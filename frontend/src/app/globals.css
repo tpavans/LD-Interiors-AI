@@ -35,13 +35,21 @@ body {
 /* Custom utilities for Pinterest-style layout */
 .masonry-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  grid-gap: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .masonry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-gap: 1.5rem;
+  }
 }
 
 @media (min-width: 768px) {
   .masonry-grid {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-gap: 2rem;
   }
 }
 
@@ -170,4 +178,29 @@ body {
 
 .animate-slideUp {
   animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Global Mobile Font Size Overrides */
+@media (max-width: 767px) {
+  .text-\[8px\] {
+    font-size: 10px !important;
+  }
+  .text-\[9px\] {
+    font-size: 11.5px !important;
+  }
+  .text-\[10px\] {
+    font-size: 12.5px !important;
+  }
+  .text-xs {
+    font-size: 13.5px !important;
+  }
+  .text-sm {
+    font-size: 15px !important;
+  }
+  .text-base {
+    font-size: 16.5px !important;
+  }
+  input, select, textarea {
+    font-size: 14px !important;
+  }
 }

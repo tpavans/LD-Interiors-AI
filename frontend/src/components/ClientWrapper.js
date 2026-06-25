@@ -55,6 +55,7 @@ export default function ClientWrapper() {
       setOrderName(savedName);
       setOrderPhone(savedPhone);
       setTrackPhone(savedPhone);
+      fetchTrackedOrders(savedPhone);
     }
 
     // Fetch all database products for conversational RAG search
@@ -115,152 +116,323 @@ export default function ClientWrapper() {
     ]);
   };
 
+  const speakMessage = (text, isTelugu = false) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+        
+        // Clean markdown, links, emojis, and special chars for speech
+        const cleanText = text
+          .replace(/\*\*?/g, '') // remove markdown bold asterisks
+          .replace(/https?:\/\/\S+/g, '') // remove URLs
+          .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Get browser voices
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = null;
+        
+        if (isTelugu) {
+          // Look for Telugu voice first
+          selectedVoice = voices.find(v => v.lang.startsWith('te'));
+          if (selectedVoice) {
+            utterance.lang = 'te-IN';
+            utterance.voice = selectedVoice;
+          } else {
+            // Fall back to Indian English voice which reads Tanglish words phonetically better
+            selectedVoice = voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
+            if (selectedVoice) {
+              utterance.lang = 'en-IN';
+              utterance.voice = selectedVoice;
+            } else {
+              utterance.lang = 'en-US';
+            }
+          }
+        } else {
+          // Standard English or Indian English
+          selectedVoice = voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
+          if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.startsWith('en'));
+          }
+          if (selectedVoice) {
+            utterance.lang = selectedVoice.lang;
+            utterance.voice = selectedVoice;
+          } else {
+            utterance.lang = 'en-US';
+          }
+        }
+        
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('Speech synthesis error:', err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isChatOpen) {
+      speakMessage("Welcome to LD Interiors and Furniture", false);
+    }
+  }, [isChatOpen]);
+
+  // Heuristics to detect if the user's query is in English vs Telugu/Tanglish
+  const checkIsEnglishQuery = (inputText) => {
+    const query = inputText.toLowerCase().trim();
+    const teluguPattern = /[\u0c00-\u0c7f]/;
+    if (teluguPattern.test(query)) return false;
+    
+    const teluguWords = [
+      'unndi', 'unnda', 'unai', 'unnai', 'kavali', 'kaavali', 'yentha', 'entha', 'dhara', 'ekada', 'ekkada', 
+      'bhagundi', 'meeru', 'mee', 'order', 'status', 'garu', 'namaste', 'dhanyavaadalu', 'chudali', 'chudu',
+      'ఉందా', 'ఉన్నాయి', 'కావాలి', 'చూపించు', 'చెప్పు', 'ఏమేమి', 'లిస్ట్', 'ప్రొడక్ట్స్', 'కలప'
+    ];
+    return !teluguWords.some(w => query.includes(w));
+  };
+
   // Bot response logic based on RAG query matching and keyword mapping (Telugu & English)
   const getBotResponse = (input) => {
     const query = input.toLowerCase().trim();
+    const useEnglish = checkIsEnglishQuery(input);
 
-    // 1. GREETINGS
-    if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
-      return `Namaste andi! LD Interiors & Furnitures AI Assistant ki welcome! 
-Nenu meeku design options, available products list, lead times, pricing and address estimations details explain cheyagalanu. Meeru ordered items tracking and ratings submit options select cheyalante navbar menu lo 'Orders' page checks link verify cheyochu. Ee roju em wooden works lead plans details discuss chedham? TV units, uyyala, mesh doors, kitiki windows with glass, sofa sets, beds - edhaina adagandi!`;
-    }
+    const getPersonalizedHeader = () => {
+      const savedName = localStorage.getItem('ld_user_name') || userName || '';
+      const savedPhone = localStorage.getItem('ld_user_phone') || userPhone || '';
+      const registered = localStorage.getItem('ld_user_registered') || isRegistered;
 
-    // 2. PRICING & ESTIMATION
-    if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate')) {
-      return `Maa custom wood designs build values and cost estimations custom wood sizing specifications, and wood type (Teak wood, Rosewood, Pine) select chesukune option batti adjust calculations chestham andi. Direct project manager, Nagaraju garini contact chesthe precise estimation metrics dynamic and simple ga calculations clear ga details provide chestharu. Mobile: +916281653998!`;
-    }
+      if (!registered || !savedName) {
+        return useEnglish 
+          ? `👤 Visitor Status: Not Registered. Register first to view your order status.`
+          : `👤 Account Status: Register avaledhu andi. dayachesi registration complete cheyyandi.`;
+      }
 
-    // 3. TECHNICAL DEV AND SYSTEM ADMIN (Pavan Sai)
-    if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai')) {
-      return `Website system updates, support, admin dashboard access logins lead issues and technical server setup controls direct dynamic updates support admin Pavan Sai handles coordinates. Phone: +919346325291!`;
-    }
-
-    // 4. ADDRESS & LOCATION
-    if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
-      return `Maa studio workshop details address andi: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema regional locations surroundings lo direct delivery installations setup clear ga provide chestham. Map directions guides direct ga explain chestham andi!`;
-    }
-
-    // 5. EXPERIENCE & TRUST
-    if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
-      return `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
-    }
-
-    // 6. PRODUCT SEARCH & QUERY MATCHING (Telugu/English Synonyms mapping)
-    const categorySynonyms = {
-      sofa: ['sofa', 'sofas', 'couch', 'సోఫా', 'సోఫాలు', 'కరుచూ', 'cushion'],
-      bed: ['bed', 'beds', 'wooden bed', 'మంచం', 'మంచాలు', 'బెడ్', 'డబుల్ బెడ్', 'మంచాల'],
-      table: ['table', 'tables', 'dining', 'slab', 'డైనింగ్', 'టేబుల్', 'బల్ల', 'బల్లలు'],
-      door: ['door', 'doors', 'entrance', 'తలుపు', 'తలుపులు', 'ద్వారం'],
-      window: ['window', 'windows', 'kitiki', 'కిటికీ', 'కిటికీలు'],
-      uyyala: ['uyyala', 'swing', 'swings', 'ఉయ్యాల', 'ఉయ్యాలలు'],
-      mesh: ['mesh', 'net', 'jalli', 'మెష్', 'జాలి', 'నెట్'],
-      tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'టెలివిజన్', 'tv console'],
-      polish: ['polish', 'varnish', 'పోలిష్', 'మెరుగు', 'పాలిష్'],
-      box: ['money box', 'hundi', 'పెట్టె', 'హుండీ', 'బాక్స్', 'మనీ బాక్స్'],
-      glass: ['glass', 'kitiki windowswith glases', 'గ్లాస్', 'అద్దం', 'అద్దాలు'],
-      office: ['office', 'desk', 'ఆఫీస్', 'డెస్క్'],
-      bathroom: ['bathroom', 'బాత్ రూమ్', 'బాత్', 'స్నానాల'],
-      kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk']
+      if (trackedOrders && trackedOrders.length > 0) {
+        const orderSummary = trackedOrders.map(o => `*${o.product}* (Status: *${o.status}*)`).join(', ');
+        return useEnglish
+          ? `👤 Account: *${savedName}* (${savedPhone}) | Ordered Item(s): ${orderSummary}`
+          : `👤 Logged In: *${savedName}*Garu (${savedPhone}) | Mee order details: ${orderSummary}`;
+      } else {
+        return useEnglish
+          ? `👤 Account: *${savedName}* (${savedPhone}) | Ordered Item(s): No active orders`
+          : `👤 Logged In: *${savedName}*Garu (${savedPhone}) | Mee order details: Active orders levu`;
+      }
     };
 
-    // Determine if query matches any category synonyms
-    let matchedCategoryKey = null;
-    for (const [catKey, keywords] of Object.entries(categorySynonyms)) {
-      if (keywords.some(kw => query.includes(kw))) {
-        matchedCategoryKey = catKey;
-        break;
-      }
-    }
+    const personalizedHeader = getPersonalizedHeader();
 
-    // Stop words to remove from search query
-    const stopWords = ['do', 'you', 'have', 'show', 'me', 'please', 'the', 'a', 'in', 'of', 'and', 'or', 'for', 'with', 'want', 'need', 'details', 'availability', 'any', 'is', 'are', 'what', 'give', 'how', 'many', 'కావాలి', 'ఉందా', 'ఉన్నాయి', 'చూపించు', 'చెప్పు', 'లిస్ట్', 'చేయండి', 'చేయి', 'గురించి', 'గూర్చి'];
-    const queryTokens = query
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
-      .split(/\s+/)
-      .filter(token => token.length > 1 && !stopWords.includes(token));
-
-    // General products listing inquiry
-    const generalKeywords = ['product', 'items', 'list', 'catalog', 'showcase', 'portfolio', 'stock', 'available', 'design', 'furniture', 'ఏమేమి', 'ఉన్నాయి', 'లిస్ట్', 'ప్రొడక్ట్స్', 'కలప', 'wood', 'all', 'designs'];
-    const isGeneralInquiry = generalKeywords.some(kw => query.includes(kw)) && !matchedCategoryKey;
-
-    if (matchedCategoryKey || queryTokens.length > 0) {
-      // Find matching items in live dbProducts
-      const matchedItems = dbProducts.filter(p => {
-        const titleLower = p.title.toLowerCase();
-        const catLower = p.category.toLowerCase();
-        const descLower = (p.description || '').toLowerCase();
-
-        // 1. Try category key matching
-        if (matchedCategoryKey) {
-          if (matchedCategoryKey === 'sofa' && (catLower.includes('sofa') || titleLower.includes('sofa') || titleLower.includes('couch'))) return true;
-          if (matchedCategoryKey === 'bed' && (catLower.includes('bed') || titleLower.includes('bed') || catLower.includes('bedroom'))) return true;
-          if (matchedCategoryKey === 'table' && (catLower.includes('table') || titleLower.includes('table') || titleLower.includes('dining') || catLower.includes('dining'))) return true;
-          if (matchedCategoryKey === 'door' && (catLower.includes('door') || titleLower.includes('door') || titleLower.includes('entrance') || catLower.includes('entrance'))) return true;
-          if (matchedCategoryKey === 'window' && (catLower.includes('window') || titleLower.includes('window') || catLower.includes('kitiki') || titleLower.includes('kitiki'))) return true;
-          if (matchedCategoryKey === 'uyyala' && (catLower.includes('uyyala') || titleLower.includes('uyyala') || titleLower.includes('swing') || catLower.includes('uyyala'))) return true;
-          if (matchedCategoryKey === 'mesh' && (catLower.includes('mesh') || titleLower.includes('mesh') || titleLower.includes('jalli') || titleLower.includes('net'))) return true;
-          if (matchedCategoryKey === 'tv' && (catLower.includes('tv') || titleLower.includes('tv') || titleLower.includes('unit') || catLower.includes('unit'))) return true;
-          if (matchedCategoryKey === 'polish' && (catLower.includes('polish') || titleLower.includes('polish') || titleLower.includes('varnish'))) return true;
-          if (matchedCategoryKey === 'box' && (catLower.includes('box') || titleLower.includes('money') || titleLower.includes('box') || titleLower.includes('hundi'))) return true;
-          if (matchedCategoryKey === 'glass' && (titleLower.includes('glass') || catLower.includes('glass') || titleLower.includes('glases'))) return true;
-          if (matchedCategoryKey === 'office' && (catLower.includes('office') || titleLower.includes('office') || titleLower.includes('desk'))) return true;
-          if (matchedCategoryKey === 'bathroom' && (catLower.includes('bathroom') || titleLower.includes('bathroom') || titleLower.includes('vanity'))) return true;
-          if (matchedCategoryKey === 'kids' && (catLower.includes('kids') || titleLower.includes('kids') || titleLower.includes('child') || titleLower.includes('bunk'))) return true;
+    const getBaseResponse = () => {
+      // 1. GREETINGS
+      if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
+        if (useEnglish) {
+          return `Hello and welcome to LD Interiors & Furnitures AI Assistant! 
+I can help you with design options, available catalogs, pricing estimations, and address details. What can I do for you today? Bunk beds, teak sofas, wood partitions - ask me anything!`;
+        } else {
+          return `Namaste andi! LD Interiors & Furnitures AI Assistant ki welcome! 
+Nenu meeku design options, available products list, lead times, pricing and address estimations details explain cheyagalanu. Meeru ordered items tracking and ratings submit options select cheyalante navbar menu lo 'Orders' page checks link verify cheyochu. Ee roju em wooden works lead plans details discuss chedham? TV units, uyyala, mesh doors, kitiki windows with glass, sofa sets, beds - edhaina adagandi!`;
         }
-
-        // 2. Try token matching on title, category, and description
-        return queryTokens.some(token => 
-          titleLower.includes(token) || 
-          catLower.includes(token) || 
-          descLower.includes(token)
-        );
-      });
-
-      if (matchedItems.length > 0) {
-        let response = `Haa andi, vetiki chusa! Maa database lo matching list premium options matching dhorikayi. Chusi cheppandi:\n\n`;
-        matchedItems.slice(0, 7).forEach((item, index) => {
-          const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
-          const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
-          response += `${index + 1}. *${item.title}*\n   - Category: ${item.category}\n   - Price: ${formattedPrice}\n   - Rating: ${stars} (${item.rating || 5}.0)\n\n`;
-        });
-        response += `Maa daggara custom sizing and design carvings customizations ready chestham andi. Ee model direct order or query pattaniki 'Order Now' tab or WhatsApp direct coordinate andi!`;
-        return response;
-      } else if (matchedCategoryKey) {
-        // Synonym matched but database has no uploads
-        let response = `Maa workshop lo custom *${matchedCategoryKey.toUpperCase()}* collections ready designs details available unnai andi.\n\n`;
-        response += `Kani, database digital uploads lo current active matching lists levu clear ga. Custom measurements designs coordinate details and pricing lists direct ga constructor Nagaraju (+916281653998) coordinate updates call chesthe explain chestharu. Custom ga sizing parameters dynamically ready chestham andi!`;
-        return response;
       }
-    }
 
-    if (isGeneralInquiry) {
-      let response = `Maa LD Interiors & Furnitures showroom catalog items list local designs details options dynamic available unnai andi. Mamulga categories lists ivi:\n\n`;
-      response += `- TV Units (టీవీ యూనిట్లు)\n`;
-      response += `- Uyyala Swings (ఉయ్యాలలు)\n`;
-      response += `- Wooden Windows (కిటికీలు)\n`;
-      response += `- Mesh Doors (జాలి తలుపులు)\n`;
-      response += `- Polish Items (మెరుగు బల్లలు)\n`;
-      response += `- Money Boxes (హుండీ పెట్టెలు)\n`;
-      response += `- Glass Windows (అద్దాల కిటికీలు)\n`;
-      response += `- Sofa Sets, Wooden Beds, Dining Tables, Office sets & Bathroom cabinets.\n\n`;
+      // 2. ORDER OR USER LOGIN CONTEXT INQUIRY
+      if (query.includes('my order') || query.includes('ordered') || query.includes('track') || query.includes('status') || query.includes('delivery') || query.includes('naa order') || query.includes('customer') || query.includes('login')) {
+        const savedName = localStorage.getItem('ld_user_name') || '';
+        const savedPhone = localStorage.getItem('ld_user_phone') || '';
 
-      if (dbProducts.length > 0) {
-        response += `*Showroom database catalog available items:\n*`;
-        dbProducts.slice(0, 8).forEach((item, index) => {
-          const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
-          response += `- *${item.title}* (${item.category}) - Price: ${formattedPrice}\n`;
-        });
-        response += `\n`;
+        if (savedName && savedPhone) {
+          // If we have active trackedOrders in state, display them
+          if (trackedOrders && trackedOrders.length > 0) {
+            const listString = trackedOrders.map(o => `- ${o.product}: Status is ${o.status}`).join('\n');
+            if (useEnglish) {
+              return `Hello ${savedName}! I checked your account details. Here is the status of your order(s):
+${listString}
+
+You can view full live progress timelines and submit rating feedback directly on our 'Orders' page in the top menu bar!`;
+            } else {
+              return `Namaste ${savedName} Garu! Mee details code checks. Meeru order chesina products status details ivi:
+${listString}
+
+Mee order status check cheyyali anukuntey, track link check cheyyandi:
+👉 https://ld-interiors-ai.vercel.app/orders`;
+            }
+          } else {
+            // No orders fetched yet, or none exist in DB
+            if (useEnglish) {
+              return `Hello ${savedName}! You are registered with phone number ${savedPhone}. I could not find any active orders for this number in our database yet. You can submit one via the 'Order Now' tab!`;
+            } else {
+              return `Namaste ${savedName} Garu! Meeru ${savedPhone} number thoti register ayyi unru, kani database checks lo active orders dhorakaledhu. Meeru product page design order buttons click chesi or 'Order Now' tab selections order submit cheyochu andi!`;
+            }
+          }
+        } else {
+          // User not registered
+          if (useEnglish) {
+            return `Please enter your details in our visitor form first. Once registered, I will be able to search the database and tracking logs for your orders instantly!`;
+          } else {
+            return `Namaste! Dayachesi website entry user register detail modal complete cheyyandi. Register details sync complete calculations checks target updates tracks!`;
+          }
+        }
       }
-      response += `Meeku sizing and design changes customizable, details customization discussion kaavalante call direct checks. Direct orders coordinates or checkout updates submit the 'Order Now' tab!`;
-      return response;
-    }
 
-    // DEFAULT RESPONSE
-    return `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs, address details, or order tracking updates gurinchi coordinates adagandi:
+      // 3. PRICING & ESTIMATION
+      if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate')) {
+        if (useEnglish) {
+          return `Our pricing is highly customizable based on wood selection (premium Teak, Rosewood, Pine) and size. Feel free to contact our manager Nagaraju at +916281653998 for a detailed budget breakdown!`;
+        } else {
+          return `Maa custom wood designs build values and cost estimations custom wood sizing specifications, and wood type (Teak wood, Rosewood, Pine) select chesukune option batti adjust calculations chestham andi. Direct project manager, Nagaraju garini contact chesthe precise estimation metrics dynamic and simple ga calculations clear ga details provide chestharu. Mobile: +916281653998!`;
+        }
+      }
+
+      // 4. TECHNICAL DEV AND SYSTEM ADMIN (Pavan Sai)
+      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai')) {
+        return `Website system updates, support, admin dashboard access logins lead issues and technical server setup controls direct dynamic updates support admin Pavan Sai handles coordinates. Phone: +919346325291!`;
+      }
+
+      // 5. ADDRESS & LOCATION
+      if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
+        if (useEnglish) {
+          return `Our studio and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`;
+        } else {
+          return `Maa studio workshop details address andi: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema regional locations surroundings lo direct delivery installations setup clear ga provide chestham. Map directions guides direct ga explain chestham andi!`;
+        }
+      }
+
+      // 6. EXPERIENCE & TRUST
+      if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
+        if (useEnglish) {
+          return `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`;
+        } else {
+          return `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
+        }
+      }
+
+      // 7. PRODUCT SEARCH & QUERY MATCHING (Telugu/English Synonyms mapping)
+      const categorySynonyms = {
+        sofa: ['sofa', 'sofas', 'couch', 'సోఫా', 'సోఫాలు', 'కరుచూ', 'cushion'],
+        bed: ['bed', 'beds', 'wooden bed', 'మంచం', 'మంచాలు', 'బెడ్', 'డబుల్ బెడ్', 'మంచాల'],
+        table: ['table', 'tables', 'dining', 'slab', 'డైనింగ్', 'టేబుల్', 'బల్ల', 'బల్లలు'],
+        door: ['door', 'doors', 'entrance', 'తలుపు', 'తలుపులు', 'ద్వారం'],
+        window: ['window', 'windows', 'kitiki', 'కిటికీ', 'కిటికీలు'],
+        uyyala: ['uyyala', 'swing', 'swings', 'ఉయ్యాల', 'ఉయ్యాలలు'],
+        mesh: ['mesh', 'net', 'jalli', 'మెష్', 'జాలి', 'నెట్'],
+        tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'టెలివిజన్', 'tv console'],
+        polish: ['polish', 'varnish', 'పోలిష్', 'మెరుగు', 'పాలిష్'],
+        box: ['money box', 'hundi', 'పెట్టె', 'హుండీ', 'బాక్స్', 'మనీ బాక్స్'],
+        glass: ['glass', 'kitiki windowswith glases', 'గ్లాస్', 'అద్దం', 'అద్దాలు'],
+        office: ['office', 'desk', 'ఆఫీస్', 'డెస్క్'],
+        bathroom: ['bathroom', 'బాత్ రూమ్', 'బాత్', 'స్నానాల'],
+        kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk']
+      };
+
+      // Determine if query matches any category synonyms
+      let matchedCategoryKey = null;
+      for (const [catKey, keywords] of Object.entries(categorySynonyms)) {
+        if (keywords.some(kw => query.includes(kw))) {
+          matchedCategoryKey = catKey;
+          break;
+        }
+      }
+
+      // Stop words to remove from search query
+      const stopWords = ['do', 'you', 'have', 'show', 'me', 'please', 'the', 'a', 'in', 'of', 'and', 'or', 'for', 'with', 'want', 'need', 'details', 'availability', 'any', 'is', 'are', 'what', 'give', 'how', 'many', 'కావాలి', 'ఉందా', 'ఉన్నాయి', 'చూపించు', 'చెప్పు', 'లిస్ట్', 'చేయండి', 'చేయి', 'గురించి', 'గూర్చి'];
+      const queryTokens = query
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
+        .split(/\s+/)
+        .filter(token => token.length > 1 && !stopWords.includes(token));
+
+      // General products listing inquiry
+      const generalKeywords = ['product', 'items', 'list', 'catalog', 'showcase', 'portfolio', 'stock', 'available', 'design', 'furniture', 'ఏమేమి', 'ఉన్నాయి', 'లిస్ట్', 'ప్రొడక్ట్స్', 'కలప', 'wood', 'all', 'designs'];
+      const isGeneralInquiry = generalKeywords.some(kw => query.includes(kw)) && !matchedCategoryKey;
+
+      if (matchedCategoryKey || queryTokens.length > 0) {
+        // Find matching items in live dbProducts
+        const matchedItems = dbProducts.filter(p => {
+          const titleLower = p.title.toLowerCase();
+          const catLower = p.category.toLowerCase();
+          const descLower = (p.description || '').toLowerCase();
+
+          // 1. Try category key matching
+          if (matchedCategoryKey) {
+            if (matchedCategoryKey === 'sofa' && (catLower.includes('sofa') || titleLower.includes('sofa') || titleLower.includes('couch'))) return true;
+            if (matchedCategoryKey === 'bed' && (catLower.includes('bed') || titleLower.includes('bed') || catLower.includes('bedroom'))) return true;
+            if (matchedCategoryKey === 'table' && (catLower.includes('table') || titleLower.includes('table') || titleLower.includes('dining') || catLower.includes('dining'))) return true;
+            if (matchedCategoryKey === 'door' && (catLower.includes('door') || titleLower.includes('door') || titleLower.includes('entrance') || catLower.includes('entrance'))) return true;
+            if (matchedCategoryKey === 'window' && (catLower.includes('window') || titleLower.includes('window') || catLower.includes('kitiki') || titleLower.includes('kitiki'))) return true;
+            if (matchedCategoryKey === 'uyyala' && (catLower.includes('uyyala') || titleLower.includes('uyyala') || titleLower.includes('swing') || catLower.includes('uyyala'))) return true;
+            if (matchedCategoryKey === 'mesh' && (catLower.includes('mesh') || titleLower.includes('mesh') || titleLower.includes('jalli') || titleLower.includes('net'))) return true;
+            if (matchedCategoryKey === 'tv' && (catLower.includes('tv') || titleLower.includes('tv') || titleLower.includes('unit') || catLower.includes('unit'))) return true;
+            if (matchedCategoryKey === 'polish' && (catLower.includes('polish') || titleLower.includes('polish') || titleLower.includes('varnish'))) return true;
+            if (matchedCategoryKey === 'box' && (catLower.includes('box') || titleLower.includes('money') || titleLower.includes('box') || titleLower.includes('hundi'))) return true;
+            if (matchedCategoryKey === 'glass' && (titleLower.includes('glass') || catLower.includes('glass') || titleLower.includes('glases'))) return true;
+            if (matchedCategoryKey === 'office' && (catLower.includes('office') || titleLower.includes('office') || titleLower.includes('desk'))) return true;
+            if (matchedCategoryKey === 'bathroom' && (catLower.includes('bathroom') || titleLower.includes('bathroom') || titleLower.includes('vanity'))) return true;
+            if (matchedCategoryKey === 'kids' && (catLower.includes('kids') || titleLower.includes('kids') || titleLower.includes('child') || titleLower.includes('bunk'))) return true;
+          }
+
+          // 2. Try token matching on title, category, and description
+          return queryTokens.some(token => 
+            titleLower.includes(token) || 
+            catLower.includes(token) || 
+            descLower.includes(token)
+          );
+        });
+
+        if (matchedItems.length > 0) {
+          if (useEnglish) {
+            let response = `Yes, I searched our database and found the following matching items for you:\n\n`;
+            matchedItems.slice(0, 5).forEach((item, index) => {
+              const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
+              const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
+              response += `${index + 1}. *${item.title}*\n   - Category: ${item.category}\n   - Price: ${formattedPrice}\n   - Rating: ${stars} (${item.rating || 5}.0)\n\n`;
+            });
+            response += `We customize sizing and carvings details according to your space specs. Order directly using the 'Order Now' tab!`;
+            return response;
+          } else {
+            let response = `Haa andi, vetiki chusa! Mee query check chesa, database matching options dhorikayi. Chusi cheppandi:\n\n`;
+            matchedItems.slice(0, 5).forEach((item, index) => {
+              const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
+              const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
+              response += `${index + 1}. *${item.title}*\n   - Category: ${item.category}\n   - Price: ${formattedPrice}\n   - Rating: ${stars} (${item.rating || 5}.0)\n\n`;
+            });
+            response += `Maa daggara custom sizing and design carvings customizations ready chestham andi. Ee model direct order or query pattaniki 'Order Now' tab or WhatsApp direct coordinate andi!`;
+            return response;
+          }
+        } else if (matchedCategoryKey) {
+          // Synonym matched but database has no uploads
+          if (useEnglish) {
+            return `We make custom *${matchedCategoryKey.toUpperCase()}* designs at our workshop. However, we do not have matching catalogs uploaded in our database yet. Contact Nagaraju at +916281653998 for custom designs!`;
+          } else {
+            let response = `Maa workshop lo custom *${matchedCategoryKey.toUpperCase()}* collections ready designs details available unnai andi.\n\n`;
+            response += `Kani, database digital uploads lo current active matching lists levu clear ga. Custom measurements designs coordinate details and pricing lists direct ga constructor Nagaraju (+916281653998) coordinate updates call chesthe explain chestharu. Custom ga sizing parameters dynamically ready chestham andi!`;
+            return response;
+          }
+        }
+      }
+
+      if (isGeneralInquiry) {
+        if (useEnglish) {
+          return `I can show you catalog items for Living Room, Kitchen, Bedrooms, Sofas, Wooden Beds, Swings, Doors, Windows, and more. Use our designs page or ask me directly about any specific item!`;
+        } else {
+          return `Maa daggara Living Room, Kitchen, Bedrooms, Sofas, Wooden Beds, Swings, Doors, Windows modal collections catalogs details custom design unnai andi. Catalog check cheyyadaniki designs page chudandi, leda direct ga adagandi.`;
+        }
+      }
+
+      // DEFAULT RESPONSE
+      if (useEnglish) {
+        return `I received your message. You can query about custom carvings wood layouts, pricing estimates, workshop address, or order tracking status. 
+Contact info:
+- Carpenter Manager Nagaraju: +916281653998
+- Web Admin Pavan Sai: +919346325291
+Or go to the top navigation 'Orders' page to see your live order status timeline.`;
+      } else {
+        return `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs, address details, or order tracking updates gurinchi coordinates adagandi:
 - Manager Nagaraju (+916281653998)
 - Tech Admin Pavan Sai (+919346325291)
 Or website top navbar menu lo unna 'Orders' link click chesi live tracking and rating updates select cheyochu andi!`;
+      }
+    };
+
+    return `${personalizedHeader}\n\n${getBaseResponse()}`;
   };
 
   // Handle chat message submit
@@ -276,6 +448,10 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     setTimeout(() => {
       const reply = getBotResponse(userMsg);
       setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      
+      // Speak the reply
+      const isEnglish = checkIsEnglishQuery(userMsg);
+      speakMessage(reply, !isEnglish);
     }, 500);
   };
 
@@ -285,10 +461,14 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     setTimeout(() => {
       const reply = getBotResponse(promptText);
       setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      
+      // Speak the reply
+      const isEnglish = checkIsEnglishQuery(promptText);
+      speakMessage(reply, !isEnglish);
     }, 500);
   };
 
-  const fetchTrackedOrders = async (phoneToQuery) => {
+  async function fetchTrackedOrders(phoneToQuery) {
     const phone = phoneToQuery || trackPhone || localStorage.getItem('ld_user_phone') || '';
     if (!phone) return;
     
@@ -728,8 +908,13 @@ Please review this order and provide availability and pricing details. Thank you
                             )}
                             <div>
                               <h5 className="font-serif text-xs font-bold text-wood-dark line-clamp-1">{order.product}</h5>
-                              <p className="text-[9px] text-wood-light mt-0.5">
-                                Ordered {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              <p className="text-[9px] text-wood-light mt-0.5 flex flex-col gap-0.5">
+                                <span>Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                {order.updatedAt && new Date(order.updatedAt).getTime() !== new Date(order.createdAt).getTime() && (
+                                  <span className="text-emerald-700 font-semibold">
+                                    Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>

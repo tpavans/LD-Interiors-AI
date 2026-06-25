@@ -126,6 +126,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     order.status = status;
+    order.updatedAt = Date.now();
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } catch (error) {

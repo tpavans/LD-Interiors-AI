@@ -86,17 +86,17 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
               {category}
             </div>
           </Link>
-          <div className="p-5 flex flex-col gap-4">
+          <div className="p-3 sm:p-5 flex flex-col gap-2.5 sm:gap-4">
             <div>
               <span className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase">
                 {category}
               </span>
-              <Link href={`/products/${_id}`} className="block mt-1">
-                <h3 className="font-serif text-base font-bold text-wood-dark hover:text-wood-light transition-colors line-clamp-1 font-semibold">
+              <Link href={`/products/${_id}`} className="block mt-0.5 sm:mt-1">
+                <h3 className="font-serif text-sm sm:text-base font-bold text-wood-dark hover:text-wood-light transition-colors line-clamp-1 font-semibold">
                   {title}
                 </h3>
               </Link>
-              <div className="mt-1 flex items-center justify-between">
+              <div className="mt-0.5 sm:mt-1 flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2">
                 <span className="text-xs font-semibold text-wood-accent">
                   {price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for Price'}
                 </span>
@@ -107,23 +107,23 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
             </div>
             
             {/* Actions Grid */}
-            <div className="flex gap-2.5">
+            <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2.5">
               {/* Call Admin Button */}
               <a
                 href="tel:+919346325291"
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-3 py-2.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                className="flex-grow flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
               >
-                <Phone className="h-3.5 w-3.5" />
-                Call
+                <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span>Call</span>
               </a>
 
               {/* Order / WhatsApp Details Button */}
               <button
                 onClick={() => setShowOrderModal(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-3 py-2.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-sm cursor-pointer"
+                className="flex-grow flex items-center justify-center gap-1 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-sm cursor-pointer"
               >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                Order
+                <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span>Order</span>
               </button>
             </div>
           </div>

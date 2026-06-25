@@ -106,29 +106,21 @@ export default function AdminPage() {
         const cleanPhone = order.phone.replace(/\D/g, '');
         const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
         
-        let statusInTelugu = newStatus;
-        if (newStatus === 'Processing') statusInTelugu = 'Processing (Final size and pricing check chesthunnamu)';
-        if (newStatus === 'In Progress') statusInTelugu = 'In Progress (Modern Carpentry wood carvings framing Alamuru workshop lo modhalaindi)';
-        if (newStatus === 'Completed') statusInTelugu = 'Completed & Delivered (Direct home installation setups finished)';
-        if (newStatus === 'Cancelled') statusInTelugu = 'Cancelled (Cancel cheyabadindi)';
+        // Format status description for simple message
+        let statusText = `your order is ${newStatus.toLowerCase()}`;
+        if (newStatus === 'Processing') statusText = 'your order is processing';
+        if (newStatus === 'In Progress') statusText = 'your order is in progress';
+        if (newStatus === 'Completed') statusText = 'your order is completed';
+        if (newStatus === 'Cancelled') statusText = 'your order is cancelled';
         
-        const messageText = `Namaste *${order.name}* andi! 
+        const messageText = `Namaste *${order.name}*Garu!
 
-Mee *LD Interiors & Furnitures* order details status update chesamu.
+Mee order status: *${statusText}*.
 
-*Order Details:*
-- Selected Design: *${order.product}*
-- Live Progress Status: *${newStatus}*
-
-*Status Update Note:*
-- ${statusInTelugu}
-
-Meeru mee live design timeline update, dimensions pricing status checks and ratings submit direct ga checks directly check cheyali anukunte page view track link check cheyyandi:
+Mee order status check cheyyali anukuntey track link check cheyyandi:
 👉 https://ld-interiors-ai.vercel.app/orders
 
-Dhanyavaadhalu,
-*Nagaraju* (Owner)
-LD Interiors & Furnitures`;
+Dhanyavaadalu`;
 
         const encodedMsg = encodeURIComponent(messageText);
         const waUrl = `https://wa.me/${targetPhone}?text=${encodedMsg}`;

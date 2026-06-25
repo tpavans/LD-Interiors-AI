@@ -199,12 +199,20 @@ export default function UserOrdersPage() {
                       <Tag className="h-3 w-3" />
                       Custom Design
                     </span>
-                    <span className="text-[10px] text-wood-light font-light flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Ordered: {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
                   </div>
-                  <h3 className="font-serif text-lg sm:text-xl font-bold text-wood-dark leading-tight">{order.product}</h3>
+                  <div className="flex flex-col gap-1 text-wood-light font-light text-[10px]">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5 text-wood-accent" />
+                      Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {order.updatedAt && new Date(order.updatedAt).getTime() !== new Date(order.createdAt).getTime() && (
+                      <span className="flex items-center gap-1 text-emerald-700 font-semibold animate-fadeIn">
+                        <Calendar className="h-3.5 w-3.5 text-emerald-600 animate-pulse" />
+                        Admin Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-wood-dark leading-tight mt-2">{order.product}</h3>
                   <p className="text-xs text-wood-medium font-light whitespace-pre-line leading-relaxed">
                     <strong className="font-semibold text-wood-dark">Notes / Sizing:</strong> {order.notes || 'No custom details provided.'}
                   </p>
