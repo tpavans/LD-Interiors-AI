@@ -212,6 +212,10 @@ export default function ClientWrapper() {
       matchedProductTitle = "Custom Bedroom/Wardrobe Furniture";
     } else if (query.includes('door') || query.includes('తలుపు')) {
       matchedProductTitle = "Custom Teak Carved Entrance Door";
+    } else if (query.includes('mandiram') || query.includes('mandiralu') || query.includes('temple') || query.includes('pooja') || query.includes('devudi') || query.includes('మండపం') || query.includes('గుడి')) {
+      matchedProductTitle = "Custom Devudi Mandiram (Pooja Temple)";
+    } else if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
+      matchedProductTitle = "Custom Teak Gummam (Main Door Frame)";
     } else {
       const matched = dbProducts.find(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
       if (matched) {
@@ -263,6 +267,48 @@ You can order it directly by clicking the button below!`;
 - Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
 
 Mee order details custom checkout order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
+        }
+      }
+
+      // SPECIAL DETECTOR FOR DEVUDI MANDIRALU / POOJA TEMPLES
+      if (query.includes('mandiram') || query.includes('mandiralu') || query.includes('temple') || query.includes('pooja') || query.includes('devudi') || query.includes('మండపం') || query.includes('గుడి')) {
+        if (useEnglish) {
+          return `Yes! We design and craft premium custom Teak Wood Devudi Mandiralu (Pooja Temples).
+- Material: Premium hand-carved Teak Wood with exquisite Gopuram and pillar details.
+- Customizations: Storage drawers, brass bell attachments, LED backlighting, and custom partition shelves.
+- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+You can order it directly by clicking the button below!`;
+        } else {
+          return `Haa andi! Maa daggara custom-made Teak Wood Devudi Mandiralu (దేవుడి మందిరాలు/Pooja Temples) direct order customizations designs available unnai.
+- Quality: First-quality Teak Wood with traditional handcarved structures, brass bells, and storage drawers.
+- Sizing options customizable according to your pooja room dimensions.
+- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+Mee Pooja Mandiram order cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
+        }
+      }
+
+      // SPECIAL DETECTOR FOR GUMMALU / MAIN DOOR FRAMES
+      if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
+        if (useEnglish) {
+          return `Yes! We specialize in heavy-duty custom Teak Wood Gummalu (Main Door Frames).
+- Material: High-thickness Premium Teak Wood logs for robust security and lifetime durability.
+- Customizations: Custom carvings, traditional Vaastu measurements, and matching threshold (Gadapa) options.
+- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+You can order it directly by clicking the button below!`;
+        } else {
+          return `Haa andi! Maa daggara custom Teak Wood Gummalu (తలుపు గుమ్మాలు/Main Door Frames) ready chese option available undi.
+- Quality: Standard high-thickness Teak Wood frame structures, elegant Vaastu alignments structure designs.
+- Sizing options customizable depending on your house dimensions.
+- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+Mee custom Teak Gummam frame direct customize order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
         }
       }
       // 1. GREETINGS
@@ -362,7 +408,9 @@ Mee order status check cheyyali anukuntey, track link check cheyyandi:
         glass: ['glass', 'kitiki windowswith glases', 'గ్లాస్', 'అద్దం', 'అద్దాలు'],
         office: ['office', 'desk', 'ఆఫీస్', 'డెస్క్'],
         bathroom: ['bathroom', 'బాత్ రూమ్', 'బాత్', 'స్నానాల'],
-        kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk']
+        kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk'],
+        mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'మండపాలు', 'గుడి', 'పూజ'],
+        gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం', 'గడప', 'gadapa']
       };
 
       // Determine if query matches any category synonyms
@@ -408,6 +456,8 @@ Mee order status check cheyyali anukuntey, track link check cheyyandi:
             if (matchedCategoryKey === 'office' && (catLower.includes('office') || titleLower.includes('office') || titleLower.includes('desk'))) return true;
             if (matchedCategoryKey === 'bathroom' && (catLower.includes('bathroom') || titleLower.includes('bathroom') || titleLower.includes('vanity'))) return true;
             if (matchedCategoryKey === 'kids' && (catLower.includes('kids') || titleLower.includes('kids') || titleLower.includes('child') || titleLower.includes('bunk'))) return true;
+            if (matchedCategoryKey === 'mandiralu' && (catLower.includes('mandiralu') || catLower.includes('mandiram') || titleLower.includes('mandiram') || titleLower.includes('temple') || titleLower.includes('pooja') || titleLower.includes('devudi'))) return true;
+            if (matchedCategoryKey === 'gummalu' && (catLower.includes('gummalu') || catLower.includes('gummam') || titleLower.includes('gummam') || titleLower.includes('gummalu') || titleLower.includes('frame'))) return true;
           }
 
           // 2. Try token matching on title, category, and description
@@ -876,6 +926,8 @@ Please review this order and provide availability and pricing details. Thank you
                         <option value="Custom Bedroom/Wardrobe Furniture">Custom Bedroom / Wardrobes</option>
                         <option value="Custom Teak Carved Entrance Door">Custom Handcarved Teak Door</option>
                         <option value="Custom Sofa Sectional Layout">Custom Cushion Sofa Set</option>
+                        <option value="Custom Devudi Mandiram (Pooja Temple)">Custom Devudi Mandiram (Pooja Temple)</option>
+                        <option value="Custom Teak Gummam (Main Door Frame)">Custom Teak Gummam (Main Door Frame)</option>
                         <option value="Complete Room Interior Design Contract">General Room Design Contract</option>
                       </select>
                     </div>

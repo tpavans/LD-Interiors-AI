@@ -144,6 +144,20 @@ const seedProducts = async () => {
         category: 'Glass Windows',
         image: 'https://images.unsplash.com/photo-1503174971373-b1f69850bded?auto=format&fit=crop&w=800&q=80',
         imagePublicId: 'seeded_asset_glass_1',
+      },
+      // 17. Devudi Mandiralu
+      {
+        title: 'Premium Handcarved Teak Wood Pooja Mandiram / Mandapam',
+        category: 'Devudi Mandiralu',
+        image: 'https://images.unsplash.com/photo-1609137882611-6110f0cf9813?auto=format&fit=crop&w=800&q=80',
+        imagePublicId: 'seeded_asset_mandiralu_1',
+      },
+      // 18. Gummalu
+      {
+        title: 'Solid Teak Wood Gummam Main Door Entrance Frame',
+        category: 'Gummalu',
+        image: 'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=800&q=80',
+        imagePublicId: 'seeded_asset_gummalu_1',
       }
     ];
 
