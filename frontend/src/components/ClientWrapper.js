@@ -201,6 +201,23 @@ export default function ClientWrapper() {
   const getBotResponse = (input) => {
     const query = input.toLowerCase().trim();
     const useEnglish = checkIsEnglishQuery(input);
+    let matchedProductTitle = null;
+
+    // Detect matched product title
+    if (query.includes('swing') || query.includes('uyyala') || query.includes('ఉయ్యాల')) {
+      matchedProductTitle = "Teak Wood Baby Swing";
+    } else if (query.includes('sofa') || query.includes('సోఫా')) {
+      matchedProductTitle = "Custom Sofa Sectional Layout";
+    } else if (query.includes('bed') || query.includes('మంచం')) {
+      matchedProductTitle = "Custom Bedroom/Wardrobe Furniture";
+    } else if (query.includes('door') || query.includes('తలుపు')) {
+      matchedProductTitle = "Custom Teak Carved Entrance Door";
+    } else {
+      const matched = dbProducts.find(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+      if (matched) {
+        matchedProductTitle = matched.title;
+      }
+    }
 
     const getPersonalizedHeader = () => {
       const savedName = localStorage.getItem('ld_user_name') || userName || '';
@@ -228,6 +245,26 @@ export default function ClientWrapper() {
     const personalizedHeader = getPersonalizedHeader();
 
     const getBaseResponse = () => {
+      // 0. SPECIAL DETECTOR FOR BABY SWING / UYYALA
+      if (query.includes('swing') || query.includes('uyyala') || query.includes('ఉయ్యాల')) {
+        if (useEnglish) {
+          return `Yes! We specialize in custom handcarved Teak Wood Baby Swings (Uyyala).
+- Material: Premium Teak Wood (Vayasina Teku Balla).
+- Customizations: Floral carvings, safety handles, adjustable chains, and baby-safe frames.
+- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+You can order it directly by clicking the button below!`;
+        } else {
+          return `Haa andi! Maa daggara custom-made Teak Wood Baby Swings (ఉయ్యాల/Uyyala) models available unnai.
+- Quality: First-quality Teak Wood thoti, safety bars handles and strong brass chains configurations chestham.
+- Sizing options customizable dynamically.
+- Contact Details: details pricing constructor Nagaraju (+916281653998) or Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+Mee order details custom checkout order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
+        }
+      }
       // 1. GREETINGS
       if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
         if (useEnglish) {
@@ -436,7 +473,10 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       }
     };
 
-    return `${personalizedHeader}\n\n${getBaseResponse()}`;
+    return {
+      text: `${personalizedHeader}\n\n${getBaseResponse()}`,
+      productTitle: matchedProductTitle
+    };
   };
 
   // Handle chat message submit
@@ -450,12 +490,16 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
 
     // Simulate bot thinking and reply
     setTimeout(() => {
-      const reply = getBotResponse(userMsg);
-      setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      const replyObj = getBotResponse(userMsg);
+      setMessages(prev => [...prev, { 
+        sender: 'bot', 
+        text: replyObj.text,
+        action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
+      }]);
       
       // Speak the reply
       const isEnglish = checkIsEnglishQuery(userMsg);
-      speakMessage(reply, !isEnglish);
+      speakMessage(replyObj.text, !isEnglish);
     }, 500);
   };
 
@@ -463,12 +507,16 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
   const handleQuickPrompt = (promptText) => {
     setMessages(prev => [...prev, { sender: 'user', text: promptText }]);
     setTimeout(() => {
-      const reply = getBotResponse(promptText);
-      setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
+      const replyObj = getBotResponse(promptText);
+      setMessages(prev => [...prev, { 
+        sender: 'bot', 
+        text: replyObj.text,
+        action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
+      }]);
       
       // Speak the reply
       const isEnglish = checkIsEnglishQuery(promptText);
-      speakMessage(reply, !isEnglish);
+      speakMessage(replyObj.text, !isEnglish);
     }, 500);
   };
 
@@ -714,7 +762,19 @@ Please review this order and provide availability and pricing details. Thank you
                               : 'bg-white border border-wood-border/50 text-wood-dark rounded-tl-none font-light'
                           }`}
                         >
-                          {msg.text}
+                          <div>{msg.text}</div>
+                          {msg.action && msg.action.type === 'order' && (
+                            <button
+                              onClick={() => {
+                                setActiveTab('order');
+                                setSelectedProduct(msg.action.productTitle);
+                              }}
+                              className="mt-3.5 w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent hover:bg-amber-500 text-wood-dark font-extrabold py-2 px-3 text-[10px] uppercase tracking-widest transition-colors duration-300 cursor-pointer shadow-sm btn-3d-accent border border-wood-accent"
+                            >
+                              <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
+                              <span>Order {msg.action.productTitle}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
