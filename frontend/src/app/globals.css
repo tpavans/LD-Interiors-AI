@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+  
+  /* Restored Warm Wood & Mahogany Theme Mapping */
+  --color-wood-dark: #2c1a0f;
+  --color-wood-medium: #54351f;
+  --color-wood-light: #8e6241;
+  --color-wood-accent: #b5834f;
+  --color-wood-cream: #fdfcf9;
+  --color-wood-beige: #f5f0e6;
+  --color-wood-border: #dfd4c4;
+  
+  --color-neutral-850: #2c1a0f;
+}
+
+:root {
+  --background: #f7f4ec;
+  --foreground: #2c1a0f;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom utilities for Pinterest-style layout */
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .masonry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/* 3D Volumetric Card & Glassmorphism styles */
+.wood-card {
+  background-color: #fdfcf9;
+  border-color: #e6dac8;
+  box-shadow: 0 10px 24px rgba(44, 26, 15, 0.08);
+}
+
+.wood-header-gradient {
+  background: linear-gradient(135deg, #2c1a0f 0%, #4a2e1b 100%);
+}
+
+.wood-light-gradient {
+  background: linear-gradient(180deg, #fdfcf9 0%, #f7f4ec 100%);
+}
+
+/* Realistic 3D Wood Plank Wall Wallpaper */
+.wood-plank-bg {
+  background: 
+    /* Horizontal lines for staggered plank joints */
+    linear-gradient(0deg, rgba(84, 53, 31, 0.08) 1.5px, transparent 1.5px) 0 0 / 100% 320px,
+    /* Vertical plank lines with shadow & highlight */
+    linear-gradient(90deg, rgba(84, 53, 31, 0.09) 1px, rgba(255, 255, 255, 0.45) 2.5px, transparent 2.5px) 0 0 / 140px 100%,
+    /* Subtle wood grain texture simulation */
+    repeating-linear-gradient(90deg, rgba(84, 53, 31, 0.012) 0px, rgba(84, 53, 31, 0.012) 2px, transparent 2px, transparent 12px),
+    repeating-linear-gradient(180deg, rgba(84, 53, 31, 0.018) 0px, rgba(84, 53, 31, 0.018) 3px, transparent 3px, transparent 10px),
+    /* Alternating warm wood board base colors */
+    linear-gradient(90deg, #f7f4ec 0px, #f7f4ec 140px, #f3ede0 140px, #f3ede0 280px);
+  background-attachment: fixed;
+}
+
+/* Luxury 3D Wood Slat Wall with Center Spotlight (for Hero Backgrounds) */
+.wood-slat-accent-bg {
+  background: 
+    /* Soft center radial spotlight to keep text completely readable */
+    radial-gradient(circle at center, rgba(253, 252, 249, 0.95) 25%, rgba(245, 240, 230, 0.8) 75%, rgba(223, 212, 196, 0.6) 100%),
+    /* repeating vertical wood slats */
+    repeating-linear-gradient(
+      90deg,
+      #ecdcb9 0px,
+      #ecdcb9 30px,
+      #cfa86b 32px,
+      #442a18 33px,
+      #2c1a0f 37px,
+      #442a18 38px,
+      #dfcda2 40px
+    );
+}
+
+
+/* Polished 3D Wooden Beam Header (Mahogany & Brass Accent) - Glassmorphic */
+.wood-header-3d {
+  background: rgba(44, 26, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.35),
+    0 8px 24px rgba(44, 26, 15, 0.12);
+}
+
+/* 3D Interactive Tilting Utilities */
+.card-3d {
+  perspective: 1000px;
+}
+
+.card-3d-inner {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover .card-3d-inner {
+  transform: translateY(-8px) rotateX(3deg) rotateY(3deg);
+  box-shadow: 
+    0 20px 30px rgba(44, 26, 15, 0.15),
+    0 0 20px rgba(181, 131, 79, 0.12);
+}
+
+/* Gold Text Glow Effect for highlights */
+.gold-text-glow {
+  background: linear-gradient(135deg, #ffe082 0%, #dfb15b 50%, #b38f3b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* 3D Beveled Buttons with Pressed states */
+.btn-3d-accent {
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 3.5px solid #8e6241 !important;
+}
+
+.btn-3d-accent:active {
+  transform: translateY(2.5px);
+  border-bottom: 1px solid #8e6241 !important;
+}
+
+.btn-3d-dark {
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 3.5px solid #1a0f08 !important;
+}
+
+.btn-3d-dark:active {
+  transform: translateY(2.5px);
+  border-bottom: 1px solid #1a0f08 !important;
+}
+
+/* Animations for Premium Modals & Chat Widget */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
