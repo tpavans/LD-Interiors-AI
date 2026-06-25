@@ -227,10 +227,15 @@ export default function UserOrdersPage() {
                 </p>
 
                 {isCancelled ? (
-                  <div className="rounded-xl bg-red-50 border border-red-150 p-4 text-xs text-red-800 flex items-start gap-2 max-w-md">
+                  <div className="rounded-xl bg-red-50 border border-red-150 p-4 text-xs text-red-800 flex items-start gap-2 max-w-md animate-fadeIn">
                     <AlertTriangle className="h-4.5 w-4.5 text-red-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold">Order Cancelled</p>
+                      {order.updatedAt && (
+                        <p className="text-[9px] text-red-650 font-bold mb-1">
+                          Cancelled: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
+                      <p className="font-bold text-red-700">Order Cancelled</p>
                       <p className="text-[10px] text-wood-light mt-0.5">This order record was cancelled. Contact Pavan Sai or Nagaraju for help.</p>
                     </div>
                   </div>
@@ -245,6 +250,9 @@ export default function UserOrdersPage() {
                         <CheckCircle className="h-2 w-2 text-white" />
                       </span>
                       <div>
+                        <p className="text-[9px] text-wood-accent font-semibold mb-0.5">
+                          Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                         <p className="text-xs font-bold text-wood-dark">Order Booked</p>
                         <p className="text-[10px] text-wood-light font-light mt-0.5">Inquiry received and logged successfully in our system.</p>
                       </div>
@@ -262,6 +270,11 @@ export default function UserOrdersPage() {
                         )}
                       </span>
                       <div>
+                        {order.status === 'Processing' && order.updatedAt && (
+                          <p className="text-[9px] text-wood-accent font-semibold mb-0.5 animate-fadeIn">
+                            Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
                         <p className={`text-xs font-bold ${['Processing', 'In Progress', 'Completed'].includes(order.status) ? 'text-wood-dark' : 'text-wood-light/60'}`}>
                           Processing & Design Sizing
                         </p>
@@ -281,6 +294,11 @@ export default function UserOrdersPage() {
                         )}
                       </span>
                       <div>
+                        {order.status === 'In Progress' && order.updatedAt && (
+                          <p className="text-[9px] text-wood-accent font-semibold mb-0.5 animate-fadeIn">
+                            Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
                         <p className={`text-xs font-bold ${['In Progress', 'Completed'].includes(order.status) ? 'text-wood-dark font-extrabold' : 'text-wood-light/60'}`}>
                           In Progress (Crafting wood carvings)
                         </p>
@@ -300,6 +318,11 @@ export default function UserOrdersPage() {
                         )}
                       </span>
                       <div>
+                        {order.status === 'Completed' && order.updatedAt && (
+                          <p className="text-[9px] text-emerald-600 font-semibold mb-0.5 animate-fadeIn">
+                            Completed: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
                         <p className={`text-xs font-bold ${order.status === 'Completed' ? 'text-emerald-700 font-extrabold' : 'text-wood-light/60'}`}>
                           Completed & Installed
                         </p>

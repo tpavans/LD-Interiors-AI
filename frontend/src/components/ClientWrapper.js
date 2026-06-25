@@ -176,6 +176,10 @@ export default function ClientWrapper() {
   useEffect(() => {
     if (isChatOpen) {
       speakMessage("Welcome to LD Interiors and Furniture", false);
+    } else {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
     }
   }, [isChatOpen]);
 
@@ -947,6 +951,11 @@ Please review this order and provide availability and pricing details. Thank you
                                     <X className="h-2 w-2" />
                                   </span>
                                   <div>
+                                    {order.updatedAt && (
+                                      <p className="text-[8px] text-red-600 font-bold mb-0.5">
+                                        Cancelled: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                      </p>
+                                    )}
                                     <p className="font-bold text-red-700">Order Cancelled</p>
                                     <p className="text-[10px] text-wood-light">This order has been cancelled. Please contact Nagaraju for details.</p>
                                   </div>
@@ -963,6 +972,9 @@ Please review this order and provide availability and pricing details. Thank you
                                       <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
                                     </span>
                                     <div>
+                                      <p className="text-[8px] text-wood-accent font-semibold mb-0.5">
+                                        Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                      </p>
                                       <p className="font-bold text-wood-dark">Order Booked</p>
                                       <p className="text-[10px] text-wood-light">Details received by admin Pavan Sai</p>
                                     </div>
@@ -978,6 +990,11 @@ Please review this order and provide availability and pricing details. Thank you
                                       <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
                                     </span>
                                     <div>
+                                      {order.status === 'Processing' && order.updatedAt && (
+                                        <p className="text-[8px] text-wood-accent font-semibold mb-0.5">
+                                          Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                      )}
                                       <p className="font-bold text-wood-dark">Processing & Verification</p>
                                       <p className="text-[10px] text-wood-light">Nagaraju finalizing sizes, lumber options, and budget</p>
                                     </div>
@@ -993,6 +1010,11 @@ Please review this order and provide availability and pricing details. Thank you
                                       <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
                                     </span>
                                     <div>
+                                      {order.status === 'In Progress' && order.updatedAt && (
+                                        <p className="text-[8px] text-wood-accent font-semibold mb-0.5">
+                                          Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                      )}
                                       <p className="font-bold text-wood-dark">In Progress (Crafting)</p>
                                       <p className="text-[10px] text-wood-light">Handcarving / polishing underway in Alamuru workshop</p>
                                     </div>
@@ -1008,6 +1030,11 @@ Please review this order and provide availability and pricing details. Thank you
                                       <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
                                     </span>
                                     <div>
+                                      {order.status === 'Completed' && order.updatedAt && (
+                                        <p className="text-[8px] text-emerald-600 font-semibold mb-0.5">
+                                          Completed: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                      )}
                                       <p className="font-bold text-wood-dark">Completed & Delivered</p>
                                       <p className="text-[10px] text-wood-light">Setup successfully installed at customer location</p>
                                     </div>
