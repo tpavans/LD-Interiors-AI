@@ -93,11 +93,49 @@ export default function AdminPage() {
     }
   };
 
-  // 2c. Update Order Status
+  // 2c. Update Order Status & Send Automatic WhatsApp Notification
   const handleUpdateStatus = async (id, newStatus) => {
     try {
       await api.put(`/orders/${id}`, { status: newStatus });
-      setOrders(prev => prev.map(o => o._id === id ? { ...o, status: newStatus } : o));
+      
+      const order = orders.find(o => o._id === id);
+      if (order) {
+        setOrders(prev => prev.map(o => o._id === id ? { ...o, status: newStatus } : o));
+        
+        // Format phone number to clean country code prefix
+        const cleanPhone = order.phone.replace(/\D/g, '');
+        const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+        
+        let statusInTelugu = newStatus;
+        if (newStatus === 'Processing') statusInTelugu = 'Processing (Final size and pricing check chesthunnamu)';
+        if (newStatus === 'In Progress') statusInTelugu = 'In Progress (Modern Carpentry wood carvings framing Alamuru workshop lo modhalaindi)';
+        if (newStatus === 'Completed') statusInTelugu = 'Completed & Delivered (Direct home installation setups finished)';
+        if (newStatus === 'Cancelled') statusInTelugu = 'Cancelled (Cancel cheyabadindi)';
+        
+        const messageText = `Namaste *${order.name}* andi! 
+
+Mee *LD Interiors & Furnitures* order details status update chesamu.
+
+*Order Details:*
+- Selected Design: *${order.product}*
+- Live Progress Status: *${newStatus}*
+
+*Status Update Note:*
+- ${statusInTelugu}
+
+Meeru mee live design timeline update, dimensions pricing status checks and ratings submit direct ga checks directly check cheyali anukunte page view track link check cheyyandi:
+👉 https://ld-interiors-ai.vercel.app/orders
+
+Dhanyavaadhalu,
+*Nagaraju* (Owner)
+LD Interiors & Furnitures`;
+
+        const encodedMsg = encodeURIComponent(messageText);
+        const waUrl = `https://wa.me/${targetPhone}?text=${encodedMsg}`;
+        
+        // Open WhatsApp Web/App in a new window/tab to send the message
+        window.open(waUrl, '_blank');
+      }
     } catch (err) {
       console.error('Error updating status:', err);
       alert('Failed to update status. Please try again.');

@@ -21,11 +21,15 @@
   --foreground: #2c1a0f;
 }
 
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  overflow-x: hidden;
 }
 
 /* Custom utilities for Pinterest-style layout */

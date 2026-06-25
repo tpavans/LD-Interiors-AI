@@ -122,7 +122,7 @@ export default function ClientWrapper() {
     // 1. GREETINGS
     if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
       return `Namaste andi! LD Interiors & Furnitures AI Assistant ki welcome! 
-Nenu meeku design options, available products list, lead times, pricing and address estimations details explain cheyagalanu. Ee roju em wooden works lead plans details discuss chedham? TV units, uyyala, mesh doors, kitiki windows with glass, sofa sets, beds - edhaina adagandi!`;
+Nenu meeku design options, available products list, lead times, pricing and address estimations details explain cheyagalanu. Meeru ordered items tracking and ratings submit options select cheyalante navbar menu lo 'Orders' page checks link verify cheyochu. Ee roju em wooden works lead plans details discuss chedham? TV units, uyyala, mesh doors, kitiki windows with glass, sofa sets, beds - edhaina adagandi!`;
     }
 
     // 2. PRICING & ESTIMATION
@@ -257,10 +257,10 @@ Nenu meeku design options, available products list, lead times, pricing and addr
     }
 
     // DEFAULT RESPONSE
-    return `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs or address details updates gurinchi coordinates adagandi:
+    return `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs, address details, or order tracking updates gurinchi coordinates adagandi:
 - Manager Nagaraju (+916281653998)
 - Tech Admin Pavan Sai (+919346325291)
-Or options scroll target check 'Order Now' / 'Track' tab features!`;
+Or website top navbar menu lo unna 'Orders' link click chesi live tracking and rating updates select cheyochu andi!`;
   };
 
   // Handle chat message submit
@@ -457,7 +457,7 @@ Please review this order and provide availability and pricing details. Thank you
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
           {/* Chat Panel */}
           {isChatOpen && (
-            <div className="w-80 sm:w-[420px] h-[520px] bg-wood-cream border border-wood-border rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
+            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] sm:h-[520px] bg-wood-cream border border-wood-border rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
               {/* Header */}
               <div className="bg-wood-dark px-5 py-4 text-white border-b border-wood-border/40">
                 <div className="flex items-center justify-between mb-3">

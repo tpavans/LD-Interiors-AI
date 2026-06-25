@@ -53,17 +53,20 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full wood-header-3d border-b-2 border-wood-accent/50">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="group flex items-center gap-2">
-          <span className="font-serif text-lg font-bold tracking-widest gold-text-glow sm:text-xl">
+        <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
+          <span className="font-serif text-sm font-extrabold tracking-wider gold-text-glow sm:text-lg md:text-xl hidden xs:inline">
             LD INTERIORS & FURNITURES
+          </span>
+          <span className="font-serif text-sm font-extrabold tracking-wider gold-text-glow xs:hidden">
+            LD INTERIORS
           </span>
         </Link>
 
         {/* Navigation Links */}
-        <nav className="flex items-center gap-5 sm:gap-6 md:gap-8">
+        <nav className="flex items-center gap-2.5 sm:gap-6 md:gap-8 text-xs font-bold uppercase tracking-wider">
           <Link
             href="/"
-            className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`transition-colors ${
               pathname === '/' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
             }`}
           >
@@ -71,15 +74,23 @@ export default function Navbar() {
           </Link>
           <Link
             href="/products"
-            className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`transition-colors ${
               pathname === '/products' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
             }`}
           >
             Designs
           </Link>
           <Link
+            href="/orders"
+            className={`transition-colors ${
+              pathname === '/orders' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+            }`}
+          >
+            Orders
+          </Link>
+          <Link
             href="/contact"
-            className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`transition-colors ${
               pathname === '/contact' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
             }`}
           >
@@ -87,7 +98,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/admin"
-            className={`text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
+            className={`transition-colors flex items-center gap-1 ${
               pathname.startsWith('/admin') ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
             }`}
           >
