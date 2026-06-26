@@ -11,10 +11,10 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-// Get all products, or upload a new one (admin only, single image parsed via upload middleware)
+// Get all products, or upload a new one (admin only, multiple images parsed via upload middleware)
 router.route('/')
   .get(getProducts)
-  .post(protect, upload.single('image'), createProduct);
+  .post(protect, upload.array('images', 5), createProduct);
 
 // Rate a single product (public customer feedback)
 router.route('/:id/rate')
@@ -23,7 +23,7 @@ router.route('/:id/rate')
 // Get, update or delete a single product (update/delete are admin protected)
 router.route('/:id')
   .get(getProductById)
-  .put(protect, upload.single('image'), updateProduct)
+  .put(protect, upload.array('images', 5), updateProduct)
   .delete(protect, deleteProduct);
 
 module.exports = router;

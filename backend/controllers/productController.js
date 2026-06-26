@@ -232,19 +232,26 @@ const createProduct = async (req, res) => {
       });
     }
 
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
-        message: 'Image file is required',
+        message: 'At least one image file is required',
       });
     }
 
-    const uploadResult = await uploadToCloudinary(req.file.path);
+    // Upload all files to Cloudinary
+    const uploadPromises = req.files.map(file => uploadToCloudinary(file.path));
+    const uploadResults = await Promise.all(uploadPromises);
+
+    const images = uploadResults.map(res => res.url);
+    const imagesPublicIds = uploadResults.map(res => res.publicId);
 
     const product = await Product.create({
       title,
       category,
-      image: uploadResult.url,
-      imagePublicId: uploadResult.publicId,
+      image: images[0],
+      imagePublicId: imagesPublicIds[0],
+      images,
+      imagesPublicIds,
       price,
       description,
       rating,
@@ -299,13 +306,24 @@ const updateProduct = async (req, res) => {
 
     let imageUrl = product.image;
     let imagePublicId = product.imagePublicId;
+    let images = product.images || [];
+    let imagesPublicIds = product.imagesPublicIds || [];
 
-    // If new image uploaded
-    if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.path);
+    // If new images uploaded
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.path));
+      const uploadResults = await Promise.all(uploadPromises);
 
-      // delete old image safely
-      if (product.imagePublicId) {
+      // delete all old images safely
+      if (product.imagesPublicIds && product.imagesPublicIds.length > 0) {
+        for (const id of product.imagesPublicIds) {
+          try {
+            await deleteFromCloudinary(id);
+          } catch (err) {
+            console.error('Old image deletion failed:', err.message);
+          }
+        }
+      } else if (product.imagePublicId) {
         try {
           await deleteFromCloudinary(product.imagePublicId);
         } catch (err) {
@@ -313,12 +331,16 @@ const updateProduct = async (req, res) => {
         }
       }
 
-      imageUrl = uploadResult.url;
-      imagePublicId = uploadResult.publicId;
+      images = uploadResults.map(res => res.url);
+      imagesPublicIds = uploadResults.map(res => res.publicId);
+      imageUrl = images[0];
+      imagePublicId = imagesPublicIds[0];
     }
 
     product.image = imageUrl;
     product.imagePublicId = imagePublicId;
+    product.images = images;
+    product.imagesPublicIds = imagesPublicIds;
 
     const updatedProduct = await product.save();
 
@@ -350,8 +372,16 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Delete image from Cloudinary safely
-    if (product.imagePublicId) {
+    // Delete all images from Cloudinary safely
+    if (product.imagesPublicIds && product.imagesPublicIds.length > 0) {
+      for (const id of product.imagesPublicIds) {
+        try {
+          await deleteFromCloudinary(id);
+        } catch (err) {
+          console.error('Cloudinary delete failed for ID:', id, err.message);
+        }
+      }
+    } else if (product.imagePublicId) {
       try {
         await deleteFromCloudinary(product.imagePublicId);
       } catch (err) {

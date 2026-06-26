@@ -25,8 +25,8 @@ export default function AdminPage() {
   const [editId, setEditId] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState('5');
@@ -177,21 +177,36 @@ Dhanyavaadalu`;
 
   // 4. Handle File Selection
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setFormError('Please select a valid image file.');
-        return;
-      }
-      setImageFile(file);
-      // Create preview URL
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter((file) => file.type.startsWith('image/'));
+    if (validFiles.length !== files.length) {
+      setFormError('Please select valid image files only.');
+      return;
+    }
+
+    if (validFiles.length > 5) {
+      setFormError('You can upload a maximum of 5 images per product.');
+      return;
+    }
+
+    setImageFiles(validFiles);
+
+    const previews = [];
+    let loadedCount = 0;
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
+        previews.push(reader.result);
+        loadedCount++;
+        if (loadedCount === validFiles.length) {
+          setImagePreviews(previews);
+        }
       };
       reader.readAsDataURL(file);
-      setFormError('');
-    }
+    });
+    setFormError('');
   };
 
   // 5. Handle Form Submit (Upload / Edit)
@@ -205,8 +220,8 @@ Dhanyavaadalu`;
       return;
     }
 
-    if (!isEditing && !imageFile) {
-      setFormError('Please select an image file to upload.');
+    if (!isEditing && imageFiles.length === 0) {
+      setFormError('Please select at least one image file to upload.');
       return;
     }
 
@@ -219,8 +234,10 @@ Dhanyavaadalu`;
       formData.append('price', price ? Number(price) : 0);
       formData.append('description', description);
       formData.append('rating', Number(rating));
-      if (imageFile) {
-        formData.append('image', imageFile);
+      if (imageFiles.length > 0) {
+        imageFiles.forEach((file) => {
+          formData.append('images', file);
+        });
       }
 
       if (isEditing) {
@@ -261,8 +278,8 @@ Dhanyavaadalu`;
     setPrice(product.price ? product.price.toString() : '');
     setDescription(product.description || '');
     setRating(product.rating ? product.rating.toString() : '5');
-    setImagePreview(product.image);
-    setImageFile(null);
+    setImagePreviews(product.images && product.images.length > 0 ? product.images : [product.image]);
+    setImageFiles([]);
     setFormError('');
     setFormSuccess('');
     // Scroll to form
@@ -296,8 +313,8 @@ Dhanyavaadalu`;
     setPrice('');
     setDescription('');
     setRating('5');
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFiles([]);
+    setImagePreviews([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -528,46 +545,55 @@ Dhanyavaadalu`;
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                  Showcase Image
+                  Showcase Images (Select 3-4 images)
                 </label>
                 <div className="mt-1 flex justify-center rounded-xl border border-dashed border-wood-border px-6 py-6 bg-wood-beige/10 hover:bg-wood-beige/20 transition-colors">
-                  <div className="space-y-2 text-center">
-                    {imagePreview ? (
-                      <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-lg border border-wood-border/50 shadow-sm bg-wood-cream">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="h-full w-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImageFile(null);
-                            setImagePreview(null);
-                            if (fileInputRef.current) fileInputRef.current.value = '';
-                          }}
-                          className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors cursor-pointer animate-fadeIn"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                  <div className="space-y-2 text-center w-full">
+                    {imagePreviews.length > 0 ? (
+                      <div>
+                        <div className="flex flex-wrap gap-2 justify-center max-w-sm mx-auto">
+                          {imagePreviews.map((preview, idx) => (
+                            <div key={idx} className="relative h-20 w-20 overflow-hidden rounded-lg border border-wood-border/50 shadow-sm bg-wood-cream">
+                              <img
+                                src={preview}
+                                alt={`Preview ${idx + 1}`}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageFiles([]);
+                              setImagePreviews([]);
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            className="text-[10px] text-red-650 hover:text-red-500 font-bold uppercase tracking-wider cursor-pointer bg-red-50 hover:bg-red-100/80 px-3 py-1 rounded-full border border-red-200 transition-colors"
+                          >
+                            Clear Images
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <Upload className="mx-auto h-8 w-8 text-wood-accent stroke-1" />
                     )}
 
-                    <div className="flex text-xs text-wood-light justify-center">
+                    <div className="flex text-xs text-wood-light justify-center pt-1.5">
                       <label className="relative cursor-pointer rounded-md bg-transparent font-semibold text-wood-accent hover:text-amber-500 focus-within:outline-none">
-                        <span>{imagePreview ? 'Change file' : 'Select an image'}</span>
+                        <span>{imagePreviews.length > 0 ? 'Change files' : 'Select images'}</span>
                         <input
                           type="file"
                           ref={fileInputRef}
                           onChange={handleFileChange}
                           accept="image/*"
+                          multiple
                           className="sr-only"
                         />
                       </label>
                     </div>
-                    <p className="text-[10px] text-wood-light">PNG, JPG, WEBP up to 10MB</p>
+                    <p className="text-[10px] text-wood-light">PNG, JPG, WEBP up to 10MB (Max 5 images)</p>
                   </div>
                 </div>
               </div>

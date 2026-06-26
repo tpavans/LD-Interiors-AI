@@ -12,6 +12,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Form Modal State
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -72,6 +73,7 @@ export default function ProductDetailPage() {
       try {
         const response = await api.get(`/products/${id}`);
         setProduct(response.data);
+        setActiveImageIndex(0);
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('We couldn\'t load this design. It may have been deleted or the link is invalid.');
@@ -168,7 +170,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
     );
   }
 
-  const { title, category, image, createdAt, price, description, rating } = product;
+  const { title, category, image, images, createdAt, price, description, rating } = product;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 sm:py-16">
@@ -192,13 +194,36 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 
       {/* Main product structure */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-        {/* Left Col: High-Res Image Display */}
-        <div className="lg:col-span-8 overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative">
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-auto object-contain max-h-[75vh] mx-auto"
-          />
+        {/* Left Col: High-Res Image Display with Thumbnails */}
+        <div className="lg:col-span-8">
+          <div className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative">
+            <img
+              src={images && images.length > 0 ? images[activeImageIndex] : image}
+              alt={title}
+              className="w-full h-auto object-contain max-h-[70vh] mx-auto"
+            />
+          </div>
+          {images && images.length > 1 && (
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              {images.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
+                    idx === activeImageIndex
+                      ? 'border-wood-accent shadow-md scale-105'
+                      : 'border-wood-border/40 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`${title} view ${idx + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Col: Info/Meta Box */}
