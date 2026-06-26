@@ -1,5 +1,5 @@
 "use client";
-import { Phone, MessageSquare, MapPin, Sparkles, Hammer } from 'lucide-react';
+import { Phone, MessageSquare, MapPin, Sparkles, Hammer, Mail } from 'lucide-react';
 
 export default function ContactPage() {
   const admin1 = {
@@ -104,7 +104,7 @@ export default function ContactPage() {
           <div className="mt-8 pt-6 border-t border-wood-border/40 flex flex-col sm:flex-row gap-3">
             <a
               href={`tel:+91${admin1.phone}`}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-4 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-3 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
             >
               <Phone className="h-4 w-4" />
               Call
@@ -113,10 +113,17 @@ export default function ContactPage() {
               href={`https://wa.me/91${admin1.phone}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-3 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-all duration-300 cursor-pointer"
             >
               <MessageSquare className="h-4 w-4" />
               WhatsApp
+            </a>
+            <a
+              href="mailto:ldinteriors.in@gmail.com"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-3 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
+            >
+              <Mail className="h-4 w-4" />
+              Email
             </a>
           </div>
         </div>
@@ -126,9 +133,9 @@ export default function ContactPage() {
       <div className="max-w-5xl mx-auto rounded-3xl bg-wood-cream border border-wood-border/60 p-8 sm:p-10 shadow-sm relative overflow-hidden">
         <div className="absolute top-1/2 left-0 -z-10 -translate-y-1/2 translate-x-[-30%] h-64 w-64 rounded-full bg-wood-beige/25 blur-3xl"></div>
         
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
           {/* Address */}
-          <div className="md:col-span-7 flex gap-4">
+          <div className="md:col-span-6 flex gap-4">
             <div className="p-3.5 rounded-2xl bg-wood-beige text-wood-accent shrink-0 h-fit">
               <MapPin className="h-6 w-6" />
             </div>
@@ -147,27 +154,43 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Social / Instagram */}
-          <div className="md:col-span-5 md:border-l border-wood-border/40 md:pl-8 flex flex-col justify-center h-full">
-            <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-              Social Media
-            </span>
-            <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 mb-4">
-              Follow Us on Instagram
-            </h3>
-            <a
-              href="https://www.instagram.com/ldinteriors.in?igsh=N2EydGxoZDNzZjF5"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-800 via-pink-700 to-amber-600 px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:opacity-90 transition-opacity duration-300 cursor-pointer"
-            >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-              @ldinteriors.in
-            </a>
+          {/* Contact Details (Email & Social) */}
+          <div className="md:col-span-6 md:border-l border-wood-border/40 md:pl-8 flex flex-col justify-between gap-6">
+            {/* Email Contact */}
+            <div>
+              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+                Email Contact
+              </span>
+              <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 flex items-center gap-2 flex-wrap">
+                <Mail className="h-5 w-5 text-wood-accent" />
+                <a href="mailto:ldinteriors.in@gmail.com" className="hover:text-wood-accent transition-colors font-semibold underline">
+                  ldinteriors.in@gmail.com
+                </a>
+              </h3>
+            </div>
+
+            {/* Social / Instagram */}
+            <div>
+              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+                Social Media
+              </span>
+              <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 mb-3">
+                Follow Us on Instagram
+              </h3>
+              <a
+                href="https://www.instagram.com/ldinteriors.in?igsh=N2EydGxoZDNzZjF5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-800 via-pink-700 to-amber-600 px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:opacity-90 transition-opacity duration-300 cursor-pointer"
+              >
+                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                @ldinteriors.in
+              </a>
+            </div>
           </div>
         </div>
       </div>
