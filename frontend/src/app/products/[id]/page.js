@@ -35,6 +35,7 @@ export default function ProductDetailPage() {
   const [orderPhone, setOrderPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [whatsappAdmin, setWhatsappAdmin] = useState('both');
 
   // Rating states
   const [userRating, setUserRating] = useState(0);
@@ -113,7 +114,8 @@ export default function ProductDetailPage() {
       console.error('Error saving order record to database:', err);
     }
 
-    const whatsappMessage = `Hello Pavan Sai! I would like to place an order/inquiry via LD Interiors & Furnitures:
+    const adminGreeting = whatsappAdmin === 'nagaraju' ? 'Nagaraju' : whatsappAdmin === 'pavansai' ? 'Pavan Sai' : 'LD Interiors';
+    const whatsappMessage = `Hello ${adminGreeting}! I would like to place an order/inquiry via LD Interiors & Furnitures:
 
 *Product Details:*
 - Name: ${product.title}
@@ -126,7 +128,15 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 - Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
 
     const encodedMsg = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/919346325291?text=${encodedMsg}`;
+    
+    let whatsappUrl = '';
+    if (whatsappAdmin === 'nagaraju') {
+      whatsappUrl = `https://wa.me/916281653998?text=${encodedMsg}`;
+    } else if (whatsappAdmin === 'pavansai') {
+      whatsappUrl = `https://wa.me/919346325291?text=${encodedMsg}`;
+    } else {
+      whatsappUrl = `https://wa.me/?text=${encodedMsg}`;
+    }
     
     window.open(whatsappUrl, '_blank');
     setOrderSuccess(true);
@@ -281,23 +291,35 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 
           <div className="mt-10 flex flex-col gap-3">
             {/* Actions Grid */}
-            <div className="flex gap-3">
-              {/* Call Admin Button */}
-              <a
-                href="tel:+919346325291"
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
-              >
-                <Phone className="h-4 w-4" />
-                Call Admin
-              </a>
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                {/* Call Nagaraju */}
+                <a
+                  href="tel:+916281653998"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  title="Call Nagaraju (Manager)"
+                >
+                  <Phone className="h-4 w-4 text-wood-accent" />
+                  <span>Call Nagaraju</span>
+                </a>
+                {/* Call Pavan Sai */}
+                <a
+                  href="tel:+919346325291"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  title="Call Pavan Sai (Tech Admin)"
+                >
+                  <Phone className="h-4 w-4 text-wood-accent/80" />
+                  <span>Call Pavan Sai</span>
+                </a>
+              </div>
 
               {/* Order via WhatsApp Button */}
               <button
                 onClick={() => setShowOrderModal(true)}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-md cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-md cursor-pointer"
               >
                 <ShoppingBag className="h-4 w-4" />
-                Order
+                Order Now
               </button>
             </div>
 
@@ -383,6 +405,21 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 ></textarea>
               </div>
 
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                  Send WhatsApp Order To
+                </label>
+                <select
+                  value={whatsappAdmin}
+                  onChange={(e) => setWhatsappAdmin(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                >
+                  <option value="both">Both Admins (Choose in WhatsApp)</option>
+                  <option value="nagaraju">Nagaraju (Manager: +916281653998)</option>
+                  <option value="pavansai">Pavan Sai (Tech Admin: +919346325291)</option>
+                </select>
+              </div>
+
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
                 ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
               </div>
@@ -399,7 +436,9 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer"
               >
                 <MessageCircle className="h-4 w-4" />
-                Submit Order to WhatsApp
+                <span>
+                  {whatsappAdmin === 'nagaraju' ? 'Submit Order to Nagaraju' : whatsappAdmin === 'pavansai' ? 'Submit Order to Pavan Sai' : 'Submit Order to WhatsApp'}
+                </span>
               </button>
             </form>
           </div>

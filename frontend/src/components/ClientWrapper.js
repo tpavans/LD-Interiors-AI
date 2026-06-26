@@ -291,6 +291,7 @@ export default function ClientWrapper() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [whatsappAdmin, setWhatsappAdmin] = useState('both');
 
   // Customer Order Tracking State
   const [trackPhone, setTrackPhone] = useState('');
@@ -746,10 +747,10 @@ Please review your order details. Would you like to confirm this order? (Type **
 
         } else if (type === 'order') {
           const priceConfirmationAlert = lang === 'en'
-            ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`
+            ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`
             : lang === 'te'
-            ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
-            : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`;
+            ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
+            : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`;
 
           const summaryText = lang === 'en'
             ? `Please review your order details:
@@ -868,10 +869,10 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
       // 1. PRICING & ESTIMATION / QUOTATIONS
       if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
         return langStyle === 'en'
-          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`
+          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`
           : langStyle === 'te'
-          ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
-          : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`;
+          ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
+          : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`;
       }
 
       // 2. CONTACT ROUTING FOR PAVAN SAI / TECHNICAL / DESIGNS
@@ -1241,7 +1242,8 @@ Based on your room's style, here are some LD Interiors products that match beaut
       console.error('Error saving order record to database:', err);
     }
 
-    const whatsappMessage = `Hello Pavan Sai! I would like to place a design order/inquiry via LD Interiors & Furnitures website:
+    const adminGreeting = whatsappAdmin === 'nagaraju' ? 'Nagaraju' : whatsappAdmin === 'pavansai' ? 'Pavan Sai' : 'LD Interiors';
+    const whatsappMessage = `Hello ${adminGreeting}! I would like to place a design order/inquiry via LD Interiors & Furnitures website:
 
 *Customer Details:*
 - Name: ${orderName.trim()}
@@ -1255,7 +1257,15 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}- Customizations 
 Please review this order and provide availability and pricing details. Thank you!`;
 
     const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/919346325291?text=${encodedMessage}`;
+    
+    let whatsappUrl = '';
+    if (whatsappAdmin === 'nagaraju') {
+      whatsappUrl = `https://wa.me/916281653998?text=${encodedMessage}`;
+    } else if (whatsappAdmin === 'pavansai') {
+      whatsappUrl = `https://wa.me/919346325291?text=${encodedMessage}`;
+    } else {
+      whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    }
     
     // Open WhatsApp URL
     window.open(whatsappUrl, '_blank');
@@ -1266,7 +1276,7 @@ Please review this order and provide availability and pricing details. Thank you
       ...prev,
       {
         sender: 'bot',
-        text: `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.\n\nThank you! Your order has been submitted successfully. Our team will contact you shortly.`
+        text: `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, we'll proceed with your order.\n\nThank you! Your order has been submitted successfully. Our team will contact you shortly.`
       }
     ]);
     
@@ -1621,6 +1631,21 @@ Please review this order and provide availability and pricing details. Thank you
                       ></textarea>
                     </div>
 
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                        Send WhatsApp Order To
+                      </label>
+                      <select
+                        value={whatsappAdmin}
+                        onChange={(e) => setWhatsappAdmin(e.target.value)}
+                        className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark font-light"
+                      >
+                        <option value="both">Both Admins (Choose in WhatsApp)</option>
+                        <option value="nagaraju">Nagaraju (Manager: +916281653998)</option>
+                        <option value="pavansai">Pavan Sai (Tech Admin: +919346325291)</option>
+                      </select>
+                    </div>
+
                     <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
                       ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
                     </div>
@@ -1637,7 +1662,9 @@ Please review this order and provide availability and pricing details. Thank you
                       className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-5 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      Send Order to Pavan Sai
+                      <span>
+                        {whatsappAdmin === 'nagaraju' ? 'Send Order to Nagaraju' : whatsappAdmin === 'pavansai' ? 'Send Order to Pavan Sai' : 'Send Order to WhatsApp'}
+                      </span>
                     </button>
                   </form>
                 </div>

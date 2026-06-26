@@ -28,6 +28,7 @@ export default function ProductCard({ product }) {
   const [orderPhone, setOrderPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [whatsappAdmin, setWhatsappAdmin] = useState('both');
 
   useEffect(() => {
     // Pre-populate name and phone from localStorage if available
@@ -60,7 +61,8 @@ export default function ProductCard({ product }) {
       console.error('Error saving order record to database:', err);
     }
 
-    const whatsappMessage = `Hello Pavan Sai! I would like to place an order/inquiry via LD Interiors & Furnitures:
+    const adminGreeting = whatsappAdmin === 'nagaraju' ? 'Nagaraju' : whatsappAdmin === 'pavansai' ? 'Pavan Sai' : 'LD Interiors';
+    const whatsappMessage = `Hello ${adminGreeting}! I would like to place an order/inquiry via LD Interiors & Furnitures:
 
 *Product Details:*
 - Name: ${title}
@@ -73,7 +75,15 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 - Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
 
     const encodedMsg = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/919346325291?text=${encodedMsg}`;
+    
+    let whatsappUrl = '';
+    if (whatsappAdmin === 'nagaraju') {
+      whatsappUrl = `https://wa.me/916281653998?text=${encodedMsg}`;
+    } else if (whatsappAdmin === 'pavansai') {
+      whatsappUrl = `https://wa.me/919346325291?text=${encodedMsg}`;
+    } else {
+      whatsappUrl = `https://wa.me/?text=${encodedMsg}`;
+    }
     
     window.open(whatsappUrl, '_blank');
     setOrderSuccess(true);
@@ -134,23 +144,35 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
             </div>
             
             {/* Actions Grid */}
-            <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2.5">
-              {/* Call Admin Button */}
-              <a
-                href="tel:+919346325291"
-                className="flex-grow flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
-              >
-                <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>Call</span>
-              </a>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                {/* Call Nagaraju */}
+                <a
+                  href="tel:+916281653998"
+                  title="Call Nagaraju (Manager)"
+                  className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                >
+                  <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent" />
+                  <span>Call Nagaraju</span>
+                </a>
+                {/* Call Pavan Sai */}
+                <a
+                  href="tel:+919346325291"
+                  title="Call Pavan Sai (Tech Admin)"
+                  className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                >
+                  <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent/80" />
+                  <span>Call Pavan</span>
+                </a>
+              </div>
 
               {/* Order / WhatsApp Details Button */}
               <button
                 onClick={() => setShowOrderModal(true)}
-                className="flex-grow flex items-center justify-center gap-1 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-sm cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-sm cursor-pointer"
               >
                 <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>Order</span>
+                <span>Order Now</span>
               </button>
             </div>
           </div>
@@ -220,6 +242,21 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 ></textarea>
               </div>
 
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                  Send WhatsApp Order To
+                </label>
+                <select
+                  value={whatsappAdmin}
+                  onChange={(e) => setWhatsappAdmin(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                >
+                  <option value="both">Both Admins (Choose in WhatsApp)</option>
+                  <option value="nagaraju">Nagaraju (Manager: +916281653998)</option>
+                  <option value="pavansai">Pavan Sai (Tech Admin: +919346325291)</option>
+                </select>
+              </div>
+
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
                 ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
               </div>
@@ -236,7 +273,9 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer"
               >
                 <MessageCircle className="h-4 w-4" />
-                Submit Order to WhatsApp
+                <span>
+                  {whatsappAdmin === 'nagaraju' ? 'Submit Order to Nagaraju' : whatsappAdmin === 'pavansai' ? 'Submit Order to Pavan Sai' : 'Submit Order to WhatsApp'}
+                </span>
               </button>
             </form>
           </div>

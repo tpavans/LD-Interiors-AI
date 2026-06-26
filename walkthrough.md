@@ -33,6 +33,14 @@ This document outlines the changes implemented to upgrade the virtual assistant 
 - Enforced `isChatOpen` check: voice synthesis will not start if the chatbot is closed, and cancels immediately when the user exits/closes the chat.
 - Prioritizes female local Telugu and English voices, operating at a slow, pleasant rate (`0.85`).
 
+### 6. Dual Admin Calling and WhatsApp Contact Routing
+- **Dual Call Buttons**: Product cards and the product detail page now render call buttons for both **Nagaraju (Manager)** and **Pavan Sai (Tech Admin)** side-by-side.
+- **WhatsApp Contact Selector**: Order checkout forms (in product card modals, product detail page modals, and the chatbot Checkout tab) now include a contact selector dropdown allowing users to route the WhatsApp inquiry to:
+  - Both Admins (opens WhatsApp contact selector)
+  - Nagaraju (direct to manager: +91 6281653998)
+  - Pavan Sai (direct to tech admin: +91 9346325291)
+- **Dynamic Greeting and Routing**: The WhatsApp pre-filled order details template and target number adjust dynamically based on the selected contact.
+
 ---
 
 ## Verification Results
