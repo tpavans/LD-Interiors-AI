@@ -48,6 +48,8 @@ We will deploy the Node.js Express backend to **Render.com** (which offers a fre
    * `CLOUDINARY_API_SECRET`: `your_cloudinary_api_secret`
    * `ADMIN1_EMAIL`: `admin@ldinteriors.com`
    * `ADMIN1_PASSWORD`: `your_secure_password`
+   * `SMTP_USER`: `pavansaiteki7@gmail.com` (Gmail address used to send emails)
+   * `SMTP_PASS`: `oqctqlghhvdjqzvk` (Gmail 16-character App Password)
 6. Click **Create Web Service**.
 7. Render will build and deploy your API. Once completed, copy your live API URL (e.g., `https://ld-interiors-backend.onrender.com`).
 
