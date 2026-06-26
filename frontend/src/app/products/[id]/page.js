@@ -92,7 +92,7 @@ export default function ProductDetailPage() {
     setOrderPhone(savedPhone);
   }, [showOrderModal]);
 
-  const handleOrderSubmit = (e) => {
+  const handleOrderSubmit = async (e) => {
     e.preventDefault();
     
     // Save to localStorage to keep visitor info synced
@@ -118,22 +118,26 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
     const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
     const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
-    // Open BOTH windows synchronously to bypass popup blocker
+    // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
     window.open(waUrlNagaraju, '_blank');
-    window.open(waUrlPavanSai, '_blank');
-
-    // Save order in the database asynchronously in background
-    api.post('/orders', {
-      name: orderName.trim(),
-      phone: orderPhone.trim(),
-      product: product.title,
-      imageUrl: absoluteImageUrl,
-      notes: orderNotes.trim() || 'No custom notes.'
-    }).catch((err) => {
-      console.error('Error saving order record to database:', err);
-    });
 
     setOrderSuccess(true);
+
+    // 2. Save order in the database and wait for it
+    try {
+      await api.post('/orders', {
+        name: orderName.trim(),
+        phone: orderPhone.trim(),
+        product: product.title,
+        imageUrl: absoluteImageUrl,
+        notes: orderNotes.trim() || 'No custom notes.'
+      });
+    } catch (err) {
+      console.error('Error saving order record to database:', err);
+    }
+
+    // 3. Redirect current window to Pavan Sai (never blocked by browser)
+    window.location.href = waUrlPavanSai;
     
     setTimeout(() => {
       setShowOrderModal(false);
