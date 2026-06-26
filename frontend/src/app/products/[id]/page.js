@@ -292,11 +292,16 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
           <div className="mt-10 flex flex-col gap-3">
             {/* Actions Grid */}
             <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
+              {/* Call for Pricing Note */}
+              <div className="text-[10px] sm:text-xs text-wood-light text-center font-medium italic mt-0.5 leading-none">
+                Contact Nagaraju for pricing & custom sizes
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-grow flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
                   title="Call Nagaraju (Manager)"
                 >
                   <Phone className="h-4 w-4 text-wood-accent" />
@@ -305,7 +310,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 {/* Call Pavan Sai */}
                 <a
                   href="tel:+919346325291"
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-grow flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
                   title="Call Pavan Sai (Tech Admin)"
                 >
                   <Phone className="h-4 w-4 text-wood-accent/80" />

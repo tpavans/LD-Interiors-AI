@@ -145,12 +145,17 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
             
             {/* Actions Grid */}
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2">
+              {/* Call for Pricing Note */}
+              <div className="text-[8.5px] sm:text-[9.5px] text-wood-light text-center font-medium italic mt-0.5 leading-none">
+                Contact Nagaraju for pricing & custom sizes
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
                   title="Call Nagaraju (Manager)"
-                  className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-grow flex items-center justify-center gap-1.5 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
                 >
                   <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent" />
                   <span>Call Nagaraju</span>
@@ -159,7 +164,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 <a
                   href="tel:+919346325291"
                   title="Call Pavan Sai (Tech Admin)"
-                  className="flex-1 flex items-center justify-center gap-1 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-grow flex items-center justify-center gap-1.5 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
                 >
                   <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent/80" />
                   <span>Call Pavan</span>
