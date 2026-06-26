@@ -1238,17 +1238,14 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}- Customizations 
 Please review this order and provide availability and pricing details. Thank you!`;
 
     const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
-    const msgPavanSai = `Hello Pavan Sai Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
-
     const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
-    const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
     // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
     window.open(waUrlNagaraju, '_blank');
 
     setOrderSuccess(true);
 
-    // 2. Save order in the database and wait for it
+    // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
     try {
       await api.post('/orders', {
         name: orderName.trim(),
@@ -1262,9 +1259,6 @@ Please review this order and provide availability and pricing details. Thank you
     } catch (err) {
       console.error('Error saving order record to database:', err);
     }
-
-    // 3. Redirect current window to Pavan Sai (never blocked by browser)
-    window.location.href = waUrlPavanSai;
     
     // Add success confirmation to Chatbot log as well
     setMessages(prev => [

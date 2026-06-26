@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
+const sendOrderEmail = require('../utils/sendEmail');
 
 /**
  * @desc    Create new order
@@ -27,6 +28,11 @@ const createOrder = async (req, res) => {
       product: product.trim(),
       imageUrl: imageUrl ? imageUrl.trim() : undefined,
       notes: notes ? notes.trim() : undefined,
+    });
+
+    // Send order email notification to pavansaiteki7@gmail.com
+    sendOrderEmail(order).catch((err) => {
+      console.error('Failed to send order email:', err);
     });
 
     res.status(201).json(order);

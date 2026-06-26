@@ -5,7 +5,8 @@ import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy } from 'lucid
 import api from '../utils/api';
 
 export default function ProductCard({ product }) {
-  const { _id, title, category, image, price, rating } = product;
+  const { _id, title, category, image, price, rating, createdAt } = product;
+  const isNew = createdAt ? (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24) <= 7 : false;
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -58,17 +59,14 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 - Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
 
     const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
-    const msgPavanSai = `Hello Pavan Sai Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
-
     const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
-    const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
     // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
     window.open(waUrlNagaraju, '_blank');
 
     setOrderSuccess(true);
 
-    // 2. Save order in the database and wait for it
+    // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
     try {
       await api.post('/orders', {
         name: orderName.trim(),
@@ -80,9 +78,6 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
     } catch (err) {
       console.error('Error saving order record to database:', err);
     }
-
-    // 3. Redirect current window to Pavan Sai (never blocked by browser)
-    window.location.href = waUrlPavanSai;
     
     setTimeout(() => {
       setShowOrderModal(false);
@@ -106,6 +101,12 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
             <div className="absolute top-4 left-4 bg-wood-cream/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-wood-accent shadow-sm border border-wood-border/30">
               {category}
             </div>
+            {/* Newly Added Badge */}
+            {isNew && (
+              <div className="absolute top-12 left-4 bg-amber-500 text-white px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-amber-600/20 z-10 animate-pulse">
+                Newly Added
+              </div>
+            )}
             {/* Share Overlay Button */}
             <button
               onClick={(e) => {

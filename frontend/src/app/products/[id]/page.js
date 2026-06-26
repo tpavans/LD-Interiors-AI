@@ -113,17 +113,14 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 - Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
 
     const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
-    const msgPavanSai = `Hello Pavan Sai Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
-
     const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
-    const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
     // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
     window.open(waUrlNagaraju, '_blank');
 
     setOrderSuccess(true);
 
-    // 2. Save order in the database and wait for it
+    // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
     try {
       await api.post('/orders', {
         name: orderName.trim(),
@@ -135,9 +132,6 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
     } catch (err) {
       console.error('Error saving order record to database:', err);
     }
-
-    // 3. Redirect current window to Pavan Sai (never blocked by browser)
-    window.location.href = waUrlPavanSai;
     
     setTimeout(() => {
       setShowOrderModal(false);
