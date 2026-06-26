@@ -158,6 +158,13 @@ const seedProducts = async () => {
         category: 'Gummalu',
         image: 'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=800&q=80',
         imagePublicId: 'seeded_asset_gummalu_1',
+      },
+      // 19. Dressing Tables
+      {
+        title: 'Modern Teak Wood Dressing Table with LED Mirror',
+        category: 'Dressing Tables',
+        image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=800&q=80',
+        imagePublicId: 'seeded_asset_dressing_1',
       }
     ];
 

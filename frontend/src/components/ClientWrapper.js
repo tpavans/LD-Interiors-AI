@@ -216,6 +216,8 @@ export default function ClientWrapper() {
       matchedProductTitle = "Custom Devudi Mandiram (Pooja Temple)";
     } else if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
       matchedProductTitle = "Custom Teak Gummam (Main Door Frame)";
+    } else if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
+      matchedProductTitle = "Custom Teak Dressing Table with Mirror";
     } else {
       const matched = dbProducts.find(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
       if (matched) {
@@ -309,6 +311,27 @@ You can order it directly by clicking the button below!`;
 - Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
 
 Mee custom Teak Gummam frame direct customize order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
+        }
+      }
+
+      // SPECIAL DETECTOR FOR DRESSING TABLES
+      if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
+        if (useEnglish) {
+          return `Yes! We specialize in custom Teak Wood Dressing Tables.
+- Material: Premium Teak Wood for a long-lasting elegant finish.
+- Customizations: Full-length LED mirrors, multiple storage drawers, soft-close sliders, and custom jewelry compartments.
+- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+You can order it directly by clicking the button below!`;
+        } else {
+          return `Haa andi! Maa daggara custom-made Teak Wood Dressing Tables (మేకప్ బల్లలు/డ్రెస్సింగ్ టేబుల్స్) collections available unnai.
+- Quality: Top-grade Teak wood, premium glass mirrors, multiple drawers and designer knobs fittings specifications chestham.
+- Sizing options customizable according to your bedroom wall dimensions.
+- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
+- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
+
+Mee custom Dressing Table order parameters submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
         }
       }
       // 1. GREETINGS
@@ -410,7 +433,8 @@ Mee order status check cheyyali anukuntey, track link check cheyyandi:
         bathroom: ['bathroom', 'బాత్ రూమ్', 'బాత్', 'స్నానాల'],
         kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk'],
         mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'మండపాలు', 'గుడి', 'పూజ'],
-        gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం', 'గడప', 'gadapa']
+        gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం', 'గడప', 'gadapa'],
+        dressing: ['dressing', 'mirror', 'makeup', 'makeup table', 'makeup tables', 'dressing tables', 'dressing table', 'అద్దం బల్ల', 'డ్రెస్సింగ్', 'డ్రెస్సింగ్ టేబుల్']
       };
 
       // Determine if query matches any category synonyms
@@ -458,6 +482,7 @@ Mee order status check cheyyali anukuntey, track link check cheyyandi:
             if (matchedCategoryKey === 'kids' && (catLower.includes('kids') || titleLower.includes('kids') || titleLower.includes('child') || titleLower.includes('bunk'))) return true;
             if (matchedCategoryKey === 'mandiralu' && (catLower.includes('mandiralu') || catLower.includes('mandiram') || titleLower.includes('mandiram') || titleLower.includes('temple') || titleLower.includes('pooja') || titleLower.includes('devudi'))) return true;
             if (matchedCategoryKey === 'gummalu' && (catLower.includes('gummalu') || catLower.includes('gummam') || titleLower.includes('gummam') || titleLower.includes('gummalu') || titleLower.includes('frame'))) return true;
+            if (matchedCategoryKey === 'dressing' && (catLower.includes('dressing') || catLower.includes('table') || titleLower.includes('dressing') || titleLower.includes('makeup') || titleLower.includes('mirror'))) return true;
           }
 
           // 2. Try token matching on title, category, and description
@@ -928,6 +953,7 @@ Please review this order and provide availability and pricing details. Thank you
                         <option value="Custom Sofa Sectional Layout">Custom Cushion Sofa Set</option>
                         <option value="Custom Devudi Mandiram (Pooja Temple)">Custom Devudi Mandiram (Pooja Temple)</option>
                         <option value="Custom Teak Gummam (Main Door Frame)">Custom Teak Gummam (Main Door Frame)</option>
+                        <option value="Custom Teak Dressing Table with Mirror">Custom Teak Dressing Table with Mirror</option>
                         <option value="Complete Room Interior Design Contract">General Room Design Contract</option>
                       </select>
                     </div>
