@@ -1240,7 +1240,7 @@ Please review this order and provide availability and pricing details. Thank you
     const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
     const msgPavanSai = `Hello Pavan Sai Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
 
-    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+    const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
     const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
     // Open BOTH windows synchronously to bypass popup blocker

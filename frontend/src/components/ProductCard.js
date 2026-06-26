@@ -60,7 +60,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
     const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
     const msgPavanSai = `Hello Pavan Sai Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
 
-    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+    const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
     const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
 
     // Open BOTH windows synchronously to bypass popup blocker

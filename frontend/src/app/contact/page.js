@@ -15,7 +15,7 @@ export default function ContactPage() {
     role: "Head of LD Interiors & Furnitures",
     desc: "Oversees all interior design projects, on-site executions, structural design finalizations, price estimations, and contracts.",
     phone: "6281653998",
-    whatsapp: false
+    whatsappPhone: "6301290966"
   };
 
   return (
@@ -58,17 +58,23 @@ export default function ContactPage() {
             </p>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-wood-border/40 flex flex-col gap-3">
+          <div className="mt-8 pt-6 border-t border-wood-border/40 flex flex-col sm:flex-row gap-3">
             <a
               href={`tel:+91${admin2.phone}`}
-              className="flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium px-5 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-4 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
             >
               <Phone className="h-4 w-4" />
-              Call Admin ({admin2.phone})
+              Call ({admin2.phone})
             </a>
-            <p className="text-[10px] text-center text-wood-light italic">
-              * Nagaraju attends to all site project works and pricing inquiries.
-            </p>
+            <a
+              href={`https://wa.me/91${admin2.whatsappPhone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-all duration-300 cursor-pointer"
+            >
+              <MessageSquare className="h-4 w-4" />
+              WhatsApp
+            </a>
           </div>
         </div>
 
