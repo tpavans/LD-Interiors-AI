@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -15,6 +15,22 @@ export default function ProductDetailPage() {
 
   // Form Modal State
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/products/${id}` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleWhatsAppShare = () => {
+    const message = `Check out this beautiful design: *${product?.title}* (${product?.category}) from LD Interiors & Furnitures!\n\n👉 ${shareUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const [orderName, setOrderName] = useState('');
   const [orderPhone, setOrderPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
@@ -285,6 +301,15 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
               </button>
             </div>
 
+            {/* Share Design Button */}
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-wood-accent hover:bg-wood-accent hover:text-wood-dark px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-accent font-semibold"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>Share Design</span>
+            </button>
+
             <Link
               href="/products"
               className="block w-full text-center rounded-xl border border-wood-border hover:bg-wood-cream hover:text-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-wood-light uppercase shadow-sm transition-colors duration-300"
@@ -373,6 +398,72 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 Submit Order to WhatsApp
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setShowShareModal(false)}>
+          <div className="w-full max-w-sm bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-6 shadow-2xl relative text-left" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
+              <h3 className="font-serif text-sm font-bold text-wood-dark flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-wood-accent" />
+                Share Design
+              </h3>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="p-1 rounded-lg hover:bg-wood-beige text-wood-light hover:text-wood-dark transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent">Design Title</p>
+              <p className="text-xs font-semibold text-wood-dark mt-0.5">{title}</p>
+            </div>
+
+            <div className="space-y-3.5">
+              {/* WhatsApp Share Button */}
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-550 text-white py-2.5 text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer shadow-sm"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Share via WhatsApp
+              </button>
+
+              {/* Copy Link Row */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  className="flex-grow rounded-xl border border-wood-border bg-white px-3 py-2 text-[10px] text-wood-medium font-mono focus:outline-none"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-3.5 py-2.5 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer shrink-0 shadow-sm min-w-[75px]"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-[9px] text-wood-light font-light text-center mt-4">
+              Copy this link to share on Instagram posts, stories, or other platforms!
+            </p>
           </div>
         </div>
       )}
