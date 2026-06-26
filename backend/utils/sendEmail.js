@@ -73,7 +73,7 @@ Image URL: ${order.imageUrl || 'None'}
 
   const mailOptions = {
     from: hasSmtpConfig ? `"${order.name} via LD Interiors" <${process.env.SMTP_USER}>` : `"${order.name} via LD Interiors Test" <test@ldinteriors.com>`,
-    to: 'ldinteriors.in@gmail.com, ldinteriors@gmail.com',
+    to: 'ldinteriors.in@gmail.com',
     subject: `🔔 New Order: ${order.product} from ${order.name}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525;">
