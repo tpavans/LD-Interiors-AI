@@ -46,6 +46,34 @@ export default function ClientWrapper() {
     const savedName = localStorage.getItem('ld_user_name') || '';
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
     
+    // Determine welcome message based on session storage
+    const welcomed = sessionStorage.getItem('ld_welcomed');
+    let welcomeText = '';
+    
+    if (!welcomed) {
+      welcomeText = `👋 Welcome to LD Interiors & Furniture!
+
+We're delighted to have you here.
+
+Whether you're looking for stylish furniture, complete home interiors, modular kitchens, wardrobes, TV units, bedrooms, office furniture, or custom-made designs, I'm here to help you every step of the way.
+
+You can browse our products, explore our latest designs, ask questions, or even place a custom order.
+
+How can I help you today?`;
+      sessionStorage.setItem('ld_welcomed', 'true');
+    } else {
+      welcomeText = savedName 
+        ? `Welcome back, ${savedName}Garu! What would you like to explore today?`
+        : `Welcome back! What would you like to explore today?`;
+    }
+
+    setMessages([
+      {
+        sender: 'bot',
+        text: welcomeText
+      }
+    ]);
+
     if (!registered) {
       setShowRegisterModal(true);
     } else {
@@ -107,13 +135,22 @@ export default function ClientWrapper() {
     setOrderName(userName.trim());
     setOrderPhone(userPhone.trim());
 
-    // Personalize bot greeting
+    // Personalize bot greeting with first visit welcome
     setMessages([
       {
         sender: 'bot',
-        text: `Namaste ${userName.trim()}! Welcome to LD Interiors & Furnitures. How can I help you today? Available products or pricing details edaina adagandi!`
+        text: `👋 Welcome to LD Interiors & Furniture, ${userName.trim()}Garu!
+
+We're delighted to have you here.
+
+Whether you're looking for stylish furniture, complete home interiors, modular kitchens, wardrobes, TV units, bedrooms, office furniture, or custom-made designs, I'm here to help you every step of the way.
+
+You can browse our products, explore our latest designs, ask questions, or even place a custom order.
+
+How can I help you today?`
       }
     ]);
+    sessionStorage.setItem('ld_welcomed', 'true');
   };
 
   const speakMessage = (text, isTelugu = false) => {
@@ -122,18 +159,44 @@ export default function ClientWrapper() {
         window.speechSynthesis.cancel();
         
         // Clean markdown, links, emojis, and special chars for speech
-        const cleanText = text
+        let cleanText = text
           .replace(/\*\*?/g, '') // remove markdown bold asterisks
           .replace(/https?:\/\/\S+/g, '') // remove URLs
           .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
           .replace(/\s+/g, ' ')
           .trim();
 
+        // Showroom receptionist behavior: never speak long paragraphs.
+        // Speak only the first sentence or first line so it sounds like a real assistant.
+        const sentences = cleanText.split(/[.!?\n]/).filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          // Speak up to first 2 sentences
+          cleanText = sentences.slice(0, 2).join('. ') + '.';
+        }
+
         const utterance = new SpeechSynthesisUtterance(cleanText);
         
         // Get browser voices
         const voices = window.speechSynthesis.getVoices();
         let selectedVoice = null;
+
+        // Function to detect female voices by name
+        const isFemaleVoice = (v) => {
+          const name = v.name.toLowerCase();
+          return name.includes('female') || 
+                 name.includes('zira') || 
+                 name.includes('samantha') || 
+                 name.includes('google us english') || 
+                 name.includes('hazel') || 
+                 name.includes('susan') || 
+                 name.includes('heera') || 
+                 name.includes('haruka') || 
+                 name.includes('karen') || 
+                 name.includes('moira') || 
+                 name.includes('tessa') || 
+                 name.includes('veena') ||
+                 name.includes('priya');
+        };
         
         if (isTelugu) {
           // Look for Telugu voice first
@@ -142,8 +205,9 @@ export default function ClientWrapper() {
             utterance.lang = 'te-IN';
             utterance.voice = selectedVoice;
           } else {
-            // Fall back to Indian English voice which reads Tanglish words phonetically better
-            selectedVoice = voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
+            // Fall back to Indian English voice which reads Tanglish words phonetically better (prefer female)
+            selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                         || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
             if (selectedVoice) {
               utterance.lang = 'en-IN';
               utterance.voice = selectedVoice;
@@ -152,11 +216,11 @@ export default function ClientWrapper() {
             }
           }
         } else {
-          // Standard English or Indian English
-          selectedVoice = voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
-          if (!selectedVoice) {
-            selectedVoice = voices.find(v => v.lang.startsWith('en'));
-          }
+          // Standard English or Indian English (prefer female)
+          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                       || voices.find(v => v.lang.startsWith('en') && isFemaleVoice(v))
+                       || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'))
+                       || voices.find(v => v.lang.startsWith('en'));
           if (selectedVoice) {
             utterance.lang = selectedVoice.lang;
             utterance.voice = selectedVoice;
@@ -165,7 +229,7 @@ export default function ClientWrapper() {
           }
         }
         
-        utterance.rate = 1.0;
+        utterance.rate = 0.85; // Calm, pleasant, slow showroom receptionist pace
         window.speechSynthesis.speak(utterance);
       } catch (err) {
         console.error('Speech synthesis error:', err);
@@ -265,7 +329,7 @@ You can order it directly by clicking the button below!`;
           return `Haa andi! Maa daggara custom-made Teak Wood Baby Swings (ఉయ్యాల/Uyyala) models available unnai.
 - Quality: First-quality Teak Wood thoti, safety bars handles and strong brass chains configurations chestham.
 - Sizing options customizable dynamically.
-- Contact Details: details pricing constructor Nagaraju (+916281653998) or Pavan Sai (+919346325291).
+- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
 - Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
 
 Mee order details custom checkout order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
@@ -334,14 +398,49 @@ You can order it directly by clicking the button below!`;
 Mee custom Dressing Table order parameters submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
         }
       }
+
+      // SPECIAL INTERIOR DESIGN CONSULTATION DETECTOR
+      if (query.includes('interior') || query.includes('interiors') || query.includes('decor') || query.includes('consultation')) {
+        if (useEnglish) {
+          return `I would love to help you plan your home interiors! To give you the best design recommendations, could you share details on:
+- Which room or spaces are we designing?
+- What are the room dimensions?
+- Do you have a preferred style or color palette?
+- What is your approximate timeline and budget?
+- What is your location?`;
+        } else {
+          return `Haa andi! Complete home interiors design estimations and layouts suggestions coordinate chestham andi. Meeru precise details coordinate selections suggest cheyalante:
+- ఏ room leda space design options customizations chesthunnaru?
+- Sizing specifications dimensions entha andi?
+- timelines and budget preferences selections details checks explain updates calls coordinate direct ga share cheyyandi!`;
+        }
+      }
+
+      // SPECIAL CUSTOM FURNITURE DETECTOR
+      if (query.includes('custom') || query.includes('customise') || query.includes('customization') || query.includes('custom-made')) {
+        if (useEnglish) {
+          return `We specialize in 100% custom-made Teak Wood designs! To submit a custom woodwork request, please share:
+- Your Name & Mobile Number
+- Furniture Type (Sofa, Bed, Wardrobe, Temple, Gummam, etc.)
+- Sizing specifications (Length, Width, Height)
+- Preferred Material, Wood finish & Color
+- Timeline & Budget range
+We will confirm these details before submitting your request to Admin Pavan Sai.`;
+        } else {
+          return `Maa carpentry workshop lo custom models 100% first-quality Teak wood, Vaastu measures matching designs specifications customizations chestham andi. Custom design order submittals checks:
+- Mee Name & Mobile details, Location details
+- Furniture type (Sofa, Bed, Wardrobe, Temple, Gummam, etc.)
+- Length, Width, and Height dimensions parameters estimations
+- Wood type, color palette, timeline and budget values details explain coordinates parameters share chesthe direct admin submit parameter calculations confirm coordinates updates synchronizations check chesthanu andi!`;
+        }
+      }
+
       // 1. GREETINGS
       if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
         if (useEnglish) {
-          return `Hello and welcome to LD Interiors & Furnitures AI Assistant! 
-I can help you with design options, available catalogs, pricing estimations, and address details. What can I do for you today? Bunk beds, teak sofas, wood partitions - ask me anything!`;
+          return `Welcome back! What would you like to explore today? We can design modular kitchens, wardrobes, TV units, devudi mandiralu, sofas, beds, or custom furniture.`;
         } else {
-          return `Namaste andi! LD Interiors & Furnitures AI Assistant ki welcome! 
-Nenu meeku design options, available products list, lead times, pricing and address estimations details explain cheyagalanu. Meeru ordered items tracking and ratings submit options select cheyalante navbar menu lo 'Orders' page checks link verify cheyochu. Ee roju em wooden works lead plans details discuss chedham? TV units, uyyala, mesh doors, kitiki windows with glass, sofa sets, beds - edhaina adagandi!`;
+          return `Namaste andi! Welcome back! Ee roju em modular designs lera custom furniture models explore chestham? TV units, bed designs, pooja mandiralu, sofas combinations gurinchi adagandi!`;
         }
       }
 
@@ -384,18 +483,22 @@ Mee order status check cheyyali anukuntey, track link check cheyyandi:
         }
       }
 
-      // 3. PRICING & ESTIMATION
-      if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate')) {
+      // 3. PRICING & ESTIMATION / QUOTATIONS
+      if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
         if (useEnglish) {
-          return `Our pricing is highly customizable based on wood selection (premium Teak, Rosewood, Pine) and size. Feel free to contact our manager Nagaraju at +916281653998 for a detailed budget breakdown!`;
+          return `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.`;
         } else {
-          return `Maa custom wood designs build values and cost estimations custom wood sizing specifications, and wood type (Teak wood, Rosewood, Pine) select chesukune option batti adjust calculations chestham andi. Direct project manager, Nagaraju garini contact chesthe precise estimation metrics dynamic and simple ga calculations clear ga details provide chestharu. Mobile: +916281653998!`;
+          return `Maa custom wood designs build values, quotations lera cost estimations dynamic coordinates checks gurinchi direct project manager Mr. Nagaraju (+916281653998) garithoti direct ga coordinate check parameters call updates chesthe explain chestharu. Once quotes are confirmed orders direct submit parameters check sync chestham.`;
         }
       }
 
       // 4. TECHNICAL DEV AND SYSTEM ADMIN (Pavan Sai)
-      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai')) {
-        return `Website system updates, support, admin dashboard access logins lead issues and technical server setup controls direct dynamic updates support admin Pavan Sai handles coordinates. Phone: +919346325291!`;
+      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai') || query.includes('technical') || query.includes('support')) {
+        if (useEnglish) {
+          return `For product design details, technical specifications, website support, or admin dashboard logins, please contact Web Admin Pavan Sai at +919346325291.`;
+        } else {
+          return `Maa product design blueprints details, technical specifications, support questions, or website admin dashboard controls gurinchi direct tech lead Pavan Sai (+919346325291) contacts support key metrics resolve chestharu andi.`;
+        }
       }
 
       // 5. ADDRESS & LOCATION
@@ -676,7 +779,7 @@ Please review this order and provide availability and pricing details. Thank you
       ...prev,
       {
         sender: 'bot',
-        text: `Order Details received for "${selectedProduct}"! Sent to Admin Pavan Sai via WhatsApp successfully. Contact matching confirmations are processing.`
+        text: `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.\n\nThank you! Your order has been submitted successfully. Our team will contact you shortly.`
       }
     ]);
     
@@ -969,6 +1072,10 @@ Please review this order and provide availability and pricing details. Thank you
                         className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark placeholder-neutral-400 font-light"
                         placeholder="e.g., 6x6 feet double bed, Teak Wood frame, delivery to Alamuru..."
                       ></textarea>
+                    </div>
+
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
+                      ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
                     </div>
 
                     {orderSuccess && (
