@@ -291,7 +291,6 @@ export default function ClientWrapper() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [whatsappAdmin, setWhatsappAdmin] = useState('both');
 
   // Customer Order Tracking State
   const [trackPhone, setTrackPhone] = useState('');
@@ -1213,7 +1212,7 @@ Based on your room's style, here are some LD Interiors products that match beaut
   };
 
   // Handle WhatsApp Order Submit
-  const handleOrderSubmit = async (e) => {
+  const handleOrderSubmit = (e) => {
     e.preventDefault();
     setOrderSuccess(false);
 
@@ -1227,25 +1226,7 @@ Based on your room's style, here are some LD Interiors products that match beaut
     const productPrice = matchedProduct && matchedProduct.price ? matchedProduct.price : 0;
     const absoluteImageUrl = productImage ? (productImage.startsWith('http') ? productImage : `${window.location.origin}${productImage.startsWith('/') ? '' : '/'}${productImage}`) : '';
 
-    // Save order in the database
-    try {
-      await api.post('/orders', {
-        name: orderName.trim(),
-        phone: orderPhone.trim(),
-        product: selectedProduct,
-        imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.'
-      });
-      // Pre-fill tracking input with the order phone so they can track it immediately
-      setTrackPhone(orderPhone.trim());
-    } catch (err) {
-      console.error('Error saving order record to database:', err);
-    }
-
-    const adminGreeting = whatsappAdmin === 'nagaraju' ? 'Nagaraju' : whatsappAdmin === 'pavansai' ? 'Pavan Sai' : 'LD Interiors';
-    const whatsappMessage = `Hello ${adminGreeting}! I would like to place a design order/inquiry via LD Interiors & Furnitures website:
-
-*Customer Details:*
+    const baseMessageBody = `*Customer Details:*
 - Name: ${orderName.trim()}
 - Phone: ${orderPhone.trim()}
 
@@ -1256,19 +1237,30 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}- Customizations 
 
 Please review this order and provide availability and pricing details. Thank you!`;
 
-    const encodedMessage = encodeURIComponent(whatsappMessage);
-    
-    let whatsappUrl = '';
-    if (whatsappAdmin === 'nagaraju') {
-      whatsappUrl = `https://wa.me/916281653998?text=${encodedMessage}`;
-    } else if (whatsappAdmin === 'pavansai') {
-      whatsappUrl = `https://wa.me/919346325291?text=${encodedMessage}`;
-    } else {
-      whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-    }
-    
-    // Open WhatsApp URL
-    window.open(whatsappUrl, '_blank');
+    const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
+    const msgPavanSai = `Hello Pavan Sai Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
+
+    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+    const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
+
+    // Open BOTH windows synchronously to bypass popup blocker
+    window.open(waUrlNagaraju, '_blank');
+    window.open(waUrlPavanSai, '_blank');
+
+    // Save order in the database asynchronously in background
+    api.post('/orders', {
+      name: orderName.trim(),
+      phone: orderPhone.trim(),
+      product: selectedProduct,
+      imageUrl: absoluteImageUrl,
+      notes: orderNotes.trim() || 'No custom notes.'
+    }).then(() => {
+      // Pre-fill tracking input with the order phone so they can track it immediately
+      setTrackPhone(orderPhone.trim());
+    }).catch((err) => {
+      console.error('Error saving order record to database:', err);
+    });
+
     setOrderSuccess(true);
     
     // Add success confirmation to Chatbot log as well
@@ -1631,21 +1623,6 @@ Please review this order and provide availability and pricing details. Thank you
                       ></textarea>
                     </div>
 
-                    <div>
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                        Send WhatsApp Order To
-                      </label>
-                      <select
-                        value={whatsappAdmin}
-                        onChange={(e) => setWhatsappAdmin(e.target.value)}
-                        className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark font-light"
-                      >
-                        <option value="both">Both Admins (Choose in WhatsApp)</option>
-                        <option value="nagaraju">Nagaraju (Manager: +916281653998)</option>
-                        <option value="pavansai">Pavan Sai (Tech Admin: +919346325291)</option>
-                      </select>
-                    </div>
-
                     <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
                       ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
                     </div>
@@ -1663,7 +1640,7 @@ Please review this order and provide availability and pricing details. Thank you
                     >
                       <MessageCircle className="h-4 w-4" />
                       <span>
-                        {whatsappAdmin === 'nagaraju' ? 'Send Order to Nagaraju' : whatsappAdmin === 'pavansai' ? 'Send Order to Pavan Sai' : 'Send Order to WhatsApp'}
+                        Send Order to WhatsApp (Both Admins)
                       </span>
                     </button>
                   </form>

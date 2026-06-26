@@ -35,7 +35,6 @@ export default function ProductDetailPage() {
   const [orderPhone, setOrderPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [whatsappAdmin, setWhatsappAdmin] = useState('both');
 
   // Rating states
   const [userRating, setUserRating] = useState(0);
@@ -91,7 +90,7 @@ export default function ProductDetailPage() {
     setOrderPhone(savedPhone);
   }, [showOrderModal]);
 
-  const handleOrderSubmit = async (e) => {
+  const handleOrderSubmit = (e) => {
     e.preventDefault();
     
     // Save to localStorage to keep visitor info synced
@@ -101,23 +100,7 @@ export default function ProductDetailPage() {
 
     const absoluteImageUrl = product.image ? (product.image.startsWith('http') ? product.image : `${window.location.origin}${product.image.startsWith('/') ? '' : '/'}${product.image}`) : '';
 
-    // Save order in the database
-    try {
-      await api.post('/orders', {
-        name: orderName.trim(),
-        phone: orderPhone.trim(),
-        product: product.title,
-        imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.'
-      });
-    } catch (err) {
-      console.error('Error saving order record to database:', err);
-    }
-
-    const adminGreeting = whatsappAdmin === 'nagaraju' ? 'Nagaraju' : whatsappAdmin === 'pavansai' ? 'Pavan Sai' : 'LD Interiors';
-    const whatsappMessage = `Hello ${adminGreeting}! I would like to place an order/inquiry via LD Interiors & Furnitures:
-
-*Product Details:*
+    const baseMessageBody = `*Product Details:*
 - Name: ${product.title}
 - Category: ${product.category}
 - Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
@@ -127,18 +110,27 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 - Phone: ${orderPhone.trim()}
 - Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
 
-    const encodedMsg = encodeURIComponent(whatsappMessage);
-    
-    let whatsappUrl = '';
-    if (whatsappAdmin === 'nagaraju') {
-      whatsappUrl = `https://wa.me/916281653998?text=${encodedMsg}`;
-    } else if (whatsappAdmin === 'pavansai') {
-      whatsappUrl = `https://wa.me/919346325291?text=${encodedMsg}`;
-    } else {
-      whatsappUrl = `https://wa.me/?text=${encodedMsg}`;
-    }
-    
-    window.open(whatsappUrl, '_blank');
+    const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
+    const msgPavanSai = `Hello Pavan Sai Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
+
+    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+    const waUrlPavanSai = `https://wa.me/919346325291?text=${encodeURIComponent(msgPavanSai)}`;
+
+    // Open BOTH windows synchronously to bypass popup blocker
+    window.open(waUrlNagaraju, '_blank');
+    window.open(waUrlPavanSai, '_blank');
+
+    // Save order in the database asynchronously in background
+    api.post('/orders', {
+      name: orderName.trim(),
+      phone: orderPhone.trim(),
+      product: product.title,
+      imageUrl: absoluteImageUrl,
+      notes: orderNotes.trim() || 'No custom notes.'
+    }).catch((err) => {
+      console.error('Error saving order record to database:', err);
+    });
+
     setOrderSuccess(true);
     
     setTimeout(() => {
@@ -410,21 +402,6 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                 ></textarea>
               </div>
 
-              <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Send WhatsApp Order To
-                </label>
-                <select
-                  value={whatsappAdmin}
-                  onChange={(e) => setWhatsappAdmin(e.target.value)}
-                  className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                >
-                  <option value="both">Both Admins (Choose in WhatsApp)</option>
-                  <option value="nagaraju">Nagaraju (Manager: +916281653998)</option>
-                  <option value="pavansai">Pavan Sai (Tech Admin: +919346325291)</option>
-                </select>
-              </div>
-
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
                 ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
               </div>
@@ -442,7 +419,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
               >
                 <MessageCircle className="h-4 w-4" />
                 <span>
-                  {whatsappAdmin === 'nagaraju' ? 'Submit Order to Nagaraju' : whatsappAdmin === 'pavansai' ? 'Submit Order to Pavan Sai' : 'Submit Order to WhatsApp'}
+                  Submit Order to WhatsApp (Both Admins)
                 </span>
               </button>
             </form>
