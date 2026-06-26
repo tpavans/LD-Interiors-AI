@@ -87,7 +87,82 @@ const sendOrderEmail = async (order) => {
 
   const subject = `🔔 New Order: ${order.product} from ${order.name}`;
 
-  // 1. IF BREVO_API_KEY IS AVAILABLE, USE THE BREVO HTTP API (Never blocked by Render free tier)
+  // 1. IF RESEND_API_KEY IS AVAILABLE, USE THE RESEND HTTP API (Never blocked by Render free tier, instant activation)
+  if (process.env.RESEND_API_KEY) {
+    console.log('RESEND_API_KEY detected. Sending email via Resend HTTP API...');
+    
+    return new Promise((resolve, reject) => {
+      const data = JSON.stringify({
+        from: `${order.name} via LD Interiors <onboarding@resend.dev>`,
+        to: ['ldinteriors.in@gmail.com'],
+        subject: subject,
+        html: htmlContent
+      });
+
+      const options = {
+        hostname: 'api.resend.com',
+        port: 443,
+        path: '/emails',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Content-Length': data.length
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', async () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log('Order notification email sent successfully via Resend! Response:', body);
+            // Log success to MongoDB
+            await EmailLog.create({
+              orderId: order._id,
+              product: order.product,
+              recipient: 'ldinteriors.in@gmail.com',
+              status: 'success',
+              smtpUser: 'Resend API',
+            }).catch(err => console.error('Failed to save EmailLog:', err));
+            resolve();
+          } else {
+            const errMessage = `Resend API returned status ${res.statusCode}: ${body}`;
+            console.error(errMessage);
+            // Log failure to MongoDB
+            await EmailLog.create({
+              orderId: order._id,
+              product: order.product,
+              recipient: 'ldinteriors.in@gmail.com',
+              status: 'failed',
+              error: errMessage,
+              smtpUser: 'Resend API',
+            }).catch(err => console.error('Failed to save EmailLog:', err));
+            reject(new Error(errMessage));
+          }
+        });
+      });
+
+      req.on('error', async (err) => {
+        console.error('Resend HTTP request failed:', err.message);
+        // Log failure to MongoDB
+        await EmailLog.create({
+          orderId: order._id,
+          product: order.product,
+          recipient: 'ldinteriors.in@gmail.com',
+          status: 'failed',
+          error: err.message,
+          smtpUser: 'Resend API',
+        }).catch(logErr => console.error('Failed to save EmailLog:', logErr));
+        reject(err);
+      });
+
+      req.write(data);
+      req.end();
+    });
+  }
+
+  // 2. IF BREVO_API_KEY IS AVAILABLE, USE THE BREVO HTTP API (Never blocked by Render free tier)
   if (process.env.BREVO_API_KEY) {
     console.log('BREVO_API_KEY detected. Sending email via Brevo HTTP API...');
     
@@ -165,7 +240,7 @@ const sendOrderEmail = async (order) => {
     });
   }
 
-  // 2. FALLBACK TO SMTP (Localhost or other servers where SMTP is unblocked)
+  // 3. FALLBACK TO SMTP (Localhost or other servers where SMTP is unblocked)
   let transporter;
   const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
 
