@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2 } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
@@ -24,6 +24,266 @@ export default function ClientWrapper() {
 
   // Live Database Products State for RAG Search
   const [dbProducts, setDbProducts] = useState([]);
+
+  // Stateful Conversational Workflow Machine State
+  const [workflowState, setWorkflowState] = useState({
+    type: 'idle', // 'idle', 'interior', 'custom', 'order'
+    step: 0,
+    lang: 'en',
+    collected: {},
+    awaitingConfirmation: false
+  });
+
+  const fileInputRef = useRef(null);
+
+  const INTERIOR_STEPS = [
+    { field: 'room', question: 'Which room or space are we designing (e.g. Living room, Bedroom, Kitchen)?' },
+    { field: 'dimensions', question: 'What are the room dimensions?' },
+    { field: 'budget', question: 'What is your approximate budget?' },
+    { field: 'style', question: 'Do you have a preferred design style (e.g. Modern, Traditional, Minimalist)?' },
+    { field: 'colors', question: 'What are your preferred colors?' },
+    { field: 'location', question: 'What is your location?' },
+    { field: 'timeline', question: 'What is your preferred timeline for completion?' }
+  ];
+
+  const CUSTOM_STEPS = [
+    { field: 'furnitureType', question: 'What type of furniture do you want to customize (e.g. Sofa, Bed, Wardrobe, Temple, Gummam)?' },
+    { field: 'length', question: 'What is the preferred length of the furniture?' },
+    { field: 'width', question: 'What is the preferred width?' },
+    { field: 'height', question: 'What is the preferred height?' },
+    { field: 'material', question: 'What material would you like to use (e.g. Premium Teak Wood, Plywood)?' },
+    { field: 'finish', question: 'What finish do you prefer (e.g. Matte, Glossy PU, Melamine)?' },
+    { field: 'color', question: 'What color do you want?' },
+    { field: 'timeline', question: 'What is your preferred timeline for delivery?' },
+    { field: 'specialRequirements', question: 'Any special requirements or notes?' },
+    { field: 'budget', question: 'What is your approximate budget?' }
+  ];
+
+  const ORDER_STEPS = [
+    { field: 'product', question: 'Which product or design would you like to order?' },
+    { field: 'name', question: 'Could you please confirm your name?' },
+    { field: 'phone', question: 'Could you please confirm your mobile number?' },
+    { field: 'address', question: 'What is your Address?' },
+    { field: 'city', question: 'What is your City?' },
+    { field: 'pincode', question: 'What is your Pincode?' },
+    { field: 'deliveryAddress', question: 'What is the Delivery Address?' },
+    { field: 'deliveryDate', question: 'What is your Preferred Delivery Date (YYYY-MM-DD)?' },
+    { field: 'customization', question: 'Any customizations or special comments?' },
+    { field: 'quantity', question: 'What quantity do you need?' }
+  ];
+
+  const detectLanguageStyle = (inputText) => {
+    const query = inputText.toLowerCase().trim();
+    const teluguPattern = /[\u0c00-\u0c7f]/;
+    if (teluguPattern.test(query)) return 'te';
+    
+    const teluguWords = [
+      'unndi', 'unnda', 'unai', 'unnai', 'kavali', 'kaavali', 'yentha', 'entha', 'dhara', 'ekada', 'ekkada', 
+      'bhagundi', 'meeru', 'mee', 'order', 'status', 'garu', 'namaste', 'dhanyavaadalu', 'chudali', 'chudu',
+      'ఉందా', 'ఉన్నాయి', 'కావాలి', 'చూపించు', 'చెప్పు', 'ఏమేమి', 'లిస్ట్', 'ప్రొడక్ట్స్', 'కలప'
+    ];
+    const isTanglish = teluguWords.some(w => query.includes(w));
+    return isTanglish ? 'tan' : 'en';
+  };
+
+  const getQuestionText = (field, lang) => {
+    const translations = {
+      room: {
+        en: 'Which room or space are we designing (e.g. Living room, Bedroom, Kitchen)?',
+        te: 'మనం ఏ గది లేదా స్థలాన్ని డిజైన్ చేస్తున్నాము (ఉదాహరణకు: లివింగ్ రూమ్, బెడ్‌రూమ్, కిచెన్)?',
+        tan: 'Manam ఏ room leda space design chesthunnam (e.g., Living room, Bedroom, Kitchen)?'
+      },
+      dimensions: {
+        en: 'What are the room dimensions (e.g. 10x12 feet)?',
+        te: 'గది కొలతలు ఎంత (ఉదాహరణకు: 10x12 అడుగులు)?',
+        tan: 'Room dimensions entha (e.g., 10x12 feet)?'
+      },
+      budget: {
+        en: 'What is your approximate budget?',
+        te: 'మీ అంచనా బడ్జెట్ ఎంత?',
+        tan: 'Mee approximate budget entha?'
+      },
+      style: {
+        en: 'Do you have a preferred design style (e.g. Modern, Traditional, Minimalist)?',
+        te: 'మీకు నచ్చిన డిజైన్ శైలి ఉందా (ఉదాహరణకు: మోడ్రన్, సాంప్రదాయ, మినిమలిస్ట్)?',
+        tan: 'Mee preferred design style entha (e.g., Modern, Traditional, Minimalist)?'
+      },
+      colors: {
+        en: 'What are your preferred colors?',
+        te: 'మీరు ఏ రంగులను ఇష్టపడుతున్నారు?',
+        tan: 'Mee preferred colors entha?'
+      },
+      location: {
+        en: 'What is your location?',
+        te: 'మీరు ఏ ప్రాంతం నుండి మాట్లాడుతున్నారు?',
+        tan: 'Mee location ekkada?'
+      },
+      timeline: {
+        en: 'What is your preferred timeline for completion (e.g. 1 month)?',
+        te: 'పని పూర్తి కావడానికి మీ గడువు ఎంత (ఉదాహరణకు: 1 నెల)?',
+        tan: 'Mee timeline target entha time lo complete kavalani (e.g., 1 month)?'
+      },
+      furnitureType: {
+        en: 'What type of furniture do you want to customize (e.g. Sofa, Bed, Wardrobe, Pooja Temple, Main Door Frame)?',
+        te: 'మీరు ఏ రకమైన ఫర్నిచర్‌ను అనుకూలీకరించాలనుకుంటున్నారు (ఉదాహరణకు: సోఫా, మంచం, పూజా మందిరం)?',
+        tan: 'Manam ఏ type of furniture design customize cheyyali (e.g. Sofa, Bed, Wardrobe, Pooja Mandiram)?'
+      },
+      length: {
+        en: 'What is the preferred length of the furniture?',
+        te: 'ఫర్నిచర్ యొక్క పొడవు ఎంత ఉండాలి?',
+        tan: 'Furniture length (podaavu) entha kavali?'
+      },
+      width: {
+        en: 'What is the preferred width?',
+        te: 'వెడల్పు ఎంత ఉండాలి?',
+        tan: 'Furniture width (vedalpu) entha kavali?'
+      },
+      height: {
+        en: 'What is the preferred height?',
+        te: 'ఎత్తు ఎంత ఉండాలి?',
+        tan: 'Furniture height (etthu) entha kavali?'
+      },
+      material: {
+        en: 'What material would you like to use (e.g. Premium Teak Wood, Plywood)?',
+        te: 'మీరు ఏ రకమైన మెటీరియల్ ఉపయోగించాలనుకుంటున్నారు (ఉదాహరణకు: టేకు కలప, ప్లైవుడ్)?',
+        tan: 'Wood details lo ఏ material use cheyyali (e.g. Premium Teak Wood, Plywood)?'
+      },
+      finish: {
+        en: 'What finish do you prefer (e.g. Matte, Glossy PU, Melamine)?',
+        te: 'మీకు ఎలాంటి ఫినిషింగ్ కావాలి (ఉదాహరణకు: మ్యాట్, గ్లోసీ)?',
+        tan: 'Mee preferred finish type entha (e.g. Matte, Glossy PU, Melamine)?'
+      },
+      color: {
+        en: 'What color do you prefer?',
+        te: 'మీరు ఏ రంగును కోరుకుంటున్నారు?',
+        tan: 'Mee preferred color entha?'
+      },
+      specialRequirements: {
+        en: 'Do you have any special requirements or notes?',
+        te: 'మీకు ఏవైనా ప్రత్యేక అవసరాలు లేదా గమనికలు ఉన్నాయా?',
+        tan: 'Inka emaina special requirements lera design customizations kavala?'
+      },
+      product: {
+        en: 'Which product or design would you like to order?',
+        te: 'మీరు ఏ ప్రొడక్ట్ లేదా డిజైన్‌ను ఆర్డర్ చేయాలనుకుంటున్నారు?',
+        tan: 'Mee order cheyyali anukuntunna product / design name cheppandi?'
+      },
+      name: {
+        en: 'Could you please confirm your name?',
+        te: 'దయచేసి మీ పేరును నిర్ధారించండి?',
+        tan: 'Dayachesi mee Name confirm cheyyandi?'
+      },
+      phone: {
+        en: 'Could you please confirm your mobile number?',
+        te: 'దయచేసి మీ మొబైల్ నంబర్‌ను నిర్ధారించండి?',
+        tan: 'Dayachesi mee mobile number confirm cheyyandi?'
+      },
+      address: {
+        en: 'What is your Address?',
+        te: 'మీ చిరునామా (Address) ఏమిటి?',
+        tan: 'Mee Address details cheppandi?'
+      },
+      city: {
+        en: 'What is your City?',
+        te: 'మీ నగరం (City) ఏమిటి?',
+        tan: 'Mee City details cheppandi?'
+      },
+      pincode: {
+        en: 'What is your Pincode?',
+        te: 'మీ పిన్‌కోడ్ (Pincode) ఏమిటి?',
+        tan: 'Mee Pincode number entha?'
+      },
+      deliveryAddress: {
+        en: 'What is the Delivery Address?',
+        te: 'డెలివరీ చిరునామా (Delivery Address) ఏమిటి?',
+        tan: 'Mee Delivery Address details cheppandi?'
+      },
+      deliveryDate: {
+        en: 'What is your Preferred Delivery Date (YYYY-MM-DD)?',
+        te: 'మీరు కోరుకునే డెలివరీ తేదీ ఏది (YYYY-MM-DD)?',
+        tan: 'Mee preferred delivery date eppudu kavali (YYYY-MM-DD)?'
+      },
+      customization: {
+        en: 'Any customizations or comments?',
+        te: 'ఏదైనా కస్టమైజేషన్ లేదా గమనికలు ఉన్నాయా?',
+        tan: 'Mee details adjustments customizations details emaina unnaya?'
+      },
+      quantity: {
+        en: 'What quantity do you need?',
+        te: 'మీకు ఎన్ని కావాలి (పరిమాణం)?',
+        tan: 'Enni items quantity kavali?'
+      }
+    };
+    return translations[field]?.[lang] || translations[field]?.['en'] || '';
+  };
+
+  const findNextEmptyStep = (steps, collected) => {
+    return steps.findIndex(s => !collected[s.field] || String(collected[s.field]).trim() === '');
+  };
+
+  const formatProductDetails = (item, lang) => {
+    const title = item.title;
+    const desc = item.description || 'Premium custom design crafted to perfection.';
+    
+    let material = 'First-Quality Teak Wood (Vayasina Teku Balla)';
+    let finish = 'Melamine Matte / Glossy Polish';
+    let colors = 'Natural Teak, Golden Oak, Dark Walnut';
+    let dimensions = 'Customizable as per space';
+    let availability = 'Built to Order (10-15 Days)';
+    
+    const titleLower = title.toLowerCase();
+    const catLower = item.category.toLowerCase();
+    
+    if (titleLower.includes('sofa') || catLower.includes('sofa')) {
+      material = 'High-Density Foam & Premium upholstery fabric / Teak Wood frame';
+      finish = 'Fabric Matte Finish';
+      colors = 'Grey, Beige, Blue, Custom Fabric Selections';
+      dimensions = 'Custom Sectional / L-Shape dimensions';
+    } else if (titleLower.includes('bed') || catLower.includes('bed') || catLower.includes('bedroom')) {
+      material = 'Premium Teak Wood (Mettu Teak)';
+      finish = 'Natural Polish / PU Paint';
+      colors = 'Teak Wood Natural, Rosewood Finish';
+      dimensions = 'King Size (72x75 inches) or Custom';
+    } else if (titleLower.includes('kitchen') || catLower.includes('kitchen')) {
+      material = 'Marine Grade Boiling Water Resistant (BWR) Plywood';
+      finish = 'Acrylic / High-Gloss Laminate';
+      colors = 'Dual Tone, Grey & White, Wooden Textured';
+      dimensions = 'Modular as per kitchen layout';
+    } else if (titleLower.includes('wardrobe') || catLower.includes('wardrobe')) {
+      material = 'High-Quality Engineered Wood / Plywood';
+      finish = 'Laminate / Glass sliding doors';
+      colors = 'White Glossy, Wooden Laminate, Dark Oak';
+      dimensions = 'Custom height and width';
+    } else if (titleLower.includes('mandiram') || titleLower.includes('temple') || titleLower.includes('pooja')) {
+      material = 'Pure Teak Wood (Teak Balla)';
+      finish = 'Hand-carved Melamine Glossy Polish';
+      colors = 'Traditional Teak Red / Natural Honey';
+      dimensions = 'Customizable (e.g., 3x2x4 feet)';
+    }
+
+    const priceStr = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Quotation';
+    
+    if (lang === 'te') {
+      return `📦 **${title}**
+- **వివరణ**: ${desc}
+- **మెటీరియల్**: ${material}
+- **ఫినిషింగ్**: ${finish}
+- **రంగులు**: ${colors}
+- **కొలతలు**: ${dimensions}
+- **లభ్యత**: ${availability}
+- **ధర**: ${priceStr}`;
+    } else {
+      return `📦 **${title}**
+- **Description**: ${desc}
+- **Material**: ${material}
+- **Finish**: ${finish}
+- **Available Colors**: ${colors}
+- **Dimensions**: ${dimensions}
+- **Availability**: ${availability}
+- **Price**: ${priceStr}`;
+    }
+  };
+
   
   // WhatsApp Order Form State
   const [orderName, setOrderName] = useState('');
@@ -62,9 +322,7 @@ You can browse our products, explore our latest designs, ask questions, or even 
 How can I help you today?`;
       sessionStorage.setItem('ld_welcomed', 'true');
     } else {
-      welcomeText = savedName 
-        ? `Welcome back, ${savedName}Garu! What would you like to explore today?`
-        : `Welcome back! What would you like to explore today?`;
+      welcomeText = `Welcome back! What would you like to explore today?`;
     }
 
     setMessages([
@@ -139,7 +397,7 @@ How can I help you today?`;
     setMessages([
       {
         sender: 'bot',
-        text: `👋 Welcome to LD Interiors & Furniture, ${userName.trim()}Garu!
+        text: `👋 Welcome to LD Interiors & Furniture!
 
 We're delighted to have you here.
 
@@ -154,6 +412,7 @@ How can I help you today?`
   };
 
   const speakMessage = (text, isTelugu = false) => {
+    if (!isChatOpen) return;
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
@@ -195,12 +454,14 @@ How can I help you today?`
                  name.includes('moira') || 
                  name.includes('tessa') || 
                  name.includes('veena') ||
-                 name.includes('priya');
+                 name.includes('priya') ||
+                 name.includes('swara') ||
+                 name.includes('neerja');
         };
         
         if (isTelugu) {
           // Look for Telugu voice first
-          selectedVoice = voices.find(v => v.lang.startsWith('te'));
+          selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemaleVoice(v)) || voices.find(v => v.lang.startsWith('te'));
           if (selectedVoice) {
             utterance.lang = 'te-IN';
             utterance.voice = selectedVoice;
@@ -239,7 +500,13 @@ How can I help you today?`
 
   useEffect(() => {
     if (isChatOpen) {
-      speakMessage("Welcome to LD Interiors and Furniture", false);
+      const welcomed = sessionStorage.getItem('ld_welcomed_speak');
+      if (!welcomed) {
+        speakMessage("Welcome to LD Interiors and Furniture! We are delighted to have you here. How can I help you today?", false);
+        sessionStorage.setItem('ld_welcomed_speak', 'true');
+      } else {
+        speakMessage("Welcome back! What would you like to explore today?", false);
+      }
     } else {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -261,400 +528,569 @@ How can I help you today?`
     return !teluguWords.some(w => query.includes(w));
   };
 
-  // Bot response logic based on RAG query matching and keyword mapping (Telugu & English)
-  const getBotResponse = (input) => {
+  // Bot response logic based on RAG query matching and keyword mapping (Telugu, English & Tanglish)
+  const getBotResponse = (input, currentWorkflow) => {
     const query = input.toLowerCase().trim();
     const useEnglish = checkIsEnglishQuery(input);
+    const langStyle = detectLanguageStyle(input);
     let matchedProductTitle = null;
 
-    // Detect matched product title
-    if (query.includes('swing') || query.includes('uyyala') || query.includes('ఉయ్యాల')) {
-      matchedProductTitle = "Teak Wood Baby Swing";
-    } else if (query.includes('sofa') || query.includes('సోఫా')) {
-      matchedProductTitle = "Custom Sofa Sectional Layout";
-    } else if (query.includes('bed') || query.includes('మంచం')) {
-      matchedProductTitle = "Custom Bedroom/Wardrobe Furniture";
-    } else if (query.includes('door') || query.includes('తలుపు')) {
-      matchedProductTitle = "Custom Teak Carved Entrance Door";
-    } else if (query.includes('mandiram') || query.includes('mandiralu') || query.includes('temple') || query.includes('pooja') || query.includes('devudi') || query.includes('మండపం') || query.includes('గుడి')) {
-      matchedProductTitle = "Custom Devudi Mandiram (Pooja Temple)";
-    } else if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
-      matchedProductTitle = "Custom Teak Gummam (Main Door Frame)";
-    } else if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
-      matchedProductTitle = "Custom Teak Dressing Table with Mirror";
-    } else {
+    // Detect matched product title for action button
+    const findMatchedProduct = () => {
+      if (query.includes('swing') || query.includes('uyyala') || query.includes('ఉయ్యాల')) {
+        return "Teak Wood Baby Swing";
+      } else if (query.includes('sofa') || query.includes('సోఫా')) {
+        return "Custom Sofa Sectional Layout";
+      } else if (query.includes('bed') || query.includes('మంచం')) {
+        return "Custom Bedroom/Wardrobe Furniture";
+      } else if (query.includes('door') || query.includes('తలుపు')) {
+        return "Custom Teak Carved Entrance Door";
+      } else if (query.includes('mandiram') || query.includes('mandiralu') || query.includes('temple') || query.includes('pooja') || query.includes('devudi') || query.includes('మండపం') || query.includes('గుడి')) {
+        return "Custom Devudi Mandiram (Pooja Temple)";
+      } else if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
+        return "Custom Teak Gummam (Main Door Frame)";
+      } else if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
+        return "Custom Teak Dressing Table with Mirror";
+      }
       const matched = dbProducts.find(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
-      if (matched) {
-        matchedProductTitle = matched.title;
+      return matched ? matched.title : null;
+    };
+    
+    matchedProductTitle = findMatchedProduct();
+
+    // ----------------------------------------------------
+    // WORKFLOW STATE MACHINE
+    // ----------------------------------------------------
+    if (currentWorkflow && currentWorkflow.type !== 'idle') {
+      const { type, step, lang, collected, awaitingConfirmation } = currentWorkflow;
+
+      // Handle Order / Custom Confirmation Step
+      if (awaitingConfirmation) {
+        const isYes = query.includes('yes') || query.includes('confirm') || query.includes('avunu') || query.includes('okay') || query.includes('ok') || query.includes('yes close') || query.includes('avunu andi') || query.includes('అవును');
+        if (isYes) {
+          // Trigger backend function submitOrder()
+          const submitWorkflowOrder = async () => {
+            try {
+              const matchedProduct = dbProducts.find(p => p.title === (collected.product || collected.furnitureType));
+              const productImage = matchedProduct ? matchedProduct.image : '';
+              const absoluteImageUrl = productImage ? (productImage.startsWith('http') ? productImage : `${window.location.origin}${productImage.startsWith('/') ? '' : '/'}${productImage}`) : '';
+
+              await api.post('/orders', {
+                name: (collected.name || localStorage.getItem('ld_user_name') || 'Guest').trim(),
+                phone: (collected.phone || localStorage.getItem('ld_user_phone') || '0000000000').trim(),
+                product: (collected.product || collected.furnitureType || 'Custom Furniture').trim(),
+                imageUrl: absoluteImageUrl,
+                notes: `Address: ${collected.address || ''}, City: ${collected.city || ''}, Pincode: ${collected.pincode || ''}. Custom details: Sizing: ${collected.length || ''}x${collected.width || ''}x${collected.height || ''}, Material: ${collected.material || ''}, Finish: ${collected.finish || ''}, Color: ${collected.color || ''}, Timeline: ${collected.timeline || ''}, Budget: ${collected.budget || ''}, Special: ${collected.specialRequirements || collected.customization || ''}`
+              });
+              // Refresh orders list
+              fetchTrackedOrders(collected.phone || localStorage.getItem('ld_user_phone'));
+            } catch (err) {
+              console.error('Error auto-submitting workflow order:', err);
+            }
+          };
+          submitWorkflowOrder();
+
+          const successText = lang === 'en'
+            ? `Thank you! Your order has been submitted successfully. Our team will contact you shortly.`
+            : lang === 'te'
+            ? `ధన్యవాదాలు! మీ ఆర్డర్ విజయవంతంగా సమర్పించబడింది. మా బృందం త్వరలో మిమ్మల్ని సంప్రదిస్తుంది.`
+            : `Thank you! Mee order successfully submit ayyindi andi. Ee pricing parameters checks coordinate cheyadaniki Mr. Nagaraju contact chestharu.`;
+
+          return {
+            text: successText,
+            nextState: { type: 'idle', step: 0, lang, collected: {}, awaitingConfirmation: false }
+          };
+        } else {
+          const cancelText = lang === 'en'
+            ? `Order cancelled. How else can I help you today?`
+            : lang === 'te'
+            ? `ఆర్డర్ రద్దు చేయబడింది. ఈ రోజు నేను మీకు ఎలా సహాయం చేయగలను?`
+            : `Order cancel chesam andi. Eeroju meeku inka ela sahaya padagalanu?`;
+
+          return {
+            text: cancelText,
+            nextState: { type: 'idle', step: 0, lang, collected: {}, awaitingConfirmation: false }
+          };
+        }
+      }
+
+      // Collect current answer
+      const steps = type === 'interior' ? INTERIOR_STEPS : type === 'custom' ? CUSTOM_STEPS : ORDER_STEPS;
+      const currentField = steps[step].field;
+      const updatedCollected = { ...collected, [currentField]: input };
+
+      // Find next empty step
+      const nextStepIdx = findNextEmptyStep(steps, updatedCollected);
+
+      if (nextStepIdx !== -1) {
+        const nextField = steps[nextStepIdx].field;
+        const question = getQuestionText(nextField, lang);
+        return {
+          text: question,
+          nextState: { type, step: nextStepIdx, lang, collected: updatedCollected }
+        };
+      } else {
+        // All fields filled! Perform final summary & confirmation
+        if (type === 'interior') {
+          // Recommend products based on room
+          const roomValue = (updatedCollected.room || '').toLowerCase();
+          let recommendations = [];
+          let recImages = [];
+          let recText = '';
+
+          if (roomValue.includes('kitchen') || roomValue.includes('వంట')) {
+            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+            recText = lang === 'en'
+              ? `We recommend checking out our Premium Modular Kitchen Cabinets.`
+              : lang === 'te'
+              ? `మా ప్రీమియం మోడ్యులర్ కిచెన్ క్యాబినెట్‌లను చూడాల్సిందిగా మేము సిఫార్సు చేస్తున్నాము.`
+              : `Maa Premium Modular Kitchen Cabinets models chudandi, chala baguntayi.`;
+          } else if (roomValue.includes('bedroom') || roomValue.includes('పడుకునే') || roomValue.includes('bed')) {
+            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed'));
+            recText = lang === 'en'
+              ? `We recommend our Classic Teak Wood Canopy Bed or Bespoke Walnut Wardrobes.`
+              : lang === 'te'
+              ? `మా క్లాసిక్ టేక్ వుడ్ పందిరి మంచం లేదా వాల్నట్ వార్డ్రోబ్‌లను మేము సిఫార్సు చేస్తున్నాము.`
+              : `Maa Classic Teak Wood Canopy Bed leda Walnut Wardrobes models try cheyyandi.`;
+          } else if (roomValue.includes('living') || roomValue.includes('hall') || roomValue.includes('sitting') || roomValue.includes('సోఫా')) {
+            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.category.toLowerCase().includes('living') || p.title.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('tv'));
+            recText = lang === 'en'
+              ? `We recommend our Premium Chesterfield Sofa or Floating Teak Wood TV Console.`
+              : lang === 'te'
+              ? `మా ప్రీమియం చెస్టర్‌ఫీల్డ్ సోఫా లేదా టేక్ వుడ్ టీవీ కన్సోల్‌ను మేము సిఫార్సు చేస్తున్నాము.`
+              : `Maa Premium Chesterfield Sofa set and TV Console select cheskondi, super looks untayi.`;
+          }
+
+          recImages = recommendations.slice(0, 2).map(r => r.image);
+
+          const summaryText = lang === 'en'
+            ? `Thank you for sharing your interior design requirements! Here is a summary:
+- **Room/Spaces**: ${updatedCollected.room}
+- **Dimensions**: ${updatedCollected.dimensions}
+- **Approximate Budget**: ${updatedCollected.budget}
+- **Style Preference**: ${updatedCollected.style}
+- **Colors**: ${updatedCollected.colors}
+- **Location**: ${updatedCollected.location}
+- **Timeline**: ${updatedCollected.timeline}
+
+${recText} We have shown matching products in the catalog below. Our team will contact you at your location shortly to finalize the consultations.`
+            : lang === 'te'
+            ? `మీ ఇంటీరియర్ డిజైన్ వివరాలు పంచుకున్నందుకు ధన్యవాదాలు! ఇక్కడ సారాంశం ఉంది:
+- **గది/స్థలం**: ${updatedCollected.room}
+- **కొలతలు**: ${updatedCollected.dimensions}
+- **అంచనా బడ్జెట్**: ${updatedCollected.budget}
+- **శైలి**: ${updatedCollected.style}
+- **రంగులు**: ${updatedCollected.colors}
+- **ప్రాంతం**: ${updatedCollected.location}
+- **గడువు**: ${updatedCollected.timeline}
+
+${recText} కింద ఉన్న మ్యాచ్ అయ్యే ప్రొడక్ట్స్‌ని చూడండి. పూర్తి వివరాల కోసం మా బృందం త్వరలోనే మిమ్మల్ని సంప్రదిస్తుంది.`
+            : `Mee interior design details share chesinanduku dhanyavaadalu! Summary details checks:
+- **Room/Space**: ${updatedCollected.room}
+- **Dimensions**: ${updatedCollected.dimensions}
+- **Budget**: ${updatedCollected.budget}
+- **Style Preference**: ${updatedCollected.style}
+- **Colors**: ${updatedCollected.colors}
+- **Location**: ${updatedCollected.location}
+- **Timeline**: ${updatedCollected.timeline}
+
+${recText} Kinda matching products details display chesam andi. Maa team mimalni consultation finalize cheyadaniki contact chestharu.`;
+
+          return {
+            text: summaryText,
+            images: recImages,
+            nextState: { type: 'idle', step: 0, lang, collected: {} }
+          };
+
+        } else if (type === 'custom') {
+          const summaryText = lang === 'en'
+            ? `Please review your custom furniture details:
+- **Furniture Type**: ${updatedCollected.furnitureType}
+- **Dimensions**: ${updatedCollected.length} (L) x ${updatedCollected.width} (W) x ${updatedCollected.height} (H)
+- **Material**: ${updatedCollected.material}
+- **Finish**: ${updatedCollected.finish}
+- **Color**: ${updatedCollected.color}
+- **Timeline**: ${updatedCollected.timeline}
+- **Budget**: ${updatedCollected.budget}
+- **Special Requirements**: ${updatedCollected.specialRequirements}
+
+Please review your order details. Would you like to confirm this order? (Type **yes** or **confirm**)`
+            : lang === 'te'
+            ? `దయచేసి మీ కస్టమ్ ఫర్నిచర్ వివరాలను సమీక్షించండి:
+- **ఫర్నిచర్ రకం**: ${updatedCollected.furnitureType}
+- **కొలతలు**: ${updatedCollected.length} (పొడవు) x ${updatedCollected.width} (వెడల్పు) x ${updatedCollected.height} (ఎత్తు)
+- **మెటీరియల్**: ${updatedCollected.material}
+- **フィニッシング**: ${updatedCollected.finish}
+- **రంగు**: ${updatedCollected.color}
+- **గడువు**: ${updatedCollected.timeline}
+- **బడ్జెట్**: ${updatedCollected.budget}
+- **ప్రత్యేక అవసరాలు**: ${updatedCollected.specialRequirements}
+
+దయచేసి మీ ఆర్డర్ వివరాలను సమీక్షించండి. మీరు ఈ ఆర్డర్‌ను ధృవీకరించాలనుకుంటున్నారా? (**అవును** లేదా **confirm** అని టైప్ చేయండి)`
+            : `Dayachesi mee custom furniture details review cheyyandi andi:
+- **Furniture Type**: ${updatedCollected.furnitureType}
+- **Dimensions**: ${updatedCollected.length} (Length) x ${updatedCollected.width} (Width) x ${updatedCollected.height} (Height)
+- **Material**: ${updatedCollected.material}
+- **Finish**: ${updatedCollected.finish}
+- **Color**: ${updatedCollected.color}
+- **Timeline**: ${updatedCollected.timeline}
+- **Budget**: ${updatedCollected.budget}
+- **Special Requirements**: ${updatedCollected.specialRequirements}
+
+Please review your order details. Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
+
+          return {
+            text: summaryText,
+            nextState: { type, step, lang, collected: updatedCollected, awaitingConfirmation: true }
+          };
+
+        } else if (type === 'order') {
+          const priceConfirmationAlert = lang === 'en'
+            ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`
+            : lang === 'te'
+            ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
+            : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`;
+
+          const summaryText = lang === 'en'
+            ? `Please review your order details:
+- **Product**: ${updatedCollected.product}
+- **Name**: ${updatedCollected.name}
+- **Phone**: ${updatedCollected.phone}
+- **Address**: ${updatedCollected.address}, ${updatedCollected.city}, ${updatedCollected.pincode}
+- **Delivery Address**: ${updatedCollected.deliveryAddress}
+- **Preferred Delivery Date**: ${updatedCollected.deliveryDate}
+- **Customizations**: ${updatedCollected.customization}
+- **Quantity**: ${updatedCollected.quantity}
+
+⚠️ **Price Confirmation**:
+${priceConfirmationAlert}
+
+Would you like to confirm this order? (Type **yes** or **confirm**)`
+            : lang === 'te'
+            ? `దయచేసి మీ ఆర్డర్ వివరాలను సమీక్షించండి:
+- **ప్రొడక్ట్**: ${updatedCollected.product}
+- **పేరు**: ${updatedCollected.name}
+- **ఫోన్**: ${updatedCollected.phone}
+- **చిరునామా**: ${updatedCollected.address}, ${updatedCollected.city}, ${updatedCollected.pincode}
+- **డెలివరీ చిరునామా**: ${updatedCollected.deliveryAddress}
+- **కోరుకున్న తేదీ**: ${updatedCollected.deliveryDate}
+- **కస్టమైజేషన్స్**: ${updatedCollected.customization}
+- **పరిమాణం**: ${updatedCollected.quantity}
+
+⚠️ **ధర ధృవీకరణ**:
+${priceConfirmationAlert}
+
+మీరు ఈ ఆర్డర్‌ను ధృవీకరించాలనుకుంటున్నారా? (**అవును** లేదా **confirm** అని టైప్ చేయండి)`
+            : `Dayachesi mee order details review cheyyandi andi:
+- **Product**: ${updatedCollected.product}
+- **Name**: ${updatedCollected.name}
+- **Phone**: ${updatedCollected.phone}
+- **Address**: ${updatedCollected.address}, ${updatedCollected.city}, ${updatedCollected.pincode}
+- **Delivery Address**: ${updatedCollected.deliveryAddress}
+- **Preferred Delivery Date**: ${updatedCollected.deliveryDate}
+- **Customizations**: ${updatedCollected.customization}
+- **Quantity**: ${updatedCollected.quantity}
+
+⚠️ **Price Confirmation**:
+${priceConfirmationAlert}
+
+Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
+
+          const matchedProd = dbProducts.find(p => p.title === updatedCollected.product);
+          const images = matchedProd ? [matchedProd.image] : [];
+
+          return {
+            text: summaryText,
+            images,
+            nextState: { type, step, lang, collected: updatedCollected, awaitingConfirmation: true }
+          };
+        }
       }
     }
 
-    const getPersonalizedHeader = () => {
-      const savedName = localStorage.getItem('ld_user_name') || userName || '';
-      const savedPhone = localStorage.getItem('ld_user_phone') || userPhone || '';
-      const registered = localStorage.getItem('ld_user_registered') || isRegistered;
+    // ----------------------------------------------------
+    // DETECT WORKFLOW INITIATIONS
+    // ----------------------------------------------------
+    const isInteriorTrigger = query.includes('interior') || query.includes('interiors') || query.includes('decor') || query.includes('consultation') || query.includes('డిజైన్') || query.includes('ఇంటీరియర్');
+    const isCustomTrigger = query.includes('custom') || query.includes('customise') || query.includes('customization') || query.includes('custom-made') || query.includes('carpenter design') || query.includes('కస్టమ్') || query.includes('కస్టమైజ్');
+    const isOrderTrigger = query.includes('buy') || query.includes('order') || query.includes('place order') || query.includes('need this furniture') || query.includes('want to buy') || query.includes('place this order') || query.includes('కొనాలి') || query.includes('ఆర్డర్');
 
-      if (!registered || !savedName) {
-        return useEnglish 
-          ? `👤 Visitor Status: Not Registered. Register first to view your order status.`
-          : `👤 Account Status: Register avaledhu andi. dayachesi registration complete cheyyandi.`;
+    if (isOrderTrigger) {
+      const initialCollected = {
+        product: matchedProductTitle || '',
+        name: localStorage.getItem('ld_user_name') || userName || '',
+        phone: localStorage.getItem('ld_user_phone') || userPhone || '',
+      };
+      const nextStepIdx = findNextEmptyStep(ORDER_STEPS, initialCollected);
+      if (nextStepIdx !== -1) {
+        const nextField = ORDER_STEPS[nextStepIdx].field;
+        const question = getQuestionText(nextField, langStyle);
+        return {
+          text: question,
+          nextState: { type: 'order', step: nextStepIdx, lang: langStyle, collected: initialCollected }
+        };
       }
+    }
 
-      if (trackedOrders && trackedOrders.length > 0) {
-        const orderSummary = trackedOrders.map(o => `*${o.product}* (Status: *${o.status}*)`).join(', ');
-        return useEnglish
-          ? `👤 Account: *${savedName}* (${savedPhone}) | Ordered Item(s): ${orderSummary}`
-          : `👤 Logged In: *${savedName}*Garu (${savedPhone}) | Mee order details: ${orderSummary}`;
-      } else {
-        return useEnglish
-          ? `👤 Account: *${savedName}* (${savedPhone}) | Ordered Item(s): No active orders`
-          : `👤 Logged In: *${savedName}*Garu (${savedPhone}) | Mee order details: Active orders levu`;
+    if (isCustomTrigger) {
+      const initialCollected = {
+        name: localStorage.getItem('ld_user_name') || userName || '',
+        phone: localStorage.getItem('ld_user_phone') || userPhone || '',
+      };
+      const nextStepIdx = findNextEmptyStep(CUSTOM_STEPS, initialCollected);
+      if (nextStepIdx !== -1) {
+        const nextField = CUSTOM_STEPS[nextStepIdx].field;
+        const question = getQuestionText(nextField, langStyle);
+        return {
+          text: question,
+          nextState: { type: 'custom', step: nextStepIdx, lang: langStyle, collected: initialCollected }
+        };
       }
-    };
+    }
 
-    const personalizedHeader = getPersonalizedHeader();
+    if (isInteriorTrigger) {
+      const initialCollected = {};
+      const nextStepIdx = findNextEmptyStep(INTERIOR_STEPS, initialCollected);
+      if (nextStepIdx !== -1) {
+        const nextField = INTERIOR_STEPS[nextStepIdx].field;
+        const question = getQuestionText(nextField, langStyle);
+        return {
+          text: question,
+          nextState: { type: 'interior', step: nextStepIdx, lang: langStyle, collected: initialCollected }
+        };
+      }
+    }
 
+    // ----------------------------------------------------
+    // BASE RESPONSES (NON-WORKFLOW)
+    // ----------------------------------------------------
     const getBaseResponse = () => {
-      // 0. SPECIAL DETECTOR FOR BABY SWING / UYYALA
-      if (query.includes('swing') || query.includes('uyyala') || query.includes('ఉయ్యాల')) {
-        if (useEnglish) {
-          return `Yes! We specialize in custom handcarved Teak Wood Baby Swings (Uyyala).
-- Material: Premium Teak Wood (Vayasina Teku Balla).
-- Customizations: Floral carvings, safety handles, adjustable chains, and baby-safe frames.
-- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-You can order it directly by clicking the button below!`;
-        } else {
-          return `Haa andi! Maa daggara custom-made Teak Wood Baby Swings (ఉయ్యాల/Uyyala) models available unnai.
-- Quality: First-quality Teak Wood thoti, safety bars handles and strong brass chains configurations chestham.
-- Sizing options customizable dynamically.
-- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-Mee order details custom checkout order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
-        }
+      // 1. PRICING & ESTIMATION / QUOTATIONS
+      if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
+        return langStyle === 'en'
+          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`
+          : langStyle === 'te'
+          ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
+          : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, I'll proceed with your order.`;
       }
 
-      // SPECIAL DETECTOR FOR DEVUDI MANDIRALU / POOJA TEMPLES
-      if (query.includes('mandiram') || query.includes('mandiralu') || query.includes('temple') || query.includes('pooja') || query.includes('devudi') || query.includes('మండపం') || query.includes('గుడి')) {
-        if (useEnglish) {
-          return `Yes! We design and craft premium custom Teak Wood Devudi Mandiralu (Pooja Temples).
-- Material: Premium hand-carved Teak Wood with exquisite Gopuram and pillar details.
-- Customizations: Storage drawers, brass bell attachments, LED backlighting, and custom partition shelves.
-- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-You can order it directly by clicking the button below!`;
-        } else {
-          return `Haa andi! Maa daggara custom-made Teak Wood Devudi Mandiralu (దేవుడి మందిరాలు/Pooja Temples) direct order customizations designs available unnai.
-- Quality: First-quality Teak Wood with traditional handcarved structures, brass bells, and storage drawers.
-- Sizing options customizable according to your pooja room dimensions.
-- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-Mee Pooja Mandiram order cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
-        }
+      // 2. CONTACT ROUTING FOR PAVAN SAI / TECHNICAL / DESIGNS
+      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai') || query.includes('technical') || query.includes('support') || query.includes('design information') || query.includes('product details')) {
+        return langStyle === 'en'
+          ? `For product design details, technical specifications, website support, or admin dashboard logins, please contact Web Admin Pavan Sai at +919346325291.`
+          : langStyle === 'te'
+          ? `డిజైన్ సమాచారం, సాంకేతిక ప్రశ్నలు మరియు వెబ్‌సైట్ సహాయం కోసం, దయచేసి పవన్ సాయి (+919346325291) గారిని సంప్రదించండి.`
+          : `Design details, website support lera technical questions kosam developer Pavan Sai (+919346325291) garithoti matladandi andi.`;
       }
 
-      // SPECIAL DETECTOR FOR GUMMALU / MAIN DOOR FRAMES
-      if (query.includes('gummalu') || query.includes('gummam') || query.includes('frame') || query.includes('frames') || query.includes('గుమ్మాలు') || query.includes('గుమ్మం')) {
-        if (useEnglish) {
-          return `Yes! We specialize in heavy-duty custom Teak Wood Gummalu (Main Door Frames).
-- Material: High-thickness Premium Teak Wood logs for robust security and lifetime durability.
-- Customizations: Custom carvings, traditional Vaastu measurements, and matching threshold (Gadapa) options.
-- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-You can order it directly by clicking the button below!`;
-        } else {
-          return `Haa andi! Maa daggara custom Teak Wood Gummalu (తలుపు గుమ్మాలు/Main Door Frames) ready chese option available undi.
-- Quality: Standard high-thickness Teak Wood frame structures, elegant Vaastu alignments structure designs.
-- Sizing options customizable depending on your house dimensions.
-- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-Mee custom Teak Gummam frame direct customize order submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
-        }
+      // 3. ADDRESS & LOCATION
+      if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
+        return langStyle === 'en'
+          ? `Our studio and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
+          : langStyle === 'te'
+          ? `మా స్టూడియో మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233.`
+          : `Maa studio workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
       }
 
-      // SPECIAL DETECTOR FOR DRESSING TABLES
-      if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
-        if (useEnglish) {
-          return `Yes! We specialize in custom Teak Wood Dressing Tables.
-- Material: Premium Teak Wood for a long-lasting elegant finish.
-- Customizations: Full-length LED mirrors, multiple storage drawers, soft-close sliders, and custom jewelry compartments.
-- Contact for pricing & sizes: Manager Nagaraju (+916281653998) or Web Admin Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-You can order it directly by clicking the button below!`;
-        } else {
-          return `Haa andi! Maa daggara custom-made Teak Wood Dressing Tables (మేకప్ బల్లలు/డ్రెస్సింగ్ టేబుల్స్) collections available unnai.
-- Quality: Top-grade Teak wood, premium glass mirrors, multiple drawers and designer knobs fittings specifications chestham.
-- Sizing options customizable according to your bedroom wall dimensions.
-- Contact Details: Manager Nagaraju (+916281653998) or Pavan Sai (+919346325291).
-- Workshop Address: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema.
-
-Mee custom Dressing Table order parameters submit cheyadaniki kinda 'Order Now' button tap cheyandi andi!`;
-        }
-      }
-
-      // SPECIAL INTERIOR DESIGN CONSULTATION DETECTOR
-      if (query.includes('interior') || query.includes('interiors') || query.includes('decor') || query.includes('consultation')) {
-        if (useEnglish) {
-          return `I would love to help you plan your home interiors! To give you the best design recommendations, could you share details on:
-- Which room or spaces are we designing?
-- What are the room dimensions?
-- Do you have a preferred style or color palette?
-- What is your approximate timeline and budget?
-- What is your location?`;
-        } else {
-          return `Haa andi! Complete home interiors design estimations and layouts suggestions coordinate chestham andi. Meeru precise details coordinate selections suggest cheyalante:
-- ఏ room leda space design options customizations chesthunnaru?
-- Sizing specifications dimensions entha andi?
-- timelines and budget preferences selections details checks explain updates calls coordinate direct ga share cheyyandi!`;
-        }
-      }
-
-      // SPECIAL CUSTOM FURNITURE DETECTOR
-      if (query.includes('custom') || query.includes('customise') || query.includes('customization') || query.includes('custom-made')) {
-        if (useEnglish) {
-          return `We specialize in 100% custom-made Teak Wood designs! To submit a custom woodwork request, please share:
-- Your Name & Mobile Number
-- Furniture Type (Sofa, Bed, Wardrobe, Temple, Gummam, etc.)
-- Sizing specifications (Length, Width, Height)
-- Preferred Material, Wood finish & Color
-- Timeline & Budget range
-We will confirm these details before submitting your request to Admin Pavan Sai.`;
-        } else {
-          return `Maa carpentry workshop lo custom models 100% first-quality Teak wood, Vaastu measures matching designs specifications customizations chestham andi. Custom design order submittals checks:
-- Mee Name & Mobile details, Location details
-- Furniture type (Sofa, Bed, Wardrobe, Temple, Gummam, etc.)
-- Length, Width, and Height dimensions parameters estimations
-- Wood type, color palette, timeline and budget values details explain coordinates parameters share chesthe direct admin submit parameter calculations confirm coordinates updates synchronizations check chesthanu andi!`;
-        }
-      }
-
-      // 1. GREETINGS
-      if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hello assistant') || query.includes('hai')) {
-        if (useEnglish) {
-          return `Welcome back! What would you like to explore today? We can design modular kitchens, wardrobes, TV units, devudi mandiralu, sofas, beds, or custom furniture.`;
-        } else {
-          return `Namaste andi! Welcome back! Ee roju em modular designs lera custom furniture models explore chestham? TV units, bed designs, pooja mandiralu, sofas combinations gurinchi adagandi!`;
-        }
-      }
-
-      // 2. ORDER OR USER LOGIN CONTEXT INQUIRY
-      if (query.includes('my order') || query.includes('ordered') || query.includes('track') || query.includes('status') || query.includes('delivery') || query.includes('naa order') || query.includes('customer') || query.includes('login')) {
+      // 4. ORDER STATUS TRACKING
+      if (query.includes('my order') || query.includes('ordered') || query.includes('track') || query.includes('status') || query.includes('delivery') || query.includes('naa order')) {
         const savedName = localStorage.getItem('ld_user_name') || '';
         const savedPhone = localStorage.getItem('ld_user_phone') || '';
 
         if (savedName && savedPhone) {
-          // If we have active trackedOrders in state, display them
           if (trackedOrders && trackedOrders.length > 0) {
             const listString = trackedOrders.map(o => `- ${o.product}: Status is ${o.status}`).join('\n');
-            if (useEnglish) {
-              return `Hello ${savedName}! I checked your account details. Here is the status of your order(s):
-${listString}
-
-You can view full live progress timelines and submit rating feedback directly on our 'Orders' page in the top menu bar!`;
-            } else {
-              return `Namaste ${savedName} Garu! Mee details code checks. Meeru order chesina products status details ivi:
-${listString}
-
-Mee order status check cheyyali anukuntey, track link check cheyyandi:
-👉 https://ld-interiors-ai.vercel.app/orders`;
-            }
+            return langStyle === 'en'
+              ? `Hello ${savedName}! Here is the status of your order(s):\n${listString}\n\nYou can view full live progress timelines on our 'Orders' page.`
+              : langStyle === 'te'
+              ? `నమస్తే ${savedName} గారు! మీ ఆర్డర్ స్థితి వివరాలు:\n${listString}\n\nమీ ఆర్డర్ స్థితిని చెక్ చేయడానికి ట్రాక్ లింక్ చూడండి.`
+              : `Mee order status check cheyyali anukuntey track link check cheyyandi:\n👉 https://ld-interiors-ai.vercel.app/orders\n\n${listString}`;
           } else {
-            // No orders fetched yet, or none exist in DB
-            if (useEnglish) {
-              return `Hello ${savedName}! You are registered with phone number ${savedPhone}. I could not find any active orders for this number in our database yet. You can submit one via the 'Order Now' tab!`;
-            } else {
-              return `Namaste ${savedName} Garu! Meeru ${savedPhone} number thoti register ayyi unru, kani database checks lo active orders dhorakaledhu. Meeru product page design order buttons click chesi or 'Order Now' tab selections order submit cheyochu andi!`;
-            }
+            return langStyle === 'en'
+              ? `Hello ${savedName}! You are registered with phone number ${savedPhone}. I could not find any active orders for this number in our database yet.`
+              : langStyle === 'te'
+              ? `నమస్తే ${savedName} గారు! ఈ ఫోన్ నంబర్‌తో నమోదు చేయబడిన యాక్టివ్ ఆర్డర్‌లు ఏవీ లేవు.`
+              : `Namaste ${savedName} Garu! Mee number thoti register ayyi unru, kani database checks lo active orders dhorakaledhu.`;
           }
         } else {
-          // User not registered
-          if (useEnglish) {
-            return `Please enter your details in our visitor form first. Once registered, I will be able to search the database and tracking logs for your orders instantly!`;
-          } else {
-            return `Namaste! Dayachesi website entry user register detail modal complete cheyyandi. Register details sync complete calculations checks target updates tracks!`;
-          }
+          return langStyle === 'en'
+            ? `Please enter your details in our visitor form first. Once registered, I will be able to search the database and tracking logs for your orders instantly!`
+            : langStyle === 'te'
+            ? `దయచేసి మొదట మీ వివరాలను నమోదు చేయండి, అప్పుడు మీ ఆర్డర్ స్థితిని చూపించగలను.`
+            : `Namaste! Dayachesi website entry user register detail complete cheyyandi.`;
         }
       }
 
-      // 3. PRICING & ESTIMATION / QUOTATIONS
-      if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
-        if (useEnglish) {
-          return `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.`;
-        } else {
-          return `Maa custom wood designs build values, quotations lera cost estimations dynamic coordinates checks gurinchi direct project manager Mr. Nagaraju (+916281653998) garithoti direct ga coordinate check parameters call updates chesthe explain chestharu. Once quotes are confirmed orders direct submit parameters check sync chestham.`;
-        }
-      }
-
-      // 4. TECHNICAL DEV AND SYSTEM ADMIN (Pavan Sai)
-      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai') || query.includes('technical') || query.includes('support')) {
-        if (useEnglish) {
-          return `For product design details, technical specifications, website support, or admin dashboard logins, please contact Web Admin Pavan Sai at +919346325291.`;
-        } else {
-          return `Maa product design blueprints details, technical specifications, support questions, or website admin dashboard controls gurinchi direct tech lead Pavan Sai (+919346325291) contacts support key metrics resolve chestharu andi.`;
-        }
-      }
-
-      // 5. ADDRESS & LOCATION
-      if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
-        if (useEnglish) {
-          return `Our studio and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`;
-        } else {
-          return `Maa studio workshop details address andi: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema regional locations surroundings lo direct delivery installations setup clear ga provide chestham. Map directions guides direct ga explain chestham andi!`;
-        }
+      // 5. GREETINGS / HELLO
+      if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hai')) {
+        return langStyle === 'en'
+          ? `Welcome back! What would you like to explore today?`
+          : langStyle === 'te'
+          ? `నమస్తే! స్వాగతం. ఈ రోజు మీరు ఏమి అన్వేషించాలనుకుంటున్నారు?`
+          : `Welcome back! What would you like to explore today?`;
       }
 
       // 6. EXPERIENCE & TRUST
       if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
-        if (useEnglish) {
-          return `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`;
-        } else {
-          return `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
-        }
+        return langStyle === 'en'
+          ? `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`
+          : `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
       }
 
-      // 7. PRODUCT SEARCH & QUERY MATCHING (Telugu/English Synonyms mapping)
+      // 7. CATEGORY RAG DATABASE SEARCH
       const categorySynonyms = {
-        sofa: ['sofa', 'sofas', 'couch', 'సోఫా', 'సోఫాలు', 'కరుచూ', 'cushion'],
-        bed: ['bed', 'beds', 'wooden bed', 'మంచం', 'మంచాలు', 'బెడ్', 'డబుల్ బెడ్', 'మంచాల'],
-        table: ['table', 'tables', 'dining', 'slab', 'డైనింగ్', 'టేబుల్', 'బల్ల', 'బల్లలు'],
-        door: ['door', 'doors', 'entrance', 'తలుపు', 'తలుపులు', 'ద్వారం'],
-        window: ['window', 'windows', 'kitiki', 'కిటికీ', 'కిటికీలు'],
-        uyyala: ['uyyala', 'swing', 'swings', 'ఉయ్యాల', 'ఉయ్యాలలు'],
-        mesh: ['mesh', 'net', 'jalli', 'మెష్', 'జాలి', 'నెట్'],
-        tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'టెలివిజన్', 'tv console'],
-        polish: ['polish', 'varnish', 'పోలిష్', 'మెరుగు', 'పాలిష్'],
-        box: ['money box', 'hundi', 'పెట్టె', 'హుండీ', 'బాక్స్', 'మనీ బాక్స్'],
-        glass: ['glass', 'kitiki windowswith glases', 'గ్లాస్', 'అద్దం', 'అద్దాలు'],
-        office: ['office', 'desk', 'ఆఫీస్', 'డెస్క్'],
-        bathroom: ['bathroom', 'బాత్ రూమ్', 'బాత్', 'స్నానాల'],
-        kids: ['kids', 'child', 'పిల్లల', 'బంక్ బెడ్', 'bunk'],
-        mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'మండపాలు', 'గుడి', 'పూజ'],
-        gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం', 'గడప', 'gadapa'],
-        dressing: ['dressing', 'mirror', 'makeup', 'makeup table', 'makeup tables', 'dressing tables', 'dressing table', 'అద్దం బల్ల', 'డ్రెస్సింగ్', 'డ్రెస్సింగ్ టేబుల్']
+        tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'television', 'tv console', 'tv cabinets', 'entertainment'],
+        wardrobe: ['wardrobe', 'wardrobes', 'almirah', 'బీరువా', 'cupboard', 'cupboards'],
+        kitchen: ['kitchen', 'modular kitchen', 'వంటగది', 'kitchen cabinets'],
+        bedroom: ['bedroom', 'bed', 'wooden bed', 'మంచం', 'మంచాలు', 'bunk bed', 'double bed', 'canopy bed'],
+        office: ['office', 'desk', 'writing table', 'ఆఫీస్', 'office furniture', 'office desk'],
+        mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'పూజ మందిరం'],
+        gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం'],
+        dressing: ['dressing', 'mirror', 'makeup', 'డ్రెస్సింగ్', 'dressing table'],
+        swing: ['swing', 'uyyala', 'baby swing', 'ఉయ్యాల']
       };
 
-      // Determine if query matches any category synonyms
-      let matchedCategoryKey = null;
+      let matchedCat = null;
       for (const [catKey, keywords] of Object.entries(categorySynonyms)) {
         if (keywords.some(kw => query.includes(kw))) {
-          matchedCategoryKey = catKey;
+          matchedCat = catKey;
           break;
         }
       }
 
-      // Stop words to remove from search query
-      const stopWords = ['do', 'you', 'have', 'show', 'me', 'please', 'the', 'a', 'in', 'of', 'and', 'or', 'for', 'with', 'want', 'need', 'details', 'availability', 'any', 'is', 'are', 'what', 'give', 'how', 'many', 'కావాలి', 'ఉందా', 'ఉన్నాయి', 'చూపించు', 'చెప్పు', 'లిస్ట్', 'చేయండి', 'చేయి', 'గురించి', 'గూర్చి'];
-      const queryTokens = query
-        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
-        .split(/\s+/)
-        .filter(token => token.length > 1 && !stopWords.includes(token));
-
-      // General products listing inquiry
-      const generalKeywords = ['product', 'items', 'list', 'catalog', 'showcase', 'portfolio', 'stock', 'available', 'design', 'furniture', 'ఏమేమి', 'ఉన్నాయి', 'లిస్ట్', 'ప్రొడక్ట్స్', 'కలప', 'wood', 'all', 'designs'];
-      const isGeneralInquiry = generalKeywords.some(kw => query.includes(kw)) && !matchedCategoryKey;
-
-      if (matchedCategoryKey || queryTokens.length > 0) {
-        // Find matching items in live dbProducts
-        const matchedItems = dbProducts.filter(p => {
-          const titleLower = p.title.toLowerCase();
-          const catLower = p.category.toLowerCase();
-          const descLower = (p.description || '').toLowerCase();
-
-          // 1. Try category key matching
-          if (matchedCategoryKey) {
-            if (matchedCategoryKey === 'sofa' && (catLower.includes('sofa') || titleLower.includes('sofa') || titleLower.includes('couch'))) return true;
-            if (matchedCategoryKey === 'bed' && (catLower.includes('bed') || titleLower.includes('bed') || catLower.includes('bedroom'))) return true;
-            if (matchedCategoryKey === 'table' && (catLower.includes('table') || titleLower.includes('table') || titleLower.includes('dining') || catLower.includes('dining'))) return true;
-            if (matchedCategoryKey === 'door' && (catLower.includes('door') || titleLower.includes('door') || titleLower.includes('entrance') || catLower.includes('entrance'))) return true;
-            if (matchedCategoryKey === 'window' && (catLower.includes('window') || titleLower.includes('window') || catLower.includes('kitiki') || titleLower.includes('kitiki'))) return true;
-            if (matchedCategoryKey === 'uyyala' && (catLower.includes('uyyala') || titleLower.includes('uyyala') || titleLower.includes('swing') || catLower.includes('uyyala'))) return true;
-            if (matchedCategoryKey === 'mesh' && (catLower.includes('mesh') || titleLower.includes('mesh') || titleLower.includes('jalli') || titleLower.includes('net'))) return true;
-            if (matchedCategoryKey === 'tv' && (catLower.includes('tv') || titleLower.includes('tv') || titleLower.includes('unit') || catLower.includes('unit'))) return true;
-            if (matchedCategoryKey === 'polish' && (catLower.includes('polish') || titleLower.includes('polish') || titleLower.includes('varnish'))) return true;
-            if (matchedCategoryKey === 'box' && (catLower.includes('box') || titleLower.includes('money') || titleLower.includes('box') || titleLower.includes('hundi'))) return true;
-            if (matchedCategoryKey === 'glass' && (titleLower.includes('glass') || catLower.includes('glass') || titleLower.includes('glases'))) return true;
-            if (matchedCategoryKey === 'office' && (catLower.includes('office') || titleLower.includes('office') || titleLower.includes('desk'))) return true;
-            if (matchedCategoryKey === 'bathroom' && (catLower.includes('bathroom') || titleLower.includes('bathroom') || titleLower.includes('vanity'))) return true;
-            if (matchedCategoryKey === 'kids' && (catLower.includes('kids') || titleLower.includes('kids') || titleLower.includes('child') || titleLower.includes('bunk'))) return true;
-            if (matchedCategoryKey === 'mandiralu' && (catLower.includes('mandiralu') || catLower.includes('mandiram') || titleLower.includes('mandiram') || titleLower.includes('temple') || titleLower.includes('pooja') || titleLower.includes('devudi'))) return true;
-            if (matchedCategoryKey === 'gummalu' && (catLower.includes('gummalu') || catLower.includes('gummam') || titleLower.includes('gummam') || titleLower.includes('gummalu') || titleLower.includes('frame'))) return true;
-            if (matchedCategoryKey === 'dressing' && (catLower.includes('dressing') || catLower.includes('table') || titleLower.includes('dressing') || titleLower.includes('makeup') || titleLower.includes('mirror'))) return true;
+      if (matchedCat) {
+        // Query matching items in database
+        let items = [];
+        let similarRec = '';
+        if (matchedCat === 'tv') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
+          similarRec = langStyle === 'en' 
+            ? "We also recommend styling it with: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend similar products: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage.";
+        } else if (matchedCat === 'wardrobe') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('bedroom') && p.title.toLowerCase().includes('wardrobe'));
+          if (items.length === 0) {
+            items = dbProducts.filter(p => p.title.toLowerCase().includes('wardrobe'));
           }
-
-          // 2. Try token matching on title, category, and description
-          return queryTokens.some(token => 
-            titleLower.includes(token) || 
-            catLower.includes(token) || 
-            descLower.includes(token)
-          );
-        });
-
-        if (matchedItems.length > 0) {
-          if (useEnglish) {
-            let response = `Yes, I searched our database and found the following matching items for you:\n\n`;
-            matchedItems.slice(0, 5).forEach((item, index) => {
-              const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
-              const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
-              response += `${index + 1}. *${item.title}*\n   - Category: ${item.category}\n   - Price: ${formattedPrice}\n   - Rating: ${stars} (${item.rating || 5}.0)\n\n`;
-            });
-            response += `We customize sizing and carvings details according to your space specs. Order directly using the 'Order Now' tab!`;
-            return response;
-          } else {
-            let response = `Haa andi, vetiki chusa! Mee query check chesa, database matching options dhorikayi. Chusi cheppandi:\n\n`;
-            matchedItems.slice(0, 5).forEach((item, index) => {
-              const formattedPrice = item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for Price';
-              const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
-              response += `${index + 1}. *${item.title}*\n   - Category: ${item.category}\n   - Price: ${formattedPrice}\n   - Rating: ${stars} (${item.rating || 5}.0)\n\n`;
-            });
-            response += `Maa daggara custom sizing and design carvings customizations ready chestham andi. Ee model direct order or query pattaniki 'Order Now' tab or WhatsApp direct coordinate andi!`;
-            return response;
-          }
-        } else if (matchedCategoryKey) {
-          // Synonym matched but database has no uploads
-          if (useEnglish) {
-            return `We make custom *${matchedCategoryKey.toUpperCase()}* designs at our workshop. However, we do not have matching catalogs uploaded in our database yet. Contact Nagaraju at +916281653998 for custom designs!`;
-          } else {
-            let response = `Maa workshop lo custom *${matchedCategoryKey.toUpperCase()}* collections ready designs details available unnai andi.\n\n`;
-            response += `Kani, database digital uploads lo current active matching lists levu clear ga. Custom measurements designs coordinate details and pricing lists direct ga constructor Nagaraju (+916281653998) coordinate updates call chesthe explain chestharu. Custom ga sizing parameters dynamically ready chestham andi!`;
-            return response;
-          }
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk.";
+        } else if (matchedCat === 'kitchen') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit.";
+        } else if (matchedCat === 'bedroom') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: వార్డ్‌రోబ్‌లు, బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers.";
+        } else if (matchedCat === 'office') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office') || p.title.toLowerCase().includes('desk'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Executive Chair, Bookshelf, side cabinet storage."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Executive Chair, Bookshelf, side cabinet storage.";
+        } else if (matchedCat === 'mandiralu') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Pooja stools, brass bells, customized drawers."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: పూజా పీటలు, ఇత్తడి గంటలు, అనుకూల డ్రాయర్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend similar items: Pooja stools, brass bells, customized drawers.";
+        } else if (matchedCat === 'gummalu') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Traditional carved threshold (Gadapa), matching main door."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Traditional carved threshold (Gadapa), matching main door.";
+        } else if (matchedCat === 'dressing') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('mirror'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Hairdryer holder, accessory organizers, side stool."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Hairdryer holder, accessory organizers, side stool.";
+        } else if (matchedCat === 'swing') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala') || p.title.toLowerCase().includes('swing') || p.title.toLowerCase().includes('uyyala'));
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ఇత్తడి గొలుసులు, రక్షణ కుషన్ ప్యాడ్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks.";
         }
-      }
 
-      if (isGeneralInquiry) {
-        if (useEnglish) {
-          return `I can show you catalog items for Living Room, Kitchen, Bedrooms, Sofas, Wooden Beds, Swings, Doors, Windows, and more. Use our designs page or ask me directly about any specific item!`;
+        if (items.length > 0) {
+          let listStr = '';
+          const images = items.map(it => it.image);
+          items.forEach(it => {
+            listStr += `${formatProductDetails(it, langStyle)}\n\n`;
+          });
+          listStr += `${similarRec}`;
+          return { text: listStr, images };
         } else {
-          return `Maa daggara Living Room, Kitchen, Bedrooms, Sofas, Wooden Beds, Swings, Doors, Windows modal collections catalogs details custom design unnai andi. Catalog check cheyyadaniki designs page chudandi, leda direct ga adagandi.`;
+          const noProductText = langStyle === 'en'
+            ? `We customize premium *${matchedCat.toUpperCase()}* designs at our workshop. Contact Nagaraju at +916281653998 for custom catalogs!`
+            : langStyle === 'te'
+            ? `మా వద్ద కస్టమ్ *${matchedCat.toUpperCase()}* డిజైన్‌లు అందుబాటులో ఉన్నాయి. వివరాల కోసం నాగరాజు గారిని (+916281653998) సంప్రదించండి.`
+            : `Maa workshop lo custom *${matchedCat.toUpperCase()}* designs build chestham andi. Details kosam contact Nagaraju (+916281653998).`;
+          return { text: noProductText, images: [] };
         }
       }
 
-      // DEFAULT RESPONSE
-      if (useEnglish) {
-        return `I received your message. You can query about custom carvings wood layouts, pricing estimates, workshop address, or order tracking status. 
+      // Default Response when no category matches
+      return langStyle === 'en'
+        ? {
+            text: `I received your message. You can query about custom carvings wood layouts, pricing estimates, workshop address, or order tracking status. 
 Contact info:
 - Carpenter Manager Nagaraju: +916281653998
 - Web Admin Pavan Sai: +919346325291
-Or go to the top navigation 'Orders' page to see your live order status timeline.`;
-      } else {
-        return `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs, address details, or order tracking updates gurinchi coordinates adagandi:
+Or go to the top navigation 'Orders' page to see your live order status timeline.`,
+            images: []
+          }
+        : langStyle === 'te'
+        ? {
+            text: `మీ సందేశం మాకు అందింది. కస్టమ్ చెక్క పనులు, ధరల అంచనా, మా వర్క్‌షాప్ చిరునామా లేదా ఆర్డర్ ట్రాకింగ్ వివరాల గురించి అడగండి:
+- మేనేజర్ నాగరాజు: +916281653998
+- వెబ్ అడ్మిన్ పవన్ సాయి: +919346325291`,
+            images: []
+          }
+        : {
+            text: `Namaste andi! Mee message received checks support team. Custom wood carvings estimates, item catalogs, address details, or order tracking updates gurinchi coordinates adagandi:
 - Manager Nagaraju (+916281653998)
 - Tech Admin Pavan Sai (+919346325291)
-Or website top navbar menu lo unna 'Orders' link click chesi live tracking and rating updates select cheyochu andi!`;
-      }
+Or website top navbar menu lo unna 'Orders' link click chesi live tracking and rating updates select cheyochu andi!`,
+            images: []
+          };
     };
 
-    return {
-      text: `${personalizedHeader}\n\n${getBaseResponse()}`,
-      productTitle: matchedProductTitle
-    };
+    const baseResponseObj = getBaseResponse();
+    
+    if (baseResponseObj.text) {
+      return {
+        text: baseResponseObj.text,
+        images: baseResponseObj.images || [],
+        productTitle: matchedProductTitle,
+        nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
+      };
+    } else {
+      return {
+        text: baseResponseObj,
+        images: [],
+        productTitle: matchedProductTitle,
+        nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
+      };
+    }
   };
 
   // Handle chat message submit
@@ -668,10 +1104,17 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
 
     // Simulate bot thinking and reply
     setTimeout(() => {
-      const replyObj = getBotResponse(userMsg);
+      const replyObj = getBotResponse(userMsg, workflowState);
+      
+      // Update workflow state
+      if (replyObj.nextState) {
+        setWorkflowState(replyObj.nextState);
+      }
+
       setMessages(prev => [...prev, { 
         sender: 'bot', 
         text: replyObj.text,
+        images: replyObj.images || [],
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
       
@@ -685,10 +1128,17 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
   const handleQuickPrompt = (promptText) => {
     setMessages(prev => [...prev, { sender: 'user', text: promptText }]);
     setTimeout(() => {
-      const replyObj = getBotResponse(promptText);
+      const replyObj = getBotResponse(promptText, workflowState);
+      
+      // Update workflow state
+      if (replyObj.nextState) {
+        setWorkflowState(replyObj.nextState);
+      }
+
       setMessages(prev => [...prev, { 
         sender: 'bot', 
         text: replyObj.text,
+        images: replyObj.images || [],
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
       
@@ -696,6 +1146,43 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       const isEnglish = checkIsEnglishQuery(promptText);
       speakMessage(replyObj.text, !isEnglish);
     }, 500);
+  };
+
+  // Simulated Room Image Upload Analysis
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const imageUrl = URL.createObjectURL(file);
+    setMessages(prev => [...prev, { sender: 'user', text: '📷 Uploaded a room image', image: imageUrl }]);
+
+    setTimeout(() => {
+      const analysisText = `🔍 **Room Image Analysis**:
+- **Room Type**: Living Room
+- **Furniture**: Sofa area & Accent wood panels
+- **Style**: Contemporary Modern
+- **Color**: Neutral Beige, Warm Oak
+- **Material**: Premium Solid Wood
+- **Space**: Spacious layout
+
+Based on your room's style, here are some LD Interiors products that match beautifully:`;
+
+      // Recommend sofa and tv console from dbProducts
+      const recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.category.toLowerCase().includes('tv') || p.category.toLowerCase().includes('living'));
+      const recImages = recommendations.slice(0, 2).map(r => r.image);
+      let recList = '';
+      recommendations.slice(0, 2).forEach(it => {
+        recList += `${formatProductDetails(it, 'en')}\n\n`;
+      });
+
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: `${analysisText}\n\n${recList}`,
+        images: recImages
+      }]);
+
+      speakMessage("I have analyzed your room image and recommended matching LD Interiors products.", false);
+    }, 1500);
   };
 
   async function fetchTrackedOrders(phoneToQuery) {
@@ -877,10 +1364,16 @@ Please review this order and provide availability and pricing details. Thank you
                     </div>
                     <div>
                       <h3 className="font-serif font-bold text-sm leading-none">LD Assistant</h3>
-                      <span className="text-[9px] text-wood-cream/70 font-light tracking-wide inline-flex items-center gap-1 mt-0.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                        Online • Conversational Search
-                      </span>
+                      {userName ? (
+                        <p className="text-[7.5px] text-wood-accent font-semibold tracking-wide mt-1">
+                          👤 Logged in as: {userName}
+                        </p>
+                      ) : (
+                        <span className="text-[9px] text-wood-cream/70 font-light tracking-wide inline-flex items-center gap-1 mt-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                          Online • Conversational Search
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -927,7 +1420,7 @@ Please review this order and provide availability and pricing details. Thank you
               {activeTab === 'chat' && (
                 <>
                   {/* Messages Body */}
-                  <div className="flex-grow overflow-y-auto p-4 bg-wood-beige/10 space-y-3">
+                  <div className="flex-grow overflow-y-auto p-4 bg-wood-beige/10 space-y-3 animate-fadeIn">
                     {messages.map((msg, index) => (
                       <div
                         key={index}
@@ -941,6 +1434,45 @@ Please review this order and provide availability and pricing details. Thank you
                           }`}
                         >
                           <div>{msg.text}</div>
+                          
+                          {/* User uploaded room image preview */}
+                          {msg.sender === 'user' && msg.image && (
+                            <img
+                              src={msg.image}
+                              alt="Uploaded room layout"
+                              className="mt-2.5 rounded-xl max-h-44 w-full object-cover border border-white/20 shadow-sm"
+                            />
+                          )}
+
+                          {/* Bot recommended designs gallery grid */}
+                          {msg.sender === 'bot' && msg.images && msg.images.length > 0 && (
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                              {msg.images.map((img, i) => (
+                                <div key={i} className="group relative rounded-xl overflow-hidden border border-wood-border/30 shadow-sm aspect-video bg-neutral-150">
+                                  <img
+                                    src={img}
+                                    alt="Product option"
+                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                  <div 
+                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 cursor-pointer"
+                                    onClick={() => {
+                                      const matched = dbProducts.find(p => p.image === img);
+                                      if (matched) {
+                                        setActiveTab('order');
+                                        setSelectedProduct(matched.title);
+                                      }
+                                    }}
+                                  >
+                                    <span className="text-[9px] font-bold text-white uppercase tracking-widest bg-wood-accent/90 py-1 px-2 rounded-lg">
+                                      Order
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           {msg.action && msg.action.type === 'order' && (
                             <button
                               onClick={() => {
@@ -982,7 +1514,22 @@ Please review this order and provide availability and pricing details. Thank you
                   </div>
 
                   {/* Chat Input Footer */}
-                  <form onSubmit={handleChatSubmit} className="p-3 bg-wood-cream border-t border-wood-border/50 flex gap-2">
+                  <form onSubmit={handleChatSubmit} className="p-3 bg-wood-cream border-t border-wood-border/50 flex gap-2 items-center">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2.5 rounded-xl bg-wood-beige hover:bg-wood-accent text-wood-dark hover:text-white transition-colors cursor-pointer"
+                      title="Upload room photo for matching products"
+                    >
+                      <Camera className="h-4.5 w-4.5" />
+                    </button>
                     <input
                       type="text"
                       value={chatInput}
