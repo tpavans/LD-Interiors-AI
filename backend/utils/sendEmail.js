@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const EmailLog = require('../models/EmailLog');
 
 /**
  * Sends a detailed order notification email to ldinteriors.in@gmail.com.
@@ -139,11 +140,36 @@ Image URL: ${order.imageUrl || 'None'}
     `,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log('Order notification email sent successfully! Message ID:', info.messageId);
-  
-  if (!hasSmtpConfig) {
-    console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Order notification email sent successfully! Message ID:', info.messageId);
+    
+    // Log success to MongoDB
+    await EmailLog.create({
+      orderId: order._id,
+      product: order.product,
+      recipient: 'ldinteriors.in@gmail.com',
+      status: 'success',
+      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+    }).catch(err => console.error('Failed to save EmailLog:', err));
+
+    if (!hasSmtpConfig) {
+      console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
+    }
+  } catch (error) {
+    console.error('Nodemailer sendMail failed:', error.message);
+    
+    // Log failure to MongoDB
+    await EmailLog.create({
+      orderId: order._id,
+      product: order.product,
+      recipient: 'ldinteriors.in@gmail.com',
+      status: 'failed',
+      error: error.message,
+      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+    }).catch(err => console.error('Failed to save EmailLog:', err));
+
+    throw error;
   }
 };
 
