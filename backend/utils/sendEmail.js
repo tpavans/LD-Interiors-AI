@@ -96,7 +96,9 @@ Image URL: ${order.imageUrl || 'None'}
             </tr>
             <tr>
               <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65;">Selected Design</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 14px; font-weight: bold; color: #6d553b;">${order.product}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 14px; font-weight: bold; color: #6d553b;">
+                ${order.productId ? `<a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #6d553b; text-decoration: underline; font-weight: bold;">${order.product}</a>` : order.product}
+              </td>
             </tr>
             <tr>
               <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65;">Custom Sizing/Notes</td>
@@ -119,7 +121,10 @@ Image URL: ${order.imageUrl || 'None'}
         <div style="margin-top: 20px; text-align: center; background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 15px;">
           <p style="font-size: 13px; font-weight: bold; color: #8e7a65; margin: 0 0 10px 0;">Design Image Preview:</p>
           <img src="${order.imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ebdcc5;" />
-          <p style="margin: 8px 0 0 0; font-size: 11px;"><a href="${order.imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full Resolution Image</a></p>
+          <p style="margin: 8px 0 0 0; font-size: 11px;">
+            <a href="${order.imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
+            ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
+          </p>
         </div>
         ` : ''}
 

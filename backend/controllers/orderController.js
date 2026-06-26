@@ -14,7 +14,7 @@ const createOrder = async (req, res) => {
     });
   }
   try {
-    const { name, phone, product, imageUrl, notes } = req.body;
+    const { name, phone, product, imageUrl, notes, productId } = req.body;
 
     if (!name || !phone || !product) {
       return res.status(400).json({
@@ -28,6 +28,7 @@ const createOrder = async (req, res) => {
       product: product.trim(),
       imageUrl: imageUrl ? imageUrl.trim() : undefined,
       notes: notes ? notes.trim() : undefined,
+      productId: productId ? productId.trim() : undefined,
     });
 
     // Send order email notification to pavansaiteki7@gmail.com

@@ -73,7 +73,8 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
         phone: orderPhone.trim(),
         product: title,
         imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.'
+        notes: orderNotes.trim() || 'No custom notes.',
+        productId: _id
       });
     } catch (err) {
       console.error('Error saving order record to database:', err);

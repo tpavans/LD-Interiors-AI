@@ -580,7 +580,8 @@ How can I help you today?`
                 phone: (collected.phone || localStorage.getItem('ld_user_phone') || '0000000000').trim(),
                 product: (collected.product || collected.furnitureType || 'Custom Furniture').trim(),
                 imageUrl: absoluteImageUrl,
-                notes: `Address: ${collected.address || ''}, City: ${collected.city || ''}, Pincode: ${collected.pincode || ''}. Custom details: Sizing: ${collected.length || ''}x${collected.width || ''}x${collected.height || ''}, Material: ${collected.material || ''}, Finish: ${collected.finish || ''}, Color: ${collected.color || ''}, Timeline: ${collected.timeline || ''}, Budget: ${collected.budget || ''}, Special: ${collected.specialRequirements || collected.customization || ''}`
+                notes: `Address: ${collected.address || ''}, City: ${collected.city || ''}, Pincode: ${collected.pincode || ''}. Custom details: Sizing: ${collected.length || ''}x${collected.width || ''}x${collected.height || ''}, Material: ${collected.material || ''}, Finish: ${collected.finish || ''}, Color: ${collected.color || ''}, Timeline: ${collected.timeline || ''}, Budget: ${collected.budget || ''}, Special: ${collected.specialRequirements || collected.customization || ''}`,
+                productId: matchedProduct ? matchedProduct._id : undefined
               });
               // Refresh orders list
               fetchTrackedOrders(collected.phone || localStorage.getItem('ld_user_phone'));
@@ -1247,12 +1248,14 @@ Please review this order and provide availability and pricing details. Thank you
 
     // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
     try {
+      const matched = dbProducts.find(p => p.title === selectedProduct);
       await api.post('/orders', {
         name: orderName.trim(),
         phone: orderPhone.trim(),
         product: selectedProduct,
         imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.'
+        notes: orderNotes.trim() || 'No custom notes.',
+        productId: matched ? matched._id : undefined
       });
       // Pre-fill tracking input with the order phone so they can track it immediately
       setTrackPhone(orderPhone.trim());
