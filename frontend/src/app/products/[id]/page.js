@@ -438,11 +438,12 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer"
+                disabled={orderSuccess}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <MessageCircle className="h-4 w-4" />
                 <span>
-                  Submit Order to WhatsApp (Both Admins)
+                  {orderSuccess ? 'Submitting Order...' : 'Submit Order to WhatsApp (Both Admins)'}
                 </span>
               </button>
             </form>

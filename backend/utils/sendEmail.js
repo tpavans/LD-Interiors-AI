@@ -72,9 +72,9 @@ Image URL: ${order.imageUrl || 'None'}
   }
 
   const mailOptions = {
-    from: hasSmtpConfig ? `"${process.env.SMTP_FROM_NAME || 'LD Interiors Portal'}" <${process.env.SMTP_USER}>` : '"LD Interiors Portal Test" <test@ldinteriors.com>',
+    from: hasSmtpConfig ? `"${order.name} via LD Interiors" <${process.env.SMTP_USER}>` : `"${order.name} via LD Interiors Test" <test@ldinteriors.com>`,
     to: 'ldinteriors.in@gmail.com, ldinteriors@gmail.com',
-    subject: `🔔 New Customer Order: ${order.product}`,
+    subject: `🔔 New Order: ${order.product} from ${order.name}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525;">
         <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
