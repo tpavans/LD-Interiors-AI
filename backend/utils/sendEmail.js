@@ -1,13 +1,15 @@
 const nodemailer = require('nodemailer');
 const https = require('https');
 const EmailLog = require('../models/EmailLog');
+const Product = require('../models/Product');
 
 /**
  * Sends a detailed order notification email.
- * Automatically switches between Brevo HTTP API (for Render free tier) and Nodemailer SMTP (for local dev).
+ * Automatically switches between Resend, Brevo, and Nodemailer SMTP.
  * @param {object} order - The created mongoose order document
  */
 const sendOrderEmail = async (order) => {
+  const orderIdStr = order._id ? order._id.toString() : 'test_mock_id';
   const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
   // Clean and format phone number for dialing
@@ -22,65 +24,92 @@ const sendOrderEmail = async (order) => {
     dialPhone = `+${cleanPhone}`;
   }
 
+  // Fetch product category and price dynamically from database if possible
+  let category = 'Furniture Design';
+  let price = 'Contact for pricing';
+  let imageUrl = order.imageUrl || '';
+
+  if (order.productId) {
+    try {
+      const prod = await Product.findById(order.productId);
+      if (prod) {
+        category = prod.category || category;
+        price = prod.price && prod.price > 0 ? `₹${prod.price.toLocaleString('en-IN')}` : 'Contact for pricing';
+        if (prod.image) {
+          imageUrl = prod.image.startsWith('http') ? prod.image : `https://ldinteriors.in${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching product from DB for email:', err.message);
+    }
+  }
+
+  // Exact text format requested by the user
+  const textContent = `Hello Pavan Sai! I would like to place an order/inquiry via LD Interiors & Furnitures:
+
+*Product Details:*
+- Name: ${order.product}
+- Category: ${category}
+- Price: ${price}
+${imageUrl ? `- Image URL: ${imageUrl}` : ''}
+
+*Customer Details:*
+- Name: ${order.name}
+- Phone: ${order.phone}
+- Notes/Sizing/Address: ${order.notes || 'No custom notes.'}`;
+
+  // Clean HTML layout wrapping the exact text format + clickable call button
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525;">
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
       <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
         <h2 style="color: #6d553b; margin: 0; font-family: Georgia, serif;">LD Interiors & Furnitures</h2>
         <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #8e7a65; margin: 5px 0 0 0;">New Order Notification</p>
       </div>
-      
-      <p style="font-size: 14px; line-height: 1.5; color: #5a4b3b;">Namaste Admin! A new customer order has been placed on the website. Here are the details:</p>
-      
-      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-top: 15px;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65; width: 35%;">Customer Name</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 14px; font-weight: bold;">${order.name}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65;">Mobile Number</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 14px;"><a href="tel:${dialPhone}" style="color: #a07d57; text-decoration: none; font-weight: bold; font-size: 15px;">📞 ${order.phone}</a></td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65;">Selected Design</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 14px; font-weight: bold; color: #6d553b;">
-              ${order.productId ? `<a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #6d553b; text-decoration: underline; font-weight: bold;">${order.product}</a>` : order.product}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-weight: bold; font-size: 13px; color: #8e7a65;">Custom Sizing/Notes</td>
-            <td style="padding: 8px 0; border-bottom: 1px solid #f2e9dc; font-size: 13px; font-style: italic; color: #5a4b3b;">${order.notes || 'No custom notes.'}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; font-weight: bold; font-size: 13px; color: #8e7a65;">Order Timestamp</td>
-            <td style="padding: 8px 0; font-size: 13px; color: #5a4b3b;">${dateStr}</td>
-          </tr>
-        </table>
+
+      <p style="font-size: 15px; font-weight: bold; color: #6d553b; margin-bottom: 15px;">Hello Pavan Sai! I would like to place an order/inquiry via LD Interiors & Furnitures:</p>
+
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Product Details</h3>
+        <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
+          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
+          <li style="margin-bottom: 8px;"><strong>• Category:</strong> ${category}</li>
+          <li style="margin-bottom: 8px;"><strong>• Price:</strong> <span style="color: #6d553b; font-weight: bold;">${price}</span></li>
+          ${imageUrl ? `<li style="margin-bottom: 8px; word-break: break-all;"><strong>• Image URL:</strong> <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${imageUrl}</a></li>` : ''}
+        </ul>
       </div>
 
-      <div style="margin-top: 20px; text-align: center;">
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Customer Details</h3>
+        <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
+          <li style="margin-bottom: 8px;"><strong>• Name:</strong> <strong>${order.name}</strong></li>
+          <li style="margin-bottom: 8px;"><strong>• Phone:</strong> <a href="tel:${dialPhone}" style="color: #a07d57; text-decoration: none; font-weight: bold;">📞 ${order.phone}</a></li>
+          <li style="margin-bottom: 8px;"><strong>• Notes/Sizing/Address:</strong> <span style="font-style: italic; color: #5a4b3b;">${order.notes || 'No custom notes.'}</span></li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
         <a href="tel:${dialPhone}" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #523f2a;">
           📞 Call Customer: ${order.phone}
         </a>
       </div>
 
-      ${order.imageUrl ? `
-      <div style="margin-top: 20px; text-align: center; background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 15px;">
-        <p style="font-size: 13px; font-weight: bold; color: #8e7a65; margin: 0 0 10px 0;">Design Image Preview:</p>
-        <img src="${order.imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ebdcc5;" />
+      ${imageUrl ? `
+      <div style="text-align: center; background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+        <p style="font-size: 12px; font-weight: bold; color: #8e7a65; margin: 0 0 10px 0;">Design Image Preview:</p>
+        <img src="${imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ebdcc5;" />
         <p style="margin: 8px 0 0 0; font-size: 11px;">
-          <a href="${order.imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
+          <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
           ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
         </p>
       </div>
       ` : ''}
 
-      <div style="margin-top: 25px; padding: 12px 15px; background-color: #f5eee4; border-left: 4px solid #6d553b; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #5a4b3b;">
+      <div style="padding: 12px 15px; background-color: #f5eee4; border-left: 4px solid #6d553b; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #5a4b3b;">
         <strong>Admin Status:</strong> Mr. Nagaraju has been redirected to chat on WhatsApp. Please check the backend database and follow up with Mr. Nagaraju for pricing finalization.
       </div>
 
       <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
-        This is an automated system notification from the LD Interiors & Furniture web platform.
+        This is an automated system notification from the LD Interiors & Furniture web platform. Order Timestamp: ${dateStr}.
       </div>
     </div>
   `;
@@ -96,7 +125,8 @@ const sendOrderEmail = async (order) => {
         from: `${order.name} via LD Interiors <onboarding@resend.dev>`,
         to: ['ldinteriors.in@gmail.com'],
         subject: subject,
-        html: htmlContent
+        html: htmlContent,
+        text: textContent
       });
 
       const options = {
@@ -107,7 +137,7 @@ const sendOrderEmail = async (order) => {
         headers: {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
           'Content-Type': 'application/json',
-          'Content-Length': data.length
+          'Content-Length': Buffer.byteLength(data)
         }
       };
 
@@ -119,7 +149,7 @@ const sendOrderEmail = async (order) => {
             console.log('Order notification email sent successfully via Resend! Response:', body);
             // Log success to MongoDB
             await EmailLog.create({
-              orderId: order._id,
+              orderId: orderIdStr,
               product: order.product,
               recipient: 'ldinteriors.in@gmail.com',
               status: 'success',
@@ -131,7 +161,7 @@ const sendOrderEmail = async (order) => {
             console.error(errMessage);
             // Log failure to MongoDB
             await EmailLog.create({
-              orderId: order._id,
+              orderId: orderIdStr,
               product: order.product,
               recipient: 'ldinteriors.in@gmail.com',
               status: 'failed',
@@ -147,7 +177,7 @@ const sendOrderEmail = async (order) => {
         console.error('Resend HTTP request failed:', err.message);
         // Log failure to MongoDB
         await EmailLog.create({
-          orderId: order._id,
+          orderId: orderIdStr,
           product: order.product,
           recipient: 'ldinteriors.in@gmail.com',
           status: 'failed',
@@ -173,7 +203,8 @@ const sendOrderEmail = async (order) => {
           { email: 'ldinteriors.in@gmail.com', name: 'LD Interiors Admin' }
         ],
         subject: subject,
-        htmlContent: htmlContent
+        htmlContent: htmlContent,
+        textContent: textContent
       });
 
       const options = {
@@ -185,7 +216,7 @@ const sendOrderEmail = async (order) => {
           'accept': 'application/json',
           'api-key': process.env.BREVO_API_KEY,
           'content-type': 'application/json',
-          'content-length': data.length
+          'content-length': Buffer.byteLength(data)
         }
       };
 
@@ -197,7 +228,7 @@ const sendOrderEmail = async (order) => {
             console.log('Order notification email sent successfully via Brevo! Response:', body);
             // Log success to MongoDB
             await EmailLog.create({
-              orderId: order._id,
+              orderId: orderIdStr,
               product: order.product,
               recipient: 'ldinteriors.in@gmail.com',
               status: 'success',
@@ -209,7 +240,7 @@ const sendOrderEmail = async (order) => {
             console.error(errMessage);
             // Log failure to MongoDB
             await EmailLog.create({
-              orderId: order._id,
+              orderId: orderIdStr,
               product: order.product,
               recipient: 'ldinteriors.in@gmail.com',
               status: 'failed',
@@ -225,7 +256,7 @@ const sendOrderEmail = async (order) => {
         console.error('Brevo HTTP request failed:', err.message);
         // Log failure to MongoDB
         await EmailLog.create({
-          orderId: order._id,
+          orderId: orderIdStr,
           product: order.product,
           recipient: 'ldinteriors.in@gmail.com',
           status: 'failed',
@@ -289,6 +320,7 @@ const sendOrderEmail = async (order) => {
     to: 'ldinteriors.in@gmail.com',
     subject: subject,
     html: htmlContent,
+    text: textContent,
   };
 
   try {
@@ -297,7 +329,7 @@ const sendOrderEmail = async (order) => {
     
     // Log success to MongoDB
     await EmailLog.create({
-      orderId: order._id,
+      orderId: orderIdStr,
       product: order.product,
       recipient: 'ldinteriors.in@gmail.com',
       status: 'success',
@@ -312,7 +344,7 @@ const sendOrderEmail = async (order) => {
     
     // Log failure to MongoDB
     await EmailLog.create({
-      orderId: order._id,
+      orderId: orderIdStr,
       product: order.product,
       recipient: 'ldinteriors.in@gmail.com',
       status: 'failed',
