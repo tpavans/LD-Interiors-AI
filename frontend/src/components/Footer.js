@@ -115,7 +115,7 @@ export default function Footer() {
 
             {/* Pinterest */}
             <a
-              href="https://pin.it/MQWrrk2VP"
+              href="https://pin.it/3oCqPHjff"
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-700 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
