@@ -135,7 +135,7 @@ export default function ContactPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
           {/* Address */}
-          <div className="md:col-span-6 flex gap-4">
+          <div className="md:col-span-4 flex gap-4">
             <div className="p-3.5 rounded-2xl bg-wood-beige text-wood-accent shrink-0 h-fit">
               <MapPin className="h-6 w-6" />
             </div>
@@ -143,10 +143,10 @@ export default function ContactPage() {
               <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
                 Studio Address
               </span>
-              <h3 className="font-serif text-xl font-bold text-wood-dark mt-1">
-                LD Interiors & Furnitures Office
+              <h3 className="font-serif text-lg font-bold text-wood-dark mt-1">
+                LD Interiors Office
               </h3>
-              <p className="mt-2 text-sm text-wood-medium font-light leading-relaxed">
+              <p className="mt-2 text-xs text-wood-medium font-light leading-relaxed">
                 6-132, Mulasthanam,<br />
                 Alamuru Mandal, Konaseema District,<br />
                 Andhra Pradesh, PIN: 533233
@@ -154,15 +154,35 @@ export default function ContactPage() {
             </div>
           </div>
 
+          {/* Working Hours */}
+          <div className="md:col-span-4 md:border-l border-wood-border/40 md:pl-8 flex gap-4">
+            <div className="p-3.5 rounded-2xl bg-wood-beige text-wood-accent shrink-0 h-fit">
+              <Sparkles className="h-6 w-6 animate-pulse" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+                Working Hours
+              </span>
+              <h3 className="font-serif text-lg font-bold text-wood-dark mt-1">
+                7:00 AM - 10:00 PM
+              </h3>
+              <p className="mt-2 text-xs text-wood-medium font-light leading-relaxed">
+                Open Morning to Night<br />
+                All 7 Days a week<br />
+                (Sunday through Saturday)
+              </p>
+            </div>
+          </div>
+
           {/* Contact Details (Email & Social) */}
-          <div className="md:col-span-6 md:border-l border-wood-border/40 md:pl-8 flex flex-col justify-between gap-6">
+          <div className="md:col-span-4 md:border-l border-wood-border/40 md:pl-8 flex flex-col justify-between gap-6">
             {/* Email Contact */}
             <div>
               <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
                 Email Contact
               </span>
-              <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 flex items-center gap-2 flex-wrap">
-                <Mail className="h-5 w-5 text-wood-accent" />
+              <h3 className="font-serif text-lg font-bold text-wood-dark mt-1 flex items-center gap-2 flex-wrap">
+                <Mail className="h-4.5 w-4.5 text-wood-accent" />
                 <a href="mailto:ldinteriors.in@gmail.com" className="hover:text-wood-accent transition-colors font-semibold underline">
                   ldinteriors.in@gmail.com
                 </a>
@@ -174,16 +194,16 @@ export default function ContactPage() {
               <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
                 Social Media
               </span>
-              <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 mb-3">
-                Follow Us on Instagram
+              <h3 className="font-serif text-lg font-bold text-wood-dark mt-1 mb-2">
+                Instagram Feed
               </h3>
               <a
                 href="https://www.instagram.com/ldinteriors.in?igsh=N2EydGxoZDNzZjF5"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-800 via-pink-700 to-amber-600 px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:opacity-90 transition-opacity duration-300 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-800 via-pink-700 to-amber-600 px-4 py-2 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:opacity-90 transition-opacity duration-300 cursor-pointer"
               >
-                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>

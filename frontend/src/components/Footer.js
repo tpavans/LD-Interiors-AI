@@ -26,6 +26,13 @@ export default function Footer() {
                 📍 View on Google Maps
               </a>
             </div>
+            <div>
+              <p className="font-semibold text-wood-dark mt-2.5">Working Hours:</p>
+              <p className="mt-1 leading-relaxed">
+                Morning 7:00 AM - 10:00 PM<br />
+                All 7 Days a week
+              </p>
+            </div>
           </div>
         </div>
 
@@ -34,12 +41,12 @@ export default function Footer() {
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
             Our Services
           </h4>
-          <ul className="flex flex-col gap-2.5 text-xs font-light">
-            <li className="hover:text-wood-dark transition-colors cursor-default">• Re-installation Works</li>
-            <li className="hover:text-wood-dark transition-colors cursor-default">• Loose Fittings carpentry</li>
-            <li className="hover:text-wood-dark transition-colors cursor-default">• Complete Interior Design</li>
-            <li className="hover:text-wood-dark transition-colors cursor-default">• Custom Designs & Furniture</li>
-          </ul>
+          <div className="flex flex-col gap-2.5 text-xs font-light">
+            <Link href="/contact" className="hover:text-wood-dark transition-colors">• Re-installation Works</Link>
+            <Link href="/products" className="hover:text-wood-dark transition-colors">• Loose Fittings carpentry</Link>
+            <Link href="/contact" className="hover:text-wood-dark transition-colors">• Complete Interior Design</Link>
+            <Link href="/products" className="hover:text-wood-dark transition-colors">• Custom Designs & Furniture</Link>
+          </div>
         </div>
 
         {/* Column 3: Need Help */}
