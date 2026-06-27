@@ -4,7 +4,7 @@ import { Phone, MessageCircle } from 'lucide-react';
 
 export default function FloatingActions() {
   return (
-    <div className="fixed bottom-6 right-6 z-[90] flex flex-col gap-3.5">
+    <div className="fixed bottom-26 right-6 z-[90] flex flex-col gap-3.5">
       {/* Call Button */}
       <a
         href="tel:+916281653998"
