@@ -109,6 +109,11 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
           <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
           ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ld-interiors-ai.vercel.app/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
         </p>
+        ${order.productId ? `
+        <div style="margin-top: 10px; padding: 8px; background-color: #fcfbf9; border: 1px dashed #e5d8c3; border-radius: 6px; font-size: 10px; color: #8e7a65; word-break: break-all;">
+          <strong>Direct URL (Copy/Paste fallback):</strong> https://ld-interiors-ai.vercel.app/products/${order.productId}
+        </div>
+        ` : ''}
       </div>
       ` : ''}
 
