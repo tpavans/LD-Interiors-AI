@@ -8,12 +8,13 @@ const {
   deleteOrder,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // Public route to track orders by phone query parameter
 router.get('/track', trackOrders);
 
-// Public route to book/create a new order
-router.post('/', createOrder);
+// Public route to book/create a new order (handles optional reference image file upload)
+router.post('/', upload.single('referenceImage'), createOrder);
 
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);

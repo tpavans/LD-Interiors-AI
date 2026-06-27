@@ -20,6 +20,28 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  imagePublicId: {
+    type: String,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  address: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  customSize: {
+    type: String,
+    trim: true,
+  },
+  desiredPrice: {
+    type: String,
+    trim: true,
+  },
   notes: {
     type: String,
     trim: true,

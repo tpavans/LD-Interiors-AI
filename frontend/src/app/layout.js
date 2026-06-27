@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientWrapper from "@/components/ClientWrapper";
+import FloatingActions from "@/components/FloatingActions";
 
 const inter = Inter({
   subsets: ["sans-serif", "latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
         </main>
         <Footer />
         <ClientWrapper />
+        <FloatingActions />
       </body>
     </html>
   );

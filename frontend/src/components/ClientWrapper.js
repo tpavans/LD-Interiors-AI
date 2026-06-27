@@ -288,6 +288,11 @@ export default function ClientWrapper() {
   // WhatsApp Order Form State
   const [orderName, setOrderName] = useState('');
   const [orderPhone, setOrderPhone] = useState('');
+  const [orderEmail, setOrderEmail] = useState('');
+  const [orderAddress, setOrderAddress] = useState('');
+  const [customSize, setCustomSize] = useState('');
+  const [desiredPrice, setDesiredPrice] = useState('');
+  const [referenceImageFile, setReferenceImageFile] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -332,14 +337,17 @@ How can I help you today?`;
       }
     ]);
 
-    if (!registered) {
-      setShowRegisterModal(true);
-    } else {
+    const savedEmail = localStorage.getItem('ld_user_email') || '';
+    const savedAddress = localStorage.getItem('ld_user_address') || '';
+
+    if (savedPhone) {
       setIsRegistered(true);
       setUserName(savedName);
       setUserPhone(savedPhone);
       setOrderName(savedName);
       setOrderPhone(savedPhone);
+      setOrderEmail(savedEmail);
+      setOrderAddress(savedAddress);
       setTrackPhone(savedPhone);
       fetchTrackedOrders(savedPhone);
     }
@@ -1217,50 +1225,81 @@ Based on your room's style, here are some LD Interiors products that match beaut
     e.preventDefault();
     setOrderSuccess(false);
 
-    if (!orderName.trim() || !orderPhone.trim() || !selectedProduct) {
-      alert('Please fill out all required fields.');
+    if (!orderName.trim() || !orderPhone.trim() || !orderEmail.trim() || !orderAddress.trim() || !selectedProduct) {
+      alert('Please fill out all required fields (Name, Phone, Gmail, Address).');
       return;
     }
+
+    setOrderSuccess(true);
+
+    // Save to localStorage to keep visitor info synced
+    localStorage.setItem('ld_user_registered', 'true');
+    localStorage.setItem('ld_user_name', orderName.trim());
+    localStorage.setItem('ld_user_phone', orderPhone.trim());
+    localStorage.setItem('ld_user_email', orderEmail.trim());
+    localStorage.setItem('ld_user_address', orderAddress.trim());
+
+    // Dispatch login event to sync across navbar
+    window.dispatchEvent(new Event('storage'));
 
     const matchedProduct = dbProducts.find(p => p.title === selectedProduct);
     const productImage = matchedProduct ? matchedProduct.image : '';
     const productPrice = matchedProduct && matchedProduct.price ? matchedProduct.price : 0;
     const absoluteImageUrl = productImage ? (productImage.startsWith('http') ? productImage : `${window.location.origin}${productImage.startsWith('/') ? '' : '/'}${productImage}`) : '';
 
-    const baseMessageBody = `*Customer Details:*
+    // Create the blank tab synchronously inside the click handler to bypass browser popup blockers
+    const newTab = window.open('about:blank', '_blank');
+
+    try {
+      const formData = new FormData();
+      formData.append('name', orderName.trim());
+      formData.append('phone', orderPhone.trim());
+      formData.append('email', orderEmail.trim());
+      formData.append('address', orderAddress.trim());
+      formData.append('product', selectedProduct);
+      formData.append('notes', orderNotes.trim() || 'No custom notes.');
+      if (matchedProduct) formData.append('productId', matchedProduct._id);
+      if (customSize.trim()) formData.append('customSize', customSize.trim());
+      if (desiredPrice.trim()) formData.append('desiredPrice', desiredPrice.trim());
+      if (referenceImageFile) {
+        formData.append('referenceImage', referenceImageFile);
+      } else {
+        formData.append('imageUrl', absoluteImageUrl);
+      }
+
+      const response = await api.post('/orders', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const createdOrder = response.data;
+      const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+
+      const baseMessageBody = `*Product Details:*
+- Name: ${selectedProduct}
+- Category: ${matchedProduct ? matchedProduct.category : 'General Inquiry'}
+- Price: ${productPrice > 0 ? `₹${productPrice.toLocaleString('en-IN')} (Estimated)` : 'Contact for pricing'}
+${orderImage ? `- Image URL: ${orderImage}\n` : ''}
+*Customer Details:*
 - Name: ${orderName.trim()}
 - Phone: ${orderPhone.trim()}
+- Gmail: ${orderEmail.trim()}
+- Delivery Address: ${orderAddress.trim()}
+${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
 
-*Order Details:*
-- Selected Design: ${selectedProduct}
-- Price: ${productPrice > 0 ? `₹${productPrice.toLocaleString('en-IN')}` : 'Contact for pricing'}
-${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}- Customizations / Notes: ${orderNotes.trim() || 'No custom notes.'}
+      const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
+      const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
 
-Please review this order and provide availability and pricing details. Thank you!`;
+      // Redirect the blank tab to WhatsApp URL
+      newTab.location.href = waUrlNagaraju;
 
-    const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
-    const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
-
-    // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
-    window.open(waUrlNagaraju, '_blank');
-
-    setOrderSuccess(true);
-
-    // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
-    try {
-      const matched = dbProducts.find(p => p.title === selectedProduct);
-      await api.post('/orders', {
-        name: orderName.trim(),
-        phone: orderPhone.trim(),
-        product: selectedProduct,
-        imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.',
-        productId: matched ? matched._id : undefined
-      });
       // Pre-fill tracking input with the order phone so they can track it immediately
       setTrackPhone(orderPhone.trim());
     } catch (err) {
       console.error('Error saving order record to database:', err);
+      newTab.close();
+      alert('Failed to place order. Please check that you entered valid details.');
     }
     
     // Add success confirmation to Chatbot log as well
@@ -1268,12 +1307,15 @@ Please review this order and provide availability and pricing details. Thank you
       ...prev,
       {
         sender: 'bot',
-        text: `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, we'll proceed with your order.\n\nThank you! Your order has been submitted successfully. Our team will contact you shortly.`
+        text: `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.\n\nThank you! Your order has been submitted successfully.`
       }
     ]);
     
-    // Reset order notes
+    // Reset order notes, custom sizes, budget, and file inputs
     setOrderNotes('');
+    setCustomSize('');
+    setDesiredPrice('');
+    setReferenceImageFile(null);
   };
 
   return (
@@ -1574,7 +1616,7 @@ Please review this order and provide availability and pricing details. Thank you
 
                     <div>
                       <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                        Mobile Number
+                        Mobile Number *
                       </label>
                       <input
                         type="tel"
@@ -1583,6 +1625,34 @@ Please review this order and provide availability and pricing details. Thank you
                         onChange={(e) => setOrderPhone(e.target.value)}
                         className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
                         placeholder="Your contact number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                        Gmail/Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={orderEmail}
+                        onChange={(e) => setOrderEmail(e.target.value)}
+                        className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                        placeholder="name@gmail.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                        Delivery Address *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={orderAddress}
+                        onChange={(e) => setOrderAddress(e.target.value)}
+                        className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                        placeholder="House No, Street, City, Pincode"
                       />
                     </div>
 
@@ -1603,23 +1673,62 @@ Please review this order and provide availability and pricing details. Thank you
                         <option value="Custom Bedroom/Wardrobe Furniture">Custom Bedroom / Wardrobes</option>
                         <option value="Custom Teak Carved Entrance Door">Custom Handcarved Teak Door</option>
                         <option value="Custom Sofa Sectional Layout">Custom Cushion Sofa Set</option>
-                        <option value="Custom Devudi Mandiram (Pooja Temple)">Custom Devudi Mandiram (Pooja Temple)</option>
+                        <option value="Custom Puja Mandiram (Pooja Temple)">Custom Puja Mandiram (Pooja Temple)</option>
                         <option value="Custom Teak Gummam (Main Door Frame)">Custom Teak Gummam (Main Door Frame)</option>
                         <option value="Custom Teak Dressing Table with Mirror">Custom Teak Dressing Table with Mirror</option>
                         <option value="Complete Room Interior Design Contract">General Room Design Contract</option>
                       </select>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                          Custom Size (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={customSize}
+                          onChange={(e) => setCustomSize(e.target.value)}
+                          className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                          placeholder="e.g., 6x7 feet"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                          Your Budget (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={desiredPrice}
+                          onChange={(e) => setDesiredPrice(e.target.value)}
+                          className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                          placeholder="e.g., ₹25,000"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                        Custom Sizing / Wood Details / Address
+                        Upload Reference Image (Optional)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setReferenceImageFile(e.target.files[0])}
+                        className="w-full text-xs text-wood-dark file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-extrabold file:uppercase file:tracking-wider file:bg-wood-beige file:text-wood-accent hover:file:bg-wood-accent hover:file:text-white file:transition-colors file:cursor-pointer cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                        Custom Notes / Special Requests (Optional)
                       </label>
                       <textarea
                         value={orderNotes}
                         onChange={(e) => setOrderNotes(e.target.value)}
-                        rows="3"
+                        rows="2"
                         className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark placeholder-neutral-400 font-light"
-                        placeholder="e.g., 6x6 feet double bed, Teak Wood frame, delivery to Alamuru..."
+                        placeholder="e.g., Teak Wood, specific carving..."
                       ></textarea>
                     </div>
 

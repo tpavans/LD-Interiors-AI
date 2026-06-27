@@ -27,63 +27,107 @@ export default function ProductCard({ product }) {
   // Form State
   const [orderName, setOrderName] = useState('');
   const [orderPhone, setOrderPhone] = useState('');
+  const [orderEmail, setOrderEmail] = useState('');
+  const [orderAddress, setOrderAddress] = useState('');
+  const [customSize, setCustomSize] = useState('');
+  const [desiredPrice, setDesiredPrice] = useState('');
+  const [referenceImageFile, setReferenceImageFile] = useState(null);
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
 
   useEffect(() => {
-    // Pre-populate name and phone from localStorage if available
+    // Pre-populate fields from localStorage if available
     const savedName = localStorage.getItem('ld_user_name') || '';
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
+    const savedEmail = localStorage.getItem('ld_user_email') || '';
+    const savedAddress = localStorage.getItem('ld_user_address') || '';
     setOrderName(savedName);
     setOrderPhone(savedPhone);
+    setOrderEmail(savedEmail);
+    setOrderAddress(savedAddress);
+    // Reset file and custom inputs
+    setCustomSize('');
+    setDesiredPrice('');
+    setReferenceImageFile(null);
   }, [showOrderModal]);
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
     
+    setOrderSuccess(true);
+    
     // Save to localStorage to keep visitor info synced
     localStorage.setItem('ld_user_registered', 'true');
     localStorage.setItem('ld_user_name', orderName.trim());
     localStorage.setItem('ld_user_phone', orderPhone.trim());
+    localStorage.setItem('ld_user_email', orderEmail.trim());
+    localStorage.setItem('ld_user_address', orderAddress.trim());
+
+    // Dispatch login event to sync across navbar and account portal
+    window.dispatchEvent(new Event('storage'));
 
     const absoluteImageUrl = image ? (image.startsWith('http') ? image : `${window.location.origin}${image.startsWith('/') ? '' : '/'}${image}`) : '';
 
-    const baseMessageBody = `*Product Details:*
+    // Create the blank tab synchronously inside the click handler to bypass browser popup blockers
+    const newTab = window.open('about:blank', '_blank');
+
+    // Save order in the database and wait for it (triggers email to Pavan Sai)
+    try {
+      const formData = new FormData();
+      formData.append('name', orderName.trim());
+      formData.append('phone', orderPhone.trim());
+      formData.append('email', orderEmail.trim());
+      formData.append('address', orderAddress.trim());
+      formData.append('product', title);
+      formData.append('notes', orderNotes.trim() || 'No custom notes.');
+      formData.append('productId', _id);
+      if (customSize.trim()) formData.append('customSize', customSize.trim());
+      if (desiredPrice.trim()) formData.append('desiredPrice', desiredPrice.trim());
+      if (referenceImageFile) {
+        formData.append('referenceImage', referenceImageFile);
+      } else {
+        formData.append('imageUrl', absoluteImageUrl);
+      }
+
+      const response = await api.post('/orders', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const createdOrder = response.data;
+      const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+
+      const baseMessageBody = `*Product Details:*
 - Name: ${title}
 - Category: ${category}
-- Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
+- Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')} (Estimated)` : 'Contact for pricing'}
+${orderImage ? `- Image URL: ${orderImage}\n` : ''}
 *Customer Details:*
 - Name: ${orderName.trim()}
 - Phone: ${orderPhone.trim()}
-- Notes/Sizing/Address: ${orderNotes.trim() || 'No custom notes.'}`;
+- Gmail: ${orderEmail.trim()}
+- Delivery Address: ${orderAddress.trim()}
+${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
 
-    const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
-    const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
+      const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
+      const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
 
-    // 1. Open Mr. Nagaraju's WhatsApp in a new tab synchronously (allowed by browser)
-    window.open(waUrlNagaraju, '_blank');
-
-    setOrderSuccess(true);
-
-    // 2. Save order in the database and wait for it (triggers email to Pavan Sai)
-    try {
-      await api.post('/orders', {
-        name: orderName.trim(),
-        phone: orderPhone.trim(),
-        product: title,
-        imageUrl: absoluteImageUrl,
-        notes: orderNotes.trim() || 'No custom notes.',
-        productId: _id
-      });
+      // Redirect the blank tab to WhatsApp URL
+      newTab.location.href = waUrlNagaraju;
     } catch (err) {
       console.error('Error saving order record to database:', err);
+      newTab.close();
+      alert('Failed to submit order. Please check that you entered valid details.');
     }
     
     setTimeout(() => {
       setShowOrderModal(false);
       setOrderSuccess(false);
       setOrderNotes('');
+      setCustomSize('');
+      setDesiredPrice('');
+      setReferenceImageFile(null);
     }, 2000);
   };
 
@@ -102,10 +146,10 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
             <div className="absolute top-4 left-4 bg-wood-cream/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-wood-accent shadow-sm border border-wood-border/30">
               {category}
             </div>
-            {/* Newly Added Badge */}
+            {/* New Arrival Badge */}
             {isNew && (
-              <div className="absolute top-12 left-4 bg-amber-500 text-white px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-amber-600/20 z-10 animate-pulse">
-                Newly Added
+              <div className="absolute top-12 left-4 bg-blue-600 text-white px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-blue-700/20 z-10 animate-pulse">
+                New Arrival
               </div>
             )}
             {/* Share Overlay Button */}
@@ -131,9 +175,17 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
                   {title}
                 </h3>
               </Link>
-              <div className="mt-0.5 sm:mt-1 flex flex-col xs:flex-row xs:items-center justify-between gap-0.5 xs:gap-2">
-                <span className="text-xs font-semibold text-wood-accent">
-                  {price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for Price'}
+              <div className="mt-0.5 sm:mt-1 flex flex-col gap-0.5">
+                <span className="text-[10px] sm:text-xs font-semibold text-wood-accent leading-snug">
+                  {price && price > 0 ? (
+                    <span>
+                      Estimated Price: <span className="font-bold">₹{price.toLocaleString('en-IN')}</span>
+                      <br />
+                      <span className="text-[8.5px] sm:text-[9.5px] font-normal text-wood-light">(Contact Nagaraju for fixed price)</span>
+                    </span>
+                  ) : (
+                    <span>Contact Nagaraju for pricing</span>
+                  )}
                 </span>
                 <span className="text-[10px] text-amber-500 font-bold tracking-wider">
                   {'★'.repeat(rating || 5)}{'☆'.repeat(5 - (rating || 5))}
@@ -220,7 +272,7 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Mobile Number
+                  Mobile Number *
                 </label>
                 <input
                   type="tel"
@@ -234,14 +286,81 @@ ${absoluteImageUrl ? `- Image URL: ${absoluteImageUrl}\n` : ''}
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Custom Sizing / Wood Details / Delivery Address
+                  Gmail/Email Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={orderEmail}
+                  onChange={(e) => setOrderEmail(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                  placeholder="name@gmail.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                  Delivery Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={orderAddress}
+                  onChange={(e) => setOrderAddress(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                  placeholder="House No, Street, City, Pincode"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                    Custom Size (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={customSize}
+                    onChange={(e) => setCustomSize(e.target.value)}
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    placeholder="e.g., 6x7 feet"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                    Your Budget (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={desiredPrice}
+                    onChange={(e) => setDesiredPrice(e.target.value)}
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    placeholder="e.g., ₹25,000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                  Upload Reference Image (Optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setReferenceImageFile(e.target.files[0])}
+                  className="w-full text-xs text-wood-dark file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-extrabold file:uppercase file:tracking-wider file:bg-wood-beige file:text-wood-accent hover:file:bg-wood-accent hover:file:text-white file:transition-colors file:cursor-pointer cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
+                  Custom Notes / Special Requests (Optional)
                 </label>
                 <textarea
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
-                  rows="3"
+                  rows="2"
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark placeholder-neutral-400 font-light"
-                  placeholder="e.g., 6x6 feet double bed, Teak Wood, delivery to Mulasthanam..."
+                  placeholder="e.g., Teak Wood, specific carving..."
                 ></textarea>
               </div>
 

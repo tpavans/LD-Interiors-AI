@@ -4,7 +4,7 @@ import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
 import { Loader2, Layers, EyeOff, Search, X } from 'lucide-react';
 
-const CATEGORIES = ["All", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Devudi Mandiralu", "Gummalu", "Dressing Tables"];
+const CATEGORIES = ["All", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);

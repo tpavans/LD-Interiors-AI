@@ -145,10 +145,10 @@ const seedProducts = async () => {
         image: 'https://images.unsplash.com/photo-1503174971373-b1f69850bded?auto=format&fit=crop&w=800&q=80',
         imagePublicId: 'seeded_asset_glass_1',
       },
-      // 17. Devudi Mandiralu
+      // 17. Puja Mandiralu
       {
         title: 'Premium Handcarved Teak Wood Pooja Mandiram / Mandapam',
-        category: 'Devudi Mandiralu',
+        category: 'Puja Mandiralu',
         image: 'https://images.unsplash.com/photo-1609137882611-6110f0cf9813?auto=format&fit=crop&w=800&q=80',
         imagePublicId: 'seeded_asset_mandiralu_1',
       },

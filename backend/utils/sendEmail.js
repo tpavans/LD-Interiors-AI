@@ -56,6 +56,10 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
 *Customer Details:*
 - Name: ${order.name}
 - Phone: ${order.phone}
+- Gmail: ${order.email}
+- Custom Size: ${order.customSize || 'Not specified'}
+- Desired Cost: ${order.desiredPrice || 'Not specified'}
+- Address: ${order.address}
 - Notes/Sizing/Address: ${order.notes || 'No custom notes.'}`;
 
   // Clean HTML layout wrapping the exact text format + clickable call button
@@ -79,11 +83,15 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
       </div>
 
       <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Customer Details</h3>
+        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Customer & Delivery Details</h3>
         <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
           <li style="margin-bottom: 8px;"><strong>• Name:</strong> <strong>${order.name}</strong></li>
           <li style="margin-bottom: 8px;"><strong>• Phone:</strong> <a href="tel:${dialPhone}" style="color: #a07d57; text-decoration: none; font-weight: bold;">📞 ${order.phone}</a></li>
-          <li style="margin-bottom: 8px;"><strong>• Notes/Sizing/Address:</strong> <span style="font-style: italic; color: #5a4b3b;">${order.notes || 'No custom notes.'}</span></li>
+          <li style="margin-bottom: 8px;"><strong>• Gmail/Email:</strong> <a href="mailto:${order.email}" style="color: #a07d57; text-decoration: none;">${order.email}</a></li>
+          <li style="margin-bottom: 8px;"><strong>• Delivery Address:</strong> ${order.address}</li>
+          <li style="margin-bottom: 8px;"><strong>• Custom Size (Optional):</strong> ${order.customSize || 'Not specified'}</li>
+          <li style="margin-bottom: 8px;"><strong>• Desired Budget/Price (Optional):</strong> ${order.desiredPrice || 'Not specified'}</li>
+          <li style="margin-bottom: 8px;"><strong>• Notes/Customization:</strong> <span style="font-style: italic; color: #5a4b3b;">${order.notes || 'No custom notes.'}</span></li>
         </ul>
       </div>
 
@@ -105,7 +113,7 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
       ` : ''}
 
       <div style="padding: 12px 15px; background-color: #f5eee4; border-left: 4px solid #6d553b; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #5a4b3b;">
-        <strong>Admin Status:</strong> Mr. Nagaraju has been redirected to chat on WhatsApp. Please check the backend database and follow up with Mr. Nagaraju for pricing finalization.
+        <strong>Admin Status:</strong> Mr. Nagaraju has been redirected to chat on WhatsApp. Please check the database and coordinate with the customer.
       </div>
 
       <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
