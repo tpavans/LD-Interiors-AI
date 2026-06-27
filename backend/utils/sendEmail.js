@@ -36,7 +36,7 @@ const sendOrderEmail = async (order) => {
         category = prod.category || category;
         price = prod.price && prod.price > 0 ? `₹${prod.price.toLocaleString('en-IN')}` : 'Contact for pricing';
         if (prod.image) {
-          imageUrl = prod.image.startsWith('http') ? prod.image : `https://ldinteriors.in${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
+          imageUrl = prod.image.startsWith('http') ? prod.image : `https://ld-interiors-ai.vercel.app${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
         }
       }
     } catch (err) {
@@ -75,7 +75,7 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
       <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
         <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Product Details</h3>
         <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
-          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
+          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://ld-interiors-ai.vercel.app/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
           <li style="margin-bottom: 8px;"><strong>• Category:</strong> ${category}</li>
           <li style="margin-bottom: 8px;"><strong>• Price:</strong> <span style="color: #6d553b; font-weight: bold;">${price}</span></li>
           ${imageUrl ? `<li style="margin-bottom: 8px; word-break: break-all;"><strong>• Image URL:</strong> <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${imageUrl}</a></li>` : ''}
@@ -107,7 +107,7 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
         <img src="${imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ebdcc5;" />
         <p style="margin: 8px 0 0 0; font-size: 11px;">
           <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
-          ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
+          ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ld-interiors-ai.vercel.app/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
         </p>
       </div>
       ` : ''}
