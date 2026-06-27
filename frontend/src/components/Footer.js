@@ -89,7 +89,7 @@ export default function Footer() {
 
             {/* YouTube */}
             <a
-              href="https://youtube.com/@ldinteriors"
+              href="https://youtube.com/@ldinteriors?si=VliCMzVv1TDItidd"
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-600 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
