@@ -4,158 +4,120 @@ const EmailLog = require('../models/EmailLog');
 const Product = require('../models/Product');
 
 /**
- * Common helper to dispatch emails using Resend, Brevo, or SMTP.
+ * Sends an email via the Resend HTTP API.
  */
-const sendGenericEmail = async ({ to, subject, html, text, orderId, productName }) => {
-  const orderIdStr = orderId ? orderId.toString() : 'test_mock_id';
-  const pName = productName || 'Furniture Design';
-
-  // 1. USE RESEND HTTP API IF RESEND_API_KEY IS CONFIGURED
-  if (process.env.RESEND_API_KEY) {
-    console.log(`Sending email to ${to} via Resend HTTP API...`);
-    return new Promise((resolve, reject) => {
-      const data = JSON.stringify({
-        from: 'LD Interiors <onboarding@resend.dev>',
-        to: Array.isArray(to) ? to : [to],
-        subject: subject,
-        html: html,
-        text: text
-      });
-
-      const options = {
-        hostname: 'api.resend.com',
-        port: 443,
-        path: '/emails',
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(data)
-        }
-      };
-
-      const req = https.request(options, (res) => {
-        let body = '';
-        res.on('data', (chunk) => body += chunk);
-        res.on('end', async () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.log(`Email successfully sent via Resend to ${to}!`);
-            await EmailLog.create({
-              orderId: orderIdStr,
-              product: pName,
-              recipient: Array.isArray(to) ? to.join(', ') : to,
-              status: 'success',
-              smtpUser: 'Resend API',
-            }).catch(err => console.error('Failed to save EmailLog:', err));
-            resolve();
-          } else {
-            const errMessage = `Resend API returned status ${res.statusCode}: ${body}`;
-            console.error(errMessage);
-            await EmailLog.create({
-              orderId: orderIdStr,
-              product: pName,
-              recipient: Array.isArray(to) ? to.join(', ') : to,
-              status: 'failed',
-              error: errMessage,
-              smtpUser: 'Resend API',
-            }).catch(err => console.error('Failed to save EmailLog:', err));
-            reject(new Error(errMessage));
-          }
-        });
-      });
-
-      req.on('error', async (err) => {
-        console.error('Resend HTTP request failed:', err.message);
-        await EmailLog.create({
-          orderId: orderIdStr,
-          product: pName,
-          recipient: Array.isArray(to) ? to.join(', ') : to,
-          status: 'failed',
-          error: err.message,
-          smtpUser: 'Resend API',
-        }).catch(logErr => console.error('Failed to save EmailLog:', logErr));
-        reject(err);
-      });
-
-      req.write(data);
-      req.end();
+const sendViaResend = async ({ to, subject, html, text, orderIdStr, pName }) => {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      from: 'LD Interiors <onboarding@resend.dev>',
+      to: Array.isArray(to) ? to : [to],
+      subject: subject,
+      html: html,
+      text: text
     });
-  }
 
-  // 2. USE BREVO HTTP API IF BREVO_API_KEY IS CONFIGURED
-  if (process.env.BREVO_API_KEY) {
-    console.log(`Sending email to ${to} via Brevo HTTP API...`);
-    return new Promise((resolve, reject) => {
-      const data = JSON.stringify({
-        sender: { name: 'LD Interiors & Furnitures', email: 'ldinteriors.in@gmail.com' },
-        to: Array.isArray(to) ? to.map(e => ({ email: e })) : [{ email: to }],
-        subject: subject,
-        htmlContent: html,
-        textContent: text
-      });
+    const options = {
+      hostname: 'api.resend.com',
+      port: 443,
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    };
 
-      const options = {
-        hostname: 'api.brevo.com',
-        port: 443,
-        path: '/v3/smtp/email',
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
-          'content-type': 'application/json',
-          'content-length': Buffer.byteLength(data)
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', async () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log(`Email successfully sent via Resend to ${to}!`);
+          await EmailLog.create({
+            orderId: orderIdStr,
+            product: pName,
+            recipient: Array.isArray(to) ? to.join(', ') : to,
+            status: 'success',
+            smtpUser: 'Resend API',
+          }).catch(err => console.error('Failed to save EmailLog:', err));
+          resolve();
+        } else {
+          const errMessage = `Resend API returned status ${res.statusCode}: ${body}`;
+          reject(new Error(errMessage));
         }
-      };
-
-      const req = https.request(options, (res) => {
-        let body = '';
-        res.on('data', (chunk) => body += chunk);
-        res.on('end', async () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.log(`Email successfully sent via Brevo to ${to}!`);
-            await EmailLog.create({
-              orderId: orderIdStr,
-              product: pName,
-              recipient: Array.isArray(to) ? to.join(', ') : to,
-              status: 'success',
-              smtpUser: 'Brevo API',
-            }).catch(err => console.error('Failed to save EmailLog:', err));
-            resolve();
-          } else {
-            const errMessage = `Brevo API returned status ${res.statusCode}: ${body}`;
-            console.error(errMessage);
-            await EmailLog.create({
-              orderId: orderIdStr,
-              product: pName,
-              recipient: Array.isArray(to) ? to.join(', ') : to,
-              status: 'failed',
-              error: errMessage,
-              smtpUser: 'Brevo API',
-            }).catch(err => console.error('Failed to save EmailLog:', err));
-            reject(new Error(errMessage));
-          }
-        });
       });
-
-      req.on('error', async (err) => {
-        console.error('Brevo HTTP request failed:', err.message);
-        await EmailLog.create({
-          orderId: orderIdStr,
-          product: pName,
-          recipient: Array.isArray(to) ? to.join(', ') : to,
-          status: 'failed',
-          error: err.message,
-          smtpUser: 'Brevo API',
-        }).catch(logErr => console.error('Failed to save EmailLog:', logErr));
-        reject(err);
-      });
-
-      req.write(data);
-      req.end();
     });
-  }
 
-  // 3. FALLBACK TO SMTP (Localhost or servers where SMTP is unblocked)
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(data);
+    req.end();
+  });
+};
+
+/**
+ * Sends an email via the Brevo HTTP API.
+ */
+const sendViaBrevo = async ({ to, subject, html, text, orderIdStr, pName }) => {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      sender: { name: 'LD Interiors & Furnitures', email: 'ldinteriors.in@gmail.com' },
+      to: Array.isArray(to) ? to.map(e => ({ email: e })) : [{ email: to }],
+      subject: subject,
+      htmlContent: html,
+      textContent: text
+    });
+
+    const options = {
+      hostname: 'api.brevo.com',
+      port: 443,
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(data)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', async () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log(`Email successfully sent via Brevo to ${to}!`);
+          await EmailLog.create({
+            orderId: orderIdStr,
+            product: pName,
+            recipient: Array.isArray(to) ? to.join(', ') : to,
+            status: 'success',
+            smtpUser: 'Brevo API',
+          }).catch(err => console.error('Failed to save EmailLog:', err));
+          resolve();
+        } else {
+          const errMessage = `Brevo API returned status ${res.statusCode}: ${body}`;
+          reject(new Error(errMessage));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(data);
+    req.end();
+  });
+};
+
+/**
+ * Sends an email via SMTP.
+ */
+const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   let transporter;
   const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
 
@@ -195,7 +157,7 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
       });
     } catch (err) {
       console.error('Failed to initialize Ethereal test account:', err.message);
-      return;
+      throw err;
     }
   }
 
@@ -207,32 +169,81 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
     text: text,
   };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Email successfully sent via SMTP to ${to}! Message ID:`, info.messageId);
-    
-    await EmailLog.create({
-      orderId: orderIdStr,
-      product: pName,
-      recipient: Array.isArray(to) ? to.join(', ') : to,
-      status: 'success',
-      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
-    }).catch(err => console.error('Failed to save EmailLog:', err));
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`Email successfully sent via SMTP to ${to}! Message ID:`, info.messageId);
+  
+  await EmailLog.create({
+    orderId: orderIdStr,
+    product: pName,
+    recipient: Array.isArray(to) ? to.join(', ') : to,
+    status: 'success',
+    smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+  }).catch(err => console.error('Failed to save EmailLog:', err));
 
-    if (!hasSmtpConfig) {
-      console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
+  if (!hasSmtpConfig) {
+    console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
+  }
+};
+
+/**
+ * Common self-healing fallback helper that tries Resend, Brevo, and SMTP.
+ */
+const sendGenericEmail = async ({ to, subject, html, text, orderId, productName }) => {
+  const orderIdStr = orderId ? orderId.toString() : 'test_mock_id';
+  const pName = productName || 'Furniture Design';
+  
+  let sent = false;
+  let errors = [];
+
+  // 1. Try Resend if configured
+  if (process.env.RESEND_API_KEY) {
+    try {
+      await sendViaResend({ to, subject, html, text, orderIdStr, pName });
+      sent = true;
+      return;
+    } catch (err) {
+      console.warn(`Resend API failed for recipient ${to}. Error: ${err.message}. Attempting fallback...`);
+      errors.push(`Resend: ${err.message}`);
     }
-  } catch (error) {
-    console.error('Nodemailer SMTP sendMail failed:', error.message);
+  }
+
+  // 2. Try Brevo if configured and not sent
+  if (!sent && process.env.BREVO_API_KEY) {
+    try {
+      await sendViaBrevo({ to, subject, html, text, orderIdStr, pName });
+      sent = true;
+      return;
+    } catch (err) {
+      console.warn(`Brevo API failed for recipient ${to}. Error: ${err.message}. Attempting fallback...`);
+      errors.push(`Brevo: ${err.message}`);
+    }
+  }
+
+  // 3. Fallback to SMTP if not sent
+  if (!sent) {
+    try {
+      await sendViaSMTP({ to, subject, html, text, orderIdStr, pName });
+      sent = true;
+      return;
+    } catch (err) {
+      console.error(`SMTP fallback failed for recipient ${to}. Error: ${err.message}`);
+      errors.push(`SMTP: ${err.message}`);
+    }
+  }
+
+  // If all failed, log and reject
+  if (!sent) {
+    const combinedError = `All email transports failed for recipient ${to}. Errors: [${errors.join(', ')}]`;
+    console.error(combinedError);
     await EmailLog.create({
       orderId: orderIdStr,
       product: pName,
       recipient: Array.isArray(to) ? to.join(', ') : to,
       status: 'failed',
-      error: error.message,
-      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+      error: combinedError,
+      smtpUser: 'All Transports Failed',
     }).catch(err => console.error('Failed to save EmailLog:', err));
-    throw error;
+    throw new Error(combinedError);
   }
 };
 
