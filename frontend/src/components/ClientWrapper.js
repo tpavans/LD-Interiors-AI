@@ -752,7 +752,6 @@ Please review your order details. Would you like to confirm this order? (Type **
             text: summaryText,
             nextState: { type, step, lang, collected: updatedCollected, awaitingConfirmation: true }
           };
-
         } else if (type === 'order') {
           const priceConfirmationAlert = lang === 'en'
             ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`
@@ -827,19 +826,28 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
     if (isOrderTrigger) {
       if (matchedProductTitle) {
         setSelectedProduct(matchedProductTitle);
+        const responseText = langStyle === 'en'
+          ? `Sure! I am opening the Order Checkout Form for you right now with *${matchedProductTitle}* selected. Please fill out your details (Name, Phone, Email, Address, Custom Size, and Budget) in the form to submit your order directly to our WhatsApp!`
+          : langStyle === 'te'
+          ? `తప్పకుండా! నేను మీ కోసం *${matchedProductTitle}* సెలెక్ట్ చేసి ఆర్డర్ ఫారమ్‌ను ఓపెన్ చేస్తున్నాను. దయచేసి మీ వివరాలను పూరించి వాట్సాప్ ద్వారా సబ్మిట్ చేయండి.`
+          : `Sure! I am opening the Order Checkout Form with *${matchedProductTitle}* selected. Please fill out your details to submit.`;
+        return {
+          text: responseText,
+          switchToOrderTab: true,
+          nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
+        };
+      } else {
+        const responseText = langStyle === 'en'
+          ? `I can help you browse our premium collections and place custom orders! Please select a category below to explore designs:`
+          : langStyle === 'te'
+          ? `నేను మీకు మా ప్రీమియం డిజైన్‌లను చూపించగలను! దయచేసి కింద ఉన్న కేటగిరీలలో ఒకదాన్ని ఎంచుకోండి:`
+          : `Maa premium collections and designs explore cheyyadaniki, kindha unna categories items select cheyandi andi:`;
+        return {
+          text: responseText,
+          type: 'categories',
+          nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
+        };
       }
-      
-      const responseText = langStyle === 'en'
-        ? `Sure! I am opening the Order Checkout Form for you right now. Please fill out your details (Name, Phone, Email, Address, Custom Size, and Budget) in the form to submit your order directly to our WhatsApp!`
-        : langStyle === 'te'
-        ? `తప్పకుండా! నేను మీ కోసం ఆర్డర్ ఫారమ్‌ను ఓపెన్ చేస్తున్నాను. దయచేసి మీ పేరు, ఫోన్ నంబర్, చిరునామా, కస్టమ్ సైజ్ మరియు బడ్జెట్ వివరాలను పూరించి వాట్సాప్ ద్వారా సబ్మిట్ చేయండి.`
-        : `Sure andi! Mee kosam manual order checkout form open chesthunnanu right now. Form lo mee details (Name, Phone, Address, Sizing) fill chesi, custom order details direct ga WhatsApp ki submit cheyandi!`;
-
-      return {
-        text: responseText,
-        switchToOrderTab: true,
-        nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
-      };
     }
 
     if (isCustomTrigger) {
@@ -1124,6 +1132,7 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       return {
         text: baseResponseObj.text,
         images: baseResponseObj.images || [],
+        type: baseResponseObj.type || null,
         productTitle: matchedProductTitle,
         switchToTrackTab: baseResponseObj.switchToTrackTab,
         switchToSupportPage: baseResponseObj.switchToSupportPage,
@@ -1134,10 +1143,57 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       return {
         text: baseResponseObj,
         images: [],
+        type: null,
         productTitle: matchedProductTitle,
         nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
       };
     }
+  };
+
+  const categoriesList = [
+    { key: 'mandiralu', label: '🛕 Pooja Mandirams' },
+    { key: 'bedroom', label: '🛏️ Teak Beds' },
+    { key: 'sofa', label: '🛋️ Living Sofa Sets' },
+    { key: 'wardrobe', label: '🚪 Wardrobes & Almirahs' },
+    { key: 'kitchen', label: '🍳 Modular Kitchen' },
+    { key: 'gummalu', label: '🚪 Main Door Frames' }
+  ];
+
+  const handleCategoryClick = (categoryKey, categoryLabel) => {
+    setMessages(prev => [...prev, { sender: 'user', text: `Browse ${categoryLabel}` }]);
+    
+    let items = [];
+    if (categoryKey === 'mandiralu') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
+    } else if (categoryKey === 'bedroom') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
+    } else if (categoryKey === 'sofa') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.category.toLowerCase().includes('living') || p.title.toLowerCase().includes('tv') || p.title.toLowerCase().includes('coffee'));
+    } else if (categoryKey === 'wardrobe') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('almirah') || p.title.toLowerCase().includes('cupboard'));
+    } else if (categoryKey === 'kitchen') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+    } else if (categoryKey === 'gummalu') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
+    }
+
+    setTimeout(() => {
+      if (items.length > 0) {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `Found ${items.length} designs in *${categoryLabel}* directly matching our database:`,
+          type: 'products',
+          productsData: items
+        }]);
+        speakMessage(`Here are our designs in ${categoryLabel}. Tap order to configure directly.`, false);
+      } else {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `We customize premium *${categoryLabel}* designs at our workshop. Please contact Mr. Nagaraju at +916281653998 for custom options!`,
+        }]);
+        speakMessage(`We customize premium designs. Please contact Nagaraju.`, false);
+      }
+    }, 400);
   };
 
   // Handle chat message submit
@@ -1148,6 +1204,39 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     const userMsg = chatInput;
     setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
     setChatInput('');
+
+    // INTERCEPT 10-DIGIT PHONE NUMBERS FOR LIVE IN-CHAT TRACKING
+    const cleanPhone = userMsg.replace(/[^0-9]/g, '');
+    if (cleanPhone.length === 10) {
+      setTimeout(() => {
+        api.get(`/orders/track?phone=${cleanPhone}`)
+          .then(res => {
+            if (res.data && res.data.length > 0) {
+              setMessages(prev => [...prev, {
+                sender: 'bot',
+                text: `I found ${res.data.length} active order(s) registered under **${cleanPhone}**! Here is the live status timeline:`,
+                type: 'tracking',
+                ordersData: res.data
+              }]);
+              speakMessage(`I found ${res.data.length} orders registered under your number. Here is the live status timeline.`, false);
+            } else {
+              setMessages(prev => [...prev, {
+                sender: 'bot',
+                text: `I couldn't find any active orders for the phone number **${cleanPhone}** in our database.\n\nPlease double check the number, or select a category below to explore our products:`,
+                type: 'categories'
+              }]);
+              speakMessage("I could not find any active orders for this phone number. You can browse our catalog below.", false);
+            }
+          })
+          .catch(err => {
+            setMessages(prev => [...prev, {
+              sender: 'bot',
+              text: `Sorry, there was an error communicating with our server. Please try again or click 'Track' in the navigation bar to query manually.`,
+            }]);
+          });
+      }, 500);
+      return;
+    }
 
     // Simulate bot thinking and reply
     setTimeout(() => {
@@ -1162,6 +1251,9 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
         sender: 'bot', 
         text: replyObj.text,
         images: replyObj.images || [],
+        type: replyObj.type || null,
+        productsData: replyObj.productsData || null,
+        ordersData: replyObj.ordersData || null,
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
       
@@ -1206,6 +1298,9 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
         sender: 'bot', 
         text: replyObj.text,
         images: replyObj.images || [],
+        type: replyObj.type || null,
+        productsData: replyObj.productsData || null,
+        ordersData: replyObj.ordersData || null,
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
       
@@ -1561,6 +1656,90 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                           }`}
                         >
                           <div>{msg.text}</div>
+                          
+                          {/* Rich Interactive Templates for e-commerce (Amazon/Flipkart style) */}
+                          {msg.sender === 'bot' && msg.type === 'categories' && (
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                              {categoriesList.map((cat) => (
+                                <button
+                                  key={cat.key}
+                                  onClick={() => handleCategoryClick(cat.key, cat.label)}
+                                  className="p-2 text-[10px] text-center font-bold text-wood-dark bg-white border border-[#ebdcc5] hover:bg-[#ebdcc5]/20 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 duration-150 font-serif"
+                                >
+                                  {cat.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {msg.sender === 'bot' && msg.type === 'products' && msg.productsData && (
+                            <div className="mt-3 space-y-2 max-h-60 overflow-y-auto pr-1">
+                              {msg.productsData.map((prod, i) => (
+                                <div key={i} className="flex gap-2.5 bg-white p-2 rounded-xl border border-[#ebdcc5] shadow-xs text-left">
+                                  <img src={prod.image} alt={prod.title} className="w-14 h-14 object-cover rounded-lg border shrink-0 bg-neutral-100" />
+                                  <div className="flex-grow min-w-0 flex flex-col justify-between">
+                                    <div>
+                                      <h4 className="text-[10px] font-extrabold text-wood-dark truncate font-serif">{prod.title}</h4>
+                                      <p className="text-[8px] text-gray-500 line-clamp-1">{prod.category}</p>
+                                      <p className="text-[9px] font-extrabold text-emerald-700 mt-0.5">Est. Price: {prod.price}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        setActiveTab('order');
+                                        setSelectedProduct(prod.title);
+                                      }}
+                                      className="mt-1 w-full bg-[#423525] hover:bg-wood-medium text-white text-[8px] font-extrabold tracking-wider py-1 rounded-lg transition-colors cursor-pointer text-center"
+                                    >
+                                      ORDER NOW
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {msg.sender === 'bot' && msg.type === 'tracking' && msg.ordersData && (
+                            <div className="mt-3 space-y-3.5 max-h-64 overflow-y-auto pr-1">
+                              {msg.ordersData.map((order, i) => {
+                                const statuses = ['Order Received', 'Wood Selection', 'Carpentry Work', 'Polishing/Finishing', 'Out for Delivery'];
+                                const currentIdx = statuses.indexOf(order.status) !== -1 ? statuses.indexOf(order.status) : 0;
+                                
+                                return (
+                                  <div key={i} className="bg-white p-3 rounded-xl border border-[#ebdcc5] shadow-xs text-left">
+                                    <div className="flex items-center justify-between border-b border-gray-100 pb-1.5 mb-2">
+                                      <span className="text-[9px] font-extrabold text-wood-dark font-mono">ID: #{order._id ? order._id.slice(-6).toUpperCase() : 'N/A'}</span>
+                                      <span className="text-[8px] bg-amber-50 text-amber-800 font-bold px-1.5 py-0.5 rounded border border-amber-200">{order.status}</span>
+                                    </div>
+                                    <p className="text-[9.5px] font-bold text-wood-light mb-2">Product: <span className="text-wood-dark font-extrabold">{order.product}</span></p>
+                                    
+                                    <div className="space-y-1.5 pl-2 relative border-l border-gray-200 ml-1.5">
+                                      {statuses.map((step, idx) => {
+                                        const isCompleted = idx <= currentIdx;
+                                        const isCurrent = idx === currentIdx;
+                                        
+                                        return (
+                                          <div key={idx} className="relative flex items-center gap-2 pl-3 py-0.5">
+                                            <span className={`absolute left-[-5px] top-1.5 h-2.5 w-2.5 rounded-full border flex items-center justify-center ${
+                                              isCompleted ? 'bg-emerald-500 border-emerald-600' : 'bg-white border-gray-300'
+                                            }`}>
+                                              {isCompleted && (
+                                                <span className="block h-1 w-1 rounded-full bg-white"></span>
+                                              )}
+                                            </span>
+                                            <span className={`text-[8.5px] font-semibold ${
+                                              isCurrent ? 'text-emerald-700 font-extrabold' : isCompleted ? 'text-wood-dark' : 'text-gray-400'
+                                            }`}>
+                                              {step}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                           
                           {/* User uploaded room image preview */}
                           {msg.sender === 'user' && msg.image && (
