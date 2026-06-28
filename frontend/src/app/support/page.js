@@ -62,8 +62,8 @@ export default function SupportPage() {
 
       // 4. Construct WhatsApp dispatch redirect message
       const cleanPhone = phone.replace(/\D/g, '');
-      const targetPhone = '916301290966'; // Mr. Nagaraju's mobile number
-      const whatsappMsg = `Hello Nagaraju Garu! I submitted a Customer Support ticket on your LD Interiors website:
+      const targetPhone = '919346325291'; // Admin Pavan Sai's mobile number
+      const whatsappMsg = `Hello Pavan Sai! I submitted a Customer Support ticket on the LD Interiors website:
 
 *Customer Details:*
 - Name: ${name.trim()}
