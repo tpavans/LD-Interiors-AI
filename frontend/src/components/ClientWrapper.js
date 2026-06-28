@@ -875,25 +875,77 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
     // BASE RESPONSES (NON-WORKFLOW)
     // ----------------------------------------------------
     const getBaseResponse = () => {
-      // 1. PRICING & ESTIMATION / QUOTATIONS
+      // 1. GREETINGS & SMALL TALK (Namaste, Hi, Hello, How are you, etc.)
+      const isGreeting = query.includes('hi') || query.includes('hello') || query.includes('namaste') || query.includes('hey') || query.includes('ela unnavu') || query.includes('how are you') || query.includes('హాయ్') || query.includes('నమస్తే');
+      if (isGreeting) {
+        return langStyle === 'en'
+          ? `Namaste andi! 🙏 Welcome to LD Interiors. Nenu chala bagunnanu, thank you! Meeru ela unnarandi? 
+I am here to guide you through our premium Teak wood furniture designs, help you place orders, track delivery, or open support tickets. How can I help you today? 😊`
+          : langStyle === 'te'
+          ? `నమస్తే అండీ! 🙏 ఎల్‌డి ఇంటీరియర్స్ కి స్వాగతం. నేను చాలా బాగున్నాను, ధన్యవాదాలు! మీరు ఎలా ఉన్నారండీ? 
+ప్రీమియం టేక్ వుడ్ ఫర్నిచర్ డిజైన్ వివరాలు, కొత్త ఆర్డర్ ప్లేస్ చేయడం, ఆర్డర్ ట్రాక్ చేయడం లేదా కస్టమర్ సపోర్ట్ వంటి ఏ విషయానికైనా నేను మీకు సహాయం చేయడానికి సిద్ధంగా ఉన్నాను. చెప్పండి, మీకు ఎలా సహాయపడగలను? 😊`
+          : `Namaste andi! 🙏 Welcome to LD Interiors. Nenu chala bagunnanu, thank you! Meeru ela unnarandi? 
+Maa premium Teak wood designs catalogs browse cheyyadaniki, custom orders submit cheyyadaniki, live status track cheyyadaniki, leda support tickets raise cheyyadaniki nenu ready ga unnanu. Eeroju meeku ela sahaya padagalanu? 😊`;
+      }
+
+      // 2. ORDER STATUS TRACKING TRIGGER
+      const isTracking = query.includes('track') || query.includes('status') || query.includes('timeline') || query.includes('delivery') || query.includes('ఎప్పుడు') || query.includes('స్టేటస్') || query.includes('ట్రాక్');
+      if (isTracking) {
+        return {
+          text: langStyle === 'en'
+            ? `Sure! I am opening the Order Tracking panel for you right now. Please enter your registered phone number there to check your live workshop progress and carpentry status! 📦`
+            : langStyle === 'te'
+            ? `తప్పకుండా అండీ! నేను మీ కోసం ఆర్డర్ ట్రాకింగ్ ప్యానెల్ ఓపెన్ చేస్తున్నాను. దయచేసి మీ రిజిస్టర్డ్ మొబైల్ నంబర్‌ని నమోదు చేసి లైవ్ కార్పెంట్రీ మరియు వర్క్‌షాప్ ప్రగతిని చూడండి! 📦`
+            : `Sure andi! Mee live status tracking section right now open chesthunnanu. Registered mobile number enter chesi, carpentry and workshop updates chuskondi! 📦`,
+          switchToTrackTab: true
+        };
+      }
+
+      // 3. CUSTOMER SUPPORT / COMPLAINT TRIGGER
+      const isSupport = query.includes('support') || query.includes('complaint') || query.includes('issue') || query.includes('help') || query.includes('repair') || query.includes('problem') || query.includes('సపోర్ట్') || query.includes('సహాయం') || query.includes('సమస్య');
+      if (isSupport) {
+        return {
+          text: langStyle === 'en'
+            ? `Sure andi! I am redirecting you to our Customer Support ticket page. Please submit your details and describe the problem, and our admin team will contact you to resolve it! 🔧`
+            : langStyle === 'te'
+            ? `కచ్చితంగా అండీ! నేను మిమ్మల్ని కస్టమర్ సపోర్ట్ పేజీకి మళ్లిస్తున్నాను. దయచేసి మీ సమస్యను అక్కడ సమర్పించండి, మా అడ్మిన్ బృందం మీకు సహాయం చేయడానికి వెంటనే సంప్రదిస్తుంది! 🔧`
+            : `Khanditham ga andi! Nenu mimmalni support form page ki redirect chesthunnanu. Details fill chesi ticket submit cheyandi, admin Pavan Sai garu ventane respond avutharu! 🔧`,
+          switchToSupportPage: true
+        };
+      }
+
+      // 4. CONTACT ROUTING FOR ADMINS / DETAILS (Nagaraju / Pavan Sai)
+      const isContact = query.includes('contact') || query.includes('number') || query.includes('call') || query.includes('phone') || query.includes('admin') || query.includes('nagaraju') || query.includes('pavan') || query.includes('ఫోన్') || query.includes('నంబర్');
+      if (isContact) {
+        return langStyle === 'en'
+          ? `Sure andi! Here are the contact details for LD Interiors:
+📞 **Mr. Nagaraju (Owner & Head Carpenter)**: +916281653998 (For design quotes, teak wood selection, and contract setups)
+📞 **Web Admin Pavan Sai (Tech Support)**: +919346325291 (For order changes, website issues, and general support)
+
+Please feel free to call us or chat on WhatsApp! 💬`
+          : langStyle === 'te'
+          ? `తప్పకుండా అండీ! మా సంప్రదింపు వివరాలు ఇక్కడ ఉన్నాయి:
+📞 **మిస్టర్ నాగరాజు (యజమాని & ప్రధాన వడ్రంగి)**: +916281653998 (డిజైన్ కొటేషన్స్, టేక్ కలప ఎంపిక మరియు ఆర్డర్ కన్ఫర్మేషన్స్)
+📞 **వెబ్ అడ్మిన్ పవన్ సాయి (సాంకేతిక సహాయం)**: +919346325291 (వెబ్‌సైట్ మరియు జనరల్ సపోర్ట్ కోసం)
+
+దయచేసి మాకు నేరుగా కాల్ చేయండి లేదా వాట్సాప్‌లో చాట్ చేయండి! 💬`
+          : `Sure andi! LD Interiors admins direct contacts list:
+📞 **Mr. Nagaraju (Owner/Wood artisan)**: +916281653998 (Pricing quotes, Teak wood logs checking)
+📞 **Web Admin Pavan Sai (Tech Admin)**: +919346325291 (General tickets resolving)
+
+Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set cheskovachu andi! 💬`;
+      }
+
+      // 5. PRICING & ESTIMATION / QUOTATIONS
       if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
         return langStyle === 'en'
-          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`
+          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, we'll proceed with your order.`
           : langStyle === 'te'
           ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
           : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`;
       }
 
-      // 2. CONTACT ROUTING FOR PAVAN SAI / TECHNICAL / DESIGNS
-      if (query.includes('developer') || query.includes('website') || query.includes('admin') || query.includes('pavan') || query.includes('pawansai') || query.includes('technical') || query.includes('support') || query.includes('design information') || query.includes('product details')) {
-        return langStyle === 'en'
-          ? `For product design details, technical specifications, website support, or admin dashboard logins, please contact Web Admin Pavan Sai at +919346325291.`
-          : langStyle === 'te'
-          ? `డిజైన్ సమాచారం, సాంకేతిక ప్రశ్నలు మరియు వెబ్‌సైట్ సహాయం కోసం, దయచేసి పవన్ సాయి (+919346325291) గారిని సంప్రదించండి.`
-          : `Design details, website support lera technical questions kosam developer Pavan Sai (+919346325291) garithoti matladandi andi.`;
-      }
-
-      // 3. ADDRESS & LOCATION
+      // 6. ADDRESS & LOCATION
       if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
         return langStyle === 'en'
           ? `Our studio and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
@@ -902,49 +954,31 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
           : `Maa studio workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
       }
 
-      // 4. ORDER STATUS TRACKING
-      if (query.includes('my order') || query.includes('ordered') || query.includes('track') || query.includes('status') || query.includes('delivery') || query.includes('naa order')) {
-        const savedName = localStorage.getItem('ld_user_name') || '';
-        const savedPhone = localStorage.getItem('ld_user_phone') || '';
-
-        if (savedName && savedPhone) {
-          if (trackedOrders && trackedOrders.length > 0) {
-            const listString = trackedOrders.map(o => `- ${o.product}: Status is ${o.status}`).join('\n');
-            return langStyle === 'en'
-              ? `Hello ${savedName}! Here is the status of your order(s):\n${listString}\n\nYou can view full live progress timelines on our 'Orders' page.`
-              : langStyle === 'te'
-              ? `నమస్తే ${savedName} గారు! మీ ఆర్డర్ స్థితి వివరాలు:\n${listString}\n\nమీ ఆర్డర్ స్థితిని చెక్ చేయడానికి ట్రాక్ లింక్ చూడండి.`
-              : `Mee order status check cheyyali anukuntey track link check cheyyandi:\n👉 https://ld-interiors-ai.vercel.app/orders\n\n${listString}`;
-          } else {
-            return langStyle === 'en'
-              ? `Hello ${savedName}! You are registered with phone number ${savedPhone}. I could not find any active orders for this number in our database yet.`
-              : langStyle === 'te'
-              ? `నమస్తే ${savedName} గారు! ఈ ఫోన్ నంబర్‌తో నమోదు చేయబడిన యాక్టివ్ ఆర్డర్‌లు ఏవీ లేవు.`
-              : `Namaste ${savedName} Garu! Mee number thoti register ayyi unru, kani database checks lo active orders dhorakaledhu.`;
-          }
-        } else {
-          return langStyle === 'en'
-            ? `Please enter your details in our visitor form first. Once registered, I will be able to search the database and tracking logs for your orders instantly!`
-            : langStyle === 'te'
-            ? `దయచేసి మొదట మీ వివరాలను నమోదు చేయండి, అప్పుడు మీ ఆర్డర్ స్థితిని చూపించగలను.`
-            : `Namaste! Dayachesi website entry user register detail complete cheyyandi.`;
-        }
-      }
-
-      // 5. GREETINGS / HELLO
-      if (query.includes('hello') || query.includes('hi') || query.includes('namaste') || query.includes('hey') || query.includes('hai')) {
-        return langStyle === 'en'
-          ? `Welcome back! What would you like to explore today?`
-          : langStyle === 'te'
-          ? `నమస్తే! స్వాగతం. ఈ రోజు మీరు ఏమి అన్వేషించాలనుకుంటున్నారు?`
-          : `Welcome back! What would you like to explore today?`;
-      }
-
-      // 6. EXPERIENCE & TRUST
+      // 7. EXPERIENCE & TRUST
       if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
         return langStyle === 'en'
           ? `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`
           : `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
+      }
+
+      // 8. TEAK WOOD QUALITY INQUIRIES
+      const isWoodQuality = query.includes('teak') || query.includes('wood') || query.includes('karra') || query.includes('quality') || query.includes('కలప') || query.includes('కర్ర') || query.includes('టేక్');
+      if (isWoodQuality) {
+        return langStyle === 'en'
+          ? `We construct our furniture using 100% pure genuine quality Teak wood (టేక్ కరప) to ensure high density, moisture protection, and lifetime durability. No synthetic mix or low-grade materials are allowed in our workshop! 🪵✨`
+          : langStyle === 'te'
+          ? `మేము మా ఫర్నిచర్‌ను కేవలం 100% నిజమైన మరియు అత్యుత్తమ టేక్ కలపతోనే తయారు చేస్తాము. ఇది వర్షానికి లేదా వేడికి చెడిపోదు, జీవితాంతం మన్నికగా ఉంటుంది! 🪵✨`
+          : `Maa workshop lo exclusively 100% pure Teak wood selection mathramey chestaru Nagaraju garu. Heavy density, double-cote Manchams verification parameters chala strict ga maintain chesi lifetime safety assurance istham andi! 🪵✨`;
+      }
+
+      // 9. THANK YOU / CUTE RESPONSES
+      const isThankYou = query.includes('thank') || query.includes('thanks') || query.includes('dhanyavadalu') || query.includes('nice') || query.includes('good') || query.includes('super') || query.includes('happy') || query.includes('ధన్యవాదాలు');
+      if (isThankYou) {
+        return langStyle === 'en'
+          ? `Aww, thank you so much! 😊 It is my absolute pleasure to guide you. If you need any more customization designs or help, please let me know. Have a wonderful day! 🌸`
+          : langStyle === 'te'
+          ? `ధన్యవాదాలు అండీ! 😊 మీకు సహాయపడటం నాకు చాలా సంతోషంగా ఉంది. మీకు ఏవైనా డిజైన్ మార్పులు లేదా ఇతర సమాచారం కావాలంటే అడగండి. మీకు మంచి రోజు అవ్వాలని కోరుకుంటున్నాను! 🌸`
+          : `Chala chala thank you andi! 😊 Mimmalni assist cheyyadam naku chala happy ga undandi. Custom orders configuration modifications updates emaina chusthara andi? Please tell me! 🌸`;
       }
 
       // 7. CATEGORY RAG DATABASE SEARCH
@@ -1091,6 +1125,9 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
         text: baseResponseObj.text,
         images: baseResponseObj.images || [],
         productTitle: matchedProductTitle,
+        switchToTrackTab: baseResponseObj.switchToTrackTab,
+        switchToSupportPage: baseResponseObj.switchToSupportPage,
+        switchToOrderTab: baseResponseObj.switchToOrderTab,
         nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
       };
     } else {
@@ -1132,10 +1169,23 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       const isEnglish = checkIsEnglishQuery(userMsg);
       speakMessage(replyObj.text, !isEnglish);
 
-      // Auto-switch to Order Form tab if flagged
+      // Auto-switch to tabs if flagged
       if (replyObj.switchToOrderTab) {
         setTimeout(() => {
           setActiveTab('order');
+        }, 2200);
+      }
+
+      if (replyObj.switchToTrackTab) {
+        setTimeout(() => {
+          setActiveTab('track');
+          fetchTrackedOrders();
+        }, 2200);
+      }
+
+      if (replyObj.switchToSupportPage) {
+        setTimeout(() => {
+          window.location.href = '/support';
         }, 2200);
       }
     }, 500);
@@ -1163,10 +1213,23 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       const isEnglish = checkIsEnglishQuery(promptText);
       speakMessage(replyObj.text, !isEnglish);
 
-      // Auto-switch to Order Form tab if flagged
+      // Auto-switch to tabs if flagged
       if (replyObj.switchToOrderTab) {
         setTimeout(() => {
           setActiveTab('order');
+        }, 2200);
+      }
+
+      if (replyObj.switchToTrackTab) {
+        setTimeout(() => {
+          setActiveTab('track');
+          fetchTrackedOrders();
+        }, 2200);
+      }
+
+      if (replyObj.switchToSupportPage) {
+        setTimeout(() => {
+          window.location.href = '/support';
         }, 2200);
       }
     }, 500);
@@ -1413,13 +1476,18 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
           {/* Chat Panel */}
           {isChatOpen && (
-            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] sm:h-[520px] bg-wood-cream border border-wood-border rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
+            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] sm:h-[520px] bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/20 rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
               {/* Header */}
-              <div className="bg-wood-dark px-5 py-4 text-white border-b border-wood-border/40">
+              <div className="bg-gradient-to-r from-[#423525] to-[#6d553b] px-5 py-4 text-white border-b border-wood-border/40">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-wood-accent flex items-center justify-center text-wood-dark font-serif font-extrabold text-sm shadow-inner">
-                      LD
+                    <div className="relative">
+                      <div className="h-9 w-9 rounded-full bg-[#ebdcc5] flex items-center justify-center text-wood-dark border border-wood-accent/30 shadow-inner">
+                        <svg className="h-5 w-5 text-wood-accent fill-current" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.5h-2v-2h-2v-2h6v2h-2v2zm-3.5-7.5c-.83 0-1.5-.67-1.5-1.5S8.67 7 9.5 7s1.5.67 1.5 1.5S10.33 10 9.5 10zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5S15.33 10 14.5 10z"/>
+                        </svg>
+                      </div>
+                      <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-wood-dark animate-pulse"></span>
                     </div>
                     <div>
                       <h3 className="font-serif font-bold text-sm leading-none">LD Assistant</h3>
@@ -1428,9 +1496,9 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                           👤 Logged in as: {userName}
                         </p>
                       ) : (
-                        <span className="text-[9px] text-wood-cream/70 font-light tracking-wide inline-flex items-center gap-1 mt-0.5">
+                        <span className="text-[9px] text-amber-200/90 font-medium tracking-wide inline-flex items-center gap-1 mt-0.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                          Online • Conversational Search
+                          Natural Assistant • Online
                         </span>
                       )}
                     </div>
@@ -1486,10 +1554,10 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                         className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line transition-all duration-300 animate-slideIn ${
                             msg.sender === 'user'
-                              ? 'bg-wood-dark text-white rounded-tr-none'
-                              : 'bg-white border border-wood-border/50 text-wood-dark rounded-tl-none font-light'
+                              ? 'bg-[#423525] text-white rounded-tr-none border border-wood-dark/20'
+                              : 'bg-[#faf6f0] border border-[#ebdcc5] text-[#423525] rounded-tl-none font-medium'
                           }`}
                         >
                           <div>{msg.text}</div>
@@ -1550,25 +1618,37 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Quick Prompt Suggestions */}
-                  <div className="px-4 py-2 bg-wood-cream border-t border-wood-border/30 flex flex-wrap gap-1.5">
+                  {/* Quick Action Suggestions */}
+                  <div className="px-4 py-2 bg-wood-cream border-t border-wood-border/30 flex flex-wrap gap-1.5 justify-center">
                     <button
-                      onClick={() => handleQuickPrompt('Search sofas design list')}
-                      className="px-2.5 py-1 rounded-full bg-wood-beige text-[9px] font-bold text-wood-dark hover:bg-wood-accent hover:text-white transition-colors cursor-pointer"
+                      onClick={() => handleQuickPrompt('I want to order a design')}
+                      className="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[9px] font-bold text-emerald-800 transition-colors cursor-pointer flex items-center gap-1"
                     >
-                      Sofa sets?
+                      🛋️ Order Design
                     </button>
                     <button
-                      onClick={() => handleQuickPrompt('Search teak beds')}
-                      className="px-2.5 py-1 rounded-full bg-wood-beige text-[9px] font-bold text-wood-dark hover:bg-wood-accent hover:text-white transition-colors cursor-pointer"
+                      onClick={() => handleQuickPrompt('Track my order progress')}
+                      className="px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-[9px] font-bold text-amber-800 transition-colors cursor-pointer flex items-center gap-1"
                     >
-                      Teak Beds?
+                      📦 Track Order
                     </button>
                     <button
-                      onClick={() => handleQuickPrompt('Nagaraju details for estimation')}
-                      className="px-2.5 py-1 rounded-full bg-wood-beige text-[9px] font-bold text-wood-dark hover:bg-wood-accent hover:text-white transition-colors cursor-pointer"
+                      onClick={() => handleQuickPrompt('I need customer support help')}
+                      className="px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-[9px] font-bold text-rose-800 transition-colors cursor-pointer flex items-center gap-1"
                     >
-                      Cost estimation?
+                      🔧 Help & Support
+                    </button>
+                    <button
+                      onClick={() => handleQuickPrompt('Contact information for admins')}
+                      className="px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-[9px] font-bold text-blue-800 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      📞 Contact Admins
+                    </button>
+                    <button
+                      onClick={() => handleQuickPrompt('Where is your workshop address?')}
+                      className="px-2.5 py-1 rounded-full bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-[9px] font-bold text-neutral-800 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      🌟 Workshop Address
                     </button>
                   </div>
 
