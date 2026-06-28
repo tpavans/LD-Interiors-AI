@@ -39,7 +39,7 @@ export default function AboutPage() {
               Where Traditional Carvings Meet Modern Living
             </h2>
             <p className="text-sm text-wood-light font-light leading-relaxed">
-              Founded by master artisan <strong>Mr. Nagaraju</strong>, LD Interiors & Furnitures has been the hallmark of premium quality woodwork in the Konaseema region for over a decade. We specialize in converting raw teak wood and high-grade plywood into functional, lifetime-lasting masterpieces.
+              Founded by master artisan <strong>Mr. Nagaraju</strong>, LD Interiors & Furnitures has been the hallmark of premium quality woodwork in the Konaseema region with over 25+ years of experience. We specialize in converting raw teak wood and high-grade plywood into functional, lifetime-lasting masterpieces.
             </p>
             <p className="text-sm text-wood-light font-light leading-relaxed">
               Every puja mandiram, double cot bed (Mancham), sofa frame, and kitchen cabinet is built by hand at our workshop in **Mulasthanam, AP**, utilizing strict quality inspections, traditional interlocking carpentry joins, and premium polished finishes.
