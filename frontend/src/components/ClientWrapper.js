@@ -825,20 +825,21 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
     const isOrderTrigger = query.includes('buy') || query.includes('order') || query.includes('place order') || query.includes('need this furniture') || query.includes('want to buy') || query.includes('place this order') || query.includes('కొనాలి') || query.includes('ఆర్డర్');
 
     if (isOrderTrigger) {
-      const initialCollected = {
-        product: matchedProductTitle || '',
-        name: localStorage.getItem('ld_user_name') || userName || '',
-        phone: localStorage.getItem('ld_user_phone') || userPhone || '',
-      };
-      const nextStepIdx = findNextEmptyStep(ORDER_STEPS, initialCollected);
-      if (nextStepIdx !== -1) {
-        const nextField = ORDER_STEPS[nextStepIdx].field;
-        const question = getQuestionText(nextField, langStyle);
-        return {
-          text: question,
-          nextState: { type: 'order', step: nextStepIdx, lang: langStyle, collected: initialCollected }
-        };
+      if (matchedProductTitle) {
+        setSelectedProduct(matchedProductTitle);
       }
+      
+      const responseText = langStyle === 'en'
+        ? `Sure! I am opening the Order Checkout Form for you right now. Please fill out your details (Name, Phone, Email, Address, Custom Size, and Budget) in the form to submit your order directly to our WhatsApp!`
+        : langStyle === 'te'
+        ? `తప్పకుండా! నేను మీ కోసం ఆర్డర్ ఫారమ్‌ను ఓపెన్ చేస్తున్నాను. దయచేసి మీ పేరు, ఫోన్ నంబర్, చిరునామా, కస్టమ్ సైజ్ మరియు బడ్జెట్ వివరాలను పూరించి వాట్సాప్ ద్వారా సబ్మిట్ చేయండి.`
+        : `Sure andi! Mee kosam manual order checkout form open chesthunnanu right now. Form lo mee details (Name, Phone, Address, Sizing) fill chesi, custom order details direct ga WhatsApp ki submit cheyandi!`;
+
+      return {
+        text: responseText,
+        switchToOrderTab: true,
+        nextState: { type: 'idle', step: 0, lang: langStyle, collected: {} }
+      };
     }
 
     if (isCustomTrigger) {
@@ -1130,6 +1131,13 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       // Speak the reply
       const isEnglish = checkIsEnglishQuery(userMsg);
       speakMessage(replyObj.text, !isEnglish);
+
+      // Auto-switch to Order Form tab if flagged
+      if (replyObj.switchToOrderTab) {
+        setTimeout(() => {
+          setActiveTab('order');
+        }, 2200);
+      }
     }, 500);
   };
 
@@ -1154,6 +1162,13 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       // Speak the reply
       const isEnglish = checkIsEnglishQuery(promptText);
       speakMessage(replyObj.text, !isEnglish);
+
+      // Auto-switch to Order Form tab if flagged
+      if (replyObj.switchToOrderTab) {
+        setTimeout(() => {
+          setActiveTab('order');
+        }, 2200);
+      }
     }, 500);
   };
 
