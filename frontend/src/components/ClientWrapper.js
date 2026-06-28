@@ -822,7 +822,7 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
     // ----------------------------------------------------
     const isInteriorTrigger = query.includes('interior') || query.includes('interiors') || query.includes('decor') || query.includes('consultation') || query.includes('డిజైన్') || query.includes('ఇంటీరియర్');
     const isCustomTrigger = query.includes('custom') || query.includes('customise') || query.includes('customization') || query.includes('custom-made') || query.includes('carpenter design') || query.includes('కస్టమ్') || query.includes('కస్టమైజ్');
-    const isOrderTrigger = query.includes('buy') || query.includes('order') || query.includes('place order') || query.includes('need this furniture') || query.includes('want to buy') || query.includes('place this order') || query.includes('కొనాలి') || query.includes('ఆర్డర్');
+    const isOrderTrigger = (query.includes('buy') || query.includes('order') || query.includes('place order') || query.includes('need this furniture') || query.includes('want to buy') || query.includes('place this order') || query.includes('కొనాలి') || query.includes('ఆర్డర్')) && !query.includes('track') && !query.includes('status') && !query.includes('timeline') && !query.includes('complaint') && !query.includes('support');
 
     if (isOrderTrigger) {
       if (matchedProductTitle) {
