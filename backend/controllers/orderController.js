@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
-const sendOrderEmail = require('../utils/sendEmail');
+const { sendOrderEmail, sendCustomerGreetingEmail, sendCustomerStatusUpdateEmail } = require('../utils/sendEmail');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
@@ -58,7 +58,12 @@ const createOrder = async (req, res) => {
 
     // Send order email notification to ldinteriors.in@gmail.com
     sendOrderEmail(order).catch((err) => {
-      console.error('Failed to send order email:', err);
+      console.error('Failed to send admin order email:', err);
+    });
+
+    // Send greeting order confirmation email to the customer
+    sendCustomerGreetingEmail(order).catch((err) => {
+      console.error('Failed to send customer greeting email:', err);
     });
 
     res.status(201).json(order);
@@ -173,6 +178,12 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const updatedOrder = await order.save();
+
+    // Send progress status update email to the customer
+    sendCustomerStatusUpdateEmail(updatedOrder, status).catch((err) => {
+      console.error('Failed to send customer status update email:', err);
+    });
+
     res.json(updatedOrder);
   } catch (error) {
     console.error('Error updating order status:', error);
