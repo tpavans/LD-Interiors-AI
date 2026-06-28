@@ -10,7 +10,7 @@ export default function Footer() {
             About LD Interiors
           </h4>
           <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">About Us</Link>
+            <Link href="/about" className="hover:text-wood-dark transition-colors">About Us</Link>
             <div>
               <p className="font-semibold text-wood-dark mt-1">Studio Location:</p>
               <p className="mt-1 leading-relaxed">
@@ -58,7 +58,7 @@ export default function Footer() {
             <Link href="/orders" className="hover:text-wood-dark transition-colors">My Account</Link>
             <Link href="/orders" className="hover:text-wood-dark transition-colors">Track Order</Link>
             <Link href="/contact" className="hover:text-wood-dark transition-colors">Contact Us</Link>
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">Customer Support</Link>
+            <Link href="/support" className="hover:text-wood-dark transition-colors">Customer Support</Link>
           </div>
         </div>
 

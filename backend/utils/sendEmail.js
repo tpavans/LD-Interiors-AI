@@ -549,8 +549,89 @@ LD Interiors & Furnitures`;
   });
 };
 
+/**
+ * 4. Admin Support Ticket Notification Email (Sent to ldinteriors.in@gmail.com)
+ */
+const sendCustomerSupportEmail = async (support) => {
+  const dateStr = support.createdAt 
+    ? new Date(support.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) 
+    : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  const rawPhone = support.phone || '';
+  const cleanPhone = rawPhone.replace(/\D/g, '');
+  let dialPhone = rawPhone;
+  if (cleanPhone.length === 10) {
+    dialPhone = `+91${cleanPhone}`;
+  } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+    dialPhone = `+${cleanPhone}`;
+  } else if (cleanPhone.length > 0) {
+    dialPhone = `+${cleanPhone}`;
+  }
+
+  const textContent = `Hello Pavan Sai! A customer has submitted a support ticket on LD Interiors & Furnitures:
+
+Customer Details:
+- Name: ${support.name}
+- Phone: ${support.phone}
+- Email: ${support.email}
+
+Problem Description/Issue:
+"${support.issue}"
+
+Please contact the customer to resolve the issue as soon as possible.`;
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #ebdcc5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
+      <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
+        <h2 style="color: #6d553b; margin: 0; font-family: Georgia, serif;">LD Interiors & Furnitures</h2>
+        <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #d9534f; margin: 5px 0 0 0; font-weight: bold;">⚠️ New Support Ticket Received</p>
+      </div>
+
+      <p style="font-size: 15px; font-weight: bold; color: #6d553b; margin-bottom: 15px;">Hello Pavan Sai!</p>
+      <p style="font-size: 14px; margin-bottom: 15px;">A customer has submitted a support request on the LD Interiors website. Here are the ticket details:</p>
+
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Customer Details</h3>
+        <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
+          <li style="margin-bottom: 8px;"><strong>• Customer Name:</strong> ${support.name}</li>
+          <li style="margin-bottom: 8px;"><strong>• Phone Number:</strong> <a href="tel:${dialPhone}" style="color: #a07d57; text-decoration: none; font-weight: bold;">📞 ${support.phone}</a></li>
+          <li style="margin-bottom: 8px;"><strong>• Email Address:</strong> <a href="mailto:${support.email}" style="color: #a07d57; text-decoration: none;">${support.email}</a></li>
+        </ul>
+      </div>
+
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #c9302c; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Problem Description</h3>
+        <div style="font-size: 13px; color: #423525; padding: 12px; background-color: #fcfbf9; border-left: 4px solid #d9534f; border-radius: 4px; line-height: 1.5; font-style: italic;">
+          "${support.issue}"
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
+        <a href="tel:${dialPhone}" style="background-color: #d9534f; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #d43f3a;">
+          📞 Call Customer to Resolve
+        </a>
+      </div>
+
+      <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
+        This is an automated system notification from the LD Interiors & Furniture web platform. Support Ticket Timestamp: ${dateStr}.
+      </div>
+    </div>
+  `;
+
+  const subject = `⚠️ Support Ticket: New request from ${support.name}`;
+  return sendGenericEmail({
+    to: 'ldinteriors.in@gmail.com',
+    subject,
+    html: htmlContent,
+    text: textContent,
+    orderId: support._id,
+    productName: 'Support Request'
+  });
+};
+
 module.exports = {
   sendOrderEmail,
   sendCustomerGreetingEmail,
   sendCustomerStatusUpdateEmail,
+  sendCustomerSupportEmail,
 };

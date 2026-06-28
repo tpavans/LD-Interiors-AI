@@ -8,6 +8,7 @@ const seedProducts = require('./utils/seedProducts');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 
 // Global exception and rejection loggers
 process.on('uncaughtException', (err) => {
@@ -96,6 +97,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/support', supportRoutes);
 
 // Fallback path for undefined routes
 app.use((req, res, next) => {
