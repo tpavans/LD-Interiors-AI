@@ -35,25 +35,43 @@ export default function Home() {
             <Sparkles className="h-3 w-3 text-wood-accent animate-pulse" />
             Curated Inspiration
           </div>
-          <h1 className="font-serif text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl leading-none drop-shadow-lg">
-            Bespoke Spaces <br />
-            <span className="font-light italic text-wood-accent font-serif">Designed for Living</span>
+          <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl uppercase">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-wood-beige to-amber-100 block">LD INTERIORS</span>
+            <span className="font-serif font-light italic text-wood-accent block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">& Furnitures</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl font-light leading-relaxed text-wood-beige drop-shadow-sm">
-            LD Interiors & Furnitures brings you high-end, contemporary interior designs and premium woodwork. Explore our collection of premium residential and commercial spaces designed to inspire.
+            Brings you high-end, contemporary interior designs and premium woodwork. Explore our collection of premium residential and commercial spaces designed to inspire.
           </p>
           
-          {/* Traditional Proverb Quote */}
-          <div className="mx-auto mt-8 max-w-2xl border-y border-wood-accent/20 py-3.5 mb-8">
-            <p className="font-serif italic text-sm sm:text-base text-wood-accent font-semibold tracking-wide leading-relaxed">
-              "గృహమే కదా స్వర్గసీమ" — Traditional Proverb: 'Home is indeed a heaven.' We bring that heaven into reality with 25+ years of craftsmanship.
-            </p>
+          {/* Custom Elegant Bilingual Quote Card */}
+          <div className="mx-auto mt-10 max-w-3xl bg-black/45 backdrop-blur-md border border-wood-accent/30 rounded-2xl p-6 sm:p-8 shadow-inner mb-8 text-center relative overflow-hidden">
+            {/* Left side soft glow */}
+            <div className="absolute -left-16 -top-16 w-32 h-32 bg-wood-accent/10 rounded-full blur-2xl" />
+            
+            <span className="font-serif text-5xl text-wood-accent/30 absolute left-4 top-1 leading-none select-none">“</span>
+            
+            <div className="space-y-4 relative z-10 px-4">
+              {/* Telugu Quote */}
+              <p className="font-serif text-base sm:text-lg text-amber-100 font-semibold tracking-wide leading-relaxed">
+                "మీ ఇల్లు మీ వ్యక్తిత్వాన్ని ప్రతిబింబించే అద్దం... మీ కలలను నిరంతర ఆనందాలుగా మార్చే అద్భుత శిల్పం. 25 సంవత్సరాలకు పైగా అనుభవంతో, మీ అభిరుచులకు అనుగుణంగా టేకు కలపతో అపురూపమైన డిజైన్లను రూపొందిస్తున్నాము."
+              </p>
+              
+              {/* Divider */}
+              <div className="w-16 h-0.5 bg-wood-accent/30 mx-auto my-3" />
+              
+              {/* English Quote */}
+              <p className="font-sans text-xs sm:text-sm font-light text-wood-beige/90 tracking-wide leading-relaxed italic">
+                "Your home should tell the story of who you are, and be a collection of what you love. We shape your dreams into premium teak wood and bespoke designs."
+              </p>
+            </div>
+            
+            <span className="font-serif text-5xl text-wood-accent/30 absolute right-4 bottom-1 leading-none select-none">”</span>
           </div>
 
           <div className="mt-6 flex items-center justify-center gap-x-6">
             <Link
               href="/products"
-              className="flex items-center gap-2 rounded-full bg-wood-accent hover:bg-amber-500 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-wood-dark shadow-md transition-all duration-300 transform hover:scale-105 cursor-pointer btn-3d-accent"
+              className="flex items-center gap-2 rounded-full bg-wood-accent hover:bg-amber-500 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-wood-dark shadow-md transition-all duration-300 transform hover:scale-105 hover:ring-4 hover:ring-wood-accent/20 active:scale-95 cursor-pointer btn-3d-accent"
             >
               Explore Showcase
               <ArrowRight className="h-4 w-4" />
