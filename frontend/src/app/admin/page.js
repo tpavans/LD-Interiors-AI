@@ -793,26 +793,175 @@ Dhanyavaadalu`;
                           </a>
                           <button
                             onClick={() => {
-                              // 1. Open WhatsApp Welcome Chat
                               const cleanPhone = o.phone.replace(/\D/g, '');
                               const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
-                              const welcomeMsg = `LD INTERIORS receiving your order , our ldinteriors team will be contact you with in 24 hours , thank you for choosing ldinteriors`;
+                              
+                              const dateStr = o.createdAt 
+                                ? new Date(o.createdAt).toLocaleDateString('en-IN', {
+                                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+                                  })
+                                : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+                              
+                              const welcomeMsg = `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${o.name}, 👋
+
+Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
+
+🎉 Your order has been received successfully!
+
+📦 Order Details
+🪑 Product: ${o.product}
+📂 Category: ${o.category || 'Furniture Design'}
+📅 Order Date: ${dateStr}
+💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+
+🌐 Track your order anytime by visiting our website:
+https://ld-interiors-ai.vercel.app/
+
+If you have any questions or need assistance, feel free to contact us anytime.
+
+Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+
+Warm Regards,
+
+🏠 LD Interiors Team
+📞 +91 93463 25291
+
+"Designing Beautiful Spaces, Creating Happy Homes." ✨
+
+---------------------------------------------------------
+
+🏠 LD Interiors కి స్వాగతం!
+
+నమస్కారం ${o.name} గారికి, 🙏
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
+
+🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
+
+📦 మీ ఆర్డర్ వివరాలు
+🪑 ఉత్పత్తి: ${o.product}
+📂 విభాగం: ${o.category || 'Furniture Design'}
+📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
+💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
+
+📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+
+🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/
+
+🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
+
+✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
+
+మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+
+ధన్యవాదాలతో,
+
+🏠 LD Interiors బృందం
+📞 +91 93463 25291
+🌐 https://ld-interiors-ai.vercel.app/
+
+"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+
                               const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
                               window.open(waUrl, '_blank');
-
-                              // 2. Trigger Greeting Email Sending via API
-                              api.post(`/orders/${o._id}/send-greeting`)
-                                .then(() => {
-                                  alert(`Bilingual greeting email sent successfully to ${o.email}!`);
-                                })
-                                .catch(err => {
-                                  console.error('Failed to dispatch greeting email:', err);
-                                  alert(`WhatsApp chat opened, but email failed: ${err.response?.data?.message || err.message}`);
-                                });
                             }}
                             className="mt-1 flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer text-center w-full shadow-xs border border-emerald-500/20 active:scale-95"
                           >
-                            💬 Send Greeting
+                            💬 WhatsApp Greeting
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              const dateStr = o.createdAt 
+                                ? new Date(o.createdAt).toLocaleDateString('en-IN', {
+                                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+                                  })
+                                : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+                              
+                              const welcomeMsg = `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${o.name}, 👋
+
+Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
+
+🎉 Your order has been received successfully!
+
+📦 Order Details
+🪑 Product: ${o.product}
+📂 Category: ${o.category || 'Furniture Design'}
+📅 Order Date: ${dateStr}
+💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+
+🌐 Track your order anytime by visiting our website:
+https://ld-interiors-ai.vercel.app/
+
+If you have any questions or need assistance, feel free to contact us anytime.
+
+Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+
+Warm Regards,
+
+🏠 LD Interiors Team
+📞 +91 93463 25291
+
+"Designing Beautiful Spaces, Creating Happy Homes." ✨
+
+---------------------------------------------------------
+
+🏠 LD Interiors కి స్వాగతం!
+
+నమస్కారం ${o.name} గారికి, 🙏
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
+
+🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
+
+📦 మీ ఆర్డర్ వివరాలు
+🪑 ఉత్పత్తి: ${o.product}
+📂 విభాగం: ${o.category || 'Furniture Design'}
+📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
+💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
+
+📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+
+🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/
+
+🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
+
+✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
+
+మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+
+ధన్యవాదాలతో,
+
+🏠 LD Interiors బృందం
+📞 +91 93463 25291
+🌐 https://ld-interiors-ai.vercel.app/
+
+"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+
+                              const subject = `🎉 Order Received successfully! - ${o.product} | ఆర్డర్ విజయవంతంగా అందింది!`;
+                              const mailtoUrl = `mailto:${o.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
+                              window.open(mailtoUrl, '_blank');
+
+                              // Dispatch to backend email service in background (fallback)
+                              api.post(`/orders/${o._id}/send-greeting`).catch(() => {});
+                            }}
+                            className="mt-1 flex items-center justify-center gap-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer text-center w-full shadow-xs border border-blue-500/20 active:scale-95"
+                          >
+                            ✉️ Email Greeting
                           </button>
                         </div>
                       </td>

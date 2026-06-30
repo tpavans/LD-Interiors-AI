@@ -302,6 +302,78 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
 - Address: ${order.address}
 - Notes/Sizing/Address: ${order.notes || 'No custom notes.'}`;
 
+  const welcomeMsgText = `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${order.name}, 👋
+
+Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
+
+🎉 Your order has been received successfully!
+
+📦 Order Details
+🪑 Product: ${order.product}
+📂 Category: ${category}
+📅 Order Date: ${dateStr}
+💰 Price: ${price}
+
+Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+
+🌐 Track your order anytime by visiting our website:
+https://ld-interiors-ai.vercel.app/
+
+If you have any questions or need assistance, feel free to contact us anytime.
+
+Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+
+Warm Regards,
+
+🏠 LD Interiors Team
+📞 +91 93463 25291
+
+"Designing Beautiful Spaces, Creating Happy Homes." ✨
+
+=========================================
+
+🏠 LD Interiors కి స్వాగతం!
+
+నమస్కారం ${order.name} గారికి, 🙏
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
+
+🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
+
+📦 మీ ఆర్డర్ వివరాలు
+🪑 ఉత్పత్తి: ${order.product}
+📂 విభాగం: ${category}
+📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
+💰 ధర: ${price}
+
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
+
+📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+
+🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/
+
+🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
+
+✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
+
+మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+
+ధన్యవాదాలతో,
+
+🏠 LD Interiors బృందం
+📞 +91 93463 25291
+🌐 https://ld-interiors-ai.vercel.app/
+
+"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+
+  const emailSubject = `🎉 Order Received successfully! - ${order.product} | ఆర్డర్ విజయవంతంగా అందింది!`;
+  const encodedMailtoSubject = encodeURIComponent(emailSubject);
+  const encodedMailtoBody = encodeURIComponent(welcomeMsgText);
+  const mailtoUrl = `mailto:${order.email || ''}?subject=${encodedMailtoSubject}&body=${encodedMailtoBody}`;
+
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
       <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
@@ -335,6 +407,9 @@ ${imageUrl ? `- Image URL: ${imageUrl}` : ''}
       </div>
 
       <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
+        <a href="${mailtoUrl}" style="background-color: #2e7d32; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #1b5e20; margin-right: 8px;">
+          ✉️ Send Greeting Email (1-Click)
+        </a>
         <a href="tel:${dialPhone}" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #523f2a;">
           📞 Call Customer: ${order.phone}
         </a>
