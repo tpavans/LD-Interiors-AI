@@ -56,7 +56,9 @@ export default function ClientWrapper() {
     { field: 'color', question: 'What color do you want?' },
     { field: 'timeline', question: 'What is your preferred timeline for delivery?' },
     { field: 'specialRequirements', question: 'Any special requirements or notes?' },
-    { field: 'budget', question: 'What is your approximate budget?' }
+    { field: 'budget', question: 'What is your approximate budget?' },
+    { field: 'email', question: 'Could you please confirm your email address?' },
+    { field: 'address', question: 'Could you please confirm your delivery address?' }
   ];
 
   const ORDER_STEPS = [
@@ -617,9 +619,11 @@ How can I help you today?`
               await api.post('/orders', {
                 name: (collected.name || localStorage.getItem('ld_user_name') || 'Guest').trim(),
                 phone: (collected.phone || localStorage.getItem('ld_user_phone') || '0000000000').trim(),
+                email: (collected.email || localStorage.getItem('ld_user_email') || 'no-email@ldinteriors.com').trim(),
+                address: (collected.address || localStorage.getItem('ld_user_address') || 'Workshop pickup').trim(),
                 product: (collected.product || collected.furnitureType || 'Custom Furniture').trim(),
                 imageUrl: absoluteImageUrl,
-                notes: `Address: ${collected.address || ''}, City: ${collected.city || ''}, Pincode: ${collected.pincode || ''}. Custom details: Sizing: ${collected.length || ''}x${collected.width || ''}x${collected.height || ''}, Material: ${collected.material || ''}, Finish: ${collected.finish || ''}, Color: ${collected.color || ''}, Timeline: ${collected.timeline || ''}, Budget: ${collected.budget || ''}, Special: ${collected.specialRequirements || collected.customization || ''}`,
+                notes: `Custom details: Sizing: ${collected.length || ''}x${collected.width || ''}x${collected.height || ''}, Material: ${collected.material || ''}, Finish: ${collected.finish || ''}, Color: ${collected.color || ''}, Timeline: ${collected.timeline || ''}, Budget: ${collected.budget || ''}, Special: ${collected.specialRequirements || collected.customization || ''}`,
                 productId: matchedProduct ? matchedProduct._id : undefined
               });
               // Refresh orders list
@@ -885,6 +889,8 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
       const initialCollected = {
         name: localStorage.getItem('ld_user_name') || userName || '',
         phone: localStorage.getItem('ld_user_phone') || userPhone || '',
+        email: localStorage.getItem('ld_user_email') || '',
+        address: localStorage.getItem('ld_user_address') || '',
       };
       const nextStepIdx = findNextEmptyStep(CUSTOM_STEPS, initialCollected);
       if (nextStepIdx !== -1) {
@@ -1219,12 +1225,25 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
   };
 
   const categoriesList = [
-    { key: 'mandiralu', label: '🛕 Pooja Mandirams' },
-    { key: 'bedroom', label: '🛏️ Teak Beds' },
-    { key: 'sofa', label: '🛋️ Living Sofa Sets' },
-    { key: 'wardrobe', label: '🚪 Wardrobes & Almirahs' },
-    { key: 'kitchen', label: '🍳 Modular Kitchen' },
-    { key: 'gummalu', label: '🚪 Main Door Frames' }
+    { key: 'living', label: '🛋️ Living Room' },
+    { key: 'kitchen', label: '🍳 Kitchen Cabinets' },
+    { key: 'bedroom', label: '🛌 Bedroom Designs' },
+    { key: 'kids', label: '👶 Kids Rooms' },
+    { key: 'sofas', label: '🛋️ Sofa Sets' },
+    { key: 'beds', label: '🛏️ Teak Beds' },
+    { key: 'dining', label: '🍽️ Dining Tables' },
+    { key: 'tv', label: '📺 TV Units' },
+    { key: 'swings', label: '🪑 Uyyala Swings' },
+    { key: 'windows', label: '🪟 Wooden Windows' },
+    { key: 'mesh', label: '🚪 Mesh Doors' },
+    { key: 'polish', label: '✨ Polish Items' },
+    { key: 'money', label: '💰 Money Boxes' },
+    { key: 'glass', label: '🖼️ Glass Windows' },
+    { key: 'office', label: '💼 Office Furniture' },
+    { key: 'bathroom', label: '🚿 Bathroom Cabinets' },
+    { key: 'mandiralu', label: '🛕 Puja Mandiralu' },
+    { key: 'gummalu', label: '🚪 Entrance Gummalu' },
+    { key: 'dressing', label: '🪞 Dressing Tables' }
   ];
 
   const handleCategoryClick = (categoryKey, categoryLabel) => {
@@ -1235,28 +1254,58 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
     } else if (categoryKey === 'bedroom') {
       items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
-    } else if (categoryKey === 'sofa') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.category.toLowerCase().includes('living') || p.title.toLowerCase().includes('tv') || p.title.toLowerCase().includes('coffee'));
+    } else if (categoryKey === 'sofa' || categoryKey === 'sofas') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('living') || p.title.toLowerCase().includes('tv') || p.title.toLowerCase().includes('coffee'));
     } else if (categoryKey === 'wardrobe') {
       items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('almirah') || p.title.toLowerCase().includes('cupboard'));
     } else if (categoryKey === 'kitchen') {
       items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
     } else if (categoryKey === 'gummalu') {
       items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
+    } else if (categoryKey === 'living') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('living'));
+    } else if (categoryKey === 'kids') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('kids') || p.category.toLowerCase().includes('bunk'));
+    } else if (categoryKey === 'beds') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('wooden beds'));
+    } else if (categoryKey === 'dining') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('dining') || p.title.toLowerCase().includes('dining'));
+    } else if (categoryKey === 'tv') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
+    } else if (categoryKey === 'swings') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala'));
+    } else if (categoryKey === 'windows') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('window') && !p.category.toLowerCase().includes('glass'));
+    } else if (categoryKey === 'mesh') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('mesh'));
+    } else if (categoryKey === 'polish') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('polish'));
+    } else if (categoryKey === 'money') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('money') || p.category.toLowerCase().includes('box') || p.title.toLowerCase().includes('hundi'));
+    } else if (categoryKey === 'glass') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('glass'));
+    } else if (categoryKey === 'office') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office'));
+    } else if (categoryKey === 'bathroom') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('bathroom') || p.title.toLowerCase().includes('bathroom'));
+    } else if (categoryKey === 'dressing') {
+      items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing'));
     }
-
+    
     // Speak synchronously inside the click handler to bypass mobile pop-up blockers!
     const voiceText = categoryKey === 'mandiralu' 
       ? `మా వద్ద ${items.length || 8} పూజా మందిరం డిజైన్లు అందుబాటులో ఉన్నాయి అండీ. మీకు నచ్చిన దాన్ని సెలెక్ట్ చేసుకోండి.`
-      : categoryKey === 'bedroom'
+      : categoryKey === 'bedroom' || categoryKey === 'beds'
       ? `మా వద్ద ${items.length || 6} టేక్ మంచాల డిజైన్లు ఉన్నాయి అండీ. ఒకసారి చూడండి.`
-      : categoryKey === 'sofa'
+      : categoryKey === 'sofa' || categoryKey === 'sofas'
       ? `సోఫా సెట్ డిజైన్లు ${items.length || 7} దొరికాయి అండీ. మీకు కావాల్సిన సైజ్ లో కస్టమైజ్ చేసుకోవచ్చు.`
       : categoryKey === 'wardrobe'
       ? `వార్డ్ రోబ్స్ మరియు బీరువా డిజైన్లు ${items.length || 5} ఉన్నాయి అండీ.`
       : categoryKey === 'kitchen'
       ? `మోడ్యులర్ కిచెన్ డిజైన్లు ${items.length || 4} దొరికాయి అండీ.`
-      : `మా వద్ద ${items.length || 5} డిజైన్లు అందుబాటులో ఉన్నాయి అండీ.`;
+      : categoryKey === 'gummalu'
+      ? `గుమ్మాలు మరియు మెయిన్ డోర్ ఫ్రేమ్స్ ${items.length || 3} ఉన్నాయి అండీ.`
+      : `మా వద్ద ${items.length || 5} ${categoryLabel} డిజైన్లు అందుబాటులో ఉన్నాయి అండీ.`;
     speakMessage(voiceText, true);
 
     setTimeout(() => {
@@ -1751,7 +1800,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                           
                           {/* Rich Interactive Templates for e-commerce (Amazon/Flipkart style) */}
                           {msg.sender === 'bot' && msg.type === 'categories' && (
-                            <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="mt-3 grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
                               {categoriesList.map((cat) => (
                                 <button
                                   key={cat.key}

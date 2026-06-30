@@ -791,6 +791,18 @@ Dhanyavaadalu`;
                           <a href={`https://wa.me/91${o.phone}`} target="_blank" className="text-emerald-600 hover:underline text-[10px] font-bold uppercase tracking-wider">
                             Message WhatsApp
                           </a>
+                          <button
+                            onClick={() => {
+                              const cleanPhone = o.phone.replace(/\D/g, '');
+                              const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+                              const welcomeMsg = `LD INTERIORS receiving your order , our ldinteriors team will be contact you with in 24 hours , thank you for choosing ldinteriors`;
+                              const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
+                              window.open(waUrl, '_blank');
+                            }}
+                            className="mt-1 flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer text-center w-full shadow-xs border border-emerald-500/20 active:scale-95"
+                          >
+                            💬 Send Greeting
+                          </button>
                         </div>
                       </td>
                       <td className="py-4 px-6 font-serif font-bold text-wood-light max-w-[150px] truncate">
