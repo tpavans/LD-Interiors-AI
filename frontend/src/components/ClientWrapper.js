@@ -9,7 +9,7 @@ export default function ClientWrapper() {
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [registerError, setRegisterError] = useState('');
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(true);
 
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -1420,9 +1420,6 @@ Based on your room's style, here are some LD Interiors products that match beaut
     const productPrice = matchedProduct && matchedProduct.price ? matchedProduct.price : 0;
     const absoluteImageUrl = productImage ? (productImage.startsWith('http') ? productImage : `${window.location.origin}${productImage.startsWith('/') ? '' : '/'}${productImage}`) : '';
 
-    // Create the blank tab synchronously inside the click handler to bypass browser popup blockers
-    const newTab = window.open('about:blank', '_blank');
-
     try {
       const formData = new FormData();
       formData.append('name', orderName.trim());
@@ -1464,14 +1461,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
       const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect the blank tab to WhatsApp URL
-      newTab.location.href = waUrlNagaraju;
+      // Redirect the current tab to WhatsApp directly to bypass mobile popup blockers
+      window.location.href = waUrlNagaraju;
 
       // Pre-fill tracking input with the order phone so they can track it immediately
       setTrackPhone(orderPhone.trim());
     } catch (err) {
       console.error('Error saving order record to database:', err);
-      newTab.close();
       alert('Failed to place order. Please check that you entered valid details.');
     }
     

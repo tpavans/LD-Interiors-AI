@@ -68,9 +68,6 @@ export default function ProductCard({ product }) {
 
     const absoluteImageUrl = image ? (image.startsWith('http') ? image : `${window.location.origin}${image.startsWith('/') ? '' : '/'}${image}`) : '';
 
-    // Create the blank tab synchronously inside the click handler to bypass browser popup blockers
-    const newTab = window.open('about:blank', '_blank');
-
     // Save order in the database and wait for it (triggers email to Pavan Sai)
     try {
       const formData = new FormData();
@@ -113,12 +110,11 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
       const waUrlNagaraju = `https://wa.me/916301290966?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect the blank tab to WhatsApp URL
-      newTab.location.href = waUrlNagaraju;
+      // Redirect the current tab to WhatsApp directly to bypass mobile popup blockers
+      window.location.href = waUrlNagaraju;
     } catch (err) {
       console.error('Error saving order record to database:', err);
-      newTab.close();
-      alert('Failed to submit order. Please check that you entered valid details.');
+      alert('Failed to place order. Please check that you entered valid details.');
     }
     
     setTimeout(() => {

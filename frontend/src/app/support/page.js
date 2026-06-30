@@ -37,9 +37,6 @@ export default function SupportPage() {
     setErrorMsg('');
     setSuccess(false);
 
-    // 1. Open a blank window synchronously to bypass browser pop-up blockers
-    const chatWindow = window.open('about:blank', '_blank');
-
     try {
       // 2. Submit the support ticket to the backend
       const response = await api.post('/support', {
@@ -78,17 +75,10 @@ Please help me resolve this. Thank you!`;
       const encodedMsg = encodeURIComponent(whatsappMsg);
       const waUrl = `https://wa.me/${targetPhone}?text=${encodedMsg}`;
 
-      // 5. Redirect the synchronously opened blank tab to WhatsApp
-      if (chatWindow) {
-        chatWindow.location.href = waUrl;
-      } else {
-        window.open(waUrl, '_blank');
-      }
-
+      // Redirect current window directly to bypass pop-up blockers
+      window.location.href = waUrl;
     } catch (err) {
       console.error('Failed to submit support ticket:', err);
-      // Close the empty tab if request fails
-      if (chatWindow) chatWindow.close();
       setErrorMsg(err.response?.data?.message || 'Failed to submit support request. Please try again.');
     } finally {
       setIsSubmitting(false);
