@@ -318,16 +318,18 @@ export default function ClientWrapper() {
     if (!welcomed) {
       welcomeText = `👋 Welcome to LD Interiors & Furniture!
 
-We're delighted to have you here.
+I am your AI Assistant (LD Assistant). Here is how I can guide you:
 
-Whether you're looking for stylish furniture, complete home interiors, modular kitchens, wardrobes, TV units, bedrooms, office furniture, or custom-made designs, I'm here to help you every step of the way.
-
-You can browse our products, explore our latest designs, ask questions, or even place a custom order.
+1. 🔍 **Search Designs**: Type any furniture (e.g., "Pooja Mandir", "Sofa", "Beds") to explore categories and see pricing.
+2. 📦 **WhatsApp Checkout**: Go to the **Order Now** tab or tell me what design you want to place a custom inquiry via WhatsApp.
+3. 📍 **Live Status Track**: Go to the **Track** tab or enter your 10-digit mobile number to track carpentry progress from our workshop.
+4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a room picture for design suggestions.
+5. 🗣️ **Local Speech Support**: I speak and reply in English, Telugu, and Tanglish! Keep your device unmuted.
 
 How can I help you today?`;
       sessionStorage.setItem('ld_welcomed', 'true');
     } else {
-      welcomeText = `Welcome back! What would you like to explore today?`;
+      welcomeText = `Welcome back! What would you like to explore today? (Type "guide" or click "📖 How to Use" below for instructions.)`;
     }
 
     setMessages([
@@ -407,11 +409,13 @@ How can I help you today?`;
         sender: 'bot',
         text: `👋 Welcome to LD Interiors & Furniture!
 
-We're delighted to have you here.
+I am your AI Assistant (LD Assistant). Here is how I can guide you:
 
-Whether you're looking for stylish furniture, complete home interiors, modular kitchens, wardrobes, TV units, bedrooms, office furniture, or custom-made designs, I'm here to help you every step of the way.
-
-You can browse our products, explore our latest designs, ask questions, or even place a custom order.
+1. 🔍 **Search Designs**: Type any furniture (e.g., "Pooja Mandir", "Sofa", "Beds") to explore categories and see pricing.
+2. 📦 **WhatsApp Checkout**: Go to the **Order Now** tab or tell me what design you want to place a custom inquiry via WhatsApp.
+3. 📍 **Live Status Track**: Go to the **Track** tab or enter your 10-digit mobile number to track carpentry progress from our workshop.
+4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a room picture for design suggestions.
+5. 🗣️ **Local Speech Support**: I speak and reply in English, Telugu, and Tanglish! Keep your device unmuted.
 
 How can I help you today?`
       }
@@ -896,6 +900,43 @@ I am here to guide you through our premium Teak wood furniture designs, help you
 Maa premium Teak wood designs catalogs browse cheyyadaniki, custom orders submit cheyyadaniki, live status track cheyyadaniki, leda support tickets raise cheyyadaniki nenu ready ga unnanu. Eeroju meeku ela sahaya padagalanu? 😊`;
       }
 
+      // 1b. CHATBOT HELP & GUIDE
+      const isChatbotGuide = query.includes('how to use') || query.includes('guide') || query.includes('features') || query.includes('help chatbot') || query.includes('chatbot help') || query.includes('instructions') || query.includes('ఎలా ఉపయోగించాలి') || query.includes('ఎలా వాడాలి') || query.includes('ఏమి చేయగలవు');
+      if (isChatbotGuide) {
+        return langStyle === 'en'
+          ? `Here is how you can use the **LD Assistant** chatbot:
+          
+1. 🔍 **Explore Designs**: Type a furniture category (e.g. "Pooja Mandir", "Sofa", "Beds") to browse catalog items, rolling ratings, and estimated pricing.
+2. 📦 **WhatsApp Checkout**: Click the **Order Now** tab or tell me "I want to buy sofa" to pre-fill your details and order via WhatsApp.
+3. 📍 **Live Order Tracking**: Click the **Track** tab or type your registered 10-digit mobile number to see the live status of your order (e.g., Wood Selection, Carpentry, Polishing).
+4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a picture of your room, and I will recommend matching designs!
+5. 📞 **Contact Admins**: Ask for "contact number" to call Mr. Nagaraju (Owner) or Pavan Sai (Web Admin).
+6. 🗣️ **Local Language Support**: You can type/speak in English, Telugu, or Tanglish, and I will talk back to you!
+
+What would you like to do first?`
+          : langStyle === 'te'
+          ? `మీరు **LD Assistant** ని క్రింది విధంగా ఉపయోగించవచ్చు:
+          
+1. 🔍 **డిజైన్లను చూడటం**: పూజా మందిరాలు, సోఫా సెట్లు, మంచాలు వంటి ఫర్నిచర్ పేర్లు టైప్ చేస్తే మా డిజైన్లు మరియు ధరలను చూపిస్తాను.
+2. 📦 **వాట్సాప్ ద్వారా ఆర్డర్**: **Order Now** ట్యాబ్ క్లిక్ చేయడం లేదా "మంచం కొనాలి" అని నాకు మెసేజ్ చేయడం ద్వారా మీ వివరాలు నింపి నాగరాజు గారి వాట్సాప్ కి నేరుగా ఆర్డర్ చేయవచ్చు.
+3. 📍 **ఆర్డర్ ట్రాకింగ్**: **Track** ట్యాబ్ క్లిక్ చేయడం ద్వారా లేదా మీ 10 అంకెల మొబైల్ నంబర్ టైప్ చేయడం ద్వారా మీ ఆర్డర్ వర్క్‌షాప్ లైవ్ వర్క్ స్టేటస్ చూసుకోవచ్చు.
+4. 📷 **గది ఫోటో అప్‌లోడ్**: మీ గది ఫోటోను కెమెరా ఐకాన్ ద్వారా అప్‌లోడ్ చేస్తే, దానికి మ్యాచ్ అయ్యే మా డిజైన్లను చూపిస్తాను.
+5. 📞 **సంప్రదింపు నంబర్లు**: నిర్వాహకుల నంబర్ల కోసం "contact number" అని అడగండి.
+6. 🗣️ **తెలుగు & ఇంగ్లీష్ వాయిస్**: నేను ఇంగ్లీష్, తెలుగు, టాంగ్లీష్ లలో మాట్లాడగలను! మీ డివైజ్ లో సౌండ్ ఆన్ ఉంచుకోండి.
+
+నేను మీకు ఇప్పుడు ఎలా సహాయం చేయగలను?`
+          : `Maa **LD Assistant** chatbot updates and controls use cheయడానికి guidelines checks:
+          
+1. 🔍 **Explore Designs**: "Pooja Mandiram", "Beds", "Sofa Sets" details adగండి, estimated pricing details display chesthanu.
+2. 📦 **WhatsApp Checkout**: **Order Now** tab open chesi parameters select cheskondi or details type chesthe Nagaraju gari WhatsApp ki request configure chesthanu.
+3. 📍 **Live Status Track**: **Track** tab select chesi 10-digit mobile number submit chesthe live workshop status timeline clear ga display avuthundi andi.
+4. 📷 **Room Layout Advice**: Camera icon click chesi room picture upload cheyandi, appropriate matches suggest chesthundi.
+5. 📞 **Contact details**: "Nagaraju phone number" search chesthe call connections display chesthanu.
+6. 🗣️ **Local Tanglish Voice**: Nenu Telugu, English, and local Tanglish speech patterns coordinate cheyagalanu. Speech support fully active andi!
+
+Tell me, what would you like to try first?`;
+      }
+
       // 2. ORDER STATUS TRACKING TRIGGER
       const isTracking = query.includes('track') || query.includes('status') || query.includes('timeline') || query.includes('delivery') || query.includes('ఎప్పుడు') || query.includes('స్టేటస్') || query.includes('ట్రాక్');
       if (isTracking) {
@@ -1304,7 +1345,9 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     const replyObj = getBotResponse(promptText, workflowState);
     const isEnglish = checkIsEnglishQuery(promptText);
 
-    if (promptText === 'I want to order a design') {
+    if (promptText === '📖 How to Use') {
+      speakMessage(`మా చాట్‌బాట్ ని ఎలా ఉపయోగించాలో ఇక్కడ వివరాలు ఇచ్చాను అండీ.`, true);
+    } else if (promptText === 'I want to order a design') {
       speakMessage(`ఆర్డర్ చేయడానికి దయచేసి కింద ఉన్న కేటగిరీలలో ఒకదాన్ని ఎంచుకోండి అండీ.`, true);
     } else if (promptText === 'Track my order progress') {
       speakMessage(`దయచేసి మీ పది అంకెల మొబైల్ నంబర్‌ని టైప్ చేయండి, మీ ఆర్డర్ లైవ్ స్టేటస్ ని చూపిస్తాను.`, true);
@@ -1821,6 +1864,12 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
                   {/* Quick Action Suggestions */}
                   <div className="px-4 py-2 bg-wood-cream border-t border-wood-border/30 flex flex-wrap gap-1.5 justify-center">
+                    <button
+                      onClick={() => handleQuickPrompt('📖 How to Use')}
+                      className="px-2.5 py-1 rounded-full bg-violet-50 hover:bg-violet-100 border border-violet-200 text-[9px] font-bold text-violet-800 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      📖 How to Use
+                    </button>
                     <button
                       onClick={() => handleQuickPrompt('I want to order a design')}
                       className="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-[9px] font-bold text-emerald-800 transition-colors cursor-pointer flex items-center gap-1"
