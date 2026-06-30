@@ -26,7 +26,7 @@ export default function ContactPage() {
           Get in Touch
         </span>
         <h1 className="font-serif text-4xl font-extrabold tracking-tight text-wood-dark sm:text-5xl mt-2">
-          Contact Our Studio
+          Contact Our Office
         </h1>
         <p className="mt-4 text-sm text-wood-light font-light leading-relaxed">
           Have an interior design project, contract inquiry, or website feedback? Reach out to our dedicated admins directly via call or message.
@@ -44,7 +44,7 @@ export default function ContactPage() {
                 <Hammer className="h-5 w-5" />
               </span>
               <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-                Studio Lead
+                Office Lead
               </span>
             </div>
             <h2 className="font-serif text-2xl font-bold text-wood-dark">
@@ -141,7 +141,7 @@ export default function ContactPage() {
             </div>
             <div>
               <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-                Studio Address
+                Office Address
               </span>
               <h3 className="font-serif text-lg font-bold text-wood-dark mt-1">
                 LD Interiors Office

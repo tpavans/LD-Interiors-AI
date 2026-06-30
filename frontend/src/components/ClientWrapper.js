@@ -956,10 +956,10 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
       // 6. ADDRESS & LOCATION
       if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
         return langStyle === 'en'
-          ? `Our studio and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
+          ? `Our office and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
           : langStyle === 'te'
-          ? `మా స్టూడియో మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233.`
-          : `Maa studio workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
+          ? `మా ఆఫీస్ మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233.`
+          : `Maa office workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
       }
 
       // 7. EXPERIENCE & TRUST
@@ -1177,6 +1177,20 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
     }
 
+    // Speak synchronously inside the click handler to bypass mobile pop-up blockers!
+    const voiceText = categoryKey === 'mandiralu' 
+      ? `మా వద్ద ${items.length || 8} పూజా మందిరం డిజైన్లు అందుబాటులో ఉన్నాయి అండీ. మీకు నచ్చిన దాన్ని సెలెక్ట్ చేసుకోండి.`
+      : categoryKey === 'bedroom'
+      ? `మా వద్ద ${items.length || 6} టేక్ మంచాల డిజైన్లు ఉన్నాయి అండీ. ఒకసారి చూడండి.`
+      : categoryKey === 'sofa'
+      ? `సోఫా సెట్ డిజైన్లు ${items.length || 7} దొరికాయి అండీ. మీకు కావాల్సిన సైజ్ లో కస్టమైజ్ చేసుకోవచ్చు.`
+      : categoryKey === 'wardrobe'
+      ? `వార్డ్ రోబ్స్ మరియు బీరువా డిజైన్లు ${items.length || 5} ఉన్నాయి అండీ.`
+      : categoryKey === 'kitchen'
+      ? `మోడ్యులర్ కిచెన్ డిజైన్లు ${items.length || 4} దొరికాయి అండీ.`
+      : `మా వద్ద ${items.length || 5} డిజైన్లు అందుబాటులో ఉన్నాయి అండీ.`;
+    speakMessage(voiceText, true);
+
     setTimeout(() => {
       if (items.length > 0) {
         setMessages(prev => [...prev, {
@@ -1185,13 +1199,11 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
           type: 'products',
           productsData: items
         }]);
-        speakMessage(`Here are our designs in ${categoryLabel}. Tap order to configure directly.`, false);
       } else {
         setMessages(prev => [...prev, {
           sender: 'bot',
           text: `We customize premium *${categoryLabel}* designs at our workshop. Please contact Mr. Nagaraju at +916281653998 for custom options!`,
         }]);
-        speakMessage(`We customize premium designs. Please contact Nagaraju.`, false);
       }
     }, 400);
   };
@@ -1208,6 +1220,8 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     // INTERCEPT 10-DIGIT PHONE NUMBERS FOR LIVE IN-CHAT TRACKING
     const cleanPhone = userMsg.replace(/[^0-9]/g, '');
     if (cleanPhone.length === 10) {
+      speakMessage(`మీ నెంబర్ పై రిజిస్టర్ అయిన ఆర్డర్ల వివరాలను తెలుసుకుంటున్నాను అండీ.`, true);
+
       setTimeout(() => {
         api.get(`/orders/track?phone=${cleanPhone}`)
           .then(res => {
@@ -1218,14 +1232,14 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
                 type: 'tracking',
                 ordersData: res.data
               }]);
-              speakMessage(`I found ${res.data.length} orders registered under your number. Here is the live status timeline.`, false);
+              speakMessage(`నేను మీ నంబర్ పై ఉన్న ఆర్డర్ ని కనుగొన్నాను అండీ.`, true);
             } else {
               setMessages(prev => [...prev, {
                 sender: 'bot',
                 text: `I couldn't find any active orders for the phone number **${cleanPhone}** in our database.\n\nPlease double check the number, or select a category below to explore our products:`,
                 type: 'categories'
               }]);
-              speakMessage("I could not find any active orders for this phone number. You can browse our catalog below.", false);
+              speakMessage(`క్షమించండి అండీ, మీ మొబైల్ నంబర్ పై ఎలాంటి ఆర్డర్లు కనిపించలేదు.`, true);
             }
           })
           .catch(err => {
@@ -1238,10 +1252,13 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
       return;
     }
 
-    // Simulate bot thinking and reply
+    // Synchronous bot response generation and speech context trigger
+    const replyObj = getBotResponse(userMsg, workflowState);
+    const isEnglish = checkIsEnglishQuery(userMsg);
+    speakMessage(replyObj.text, !isEnglish);
+
+    // Simulate bot thinking and reply layout
     setTimeout(() => {
-      const replyObj = getBotResponse(userMsg, workflowState);
-      
       // Update workflow state
       if (replyObj.nextState) {
         setWorkflowState(replyObj.nextState);
@@ -1256,10 +1273,6 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
         ordersData: replyObj.ordersData || null,
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
-      
-      // Speak the reply
-      const isEnglish = checkIsEnglishQuery(userMsg);
-      speakMessage(replyObj.text, !isEnglish);
 
       // Auto-switch to tabs if flagged
       if (replyObj.switchToOrderTab) {
@@ -1286,9 +1299,26 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
   // Quick prompt handle
   const handleQuickPrompt = (promptText) => {
     setMessages(prev => [...prev, { sender: 'user', text: promptText }]);
+    
+    // Get response and speak synchronously inside the user click gesture loop
+    const replyObj = getBotResponse(promptText, workflowState);
+    const isEnglish = checkIsEnglishQuery(promptText);
+
+    if (promptText === 'I want to order a design') {
+      speakMessage(`ఆర్డర్ చేయడానికి దయచేసి కింద ఉన్న కేటగిరీలలో ఒకదాన్ని ఎంచుకోండి అండీ.`, true);
+    } else if (promptText === 'Track my order progress') {
+      speakMessage(`దయచేసి మీ పది అంకెల మొబైల్ నంబర్‌ని టైప్ చేయండి, మీ ఆర్డర్ లైవ్ స్టేటస్ ని చూపిస్తాను.`, true);
+    } else if (promptText === 'I need customer support help') {
+      speakMessage(`మీ సమస్యను పరిష్కరించడానికి నేను మిమ్మల్ని కస్టమర్ సపోర్ట్ పేజీకి తీసుకువెళ్తున్నాను అండీ.`, true);
+    } else if (promptText === 'Contact information for admins') {
+      speakMessage(`మిస్టర్ నాగరాజు మరియు పవన్ సాయి గారి కాంటాక్ట్ డీటెయిల్స్ ఇక్కడ ఇచ్చాను అండీ.`, true);
+    } else if (promptText === 'Where is your workshop address?') {
+      speakMessage(`మా వర్క్‌షాప్ ఆలమూరు మండలం మూలస్థానం లో ఉంది అండీ. కోనసీమ పరిసర ప్రాంతాలకు డెలివరీ చేస్తాము.`, true);
+    } else {
+      speakMessage(replyObj.text, !isEnglish);
+    }
+
     setTimeout(() => {
-      const replyObj = getBotResponse(promptText, workflowState);
-      
       // Update workflow state
       if (replyObj.nextState) {
         setWorkflowState(replyObj.nextState);
@@ -1303,10 +1333,6 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
         ordersData: replyObj.ordersData || null,
         action: replyObj.productTitle ? { type: 'order', productTitle: replyObj.productTitle } : null
       }]);
-      
-      // Speak the reply
-      const isEnglish = checkIsEnglishQuery(promptText);
-      speakMessage(replyObj.text, !isEnglish);
 
       // Auto-switch to tabs if flagged
       if (replyObj.switchToOrderTab) {

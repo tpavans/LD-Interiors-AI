@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="flex flex-col gap-2.5 text-xs font-light">
             <Link href="/about" className="hover:text-wood-dark transition-colors">About Us</Link>
             <div>
-              <p className="font-semibold text-wood-dark mt-1">Studio Location:</p>
+              <p className="font-semibold text-wood-dark mt-1">Office Location:</p>
               <p className="mt-1 leading-relaxed">
                 Mulasthanam, Alamuru Mandal,<br />
                 Konaseema District, AP - 533233
@@ -65,7 +65,7 @@ export default function Footer() {
         {/* Column 4: Studio Connect */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
-            Studio Connect
+            Office Connect
           </h4>
           <p className="text-xs font-light leading-relaxed">
             Follow our design daily logs and workshop reels on our social channels.

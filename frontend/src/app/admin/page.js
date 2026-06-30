@@ -412,7 +412,7 @@ Dhanyavaadalu`;
             Admin Workspace
           </span>
           <h1 className="font-serif text-3xl font-extrabold tracking-tight text-wood-dark mt-1">
-            Studio Dashboard
+            Office Dashboard
           </h1>
         </div>
         <div className="flex items-center gap-2">
