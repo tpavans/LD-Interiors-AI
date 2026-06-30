@@ -570,11 +570,38 @@ How can I help you today?`
     
     matchedProductTitle = findMatchedProduct();
 
+    // 1. Check for workflow cancellation or quick action redirection
+    const isCancel = query === 'cancel' || query === 'stop' || query === 'exit' || query === 'reset' || query === 'restart' || query === 'వద్దు' || query === 'ఆపు' || query === 'ఆపండి';
+    const isQuickPromptText = [
+      '📖 how to use',
+      'i want to order a design',
+      'track my order progress',
+      'i need customer support help',
+      'contact information for admins',
+      'where is your workshop address?'
+    ].includes(query);
+    const isCategoryClick = query.startsWith('browse ');
+
+    let activeWorkflow = currentWorkflow;
+    if (isCancel || isQuickPromptText || isCategoryClick) {
+      activeWorkflow = { type: 'idle', step: 0, lang: langStyle, collected: {}, awaitingConfirmation: false };
+      if (isCancel) {
+        return {
+          text: langStyle === 'en'
+            ? `Okay, I have cancelled the current custom design wizard. How else can I assist you?`
+            : langStyle === 'te'
+            ? `సరే అండీ, నేను ప్రస్తుత కస్టమ్ డిజైన్ విజార్డ్‌ను రద్దు చేసాను. నేను మీకు ఇంకా ఎలా సహాయపడగలను?`
+            : `Okay andi, current custom wizard cancel chesam. Inkela help cheyagalanu?`,
+          nextState: activeWorkflow
+        };
+      }
+    }
+
     // ----------------------------------------------------
     // WORKFLOW STATE MACHINE
     // ----------------------------------------------------
-    if (currentWorkflow && currentWorkflow.type !== 'idle') {
-      const { type, step, lang, collected, awaitingConfirmation } = currentWorkflow;
+    if (activeWorkflow && activeWorkflow.type !== 'idle') {
+      const { type, step, lang, collected, awaitingConfirmation } = activeWorkflow;
 
       // Handle Order / Custom Confirmation Step
       if (awaitingConfirmation) {
@@ -824,7 +851,7 @@ Would you like to confirm this order? (Type **yes** or **confirm** to submit)`;
     // DETECT WORKFLOW INITIATIONS
     // ----------------------------------------------------
     const isInteriorTrigger = query.includes('interior') || query.includes('interiors') || query.includes('decor') || query.includes('consultation') || query.includes('డిజైన్') || query.includes('ఇంటీరియర్');
-    const isCustomTrigger = query.includes('custom') || query.includes('customise') || query.includes('customization') || query.includes('custom-made') || query.includes('carpenter design') || query.includes('కస్టమ్') || query.includes('కస్టమైజ్');
+    const isCustomTrigger = /\b(custom|customise|customize|customization|custom-made)\b/.test(query) || query.includes('carpenter design') || query.includes('కస్టమ్') || query.includes('కస్టమైజ్');
     const isOrderTrigger = (query.includes('buy') || query.includes('order') || query.includes('place order') || query.includes('need this furniture') || query.includes('want to buy') || query.includes('place this order') || query.includes('కొనాలి') || query.includes('ఆర్డర్')) && !query.includes('track') && !query.includes('status') && !query.includes('timeline') && !query.includes('complaint') && !query.includes('support');
 
     if (isOrderTrigger) {
