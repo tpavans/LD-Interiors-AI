@@ -588,6 +588,13 @@ https://ld-interiors-ai.vercel.app/
         <p style="font-size: 13px; color: #8e7a65; font-style: italic; text-align: center; margin-top: 15px;">"Designing Beautiful Spaces, Creating Happy Homes." ✨</p>
       </div>
 
+      ${imageUrl ? `
+      <div style="text-align: center; background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 15px; margin: 20px 0;">
+        <p style="font-size: 11px; font-weight: bold; color: #8e7a65; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1.5px;">🖼️ Ordered Design Preview / ఎంపిక చేసిన డిజైన్:</p>
+        <img src="${imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ebdcc5; display: inline-block;" />
+      </div>
+      ` : ''}
+
       <hr style="border: 0; border-top: 1px dashed #ebdcc5; margin: 25px 0;" />
 
       <!-- Telugu Version -->
