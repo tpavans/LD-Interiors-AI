@@ -793,11 +793,22 @@ Dhanyavaadalu`;
                           </a>
                           <button
                             onClick={() => {
+                              // 1. Open WhatsApp Welcome Chat
                               const cleanPhone = o.phone.replace(/\D/g, '');
                               const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
                               const welcomeMsg = `LD INTERIORS receiving your order , our ldinteriors team will be contact you with in 24 hours , thank you for choosing ldinteriors`;
                               const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
                               window.open(waUrl, '_blank');
+
+                              // 2. Trigger Greeting Email Sending via API
+                              api.post(`/orders/${o._id}/send-greeting`)
+                                .then(() => {
+                                  alert(`Bilingual greeting email sent successfully to ${o.email}!`);
+                                })
+                                .catch(err => {
+                                  console.error('Failed to dispatch greeting email:', err);
+                                  alert(`WhatsApp chat opened, but email failed: ${err.response?.data?.message || err.message}`);
+                                });
                             }}
                             className="mt-1 flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer text-center w-full shadow-xs border border-emerald-500/20 active:scale-95"
                           >

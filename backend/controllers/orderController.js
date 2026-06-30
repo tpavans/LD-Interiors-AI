@@ -232,10 +232,43 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Send manual greeting email to customer
+ * @route   POST /api/orders/:id/send-greeting
+ * @access  Private (Admin only)
+ */
+const sendManualGreetingEmail = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: 'Database connection is offline.',
+    });
+  }
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (!order.email || order.email.includes('no-email') || !order.email.includes('@')) {
+      return res.status(400).json({ message: 'This order does not have a valid customer email address.' });
+    }
+
+    await sendCustomerGreetingEmail(order);
+    res.json({ message: 'Greeting email sent successfully to ' + order.email });
+  } catch (error) {
+    console.error('Error sending manual greeting email:', error);
+    res.status(500).json({
+      message: 'Server error sending greeting email.',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
   trackOrders,
   updateOrderStatus,
   deleteOrder,
+  sendManualGreetingEmail,
 };

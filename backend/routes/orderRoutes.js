@@ -6,6 +6,7 @@ const {
   trackOrders,
   updateOrderStatus,
   deleteOrder,
+  sendManualGreetingEmail,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -18,6 +19,9 @@ router.post('/', upload.single('referenceImage'), createOrder);
 
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);
+
+// Admin-only route to manually send order greeting email
+router.post('/:id/send-greeting', protect, sendManualGreetingEmail);
 
 // Admin-only routes to update or delete order status
 router.route('/:id')
