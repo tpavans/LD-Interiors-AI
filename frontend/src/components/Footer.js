@@ -62,7 +62,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Column 4: Studio Connect */}
+        {/* Column 4: Office Connect */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
             Office Connect

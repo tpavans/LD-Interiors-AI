@@ -64,7 +64,7 @@ export default function Home() {
 
       {/* About & Wooden Furniture Themes Section */}
       <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-        {/* Left Col: About Studio */}
+        {/* Left Col: About Office */}
         <div className="lg:col-span-7">
           <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
             Our Legacy
