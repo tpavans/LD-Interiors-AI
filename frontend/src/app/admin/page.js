@@ -6,6 +6,95 @@ import Link from 'next/link';
 
 const CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
+const getBilingualGreetingText = (o) => {
+  const orderDate = o.createdAt 
+    ? new Date(o.createdAt).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata'
+      })
+    : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+
+  const orderTime = o.createdAt 
+    ? new Date(o.createdAt).toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata'
+      })
+    : new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+
+  const resolvedImageUrl = o.imageUrl
+    ? (o.imageUrl.startsWith('http') ? o.imageUrl : `https://ld-interiors-ai.vercel.app${o.imageUrl.startsWith('/') ? '' : '/'}${o.imageUrl}`)
+    : 'https://ld-interiors-ai.vercel.app/products';
+
+  return `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${o.name}, 👋
+
+Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
+
+🎉 Your order has been received successfully!
+
+📦 Order Details
+🪑 Name: ${o.product}
+📂 Category: ${o.category || 'Furniture Design'}
+💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+🖼️ Image URL: ${resolvedImageUrl}
+📅 Order Date: ${orderDate}
+⏰ Order Time: ${orderTime}
+
+Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+
+🌐 Track your order anytime by visiting our website:
+https://ld-interiors-ai.vercel.app/
+
+If you have any questions or need assistance, feel free to contact us anytime.
+
+Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+
+Warm Regards,
+
+🏠 LD Interiors Team
+📞 +91 93463 25291
+
+"Designing Beautiful Spaces, Creating Happy Homes." ✨
+
+---------------------------------------------------------
+
+🏠 LD Interiors కి స్వాగతం!
+
+నమస్కారం ${o.name} గారికి, 🙏
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
+
+🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
+
+📦 మీ ఆర్డర్ వివరాలు
+🪑 ఉత్పత్తి పేరు: ${o.product}
+📂 విభాగం: ${o.category || 'Furniture Design'}
+💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+🖼️ చిత్రం లింక్: ${resolvedImageUrl}
+📅 తేదీ: ${orderDate}
+⏰ సమయం: ${orderTime}
+
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
+
+📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+
+🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/
+
+🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
+
+✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
+
+మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+
+ధన్యవాదాలతో,
+
+🏠 LD Interiors బృందం
+📞 +91 93463 25291
+🌐 https://ld-interiors-ai.vercel.app/
+
+"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+};
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -775,92 +864,19 @@ Dhanyavaadalu`;
                       const cleanPhone = pendingOrderDetails.phone.replace(/\D/g, '');
                       const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
                       
-                      const dateStr = pendingOrderDetails.createdAt 
-                        ? new Date(pendingOrderDetails.createdAt).toLocaleDateString('en-IN', {
-                            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-                          })
-                        : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
-
-                      const welcomeMsg = `🏠 Welcome to LD Interiors!
-
-Hello Mr./Ms. ${pendingOrderDetails.name}, 👋
-
-Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
-
-🎉 Your order has been received successfully!
-
-📦 Order Details
-🪑 Product: ${pendingOrderDetails.product}
-📂 Category: ${pendingOrderDetails.category || 'Furniture Design'}
-📅 Order Date: ${dateStr}
-💰 Price: ${pendingOrderDetails.price && pendingOrderDetails.price > 0 ? `₹${pendingOrderDetails.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
-
-🌐 Track your order anytime by visiting our website:
-https://ld-interiors-ai.vercel.app/
-
-If you have any questions or need assistance, feel free to contact us anytime.
-
-Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
-
-Warm Regards,
-
-🏠 LD Interiors Team
-📞 +91 93463 25291
-
-"Designing Beautiful Spaces, Creating Happy Homes." ✨
-
----------------------------------------------------------
-
-🏠 LD Interiors కి స్వాగతం!
-
-నమస్కారం ${pendingOrderDetails.name} గారికి, 🙏
-
-LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
-
-🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
-
-📦 మీ ఆర్డర్ వివరాలు
-🪑 ఉత్పత్తి: ${pendingOrderDetails.product}
-📂 విభాగం: ${pendingOrderDetails.category || 'Furniture Design'}
-📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
-💰 ధర: ${pendingOrderDetails.price && pendingOrderDetails.price > 0 ? `₹${pendingOrderDetails.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
-
-📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
-
-🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://ld-interiors-ai.vercel.app/
-
-🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
-
-✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
-
-మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
-
-ధన్యవాదాలతో,
-
-🏠 LD Interiors బృందం
-📞 +91 93463 25291
-🌐 https://ld-interiors-ai.vercel.app/
-
-"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+                      const welcomeMsg = getBilingualGreetingText(pendingOrderDetails);
 
                       // 1. WhatsApp Welcome
                       const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
                       window.open(waUrl, '_blank');
 
-                      // 2. Email Greeting API
-                      api.post(`/orders/${pendingOrderDetails._id}/send-greeting`)
-                        .then(() => {
-                          alert(`Bilingual greeting email sent successfully to ${pendingOrderDetails.email}!`);
-                        })
-                        .catch(err => {
-                          console.error('Email failed:', err);
-                          alert(`WhatsApp chat opened, but email failed: ${err.response?.data?.message || err.message}`);
-                        });
+                      // 2. Direct Mail Client (Mailto) Compose
+                      const subject = `🎉 Order Received successfully! - ${pendingOrderDetails.product} | ఆర్డర్ విజయవంతంగా అందింది!`;
+                      const mailtoUrl = `mailto:${pendingOrderDetails.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
+                      window.open(mailtoUrl, '_blank');
+
+                      // 3. Fallback backend email dispatch
+                      api.post(`/orders/${pendingOrderDetails._id}/send-greeting`).catch(() => {});
 
                       // Clear pending action
                       setPendingGreetingOrder(null);
@@ -941,79 +957,7 @@ https://ld-interiors-ai.vercel.app/
                               const cleanPhone = o.phone.replace(/\D/g, '');
                               const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
                               
-                              const dateStr = o.createdAt 
-                                ? new Date(o.createdAt).toLocaleDateString('en-IN', {
-                                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-                                  })
-                                : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
-                              
-                              const welcomeMsg = `🏠 Welcome to LD Interiors!
-
-Hello Mr./Ms. ${o.name}, 👋
-
-Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
-
-🎉 Your order has been received successfully!
-
-📦 Order Details
-🪑 Product: ${o.product}
-📂 Category: ${o.category || 'Furniture Design'}
-📅 Order Date: ${dateStr}
-💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
-
-🌐 Track your order anytime by visiting our website:
-https://ld-interiors-ai.vercel.app/
-
-If you have any questions or need assistance, feel free to contact us anytime.
-
-Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
-
-Warm Regards,
-
-🏠 LD Interiors Team
-📞 +91 93463 25291
-
-"Designing Beautiful Spaces, Creating Happy Homes." ✨
-
----------------------------------------------------------
-
-🏠 LD Interiors కి స్వాగతం!
-
-నమస్కారం ${o.name} గారికి, 🙏
-
-LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
-
-🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
-
-📦 మీ ఆర్డర్ వివరాలు
-🪑 ఉత్పత్తి: ${o.product}
-📂 విభాగం: ${o.category || 'Furniture Design'}
-📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
-💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
-
-📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
-
-🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://ld-interiors-ai.vercel.app/
-
-🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
-
-✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
-
-మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
-
-ధన్యవాదాలతో,
-
-🏠 LD Interiors బృందం
-📞 +91 93463 25291
-🌐 https://ld-interiors-ai.vercel.app/
-
-"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
-
+                              const welcomeMsg = getBilingualGreetingText(o);
                               const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
                               window.open(waUrl, '_blank');
                             }}
@@ -1024,79 +968,7 @@ https://ld-interiors-ai.vercel.app/
 
                           <button
                             onClick={() => {
-                              const dateStr = o.createdAt 
-                                ? new Date(o.createdAt).toLocaleDateString('en-IN', {
-                                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-                                  })
-                                : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
-                              
-                              const welcomeMsg = `🏠 Welcome to LD Interiors!
-
-Hello Mr./Ms. ${o.name}, 👋
-
-Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
-
-🎉 Your order has been received successfully!
-
-📦 Order Details
-🪑 Product: ${o.product}
-📂 Category: ${o.category || 'Furniture Design'}
-📅 Order Date: ${dateStr}
-💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
-
-🌐 Track your order anytime by visiting our website:
-https://ld-interiors-ai.vercel.app/
-
-If you have any questions or need assistance, feel free to contact us anytime.
-
-Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
-
-Warm Regards,
-
-🏠 LD Interiors Team
-📞 +91 93463 25291
-
-"Designing Beautiful Spaces, Creating Happy Homes." ✨
-
----------------------------------------------------------
-
-🏠 LD Interiors కి స్వాగతం!
-
-నమస్కారం ${o.name} గారికి, 🙏
-
-LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
-
-🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
-
-📦 మీ ఆర్డర్ వివరాలు
-🪑 ఉత్పత్తి: ${o.product}
-📂 విభాగం: ${o.category || 'Furniture Design'}
-📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
-💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-
-మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
-
-📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
-
-🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://ld-interiors-ai.vercel.app/
-
-🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
-
-✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
-
-మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
-
-ధన్యవాదాలతో,
-
-🏠 LD Interiors బృందం
-📞 +91 93463 25291
-🌐 https://ld-interiors-ai.vercel.app/
-
-"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
-
+                              const welcomeMsg = getBilingualGreetingText(o);
                               const subject = `🎉 Order Received successfully! - ${o.product} | ఆర్డర్ విజయవంతంగా అందింది!`;
                               const mailtoUrl = `mailto:${o.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
                               window.open(mailtoUrl, '_blank');
