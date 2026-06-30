@@ -95,6 +95,61 @@ https://ld-interiors-ai.vercel.app/
 "మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
 };
 
+const getStatusUpdateGreetingText = (o, status) => {
+  const statusNotesEn = {
+    'Pending': 'We have received your order request and are currently conducting initial custom requirement reviews.',
+    'Processing': 'Final size and pricing check is in progress—coordinating raw materials & custom wood selections.',
+    'In Progress': 'Modern carpentry wood carvings & framing has started at our workshop. Master craftsmen are building your custom designs.',
+    'Completed': 'Order completed and delivered successfully. Direct home installation setup is finished.',
+    'Cancelled': 'This order has been cancelled or modified. Please contact us for further details.'
+  };
+
+  const statusNotesTe = {
+    'Pending': 'మీ ఆర్డర్ అభ్యర్థన విజయవంతంగా చేరింది. మేము ప్రస్తుతం ప్రాథమిక సమీక్ష జరుపుతున్నాము.',
+    'Processing': 'మీ ఆర్డర్ ప్రాసెస్ చేయబడుతోంది. చివరి పరిమాణం, ధర మరియు కలప ఎంపికల సమన్వయం జరుగుతోంది.',
+    'In Progress': 'మా వర్క్‌షాప్‌లో మీ ఆర్డర్ తయారీ ప్రక్రియ ప్రారంభమైంది. మా నిపుణులైన వడ్రంగులు మీ డిజైన్‌ను రూపొందిస్తున్నారు.',
+    'Completed': 'మీ ఆర్డర్ విజయవంతంగా పూర్తయింది మరియు డెలివరీ చేయబడింది. గృహంలో ఇన్‌స్టాలేషన్ కూడా పూర్తయింది.',
+    'Cancelled': 'ఈ ఆర్డర్ రద్దు చేయబడింది లేదా సవరించబడింది. దయచేసి వివరాల కోసం మమ్మల్ని సంప్రదించండి.'
+  };
+
+  const noteEn = statusNotesEn[status] || 'Your order status has been updated.';
+  const noteTe = statusNotesTe[status] || 'మీ ఆర్డర్ స్థితి నవీకరించబడింది.';
+
+  return `🔔 LD Interiors Order Update / ఆర్డర్ స్థితి అప్‌డేట్
+
+Hello Mr./Ms. ${o.name}, 👋
+
+We have updated the progress timeline for your order of "${o.product}":
+
+🔨 Current Status: ${status}
+📝 Status Note: ${noteEn}
+
+🌐 Track your live progress anytime on our website:
+https://ld-interiors-ai.vercel.app/orders
+
+Thank you for choosing LD Interiors! ❤️
+
+---------------------------------------------------------
+
+నమస్కారం ${o.name} గారికి, 🙏
+
+మీరు ఆర్డర్ చేసిన "${o.product}" యొక్క స్థితి అప్‌డేట్ చేయబడింది:
+
+🔨 ప్రస్తుత స్థితి: ${status === 'Pending' ? 'Pending (పెండింగ్)' : 
+                   status === 'Processing' ? 'Processing (ప్రాసెస్ అవుతోంది)' : 
+                   status === 'In Progress' ? 'In Progress (తయారీలో ఉంది)' : 
+                   status === 'Completed' ? 'Completed (పూర్తయింది)' : 'Cancelled (రద్దు చేయబడింది)'}
+📝 వివరణ: ${noteTe}
+
+🌐 మీ ఆర్డర్ ప్రగతిని ఎప్పుడైనా మా వెబ్సైట్‌లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/orders
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు ధన్యవాదాలు! ❤️
+
+🏠 LD Interiors Team
+📞 +91 93463 25291`;
+};
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -197,8 +252,7 @@ export default function AdminPage() {
       setOrdersLoading(false);
     }
   };
-
-  // 2c. Update Order Status & Send Automatic WhatsApp Notification
+  // 2c. Update Order Status & Send Automatic WhatsApp & Email Notification
   const handleUpdateStatus = async (id, newStatus) => {
     try {
       await api.put(`/orders/${id}`, { status: newStatus });
@@ -211,27 +265,17 @@ export default function AdminPage() {
         const cleanPhone = order.phone.replace(/\D/g, '');
         const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
         
-        // Format status description for simple message
-        let statusText = `your order is ${newStatus.toLowerCase()}`;
-        if (newStatus === 'Processing') statusText = 'your order is processing';
-        if (newStatus === 'In Progress') statusText = 'your order is in progress';
-        if (newStatus === 'Completed') statusText = 'your order is completed';
-        if (newStatus === 'Cancelled') statusText = 'your order is cancelled';
+        // Generate the beautiful bilingual status greeting message
+        const statusUpdateMsg = getStatusUpdateGreetingText(order, newStatus);
         
-        const messageText = `Namaste *${order.name}*Garu!
-
-Mee order status: *${statusText}*.
-
-Mee order status check cheyyali anukuntey track link check cheyyandi:
-👉 https://ld-interiors-ai.vercel.app/orders
-
-Dhanyavaadalu`;
-
-        const encodedMsg = encodeURIComponent(messageText);
-        const waUrl = `https://wa.me/${targetPhone}?text=${encodedMsg}`;
-        
-        // Open WhatsApp Web/App in a new window/tab to send the message
+        // 1. Open WhatsApp Pre-filled chat
+        const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(statusUpdateMsg)}`;
         window.open(waUrl, '_blank');
+        
+        // 2. Open pre-filled Email compose window
+        const subject = `🔨 Order Progress: ${order.product} is ${newStatus}`;
+        const mailtoUrl = `mailto:${order.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(statusUpdateMsg)}`;
+        window.open(mailtoUrl, '_blank');
       }
     } catch (err) {
       console.error('Error updating status:', err);
