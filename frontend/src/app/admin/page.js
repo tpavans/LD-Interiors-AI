@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [adminTab, setAdminTab] = useState('showcase'); // 'showcase' or 'orders'
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [pendingGreetingOrder, setPendingGreetingOrder] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -65,6 +66,21 @@ export default function AdminPage() {
       setAuthLoading(false);
     };
     checkAuth();
+  }, []);
+
+  // 1b. Check query params for mail-initiated actions
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const orderId = urlParams.get('orderId');
+
+    if (action === 'send-greeting' && orderId) {
+      setPendingGreetingOrder(orderId);
+      // Clean query params so it doesn't trigger on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Switch tab to orders automatically so they see the banner
+      setAdminTab('orders');
+    }
   }, []);
 
   // 2. Fetch all products
@@ -728,8 +744,137 @@ Dhanyavaadalu`;
           </div>
         </div>
       ) : (
-        /* Orders list panel */
-        <div className="bg-wood-cream border border-wood-border rounded-2xl shadow-lg overflow-hidden text-left animate-fadeIn">
+        <div>
+          {/* Orders list panel */}
+          {(() => {
+            const pendingOrderDetails = orders.find(o => o._id === pendingGreetingOrder);
+            if (!pendingOrderDetails) return null;
+            
+            return (
+              <div className="mb-6 p-6 bg-emerald-50 border border-emerald-250 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn border-dashed text-left">
+                <div className="text-left">
+                  <span className="text-[10px] font-extrabold tracking-widest text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded-full">
+                    Action Required
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-emerald-950 mt-1">
+                    Send welcome greeting to {pendingOrderDetails.name}?
+                  </h3>
+                  <p className="text-xs text-emerald-800 font-light mt-0.5 font-mono">
+                    Product: {pendingOrderDetails.product} ({pendingOrderDetails.email})
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => setPendingGreetingOrder(null)}
+                    className="px-4 py-2.5 rounded-xl border border-emerald-200 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const cleanPhone = pendingOrderDetails.phone.replace(/\D/g, '');
+                      const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+                      
+                      const dateStr = pendingOrderDetails.createdAt 
+                        ? new Date(pendingOrderDetails.createdAt).toLocaleDateString('en-IN', {
+                            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+                          })
+                        : new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                      const welcomeMsg = `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${pendingOrderDetails.name}, 👋
+
+Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
+
+🎉 Your order has been received successfully!
+
+📦 Order Details
+🪑 Product: ${pendingOrderDetails.product}
+📂 Category: ${pendingOrderDetails.category || 'Furniture Design'}
+📅 Order Date: ${dateStr}
+💰 Price: ${pendingOrderDetails.price && pendingOrderDetails.price > 0 ? `₹${pendingOrderDetails.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+
+🌐 Track your order anytime by visiting our website:
+https://ld-interiors-ai.vercel.app/
+
+If you have any questions or need assistance, feel free to contact us anytime.
+
+Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+
+Warm Regards,
+
+🏠 LD Interiors Team
+📞 +91 93463 25291
+
+"Designing Beautiful Spaces, Creating Happy Homes." ✨
+
+---------------------------------------------------------
+
+🏠 LD Interiors కి స్వాగతం!
+
+నమస్కారం ${pendingOrderDetails.name} గారికి, 🙏
+
+LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
+
+🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
+
+📦 మీ ఆర్డర్ వివరాలు
+🪑 ఉత్పత్తి: ${pendingOrderDetails.product}
+📂 విభాగం: ${pendingOrderDetails.category || 'Furniture Design'}
+📅 ఆర్డర్ చేసిన తేదీ: ${dateStr}
+💰 ధర: ${pendingOrderDetails.price && pendingOrderDetails.price > 0 ? `₹${pendingOrderDetails.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
+
+📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+
+🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
+https://ld-interiors-ai.vercel.app/
+
+🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
+
+✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
+
+మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+
+ధన్యవాదాలతో,
+
+🏠 LD Interiors బృందం
+📞 +91 93463 25291
+🌐 https://ld-interiors-ai.vercel.app/
+
+"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+
+                      // 1. WhatsApp Welcome
+                      const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`;
+                      window.open(waUrl, '_blank');
+
+                      // 2. Email Greeting API
+                      api.post(`/orders/${pendingOrderDetails._id}/send-greeting`)
+                        .then(() => {
+                          alert(`Bilingual greeting email sent successfully to ${pendingOrderDetails.email}!`);
+                        })
+                        .catch(err => {
+                          console.error('Email failed:', err);
+                          alert(`WhatsApp chat opened, but email failed: ${err.response?.data?.message || err.message}`);
+                        });
+
+                      // Clear pending action
+                      setPendingGreetingOrder(null);
+                    }}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm active:scale-95 rounded-xl"
+                  >
+                    ⚡ Send WhatsApp & Email
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="bg-wood-cream border border-wood-border rounded-2xl shadow-lg overflow-hidden text-left animate-fadeIn">
           <div className="px-6 py-5 border-b border-wood-border/40 flex items-center justify-between">
             <h3 className="font-serif text-lg font-bold text-wood-dark">
               Customer Orders Live Status
@@ -1014,7 +1159,8 @@ https://ld-interiors-ai.vercel.app/
             </div>
           )}
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 }
