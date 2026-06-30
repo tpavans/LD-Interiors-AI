@@ -2228,18 +2228,60 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             </div>
           )}
 
-          {/* Chat Floating Button */}
+          {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="flex items-center justify-center h-14 w-14 rounded-full bg-wood-dark text-white hover:bg-wood-medium hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative"
+            className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
-            <MessageSquare className="h-6 w-6" />
-            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wood-accent opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-wood-accent items-center justify-center text-[8px] font-extrabold text-wood-dark">
-                !
-              </span>
-            </span>
+            {isChatOpen ? (
+              <svg className="h-6 w-6 text-[#ebdcc5] transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="h-12 w-12 drop-shadow-md">
+                  <style>{`
+                    @keyframes girlBlink {
+                      0%, 90%, 100% { transform: scaleY(1); }
+                      95% { transform: scaleY(0.1); }
+                    }
+                    .girl-eyes {
+                      animation: girlBlink 4s infinite;
+                      transform-origin: 50px 50px;
+                    }
+                  `}</style>
+                  {/* Hair back */}
+                  <path d="M20,60 C20,20 80,20 80,60 C80,65 75,70 70,68 C65,66 60,60 50,60 C40,60 35,66 30,68 C25,70 20,65 20,60 Z" fill="#2D2116" />
+                  {/* Neck */}
+                  <rect x="46" y="62" width="8" height="12" rx="4" fill="#ffd1b3" />
+                  {/* Head */}
+                  <circle cx="50" cy="46" r="20" fill="#ffe0cc" />
+                  {/* Hair bangs */}
+                  <path d="M30,40 C35,26 65,26 70,40 C72,36 68,26 50,26 C32,26 28,36 30,40 Z" fill="#2D2116" />
+                  {/* Eyes (Blinking!) */}
+                  <g className="girl-eyes">
+                    <circle cx="43" cy="45" r="2.5" fill="#231709" />
+                    <circle cx="57" cy="45" r="2.5" fill="#231709" />
+                    <circle cx="44" cy="44" r="0.8" fill="#ffffff" />
+                    <circle cx="58" cy="44" r="0.8" fill="#ffffff" />
+                  </g>
+                  {/* Rosy cheeks */}
+                  <circle cx="34" cy="50" r="3" fill="#ff9999" opacity="0.6" />
+                  <circle cx="66" cy="50" r="3" fill="#ff9999" opacity="0.6" />
+                  {/* Nose */}
+                  <path d="M49,50 C49,50 50,51.5 51,50" stroke="#e6a885" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                  {/* Smiling Mouth */}
+                  <path d="M46,54 Q50,58 54,54" stroke="#e65c5c" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+                {/* Active notification indicator */}
+                <span className="absolute top-1.5 right-1.5 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ebdcc5] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#ebdcc5] items-center justify-center text-[7px] font-extrabold text-wood-dark">
+                    !
+                  </span>
+                </span>
+              </div>
+            )}
           </button>
         </div>
       )}
