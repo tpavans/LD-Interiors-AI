@@ -18,7 +18,12 @@ const triggerCustomerVoiceCall = async (order) => {
   }
 
   try {
-    // 1. Clean and format the customer's phone number to E.164 format (+91...)
+    // 1. Wait for 5 seconds before placing the call
+    // This gives the customer time to click "Send" on WhatsApp and put their phone down
+    console.log('[Twilio Voice Call] Delaying call for 5 seconds to let user complete WhatsApp action...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // 2. Clean and format the customer's phone number to E.164 format (+91...)
     let cleanPhone = order.phone.replace(/\D/g, '');
     
     // Default to +91 country code for India if not specified
@@ -34,55 +39,35 @@ const triggerCustomerVoiceCall = async (order) => {
 
     const client = twilio(accountSid, authToken);
 
-    // 2. Simplify customer name (extract first name or first word)
+    // 3. Simplify customer name (extract first name or first word)
     const rawName = (order.name || 'Customer').trim();
-    const nameParts = rawName.split(/\s+/);
-    const firstName = nameParts[0];
+    // Verify if name is English to prevent speech synthesis error on Telugu Unicode characters
+    const isEnglishName = /^[a-zA-Z\s]+$/.test(rawName);
+    const firstName = isEnglishName ? rawName.split(/\s+/)[0] : 'Customer';
 
-    // 3. Simplify product name (first 3 words max to prevent long robotic readouts)
+    // 4. Simplify product name (first 3 words max to prevent long robotic readouts)
     const rawProduct = (order.product || 'Furniture').trim();
-    const productParts = rawProduct.split(/\s+/);
-    const shortProduct = productParts.slice(0, 3).join(' ');
+    const isEnglishProduct = /^[a-zA-Z\s0-9]+$/.test(rawProduct);
+    const shortProduct = isEnglishProduct ? rawProduct.split(/\s+/).slice(0, 3).join(' ') : 'your custom design';
 
-    // 4. Detect if customer details contain Telugu script
-    const hasTeluguScript = /[\u0c00-\u0c7f]/.test(rawName) || /[\u0c00-\u0c7f]/.test(rawProduct);
+    // 5. Generate customized TwiML using Polly.Aditi (natively supported on all Twilio accounts without setup)
+    const twiml = `
+      <Response>
+        <Pause length="2"/>
+        <Say voice="Polly.Aditi" language="en-IN">
+          Namaste ${firstName} garu! 
+          L D Interiors ni en-chukun-nanduku dhanyavaadalu. 
+          ${shortProduct} kosam mee order successfully register ayyindi. 
+          Maa L D Interiors team mimmalni twaralone sampradistharu. 
+          Dhanyavaadalu!
+        </Say>
+        <Pause length="1"/>
+      </Response>
+    `.trim();
 
-    let twiml = '';
-    if (hasTeluguScript) {
-      // Pure Telugu text read by Google Telugu voice
-      twiml = `
-        <Response>
-          <Pause length="2"/>
-          <Say voice="Google.te-IN-Standard-A" language="te-IN">
-            నమస్కారం ${firstName} గారు! 
-            ఎల్ డి ఇంటీరియర్స్ ని ఎంచుకున్నందుకు ధన్యవాదాలు. 
-            మీరు ఆర్డర్ చేసిన ${shortProduct} వివరాలు విజయవంతంగా నమోదయ్యాయి. 
-            మా ఎల్ డి ఇంటీరియర్స్ బృందం త్వరలోనే మిమ్మల్ని సంప్రదిస్తారు. 
-            ధన్యవాదాలు!
-          </Say>
-          <Pause length="1"/>
-        </Response>
-      `.trim();
-      console.log('[Twilio Voice Call] Outputting TwiML in native Telugu script (Google.te-IN-Standard-A)');
-    } else {
-      // Phonetic Telugu read by Polly Aditi voice
-      twiml = `
-        <Response>
-          <Pause length="2"/>
-          <Say voice="Polly.Aditi" language="en-IN">
-            Namaste ${firstName} garu! 
-            L D Interiors ni en-chukun-nanduku dhanyavaadalu. 
-            ${shortProduct} kosam mee order successfully register ayyindi. 
-            Maa L D Interiors team mimmalni twaralone sampradistharu. 
-            Dhanyavaadalu!
-          </Say>
-          <Pause length="1"/>
-        </Response>
-      `.trim();
-      console.log('[Twilio Voice Call] Outputting TwiML in phonetic Telugu script (Polly.Aditi)');
-    }
+    console.log(`[Twilio Voice Call] Outputting TwiML for Polly.Aditi. Name: ${firstName}, Product: ${shortProduct}`);
 
-    // 5. Initiate the Twilio call
+    // 6. Initiate the Twilio call
     const call = await client.calls.create({
       to: cleanPhone,
       from: fromNumber,
