@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const { sendOrderEmail, sendCustomerGreetingEmail, sendCustomerStatusUpdateEmail } = require('../utils/sendEmail');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const { triggerCustomerVoiceCall } = require('../utils/voiceCall');
 
 /**
  * @desc    Create new order
@@ -64,6 +65,11 @@ const createOrder = async (req, res) => {
     // Send greeting order confirmation email to the customer
     sendCustomerGreetingEmail(order).catch((err) => {
       console.error('Failed to send customer greeting email:', err);
+    });
+
+    // Trigger outbound customer confirmation voice call (Twilio)
+    triggerCustomerVoiceCall(order).catch((err) => {
+      console.error('Failed to trigger customer voice call:', err);
     });
 
     res.status(201).json(order);
