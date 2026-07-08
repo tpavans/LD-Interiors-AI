@@ -57,14 +57,18 @@ const createOrder = async (req, res) => {
       productId: productId ? productId.trim() : undefined,
     });
 
-    // Dispatch notifications sequentially in the background:
-    // 1. Admin Email -> 2. Customer Greeting Email -> 3. Outbound Voice Call Agent
-    sendOrderEmail(order)
-      .catch((err) => console.error('Failed to send admin order email:', err))
-      .then(() => sendCustomerGreetingEmail(order))
-      .catch((err) => console.error('Failed to send customer greeting email:', err))
-      .then(() => triggerCustomerVoiceCall(order))
-      .catch((err) => console.error('Failed to trigger customer voice call:', err));
+    // Dispatch notifications in parallel (so slow SMTP emails don't delay the Twilio voice call)
+    sendOrderEmail(order).catch((err) => {
+      console.error('Failed to send admin order email:', err);
+    });
+
+    sendCustomerGreetingEmail(order).catch((err) => {
+      console.error('Failed to send customer greeting email:', err);
+    });
+
+    triggerCustomerVoiceCall(order).catch((err) => {
+      console.error('Failed to trigger customer voice call:', err);
+    });
 
     res.status(201).json(order);
   } catch (error) {
