@@ -61,8 +61,8 @@ const triggerVapiConversationalCall = (order, cleanPhone, firstName, shortProduc
           ]
         },
         voice: {
-          provider: 'google',
-          voiceId: 'te-IN-Standard-A'
+          provider: 'azure',
+          voiceId: 'te-IN-ShrutiNeural'
         }
       }
     });
