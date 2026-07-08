@@ -4,7 +4,7 @@ import { Phone } from 'lucide-react';
 
 export default function FloatingActions() {
   return (
-    <div className="fixed bottom-8 right-6 z-[90] flex flex-col gap-3 p-2 bg-white/70 backdrop-blur-xl border border-wood-border/40 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
+    <div className="fixed bottom-24 right-6 z-[90] flex flex-col gap-3 p-2 bg-white/70 backdrop-blur-xl border border-wood-border/40 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300">
       {/* Call Button */}
       <a
         href="tel:+916281653998"

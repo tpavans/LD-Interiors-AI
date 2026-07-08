@@ -68,18 +68,12 @@ body {
   background: linear-gradient(180deg, #fdfcf9 0%, #f7f4ec 100%);
 }
 
-/* Realistic 3D Wood Plank Wall Wallpaper */
+/* Professional Minimalist Luxury Ivory Background */
 .wood-plank-bg {
-  background: 
-    /* Horizontal lines for staggered plank joints */
-    linear-gradient(0deg, rgba(84, 53, 31, 0.08) 1.5px, transparent 1.5px) 0 0 / 100% 320px,
-    /* Vertical plank lines with shadow & highlight */
-    linear-gradient(90deg, rgba(84, 53, 31, 0.09) 1px, rgba(255, 255, 255, 0.45) 2.5px, transparent 2.5px) 0 0 / 140px 100%,
-    /* Subtle wood grain texture simulation */
-    repeating-linear-gradient(90deg, rgba(84, 53, 31, 0.012) 0px, rgba(84, 53, 31, 0.012) 2px, transparent 2px, transparent 12px),
-    repeating-linear-gradient(180deg, rgba(84, 53, 31, 0.018) 0px, rgba(84, 53, 31, 0.018) 3px, transparent 3px, transparent 10px),
-    /* Alternating warm wood board base colors */
-    linear-gradient(90deg, #f7f4ec 0px, #f7f4ec 140px, #f3ede0 140px, #f3ede0 280px);
+  background-color: #faf9f5;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(245, 240, 230, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(181, 131, 79, 0.04) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
