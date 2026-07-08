@@ -1,4 +1,5 @@
 const twilio = require('twilio');
+const https = require('https');
 
 /**
  * Escapes characters that are reserved in XML/TwiML
@@ -20,66 +21,149 @@ const escapeXml = (unsafe) => {
 };
 
 /**
- * Triggers an outbound confirmation voice call to the customer using Twilio Text-To-Speech (TwiML)
+ * Triggers a conversational AI voice call using Vapi.ai
+ * @param {Object} order - The order document
+ * @param {string} cleanPhone - Customer phone number
+ * @param {string} firstName - Customer first name
+ * @param {string} shortProduct - Simplified product name
+ * @returns {Promise<Object>}
+ */
+const triggerVapiConversationalCall = (order, cleanPhone, firstName, shortProduct) => {
+  return new Promise((resolve, reject) => {
+    const vapiApiKey = process.env.VAPI_API_KEY;
+    const vapiPhoneNumberId = process.env.VAPI_PHONE_NUMBER_ID;
+
+    console.log(`[Vapi AI Voice Agent] Placing conversational call to: ${cleanPhone}`);
+
+    const postData = JSON.stringify({
+      phoneNumberId: vapiPhoneNumberId,
+      customer: {
+        number: cleanPhone,
+        name: firstName
+      },
+      assistant: {
+        firstMessage: `నమస్కారం ${firstName} గారు! ఎల్ డి ఇంటీరియర్స్ కి స్వాగతం. ${shortProduct} కోసం మీ ఆర్డర్ వివరాలు మాకు విజయవంతంగా నమోదయ్యాయి. నేను మీకు ఎలా సహాయపడగలను?`,
+        model: {
+          provider: 'openai',
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a friendly, professional customer service AI assistant for LD Interiors & Furnitures. 
+              The customer's name is ${firstName}. They just ordered: ${shortProduct}.
+              Your goal:
+              1. Speak in clear, polite, natural Telugu. 
+              2. Confirm their order details and ask if they have any custom sizing, raw wood preferences (like premium teak wood), or design questions.
+              3. Keep your answers brief, warm, and helpful.
+              4. Tell them that the LD Interiors team will contact them within 24 hours to confirm pricing and details.
+              5. Keep your responses short (under 2 sentences) to maintain a natural phone flow.`
+            }
+          ]
+        },
+        voice: {
+          provider: 'google',
+          voiceId: 'te-IN-Standard-A'
+        }
+      }
+    });
+
+    const options = {
+      hostname: 'api.vapi.ai',
+      port: 443,
+      path: '/call',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${vapiApiKey}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          const responseData = JSON.parse(body);
+          console.log(`[Vapi AI Voice Agent] Call initiated successfully! Call ID: ${responseData.id}`);
+          resolve({ success: true, callId: responseData.id });
+        } else {
+          reject(new Error(`Vapi API responded with status ${res.statusCode}: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
+    req.write(postData);
+    req.end();
+  });
+};
+
+/**
+ * Triggers an outbound confirmation voice call to the customer (either Vapi AI or standard Twilio TTS)
  * @param {Object} order - The created order document containing name, phone, product, etc.
  */
 const triggerCustomerVoiceCall = async (order) => {
+  // 1. Wait for 5 seconds before placing the call
+  // This gives the customer time to click "Send" on WhatsApp and put their phone down
+  console.log('[Voice Call Agent] Delaying call for 5 seconds to let user complete WhatsApp action...');
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
+  // 2. Clean and format the customer's phone number to E.164 format (+91...)
+  let cleanPhone = order.phone.replace(/\D/g, '');
+  if (cleanPhone.length === 10) {
+    cleanPhone = `+91${cleanPhone}`;
+  } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+    cleanPhone = `+${cleanPhone}`;
+  } else if (!cleanPhone.startsWith('+')) {
+    cleanPhone = `+${cleanPhone}`;
+  }
+
+  // 3. Simplify customer name (extract first name or first word)
+  const rawName = (order.name || 'Customer').trim();
+  const isEnglishName = /^[a-zA-Z\s]+$/.test(rawName);
+  let firstName = isEnglishName ? rawName.split(/\s+/)[0] : 'Customer';
+  firstName = firstName.replace(/[^a-zA-Z\s]/g, '').trim() || 'Customer';
+
+  // 4. Simplify product name (first 3 words max to prevent long robotic readouts)
+  const rawProduct = (order.product || 'Furniture').trim();
+  const isEnglishProduct = /^[a-zA-Z\s0-9]+$/.test(rawProduct);
+  let shortProduct = isEnglishProduct ? rawProduct.split(/\s+/).slice(0, 3).join(' ') : 'your custom design';
+  shortProduct = shortProduct.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'your custom design';
+
+  // 5. If Vapi credentials are set, trigger a fully interactive Conversational AI call
+  const vapiApiKey = process.env.VAPI_API_KEY;
+  const vapiPhoneNumberId = process.env.VAPI_PHONE_NUMBER_ID;
+
+  if (vapiApiKey && vapiPhoneNumberId) {
+    try {
+      const result = await triggerVapiConversationalCall(order, cleanPhone, firstName, shortProduct);
+      return result;
+    } catch (vapiError) {
+      console.error('[Vapi AI Voice Agent Error] Failed, falling back to Twilio TTS:', vapiError.message);
+    }
+  }
+
+  // 6. Otherwise, fall back to standard Twilio TTS (100% free with their Twilio trial credentials)
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNumber = process.env.TWILIO_FROM_NUMBER;
 
-  // Gracefully skip call if credentials are not configured
   if (!accountSid || !authToken || !fromNumber) {
-    console.warn('\n[Twilio Voice Call Alert]');
-    console.warn('TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_FROM_NUMBER are not set in .env.');
-    console.warn('Voice call notification to the customer has been skipped.\n');
+    console.warn('\n[Twilio Voice Call Alert] Credentials not set. Voice call skipped.\n');
     return { success: false, reason: 'Credentials not configured' };
   }
 
   try {
-    // 1. Wait for 5 seconds before placing the call
-    // This gives the customer time to click "Send" on WhatsApp and put their phone down
-    console.log('[Twilio Voice Call] Delaying call for 5 seconds to let user complete WhatsApp action...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // 2. Clean and format the customer's phone number to E.164 format (+91...)
-    let cleanPhone = order.phone.replace(/\D/g, '');
-    
-    // Default to +91 country code for India if not specified
-    if (cleanPhone.length === 10) {
-      cleanPhone = `+91${cleanPhone}`;
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
-      cleanPhone = `+${cleanPhone}`;
-    } else if (!cleanPhone.startsWith('+')) {
-      cleanPhone = `+${cleanPhone}`;
-    }
-
-    console.log(`[Twilio Voice Call] Preparing outbound call to: ${cleanPhone} for order: ${order.product}`);
-
+    console.log(`[Twilio Voice Call] Placing outbound call to: ${cleanPhone} for order: ${order.product}`);
     const client = twilio(accountSid, authToken);
 
-    // 3. Simplify customer name (extract first name or first word)
-    const rawName = (order.name || 'Customer').trim();
-    // Verify if name is English to prevent speech synthesis error on Telugu Unicode characters
-    const isEnglishName = /^[a-zA-Z\s]+$/.test(rawName);
-    let firstName = isEnglishName ? rawName.split(/\s+/)[0] : 'Customer';
-    
-    // Strip non-alphanumeric characters to prevent XML parsing issues
-    firstName = firstName.replace(/[^a-zA-Z\s]/g, '').trim() || 'Customer';
-
-    // 4. Simplify product name (first 3 words max to prevent long robotic readouts)
-    const rawProduct = (order.product || 'Furniture').trim();
-    const isEnglishProduct = /^[a-zA-Z\s0-9]+$/.test(rawProduct);
-    let shortProduct = isEnglishProduct ? rawProduct.split(/\s+/).slice(0, 3).join(' ') : 'your custom design';
-    
-    // Strip non-alphanumeric characters to prevent XML parsing issues (such as "&" character)
-    shortProduct = shortProduct.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'your custom design';
-
-    // 5. Escape for XML/TwiML safety
     const safeName = escapeXml(firstName);
     const safeProduct = escapeXml(shortProduct);
 
-    // 6. Generate customized TwiML using Polly.Aditi (natively supported on all Twilio accounts without setup)
     const twiml = `
       <Response>
         <Pause length="2"/>
@@ -94,9 +178,6 @@ const triggerCustomerVoiceCall = async (order) => {
       </Response>
     `.trim();
 
-    console.log(`[Twilio Voice Call] Outputting TwiML for Polly.Aditi. Name: ${safeName}, Product: ${safeProduct}`);
-
-    // 7. Initiate the Twilio call
     const call = await client.calls.create({
       to: cleanPhone,
       from: fromNumber,
