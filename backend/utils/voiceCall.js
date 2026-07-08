@@ -35,19 +35,29 @@ const triggerCustomerVoiceCall = async (order) => {
 
     const client = twilio(accountSid, authToken);
 
-    // 2. Generate customized TwiML with a natural Indian-English voice (Polly.Aditi)
+    // 2. Generate customized bilingual TwiML (Telugu followed by English)
     const phoneticName = order.name.trim();
     const productName = order.product.trim();
     
     const twiml = `
       <Response>
         <Pause length="1"/>
-        <Say voice="Polly.Aditi" language="en-IN">
-          Namaste ${phoneticName} garu! 
+        <!-- Telugu Section -->
+        <Say voice="Google.te-IN-Standard-A" language="te-IN">
+          నమస్కారం ${phoneticName} గారు! 
+          ఎల్ డి ఇంటీరియర్స్ ని ఎంచుకున్నందుకు ధన్యవాదాలు. 
+          ${productName} కోసం మీ ఆర్డర్ విజయవంతంగా నమోదైంది. 
+          మా ఎల్ డి ఇంటీరియర్స్ బృందం త్వరలోనే మిమ్మల్ని సంప్రదిస్తారు. 
+          ధన్యవాదాలు!
+        </Say>
+        <Pause length="1"/>
+        <!-- English Section -->
+        <Say voice="Google.en-IN-Standard-A" language="en-IN">
+          Hello ${phoneticName} garu! 
           Thank you for choosing L D Interiors. 
-          We are pleased to inform you that your order for ${productName} has been received successfully. 
-          Maa L D Interiors team mimmalni twenty four hours lo contact avtharu. 
-          Thank you once again and have a wonderful day!
+          Your order for ${productName} has been received successfully. 
+          Our L D Interiors team will contact you shortly. 
+          Thank you!
         </Say>
         <Pause length="1"/>
       </Response>
