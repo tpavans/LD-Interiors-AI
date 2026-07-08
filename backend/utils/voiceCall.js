@@ -1,6 +1,25 @@
 const twilio = require('twilio');
 
 /**
+ * Escapes characters that are reserved in XML/TwiML
+ * @param {string} unsafe - The raw unsafe string
+ * @returns {string} The XML-safe string
+ */
+const escapeXml = (unsafe) => {
+  if (!unsafe) return '';
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+};
+
+/**
  * Triggers an outbound confirmation voice call to the customer using Twilio Text-To-Speech (TwiML)
  * @param {Object} order - The created order document containing name, phone, product, etc.
  */
@@ -43,21 +62,31 @@ const triggerCustomerVoiceCall = async (order) => {
     const rawName = (order.name || 'Customer').trim();
     // Verify if name is English to prevent speech synthesis error on Telugu Unicode characters
     const isEnglishName = /^[a-zA-Z\s]+$/.test(rawName);
-    const firstName = isEnglishName ? rawName.split(/\s+/)[0] : 'Customer';
+    let firstName = isEnglishName ? rawName.split(/\s+/)[0] : 'Customer';
+    
+    // Strip non-alphanumeric characters to prevent XML parsing issues
+    firstName = firstName.replace(/[^a-zA-Z\s]/g, '').trim() || 'Customer';
 
     // 4. Simplify product name (first 3 words max to prevent long robotic readouts)
     const rawProduct = (order.product || 'Furniture').trim();
     const isEnglishProduct = /^[a-zA-Z\s0-9]+$/.test(rawProduct);
-    const shortProduct = isEnglishProduct ? rawProduct.split(/\s+/).slice(0, 3).join(' ') : 'your custom design';
+    let shortProduct = isEnglishProduct ? rawProduct.split(/\s+/).slice(0, 3).join(' ') : 'your custom design';
+    
+    // Strip non-alphanumeric characters to prevent XML parsing issues (such as "&" character)
+    shortProduct = shortProduct.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'your custom design';
 
-    // 5. Generate customized TwiML using Polly.Aditi (natively supported on all Twilio accounts without setup)
+    // 5. Escape for XML/TwiML safety
+    const safeName = escapeXml(firstName);
+    const safeProduct = escapeXml(shortProduct);
+
+    // 6. Generate customized TwiML using Polly.Aditi (natively supported on all Twilio accounts without setup)
     const twiml = `
       <Response>
         <Pause length="2"/>
         <Say voice="Polly.Aditi" language="en-IN">
-          Namaste ${firstName} garu! 
+          Namaste ${safeName} garu! 
           L D Interiors ni en-chukun-nanduku dhanyavaadalu. 
-          ${shortProduct} kosam mee order successfully register ayyindi. 
+          ${safeProduct} kosam mee order successfully register ayyindi. 
           Maa L D Interiors team mimmalni twaralone sampradistharu. 
           Dhanyavaadalu!
         </Say>
@@ -65,9 +94,9 @@ const triggerCustomerVoiceCall = async (order) => {
       </Response>
     `.trim();
 
-    console.log(`[Twilio Voice Call] Outputting TwiML for Polly.Aditi. Name: ${firstName}, Product: ${shortProduct}`);
+    console.log(`[Twilio Voice Call] Outputting TwiML for Polly.Aditi. Name: ${safeName}, Product: ${safeProduct}`);
 
-    // 6. Initiate the Twilio call
+    // 7. Initiate the Twilio call
     const call = await client.calls.create({
       to: cleanPhone,
       from: fromNumber,
