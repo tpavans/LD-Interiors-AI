@@ -57,20 +57,14 @@ const createOrder = async (req, res) => {
       productId: productId ? productId.trim() : undefined,
     });
 
-    // Send order email notification to ldinteriors.in@gmail.com
-    sendOrderEmail(order).catch((err) => {
-      console.error('Failed to send admin order email:', err);
-    });
-
-    // Send greeting order confirmation email to the customer
-    sendCustomerGreetingEmail(order).catch((err) => {
-      console.error('Failed to send customer greeting email:', err);
-    });
-
-    // Trigger outbound customer confirmation voice call (Twilio)
-    triggerCustomerVoiceCall(order).catch((err) => {
-      console.error('Failed to trigger customer voice call:', err);
-    });
+    // Dispatch notifications sequentially in the background:
+    // 1. Admin Email -> 2. Customer Greeting Email -> 3. Outbound Voice Call Agent
+    sendOrderEmail(order)
+      .catch((err) => console.error('Failed to send admin order email:', err))
+      .then(() => sendCustomerGreetingEmail(order))
+      .catch((err) => console.error('Failed to send customer greeting email:', err))
+      .then(() => triggerCustomerVoiceCall(order))
+      .catch((err) => console.error('Failed to trigger customer voice call:', err));
 
     res.status(201).json(order);
   } catch (error) {
