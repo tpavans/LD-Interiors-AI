@@ -3,56 +3,73 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame } from 'lucide-react';
+
+const HOMEPAGE_CATEGORIES = ["All", "Gummalu", "Puja Mandiralu", "TV Units", "Sofas"];
 
 export default function Home() {
-  const [featured, setFeatured] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [filteredShowcase, setFilteredShowcase] = useState([]);
+  const [activeTab, setActiveTab] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchAllProducts = async () => {
       try {
         const response = await api.get('/products');
-        // Slice the latest 3 items
-        setFeatured(response.data.slice(0, 3));
+        setProducts(response.data);
+        // Default to latest 6 items
+        setFilteredShowcase(response.data.slice(0, 6));
       } catch (err) {
-        console.error('Error fetching featured products:', err);
+        console.error('Error fetching products for homepage:', err);
         setError('Could not connect to the backend server. Please verify the API endpoint is available.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeatured();
+    fetchAllProducts();
   }, []);
+
+  const handleTabChange = (category) => {
+    setActiveTab(category);
+    if (category === "All") {
+      setFilteredShowcase(products.slice(0, 6));
+    } else {
+      const filtered = products.filter(p => p.category.toLowerCase() === category.toLowerCase());
+      setFilteredShowcase(filtered.slice(0, 6));
+    }
+  };
 
   return (
     <div className="flex flex-col gap-24 pb-20">
-      <section className="-mt-20 relative overflow-hidden border-b-2 border-wood-border/40 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(44, 26, 15, 0.45), rgba(26, 15, 8, 0.7)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      {/* Hero Section */}
+      <section className="-mt-20 relative overflow-hidden border-b border-wood-border/30 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(44, 26, 15, 0.4), rgba(26, 15, 8, 0.75)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-wood-accent/20 px-3.5 py-1 text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-6 border border-wood-accent/30 backdrop-blur-sm">
-            <Sparkles className="h-3 w-3 text-wood-accent animate-pulse" />
-            Curated Inspiration
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-wood-accent/20 px-4 py-1.5 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-6 border border-wood-accent/30 backdrop-blur-md">
+            <Sparkles className="h-3.5 w-3.5 text-wood-accent animate-pulse" />
+            Premium Design Studio
           </div>
-          <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl uppercase">
+          <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none uppercase">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-wood-beige to-amber-100 block">LD INTERIORS</span>
-            <span className="font-serif font-light italic text-wood-accent block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">& Furnitures</span>
+            <span className="bg-gradient-to-r from-wood-accent via-amber-400 to-amber-200 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">& Furnitures</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl font-light leading-relaxed text-wood-beige drop-shadow-sm">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg font-light leading-relaxed text-wood-beige/90 drop-shadow-sm">
             Brings you high-end, contemporary interior designs and premium woodwork. Explore our collection of premium residential and commercial spaces designed to inspire.
           </p>
           
           {/* Custom Elegant Bilingual Quote Card */}
-          <div className="mx-auto mt-10 max-w-3xl bg-black/45 backdrop-blur-md border border-wood-accent/30 rounded-2xl p-6 sm:p-8 shadow-inner mb-8 text-center relative overflow-hidden">
-            {/* Left side soft glow */}
-            <div className="absolute -left-16 -top-16 w-32 h-32 bg-wood-accent/10 rounded-full blur-2xl" />
+          <div className="mx-auto mt-10 max-w-3xl glass-panel border border-wood-accent/30 rounded-3xl p-6 sm:p-8 shadow-inner mb-8 text-center relative overflow-hidden">
+            {/* Soft decorative background glows */}
+            <div className="absolute -left-16 -top-16 w-32 h-32 bg-wood-accent/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
             
-            <span className="font-serif text-5xl text-wood-accent/30 absolute left-4 top-1 leading-none select-none">“</span>
+            <span className="font-serif text-6xl text-wood-accent/20 absolute left-4 top-1 leading-none select-none">“</span>
             
             <div className="space-y-4 relative z-10 px-4">
               {/* Telugu Quote */}
-              <p className="font-serif text-base sm:text-lg text-amber-100 font-semibold tracking-wide leading-relaxed">
+              <p className="font-serif text-base sm:text-lg text-wood-dark font-bold tracking-wide leading-relaxed">
                 "మీ ఇల్లు మీ వ్యక్తిత్వాన్ని ప్రతిబింబించే అద్దం... మీ కలలను నిరంతర ఆనందాలుగా మార్చే అద్భుత శిల్పం. 25 సంవత్సరాలకు పైగా అనుభవంతో, మీ అభిరుచులకు అనుగుణంగా టేకు కలపతో అపురూపమైన డిజైన్లను రూపొందిస్తున్నాము."
               </p>
               
@@ -60,18 +77,18 @@ export default function Home() {
               <div className="w-16 h-0.5 bg-wood-accent/30 mx-auto my-3" />
               
               {/* English Quote */}
-              <p className="font-sans text-xs sm:text-sm font-light text-wood-beige/90 tracking-wide leading-relaxed italic">
+              <p className="font-sans text-xs sm:text-sm font-light text-wood-medium/95 tracking-wide leading-relaxed italic">
                 "Your home should tell the story of who you are, and be a collection of what you love. We shape your dreams into premium teak wood and bespoke designs."
               </p>
             </div>
             
-            <span className="font-serif text-5xl text-wood-accent/30 absolute right-4 bottom-1 leading-none select-none">”</span>
+            <span className="font-serif text-6xl text-wood-accent/20 absolute right-4 bottom-1 leading-none select-none">”</span>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-x-6">
+          <div className="mt-8 flex items-center justify-center gap-x-6">
             <Link
               href="/products"
-              className="flex items-center gap-2 rounded-full bg-wood-accent hover:bg-amber-500 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-wood-dark shadow-md transition-all duration-300 transform hover:scale-105 hover:ring-4 hover:ring-wood-accent/20 active:scale-95 cursor-pointer btn-3d-accent"
+              className="flex items-center gap-2 rounded-full bg-wood-accent hover:bg-amber-500 px-7 py-4 text-xs font-bold uppercase tracking-widest text-wood-dark shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer btn-3d-accent"
             >
               Explore Showcase
               <ArrowRight className="h-4 w-4" />
@@ -80,12 +97,45 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trust & Metric Highlights Section */}
+      <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 -mt-16 sm:-mt-24 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
+            <div className="h-12 w-12 rounded-xl bg-wood-dark text-wood-accent flex items-center justify-center shrink-0 shadow-inner">
+              <Award className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">25+ Years Legacy</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">Generations of trusted regional craftsmanship.</p>
+            </div>
+          </div>
+          <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
+            <div className="h-12 w-12 rounded-xl bg-wood-dark text-wood-accent flex items-center justify-center shrink-0 shadow-inner">
+              <Flame className="h-6 w-6 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">Premium Teak Wood</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">Highest grade seasoned timber guarantee.</p>
+            </div>
+          </div>
+          <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
+            <div className="h-12 w-12 rounded-xl bg-wood-dark text-wood-accent flex items-center justify-center shrink-0 shadow-inner">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">Structural Warranty</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">Termite-resistant, sturdy joint engineering.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* About & Wooden Furniture Themes Section */}
-      <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         {/* Left Col: About Office */}
         <div className="lg:col-span-7">
           <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-            Our Legacy
+            Our Heritage
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-wood-dark mt-2 mb-6">
             About LD Interiors & Furnitures
@@ -118,15 +168,16 @@ export default function Home() {
             <div className="flex gap-3">
               <span className="text-wood-accent font-serif text-lg font-bold">✓</span>
               <div>
-                <h4 className="font-serif font-bold text-sm text-wood-dark">25+ Years of Trust</h4>
-                <p className="text-xs text-wood-light font-light mt-1">Generations of families served in Konaseema region.</p>
+                <h4 className="font-serif font-bold text-sm text-wood-dark">Konaseema Woodwork</h4>
+                <p className="text-xs text-wood-light font-light mt-1">Generations of families served in Alamuru region.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right Col: Wooden Theme Highlights */}
-        <div className="lg:col-span-5 bg-wood-cream border border-wood-border/60 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        <div className="lg:col-span-5 bg-white/70 backdrop-blur-xl border border-wood-border/40 rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
+          <div className="absolute -right-24 -bottom-24 w-48 h-48 bg-wood-accent/5 rounded-full blur-3xl pointer-events-none" />
           <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
             Signature Design Tones
           </span>
@@ -134,15 +185,15 @@ export default function Home() {
             Bespoke Wooden Furniture
           </h3>
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-wood-beige/25 border border-wood-border/30 hover:border-wood-accent/35 transition-colors">
+            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
               <h4 className="font-serif font-bold text-sm text-wood-dark">Teak Wood Main Doors</h4>
               <p className="text-xs text-wood-light font-light mt-1">Robust entryways featuring traditional temple carving and brass fittings.</p>
             </div>
-            <div className="p-4 rounded-xl bg-wood-beige/25 border border-wood-border/30 hover:border-wood-accent/35 transition-colors">
+            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
               <h4 className="font-serif font-bold text-sm text-wood-dark">Walnut & Beech Dining Sets</h4>
               <p className="text-xs text-wood-light font-light mt-1">Hand-finished joint alignments with scratch-resistant wood polish.</p>
             </div>
-            <div className="p-4 rounded-xl bg-wood-beige/25 border border-wood-border/30 hover:border-wood-accent/35 transition-colors">
+            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
               <h4 className="font-serif font-bold text-sm text-wood-dark">Rosewood Modular Cabinets</h4>
               <p className="text-xs text-wood-light font-light mt-1">Space-saving wardrobes and drawers built from seasoned rosewood.</p>
             </div>
@@ -152,23 +203,42 @@ export default function Home() {
 
       {/* Featured Showcase Section */}
       <section className="mx-auto w-full max-w-7xl px-6 sm:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 border-b border-wood-border/30 pb-6 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-wood-border/30 pb-6 gap-4">
           <div>
             <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
               Fresh Daily
             </span>
             <h2 className="font-serif text-3xl font-bold tracking-tight text-wood-dark mt-1">
-              Latest Additions
+              Design Gallery
             </h2>
           </div>
           <Link
             href="/products"
-            className="group inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-wood-dark hover:text-wood-medium transition-colors"
+            className="group inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-wood-dark hover:text-wood-accent transition-colors"
           >
             View all designs
             <ArrowRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+
+        {/* Real-time Category Filtering Tabs */}
+        {!loading && !error && products.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-10 pb-2 overflow-x-auto select-none no-scrollbar">
+            {HOMEPAGE_CATEGORIES.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`px-4.5 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 cursor-pointer ${
+                  activeTab === tab
+                    ? 'bg-wood-dark text-white shadow-md'
+                    : 'bg-white/60 text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
+                }`}
+              >
+                {tab === "Gummalu" ? "Main Doors (Gummalu)" : tab === "Puja Mandiralu" ? "Puja Mandirs" : tab}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex h-60 w-full items-center justify-center">
@@ -178,7 +248,7 @@ export default function Home() {
             </div>
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-wood-border/60 bg-wood-cream p-12 text-center">
+          <div className="rounded-2xl border border-wood-border/60 bg-wood-cream/90 backdrop-blur-md p-12 text-center">
             <Compass className="mx-auto h-12 w-12 text-wood-light stroke-1 mb-4 animate-bounce" />
             <h3 className="text-lg font-serif font-bold text-wood-dark">Connection Offline</h3>
             <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">{error}</p>
@@ -189,23 +259,17 @@ export default function Home() {
               Access Admin Panel
             </Link>
           </div>
-        ) : featured.length === 0 ? (
+        ) : filteredShowcase.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-wood-border p-12 text-center">
             <ImageIcon className="mx-auto h-12 w-12 text-wood-light mb-4" />
-            <h3 className="text-lg font-serif font-bold text-wood-dark">Gallery is empty</h3>
+            <h3 className="text-lg font-serif font-bold text-wood-dark">No designs in this category</h3>
             <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">
-              We are preparing to upload our interior design catalog soon. Admins can start uploading right away.
+              We are preparing to upload catalog items for "{activeTab}". Click "All" to browse other design collections.
             </p>
-            <Link
-              href="/admin"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-wood-dark px-5 py-2.5 text-xs font-semibold text-white hover:bg-wood-medium transition-colors"
-            >
-              Go to Admin Panel
-            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((product) => (
+            {filteredShowcase.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>

@@ -204,3 +204,53 @@ body {
     font-size: 14px !important;
   }
 }
+
+/* Glassmorphism Luxury Container */
+.glass-panel {
+  background: rgba(253, 252, 249, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(223, 212, 196, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(44, 26, 15, 0.04);
+}
+
+.glass-panel-dark {
+  background: rgba(44, 26, 15, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(181, 131, 79, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Elegant luxury gold shine animation */
+@keyframes shine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.gold-gradient-shine {
+  background: linear-gradient(
+    90deg,
+    #b5834f 0%,
+    #dfb15b 25%,
+    #ffe082 50%,
+    #dfb15b 75%,
+    #b5834f 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 6s linear infinite;
+}
+
+/* Glow border on hover */
+.glow-on-hover {
+  transition: all 0.4s ease;
+}
+.glow-on-hover:hover {
+  box-shadow: 
+    0 0 15px rgba(181, 131, 79, 0.25),
+    0 10px 20px rgba(44, 26, 15, 0.08);
+  border-color: rgba(181, 131, 79, 0.45) !important;
+}

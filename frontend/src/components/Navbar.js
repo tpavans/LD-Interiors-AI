@@ -50,69 +50,79 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full wood-header-3d border-b-2 border-wood-accent/50">
+    <header className="sticky top-0 z-50 w-full glass-panel-dark border-b border-wood-accent/30 shadow-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         {/* Brand Logo */}
         <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
-          <span className="font-serif text-sm font-extrabold tracking-wider gold-text-glow sm:text-lg md:text-xl hidden xs:inline">
+          <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all sm:text-lg md:text-xl hidden xs:inline uppercase">
             LD INTERIORS & FURNITURES
           </span>
-          <span className="font-serif text-sm font-extrabold tracking-wider gold-text-glow xs:hidden">
+          <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all xs:hidden uppercase">
             LD INTERIORS
           </span>
         </Link>
 
         {/* Navigation Links */}
-        <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 text-xs font-bold uppercase tracking-wider">
+        <nav className="flex items-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
           <Link
             href="/"
-            className={`transition-colors ${
-              pathname === '/' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+            className={`relative pb-1 transition-colors duration-300 ${
+              pathname === '/' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
             Home
           </Link>
           <Link
             href="/products"
-            className={`transition-colors ${
-              pathname === '/products' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+            className={`relative pb-1 transition-colors duration-300 ${
+              pathname === '/products' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/products' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
             Designs
           </Link>
 
           {/* Desktop Only Links */}
-          <div className="hidden md:flex items-center gap-5 sm:gap-6 md:gap-8">
+          <div className="hidden md:flex items-center gap-6 md:gap-8">
             <Link
               href="/orders"
-              className={`transition-colors ${
-                pathname === '/orders' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+              className={`relative pb-1 transition-colors duration-300 ${
+                pathname === '/orders' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+                pathname === '/orders' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
               Orders
             </Link>
             <Link
               href="/contact"
-              className={`transition-colors ${
-                pathname === '/contact' ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+              className={`relative pb-1 transition-colors duration-300 ${
+                pathname === '/contact' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+                pathname === '/contact' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
               Contact
             </Link>
             <Link
               href="/admin"
-              className={`transition-colors flex items-center gap-1 ${
-                pathname.startsWith('/admin') ? 'text-wood-accent border-b-2 border-wood-accent pb-1' : 'text-wood-cream/70 hover:text-white pb-1'
+              className={`relative pb-1 flex items-center gap-1 transition-colors duration-300 ${
+                pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+                pathname.startsWith('/admin') ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
               {isLoggedIn ? (
                 <>
-                  <LayoutDashboard className="h-3.5 w-3.5 hidden sm:inline" />
+                  <LayoutDashboard className="h-3.5 w-3.5" />
                   <span>Dashboard</span>
                 </>
               ) : (
                 <>
-                  <User className="h-3.5 w-3.5 hidden sm:inline" />
+                  <User className="h-3.5 w-3.5" />
                   <span>Admin</span>
                 </>
               )}
@@ -120,7 +130,7 @@ export default function Navbar() {
             {isLoggedIn && (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 rounded-full border border-wood-accent/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-wood-cream hover:bg-wood-accent hover:text-wood-dark hover:border-wood-accent transition-all duration-300 cursor-pointer"
+                className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 cursor-pointer"
               >
                 <LogOut className="h-3 w-3" />
                 <span>Logout</span>

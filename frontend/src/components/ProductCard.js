@@ -130,8 +130,8 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
   return (
     <>
       <div className="card-3d block">
-        <div className="card-3d-inner group overflow-hidden rounded-2xl bg-wood-cream border border-wood-border/50 transition-all duration-500 ease-out shadow-lg">
-          <Link href={`/products/${_id}`} className="block relative overflow-hidden aspect-[4/5] bg-wood-beige/25">
+        <div className="card-3d-inner group overflow-hidden rounded-3xl bg-white/85 backdrop-blur-md border border-wood-border/40 transition-all duration-500 ease-out shadow-lg hover:shadow-xl hover:border-wood-accent/30 glow-on-hover">
+          <Link href={`/products/${_id}`} className="block relative overflow-hidden aspect-[4/5] bg-wood-beige/10">
             <img
               src={image}
               alt={title}
@@ -139,12 +139,12 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               className="h-full w-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
             />
             {/* Category Overlay */}
-            <div className="absolute top-4 left-4 bg-wood-cream/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-wood-accent shadow-sm border border-wood-border/30">
+            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-wood-accent shadow-sm border border-wood-border/30">
               {category}
             </div>
             {/* New Arrival Badge */}
             {isNew && (
-              <div className="absolute top-12 left-4 bg-blue-600 text-white px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-blue-700/20 z-10 animate-pulse">
+              <div className="absolute top-12 left-4 bg-amber-500 text-wood-dark px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-amber-600/20 z-10 animate-pulse">
                 New Arrival
               </div>
             )}
@@ -155,75 +155,75 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 e.stopPropagation();
                 setShowShareModal(true);
               }}
-              className="absolute top-4 right-4 bg-wood-cream/90 backdrop-blur-md p-2 rounded-full text-wood-dark hover:bg-wood-accent hover:text-white transition-colors duration-300 shadow-sm border border-wood-border/30 cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full text-wood-dark hover:bg-wood-accent hover:text-white transition-colors duration-300 shadow-sm border border-wood-border/30 cursor-pointer z-10"
               title="Share Design"
             >
               <Share2 className="h-3.5 w-3.5" />
             </button>
           </Link>
-          <div className="p-3 sm:p-5 flex flex-col gap-2.5 sm:gap-4">
+          <div className="p-4 sm:p-5 flex flex-col gap-3 sm:gap-4">
             <div>
               <span className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase">
                 {category}
               </span>
               <Link href={`/products/${_id}`} className="block mt-0.5 sm:mt-1">
-                <h3 className="font-serif text-sm sm:text-base font-bold text-wood-dark hover:text-wood-light transition-colors line-clamp-1 font-semibold">
+                <h3 className="font-serif text-sm sm:text-base font-bold text-wood-dark hover:text-wood-accent transition-colors line-clamp-1">
                   {title}
                 </h3>
               </Link>
-              <div className="mt-0.5 sm:mt-1 flex flex-col gap-0.5">
+              <div className="mt-1 flex flex-col gap-1">
                 <span className="text-[10px] sm:text-xs font-semibold text-wood-accent leading-snug">
                   {price && price > 0 ? (
                     <span>
-                      Estimated Price: <span className="font-bold">₹{price.toLocaleString('en-IN')}</span>
+                      Estimated Price: <span className="font-extrabold text-wood-dark">₹{price.toLocaleString('en-IN')}</span>
                       <br />
-                      <span className="text-[8.5px] sm:text-[9.5px] font-normal text-wood-light">(Contact Nagaraju for fixed price)</span>
+                      <span className="text-[8.5px] sm:text-[9.5px] font-normal text-wood-light">(Contact Nagaraju for fixed quotation)</span>
                     </span>
                   ) : (
-                    <span>Contact Nagaraju for pricing</span>
+                    <span className="font-semibold text-wood-accent">Contact Nagaraju for pricing</span>
                   )}
                 </span>
-                <span className="text-[10px] text-amber-500 font-bold tracking-wider">
+                <span className="text-[10px] text-amber-400 font-bold tracking-wider filter drop-shadow-sm">
                   {'★'.repeat(rating || 5)}{'☆'.repeat(5 - (rating || 5))}
                 </span>
               </div>
             </div>
             
             {/* Actions Grid */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {/* Call for Pricing Note */}
-              <div className="text-[8.5px] sm:text-[9.5px] text-wood-light text-center font-medium italic mt-0.5 leading-none">
-                Contact Nagaraju for pricing & custom sizes
+              <div className="text-[8px] sm:text-[9px] text-wood-light text-center font-medium italic leading-none">
+                Get pricing & custom sizing info:
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
+              <div className="flex gap-2">
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
                   title="Call Nagaraju (Manager)"
-                  className="flex-grow flex items-center justify-center gap-1.5 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
                 >
-                  <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent" />
-                  <span>Call Nagaraju</span>
+                  <Phone className="h-3 w-3 text-wood-accent" />
+                  <span>Call Owner</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a
                   href="tel:+919346325291"
                   title="Call Pavan Sai (Tech Admin)"
-                  className="flex-grow flex items-center justify-center gap-1.5 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-1.5 py-2 text-[10px] sm:text-xs font-bold tracking-wider uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
                 >
-                  <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-wood-accent/80" />
-                  <span>Call Pavan</span>
+                  <Phone className="h-3 w-3 text-wood-accent/80" />
+                  <span>Call Admin</span>
                 </a>
               </div>
 
               {/* Order / WhatsApp Details Button */}
               <button
                 onClick={() => setShowOrderModal(true)}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-sm cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-2.5 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase transition-all duration-350 shadow-sm hover:shadow-wood-dark/20 cursor-pointer"
               >
                 <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>Order Now</span>
+                <span>Place Inquiry / Order</span>
               </button>
             </div>
           </div>

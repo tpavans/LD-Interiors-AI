@@ -82,7 +82,7 @@ export default function ProductsPage() {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder="Search designs (e.g. bed, dining, modern...)"
-            className="w-full rounded-full border border-wood-border/60 bg-wood-cream/50 pl-11 pr-10 py-3 text-sm focus:border-wood-dark focus:outline-none transition-colors text-wood-dark placeholder-wood-light/70 shadow-sm"
+            className="w-full rounded-full border border-wood-border/60 bg-white/70 backdrop-blur-md pl-11 pr-10 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all text-wood-dark placeholder-wood-light/70 shadow-sm"
           />
           {searchQuery && (
             <button
@@ -99,15 +99,15 @@ export default function ProductsPage() {
       </div>
 
       {/* Filter Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-2 mb-12 border-b border-wood-border/30 pb-8">
+      <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-wood-border/30 pb-8 select-none">
         {CATEGORIES.map((category) => (
           <button
             key={category}
             onClick={() => handleCategoryChange(category)}
-            className={`px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300 cursor-pointer ${
+            className={`px-4.5 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 cursor-pointer ${
               selectedCategory === category
-                ? 'bg-wood-dark text-white shadow-sm'
-                : 'bg-wood-cream text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
+                ? 'bg-wood-dark text-white shadow-md'
+                : 'bg-white/60 text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
             }`}
           >
             {category}

@@ -36,34 +36,34 @@ export default function ContactPage() {
       {/* Grid containing Contact Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto mb-16">
         {/* Admin 2 Card (Nagaraju - Head, placed first to prioritize business leads) */}
-        <div className="group relative overflow-hidden rounded-2xl bg-wood-cream border border-wood-border/60 p-8 shadow-sm hover:shadow-xl hover:border-wood-accent/30 transition-all duration-500 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-wood-beige/50 group-hover:scale-150 transition-transform duration-500 -z-10"></div>
+        <div className="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-md border border-wood-border/40 p-8 shadow-lg hover:shadow-xl hover:border-wood-accent/30 transition-all duration-500 flex flex-col justify-between glow-on-hover">
+          <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-wood-beige/20 group-hover:scale-150 transition-transform duration-500 -z-10"></div>
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="p-2.5 rounded-xl bg-wood-beige text-wood-accent">
+              <span className="p-2.5 rounded-xl bg-wood-beige/50 text-wood-accent">
                 <Hammer className="h-5 w-5" />
               </span>
-              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+              <span className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase">
                 Office Lead
               </span>
             </div>
             <h2 className="font-serif text-2xl font-bold text-wood-dark">
               {admin2.name}
             </h2>
-            <p className="text-xs font-semibold text-wood-light mt-1 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-wood-accent mt-1 uppercase tracking-wider">
               {admin2.role}
             </p>
-            <p className="mt-4 text-sm text-wood-medium/80 font-light leading-relaxed">
+            <p className="mt-4 text-sm text-wood-medium/90 font-light leading-relaxed">
               {admin2.desc}
             </p>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-wood-border/40 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 pt-6 border-t border-wood-border/30 flex flex-col sm:flex-row gap-3">
             <a
               href={`tel:+91${admin2.phone}`}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-4 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
             >
-              <Phone className="h-4 w-4" />
+              <Phone className="h-4 w-4 text-wood-accent" />
               Call ({admin2.phone})
             </a>
             <a
@@ -79,50 +79,50 @@ export default function ContactPage() {
         </div>
 
         {/* Admin 1 Card (Pavan Sai - Developer) */}
-        <div className="group relative overflow-hidden rounded-2xl bg-wood-cream border border-wood-border/60 p-8 shadow-sm hover:shadow-xl hover:border-wood-accent/30 transition-all duration-500 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-wood-beige/50 group-hover:scale-150 transition-transform duration-500 -z-10"></div>
+        <div className="group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-md border border-wood-border/40 p-8 shadow-lg hover:shadow-xl hover:border-wood-accent/30 transition-all duration-500 flex flex-col justify-between glow-on-hover">
+          <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-wood-beige/20 group-hover:scale-150 transition-transform duration-500 -z-10"></div>
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="p-2.5 rounded-xl bg-wood-beige text-wood-accent">
+              <span className="p-2.5 rounded-xl bg-wood-beige/50 text-wood-accent">
                 <Sparkles className="h-5 w-5" />
               </span>
-              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+              <span className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase">
                 System Admin
               </span>
             </div>
             <h2 className="font-serif text-2xl font-bold text-wood-dark">
               {admin1.name}
             </h2>
-            <p className="text-xs font-semibold text-wood-light mt-1 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-wood-accent mt-1 uppercase tracking-wider">
               {admin1.role}
             </p>
-            <p className="mt-4 text-sm text-wood-medium/80 font-light leading-relaxed">
+            <p className="mt-4 text-sm text-wood-medium/90 font-light leading-relaxed">
               {admin1.desc}
             </p>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-wood-border/40 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 pt-6 border-t border-wood-border/30 flex flex-col sm:flex-row gap-2.5">
             <a
               href={`tel:+91${admin1.phone}`}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-3 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent px-3 py-3.5 text-xs font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
             >
-              <Phone className="h-4 w-4" />
+              <Phone className="h-4 w-4 text-wood-accent" />
               Call
             </a>
             <a
               href={`https://wa.me/91${admin1.phone}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-3 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-3 py-3.5 text-xs font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-white"
             >
               <MessageSquare className="h-4 w-4" />
               WhatsApp
             </a>
             <a
               href="mailto:ldinteriors.in@gmail.com"
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-dark hover:bg-wood-dark hover:text-white px-3 py-3.5 text-xs font-bold tracking-widest text-wood-dark uppercase shadow-sm transition-all duration-300 cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent px-3 py-3.5 text-xs font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-4 w-4 text-wood-accent" />
               Email
             </a>
           </div>
