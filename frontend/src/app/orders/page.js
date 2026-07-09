@@ -636,10 +636,33 @@ ${profileName || activePayOrder.name}`;
 
                         {/* Payment Verification Alerts */}
                         {hasPendingVerifications && (
-                          <div className="rounded-xl bg-amber-50 border border-amber-150 p-3 text-[10px] text-amber-850 flex items-start gap-2 mb-3 animate-pulse">
-                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                            <div>
-                              <strong>Payment Awaiting Approval:</strong> You sent a payment confirmation. Nagaraju is verifying it with their GPay/PhonePe account statement.
+                          <div className="rounded-xl bg-amber-50 border border-amber-150 p-3.5 text-xs text-amber-800 flex flex-col gap-2.5 mb-3 text-left">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
+                              <div className="text-[10px] text-amber-850">
+                                <strong>Payment Awaiting Approval:</strong> You sent a payment confirmation. Nagaraju is verifying it with their GPay/PhonePe account statement.
+                              </div>
+                            </div>
+                            <div className="border-t border-wood-border/20 pt-2 flex items-center justify-between gap-2">
+                              <span className="text-[8.5px] text-wood-light italic font-light">Payment failed or cancelled halfway?</span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (window.confirm("Did your payment fail/cancel? Click OK to reset the payment button and try again.")) {
+                                    try {
+                                      await api.post(`/orders/${order._id}/cancel-pending-verification`);
+                                      alert("Payment reset successfully. You can now try paying again!");
+                                      handleSearch(null, phone);
+                                    } catch (err) {
+                                      console.error("Failed to reset verification:", err);
+                                      alert("Could not reset payment status. Please try again.");
+                                    }
+                                  }
+                                }}
+                                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+                              >
+                                🔄 Reset & Retry Payment
+                              </button>
                             </div>
                           </div>
                         )}

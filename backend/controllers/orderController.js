@@ -672,6 +672,44 @@ const verifyRazorpaySignature = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Cancel a pending payment verification request to allow customer retry
+ * @route   POST /api/orders/:id/cancel-pending-verification
+ * @access  Public
+ */
+const cancelPendingPaymentVerification = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const originalLength = order.payments.length;
+    // Keep only non-pending payments
+    order.payments = order.payments.filter(p => p.status !== 'Pending');
+
+    if (order.payments.length === originalLength) {
+      return res.status(400).json({ message: 'No pending payment verification found.' });
+    }
+
+    // Reset paymentStatus based on verified ledger
+    if (order.paidAmount >= order.totalPrice && order.totalPrice > 0) {
+      order.paymentStatus = 'Paid';
+    } else if (order.paidAmount > 0) {
+      order.paymentStatus = 'Partially Paid';
+    } else {
+      order.paymentStatus = 'Unpaid';
+    }
+
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error cancelling pending payment verification:', error);
+    res.status(500).json({ message: 'Server error resetting payment.', error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
@@ -686,4 +724,5 @@ module.exports = {
   updateDeliveryTracking,
   createRazorpayOrder,
   verifyRazorpaySignature,
+  cancelPendingPaymentVerification,
 };

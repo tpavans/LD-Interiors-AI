@@ -14,6 +14,7 @@ const {
   updateDeliveryTracking,
   createRazorpayOrder,
   verifyRazorpaySignature,
+  cancelPendingPaymentVerification,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -35,6 +36,9 @@ router.post('/:id/razorpay-order', createRazorpayOrder);
 
 // Public route to verify Razorpay signature and settle instantly
 router.post('/:id/razorpay-verify', verifyRazorpaySignature);
+
+// Public route to cancel/reset pending verification
+router.post('/:id/cancel-pending-verification', cancelPendingPaymentVerification);
 
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);
