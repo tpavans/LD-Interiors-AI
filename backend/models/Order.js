@@ -81,6 +81,17 @@ const OrderSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now }
     }
   ],
+  deliveryDate: {
+    type: Date,
+  },
+  carrier: {
+    type: String,
+    trim: true,
+  },
+  trackingNumber: {
+    type: String,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -439,6 +439,90 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Customer confirm payment without manual UTR number (for WhatsApp P2P alert flows)
+ * @route   POST /api/orders/:id/confirm-payment
+ * @access  Public
+ */
+const confirmCustomerPayment = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { amount, upiIdUsed } = req.body;
+    if (!amount) {
+      return res.status(400).json({ message: 'Amount is required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Append to payments with custom status
+    order.payments.push({
+      amount: Number(amount),
+      utrNumber: 'WhatsApp Alert Triggered',
+      upiIdUsed: upiIdUsed || 'UPI QR / App Link',
+      status: 'Pending',
+      createdAt: Date.now()
+    });
+
+    order.paymentStatus = 'Pending Verification';
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+
+    // Trigger email alert to admin
+    try {
+      const { sendAdminPaymentAlertEmail } = require('../utils/sendEmail');
+      sendAdminPaymentAlertEmail(updatedOrder, amount, 'WhatsApp Alert Triggered').catch(e => console.error(e));
+    } catch (err) {
+      console.error('Failed to send admin payment alert email:', err);
+    }
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error confirming customer payment:', error);
+    res.status(500).json({ message: 'Server error confirming payment.', error: error.message });
+  }
+};
+
+/**
+ * @desc    Admin update delivery tracking data (deliveryDate, carrier, trackingNumber)
+ * @route   PUT /api/orders/:id/delivery-tracking
+ * @access  Private (Admin only)
+ */
+const updateDeliveryTracking = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { deliveryDate, carrier, trackingNumber } = req.body;
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (deliveryDate !== undefined) {
+      order.deliveryDate = deliveryDate ? new Date(deliveryDate) : null;
+    }
+    if (carrier !== undefined) {
+      order.carrier = carrier.trim();
+    }
+    if (trackingNumber !== undefined) {
+      order.trackingNumber = trackingNumber.trim();
+    }
+
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error updating delivery tracking:', error);
+    res.status(500).json({ message: 'Server error updating delivery details.', error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
@@ -449,4 +533,6 @@ module.exports = {
   updateOrderPricing,
   submitPayment,
   verifyPayment,
+  confirmCustomerPayment,
+  updateDeliveryTracking,
 };

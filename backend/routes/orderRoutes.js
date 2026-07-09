@@ -10,6 +10,8 @@ const {
   updateOrderPricing,
   submitPayment,
   verifyPayment,
+  confirmCustomerPayment,
+  updateDeliveryTracking,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -23,6 +25,9 @@ router.post('/', upload.single('referenceImage'), createOrder);
 // Public route to submit payment transaction proof
 router.post('/:id/payments', submitPayment);
 
+// Public route to submit payment confirmation without UTR (WhatsApp alerts)
+router.post('/:id/confirm-payment', confirmCustomerPayment);
+
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);
 
@@ -31,6 +36,9 @@ router.post('/:id/send-greeting', protect, sendManualGreetingEmail);
 
 // Admin-only route to update pricing details
 router.put('/:id/pricing', protect, updateOrderPricing);
+
+// Admin-only route to update delivery tracking details
+router.put('/:id/delivery-tracking', protect, updateDeliveryTracking);
 
 // Admin-only route to approve or reject a payment
 router.post('/:id/payments/:paymentId/verify', protect, verifyPayment);

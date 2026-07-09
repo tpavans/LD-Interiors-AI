@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 const CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
@@ -193,6 +193,15 @@ export default function AdminPage() {
   const [pricingError, setPricingError] = useState('');
   const [pricingSuccess, setPricingSuccess] = useState('');
   const [pricingLoading, setPricingLoading] = useState(false);
+
+  // Delivery Tracking Modal State
+  const [activeDeliveryOrder, setActiveDeliveryOrder] = useState(null);
+  const [deliveryDateInput, setDeliveryDateInput] = useState('');
+  const [carrierInput, setCarrierInput] = useState('Xpressbees');
+  const [trackingNumberInput, setTrackingNumberInput] = useState('');
+  const [deliveryError, setDeliveryError] = useState('');
+  const [deliverySuccess, setDeliverySuccess] = useState('');
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
 
   // Payments verification action loading
   const [paymentActionLoading, setPaymentActionLoading] = useState({}); // paymentId -> boolean
@@ -466,7 +475,7 @@ export default function AdminPage() {
     }
   };
 
-  // 10. Update pricing handler
+  // 10. Update pricing handler & WhatsApp Payment message launch
   const handleSavePricing = async (e) => {
     e.preventDefault();
     if (!activePricingOrder) return;
@@ -485,7 +494,7 @@ export default function AdminPage() {
 
       await api.put(`/orders/${activePricingOrder._id}/pricing`, {
         totalPrice: priceVal,
-        status: updateToAwaitingAdvance ? 'Processing' : undefined // Trigger callback processing
+        status: updateToAwaitingAdvance ? 'Processing' : undefined
       });
 
       setPricingSuccess('Order pricing updated successfully!');
@@ -501,6 +510,31 @@ export default function AdminPage() {
         : o
       ));
 
+      // Trigger automatic WhatsApp price message window opening
+      const cleanPhone = activePricingOrder.phone.replace(/\D/g, '');
+      const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+      
+      const advance = Math.round(priceVal / 2);
+      const priceMsg = `🏠 LD Interiors: Sizing & Pricing Finalized! / ఆర్డర్ ధర ఖరారు చేయబడింది
+
+Dear Mr./Ms. ${activePricingOrder.name} గారికి, 🙏
+
+Nagaraju here. We have finalized the sizing and contract price for your custom design order of "${activePricingOrder.product}":
+
+💵 Final Agreed Price: ₹${priceVal.toLocaleString('en-IN')}
+💰 50% Booking Advance: ₹${advance.toLocaleString('en-IN')}
+
+To begin crafting your custom design at our Alamuru workshop, please pay the 50% advance or full price:
+👉 Pay here: https://ld-interiors-ai.vercel.app/orders
+
+Warm regards,
+Nagaraju (Owner)
+LD Interiors & Furnitures
+📞 +91 93463 25291`;
+
+      const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(priceMsg)}`;
+      window.open(waUrl, '_blank');
+
       setTimeout(() => {
         setActivePricingOrder(null);
         setTotalPriceInput('');
@@ -514,7 +548,78 @@ export default function AdminPage() {
     }
   };
 
-  // 11. Verify payment installment
+  // 11. Save delivery tracking data
+  const handleSaveDeliveryTracking = async (e) => {
+    e.preventDefault();
+    if (!activeDeliveryOrder) return;
+
+    setDeliveryError('');
+    setDeliverySuccess('');
+    setDeliveryLoading(true);
+
+    try {
+      await api.put(`/orders/${activeDeliveryOrder._id}/delivery-tracking`, {
+        deliveryDate: deliveryDateInput || null,
+        carrier: carrierInput,
+        trackingNumber: trackingNumberInput
+      });
+
+      setDeliverySuccess('Delivery & Tracking parameters saved successfully!');
+
+      setOrders(prev => prev.map(o => o._id === activeDeliveryOrder._id
+        ? {
+            ...o,
+            deliveryDate: deliveryDateInput ? new Date(deliveryDateInput) : null,
+            carrier: carrierInput,
+            trackingNumber: trackingNumberInput
+          }
+        : o
+      ));
+
+      setTimeout(() => {
+        setActiveDeliveryOrder(null);
+        setDeliveryDateInput('');
+        setTrackingNumberInput('');
+      }, 1200);
+
+    } catch (err) {
+      console.error('Delivery tracking save failed:', err);
+      setDeliveryError(err.response?.data?.message || 'Failed to update delivery tracking details. Please try again.');
+    } finally {
+      setDeliveryLoading(false);
+    }
+  };
+
+  // 12. Send WhatsApp Balance & Delivery Reminder
+  const handleSendBalanceReminder = (o) => {
+    const cleanPhone = o.phone.replace(/\D/g, '');
+    const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+    
+    const dateStr = o.deliveryDate 
+      ? new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : 'tomorrow';
+      
+    const deliveryMsg = `🚚 LD Interiors: Delivery Schedule & Balance Statement / డెలివరీ సమాచారం
+
+Dear Mr./Ms. ${o.name} గారికి, 🙏
+
+Nagaraju here. Your custom furniture "${o.product}" is scheduled for delivery on ${dateStr}!
+
+⚖️ Outstanding Balance: ₹${o.remainingBalance.toLocaleString('en-IN')}
+📦 Carrier tracking ID (${o.carrier || 'Xpressbees'}): ${o.trackingNumber || 'Self-Transport'}
+
+You can pay the remaining balance online before delivery, or pay cash/UPI directly during installation:
+👉 Pay online: https://ld-interiors-ai.vercel.app/orders
+
+We are excited to deliver your premium furniture! ❤️
+
+LD Interiors & Furnitures
+📞 +91 93463 25291`;
+
+    window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(deliveryMsg)}`, '_blank');
+  };
+
+  // 13. Verify payment installment
   const handleVerifyPayment = async (orderId, paymentId, action, finalAmt) => {
     const confirmation = window.confirm(`Are you sure you want to ${action} this payment installment?`);
     if (!confirmation) return;
@@ -699,7 +804,7 @@ export default function AdminPage() {
       {adminTab === 'showcase' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Upload / Edit form */}
-          <div className="lg:col-span-4 bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-6 shadow-md text-left glow-on-hover">
+          <div className="lg:col-span-4 bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-6 shadow-md text-left glow-on-hover animate-fadeIn">
             <h2 className="font-serif text-lg font-bold text-wood-dark mb-6 flex items-center gap-2">
               {isEditing ? (
                 <>
@@ -887,7 +992,7 @@ export default function AdminPage() {
           </div>
 
           {/* Product listings */}
-          <div className="lg:col-span-8 bg-white/80 backdrop-blur-md border border-wood-border rounded-3xl shadow-md overflow-hidden text-left glow-on-hover">
+          <div className="lg:col-span-8 bg-white/80 backdrop-blur-md border border-wood-border rounded-3xl shadow-md overflow-hidden text-left glow-on-hover animate-fadeIn">
             <div className="px-6 py-5 border-b border-wood-border/40 flex items-center justify-between">
               <h3 className="font-serif text-lg font-bold text-wood-dark">
                 Manage Designs
@@ -1042,6 +1147,7 @@ export default function AdminPage() {
                       <th className="py-4 px-6">Phone</th>
                       <th className="py-4 px-6">Product Details</th>
                       <th className="py-4 px-6">Agreed Price</th>
+                      <th className="py-4 px-6">Carrier / Tracking</th>
                       <th className="py-4 px-6">Timeline Status</th>
                       <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
@@ -1104,11 +1210,52 @@ export default function AdminPage() {
                                 setPricingError('');
                                 setPricingSuccess('');
                               }}
-                              className="inline-flex items-center justify-center gap-1 rounded bg-wood-beige hover:bg-wood-border/40 text-wood-accent text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-wood-border/20 active:scale-95"
+                              className="inline-flex items-center justify-center gap-1 rounded bg-wood-beige hover:bg-wood-border/40 text-wood-accent text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-wood-border/20 active:scale-95 w-full text-center"
                             >
                               <CreditCard className="h-3 w-3" />
                               <span>{o.totalPrice > 0 ? 'Edit Price' : 'Set Price'}</span>
                             </button>
+                          </div>
+                        </td>
+
+                        {/* CARRIER / SHIPPING TRACKING COLUMN */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1 text-xs text-left max-w-[160px]">
+                            {o.trackingNumber ? (
+                              <div className="text-[10px] text-wood-medium leading-relaxed font-light">
+                                <p><strong>Carrier:</strong> {o.carrier || 'Xpressbees'}</p>
+                                <p className="truncate"><strong>Waybill:</strong> {o.trackingNumber}</p>
+                                {o.deliveryDate && (
+                                  <p className="font-bold text-emerald-800">📅 {new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-wood-light italic font-light">No shipment details</span>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                setActiveDeliveryOrder(o);
+                                setDeliveryDateInput(o.deliveryDate ? new Date(o.deliveryDate).toISOString().substring(0, 10) : '');
+                                setCarrierInput(o.carrier || 'Xpressbees');
+                                setTrackingNumberInput(o.trackingNumber || '');
+                                setDeliveryError('');
+                                setDeliverySuccess('');
+                              }}
+                              className="inline-flex items-center justify-center gap-1 rounded bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-neutral-300 w-full text-center mt-1"
+                            >
+                              <Truck className="h-3 w-3" />
+                              <span>Update Carrier</span>
+                            </button>
+
+                            {o.remainingBalance > 0 && o.trackingNumber && (
+                              <button
+                                onClick={() => handleSendBalanceReminder(o)}
+                                className="inline-flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-emerald-500/20 w-full text-center mt-1 active:scale-95"
+                              >
+                                🔔 Remind Balance
+                              </button>
+                            )}
                           </div>
                         </td>
 
@@ -1167,7 +1314,7 @@ export default function AdminPage() {
             <div className="px-6 py-20 text-center text-wood-light font-light">
               No pending payment verification requests in the queue. 
               <br />
-              <span className="text-[10px] text-wood-light/75 italic mt-1 block">When clients pay via UPI QR and submit UTR ref numbers, they will pop up here instantly!</span>
+              <span className="text-[10px] text-wood-light/75 italic mt-1 block">When clients confirm payment on the website, they will pop up here instantly!</span>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1176,8 +1323,8 @@ export default function AdminPage() {
                   <tr className="border-b border-wood-border/40 bg-wood-beige/10 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
                     <th className="py-4 px-6">Customer</th>
                     <th className="py-4 px-6">Product</th>
-                    <th className="py-4 px-6">UTR Ref Number</th>
-                    <th className="py-4 px-6">Submitted (Hint)</th>
+                    <th className="py-4 px-6">Log Type</th>
+                    <th className="py-4 px-6">Claimed Amount</th>
                     <th className="py-4 px-6">Actual Recd (₹)</th>
                     <th className="py-4 px-6">UPI Gateway</th>
                     <th className="py-4 px-6">Date</th>
@@ -1188,7 +1335,6 @@ export default function AdminPage() {
                   {pendingPayments.map((p) => {
                     const actionLoading = paymentActionLoading[p._id];
                     
-                    // Default to submitted amount. If submitted amount is 0, prefill with full balance.
                     const defaultPrefill = p.amount > 0 ? p.amount : p.fullOrder.remainingBalance;
                     const finalVerifiedAmt = verifiedAmounts[p._id] !== undefined ? verifiedAmounts[p._id] : defaultPrefill;
                     
@@ -1204,12 +1350,12 @@ export default function AdminPage() {
                           {p.productName}
                         </td>
                         <td className="py-4 px-6">
-                          <span className="font-mono text-xs font-bold bg-red-50 border border-red-200 text-red-700 px-2.5 py-1.5 rounded-lg select-all">
+                          <span className="font-mono text-[9px] font-bold bg-amber-50 border border-amber-250 text-amber-700 px-2 py-1 rounded-lg">
                             {p.utrNumber}
                           </span>
                         </td>
-                        <td className="py-4 px-6 font-semibold text-neutral-600 text-xs">
-                          {p.amount > 0 ? `₹${p.amount.toLocaleString('en-IN')}` : 'No hint (UTR only)'}
+                        <td className="py-4 px-6 font-bold text-neutral-600 text-xs">
+                          ₹{p.amount.toLocaleString('en-IN')}
                         </td>
                         <td className="py-4 px-6">
                           <input
@@ -1317,11 +1463,10 @@ export default function AdminPage() {
                   value={totalPriceInput}
                   onChange={(e) => setTotalPriceInput(e.target.value)}
                   placeholder="e.g. 25000"
-                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
+                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark focus:outline-none focus:border-wood-accent font-bold"
                 />
               </div>
 
-              {/* Checkbox to auto-update status to processing (which alerts client that sizes/prices are ready) */}
               <div className="flex items-start gap-2.5 py-1.5">
                 <input
                   type="checkbox"
@@ -1345,7 +1490,110 @@ export default function AdminPage() {
                 ) : (
                   <>
                     <Check className="h-4.5 w-4.5" />
-                    <span>Save Contract Price</span>
+                    <span>Save Price & Send WhatsApp</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT DELIVERY TRACKING MODAL POPUP */}
+      {activeDeliveryOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto" onClick={() => setActiveDeliveryOrder(null)}>
+          <div className="w-full max-w-sm bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-5 sm:p-7 shadow-2xl relative text-left max-h-[90vh] overflow-y-auto scrollbar-thin" onClick={(e) => e.stopPropagation()}>
+            
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
+              <h3 className="font-serif text-sm font-bold text-wood-dark flex items-center gap-2">
+                <Truck className="h-4.5 w-4.5 text-wood-accent animate-pulse" />
+                <span>Configure Delivery Tracking</span>
+              </h3>
+              <button 
+                onClick={() => setActiveDeliveryOrder(null)}
+                className="p-1 rounded-lg hover:bg-wood-beige text-wood-light hover:text-wood-dark transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {deliveryError && (
+              <div className="rounded-xl bg-red-50 border border-red-150 p-3 text-[10px] text-red-800 flex items-start gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <span>{deliveryError}</span>
+              </div>
+            )}
+
+            {deliverySuccess && (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-150 p-3 text-[10px] text-emerald-800 flex items-start gap-2 mb-3">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{deliverySuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveDeliveryTracking} className="space-y-4">
+              <div>
+                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent">Customer</p>
+                <p className="text-xs font-semibold text-wood-dark mt-0.5">{activeDeliveryOrder.name}</p>
+              </div>
+
+              <div>
+                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent">Carpentry Product</p>
+                <p className="text-xs font-semibold text-wood-dark mt-0.5">{activeDeliveryOrder.product}</p>
+              </div>
+
+              <div>
+                <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
+                  Scheduled Delivery Date
+                </label>
+                <input
+                  type="date"
+                  value={deliveryDateInput}
+                  onChange={(e) => setDeliveryDateInput(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
+                  Delivery Carrier
+                </label>
+                <select
+                  value={carrierInput}
+                  onChange={(e) => setCarrierInput(e.target.value)}
+                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark focus:outline-none focus:border-wood-accent cursor-pointer"
+                >
+                  <option value="Xpressbees">Xpressbees (Low Cost Courier)</option>
+                  <option value="India Post">India Post (Government Parcel)</option>
+                  <option value="Self-Transport">Self-Transport / Workshop Handover</option>
+                  <option value="Ekart Logistics">Ekart Logistics</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
+                  Consignment Waybill / Tracking Number
+                </label>
+                <input
+                  type="text"
+                  value={trackingNumberInput}
+                  onChange={(e) => setTrackingNumberInput(e.target.value)}
+                  placeholder="e.g. Waybill ID 142839958"
+                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark focus:outline-none focus:border-wood-accent font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={deliveryLoading}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-md disabled:bg-neutral-500"
+              >
+                {deliveryLoading ? (
+                  <Loader2 className="h-4.5 w-4.5 animate-spin text-white" />
+                ) : (
+                  <>
+                    <Check className="h-4.5 w-4.5" />
+                    <span>Save Delivery Tracking</span>
                   </>
                 )}
               </button>

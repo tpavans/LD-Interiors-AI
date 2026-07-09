@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone } from 'lucide-react';
+import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck } from 'lucide-react';
 
 const UPI_IDS = {
   phonepe: { id: "9346325291@axl", name: "Pavansai Teki", label: "PhonePe" },
@@ -31,12 +31,9 @@ export default function UserOrdersPage() {
   // Payment Modal States
   const [activePayOrder, setActivePayOrder] = useState(null);
   const [selectedUpiKey, setSelectedUpiKey] = useState('phonepe');
-  const [selectedOption, setSelectedOption] = useState('50'); // '50', '100', 'custom'
-  const [customAmount, setCustomAmount] = useState('');
-  const [utrNumber, setUtrNumber] = useState('');
+  const [selectedOption, setSelectedOption] = useState('50'); // '50', '100'
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
-  const [detectedUtr, setDetectedUtr] = useState('');
 
   useEffect(() => {
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
@@ -76,63 +73,6 @@ export default function UserOrdersPage() {
 
     fetchCatalogAndTrack();
   }, []);
-
-  // Automatic Clipboard UTR detection when user returns to tab
-  useEffect(() => {
-    if (!activePayOrder) {
-      setDetectedUtr('');
-      return;
-    }
-
-    const tryAutoDetectUtr = async () => {
-      try {
-        if (!navigator.clipboard || !navigator.clipboard.readText) return;
-        const text = await navigator.clipboard.readText();
-        const cleanText = text.trim().replace(/\D/g, '');
-        if (cleanText.length === 12) {
-          setDetectedUtr(cleanText);
-        } else {
-          setDetectedUtr('');
-        }
-      } catch (err) {
-        console.debug('Clipboard auto-read skipped or permission denied:', err);
-      }
-    };
-
-    // Auto-detect when modal opens
-    tryAutoDetectUtr();
-
-    // Auto-detect when window gains focus (user returns from banking app)
-    const handleFocus = () => {
-      setTimeout(tryAutoDetectUtr, 350);
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [activePayOrder]);
-
-  const handleAutoPaste = async () => {
-    try {
-      if (!navigator.clipboard || !navigator.clipboard.readText) {
-        alert('Your browser does not support clipboard reading. Please paste manually.');
-        return;
-      }
-      const text = await navigator.clipboard.readText();
-      const cleanText = text.trim().replace(/\D/g, '');
-      if (cleanText.length === 12) {
-        setUtrNumber(cleanText);
-        setDetectedUtr('');
-        setPaymentError('');
-      } else {
-        alert(`Could not find a valid 12-digit transaction number in your clipboard. Current text: "${text.substring(0, 30)}..."`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Clipboard permission denied. Please paste the UTR manually.');
-    }
-  };
 
   const handleSearch = async (e, forcePhone) => {
     if (e) e.preventDefault();
@@ -243,10 +183,8 @@ export default function UserOrdersPage() {
     const balance = activePayOrder.remainingBalance || activePayOrder.totalPrice || 0;
     if (selectedOption === '50') {
       return Math.round(balance / 2);
-    } else if (selectedOption === '100') {
-      return balance;
     } else {
-      return Number(customAmount) || 0;
+      return balance;
     }
   };
 
@@ -259,17 +197,13 @@ export default function UserOrdersPage() {
     return `upi://pay?pa=${upi.id}&pn=${encodeURIComponent(upi.name)}&am=${amount}&tn=Order%20LD-${orderShortId}&cu=INR`;
   };
 
-  const handlePaymentSubmit = async (e) => {
-    e.preventDefault();
+  const handlePaymentConfirm = async (e) => {
+    if (e) e.preventDefault();
     if (!activePayOrder) return;
     
     const amount = getPayableAmount();
     if (amount <= 0) {
-      setPaymentError('Please enter or select a valid payment amount.');
-      return;
-    }
-    if (!utrNumber || utrNumber.trim().length !== 12 || isNaN(utrNumber.trim())) {
-      setPaymentError('Please enter a valid 12-digit numerical UPI UTR transaction reference number.');
+      setPaymentError('Please select a valid payment amount.');
       return;
     }
 
@@ -277,22 +211,35 @@ export default function UserOrdersPage() {
     setPaymentError('');
 
     try {
-      await api.post(`/orders/${activePayOrder._id}/payments`, {
+      await api.post(`/orders/${activePayOrder._id}/confirm-payment`, {
         amount,
-        utrNumber: utrNumber.trim(),
         upiIdUsed: UPI_IDS[selectedUpiKey].id
       });
 
-      alert('Payment proof submitted successfully! Nagaraju is verifying it now. Your receipt will be mailed shortly.');
+      // 2. Open WhatsApp Chat prefilled to Admin Pavansai (9346325291)
+      const orderShortId = activePayOrder._id.substring(18).toUpperCase();
+      const waMsg = `🔔 Payment Notification / పేమెంట్ సమాచారం
+
+Hello Pavansai/Nagaraju,
+
+I have completed the UPI payment of ₹${amount.toLocaleString('en-IN')} for my order of "${activePayOrder.product}" (Order ID: LD-${orderShortId}).
+
+Please check your bank account and approve my order.
+
+Thank you,
+${profileName || activePayOrder.name}`;
+
+      const waUrl = `https://wa.me/919346325291?text=${encodeURIComponent(waMsg)}`;
+      window.open(waUrl, '_blank');
+
+      alert('Payment confirmation registered! We opened WhatsApp to notify Pavansai. Nagaraju will check the account and verify the transaction in the dashboard.');
       
       // Close modal and refresh order logs
       setActivePayOrder(null);
-      setUtrNumber('');
-      setCustomAmount('');
       await handleSearch(null, phone);
     } catch (err) {
-      console.error('Payment submission failed:', err);
-      setPaymentError(err.response?.data?.message || 'Failed to submit payment UTR reference. Please try again.');
+      console.error('Payment confirmation failed:', err);
+      setPaymentError(err.response?.data?.message || 'Failed to register payment confirmation. Please try again.');
     } finally {
       setSubmittingPayment(false);
     }
@@ -526,11 +473,10 @@ export default function UserOrdersPage() {
                 const userSubmittedRating = ratedOrders[order._id];
                 const orderShortId = order._id.substring(18).toUpperCase();
                 
-                // Check if payment is awaiting approval
                 const hasPendingVerifications = order.payments?.some(p => p.status === 'Pending');
                 
                 return (
-                  <div key={order._id} className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-5 sm:p-7 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg glow-on-hover">
+                  <div key={order._id} className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-5 sm:p-7 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg glow-on-hover animate-fadeIn">
                     {/* Product and Meta Row */}
                     <div className="flex flex-col md:flex-row gap-5 items-start pb-5 border-b border-wood-border/30">
                       {order.imageUrl ? (
@@ -585,9 +531,9 @@ export default function UserOrdersPage() {
                       </div>
                     </div>
 
-                    {/* PAYMENT & INVOICE CENTER (Only visible if Admin has set a Total Price) */}
+                    {/* PAYMENT & INVOICE CENTER */}
                     {order.totalPrice > 0 && (
-                      <div className="py-5 border-b border-wood-border/30 bg-wood-beige/10 -mx-5 sm:-mx-7 px-5 sm:px-7 my-2">
+                      <div className="py-5 border-b border-wood-border/30 bg-wood-beige/10 -mx-5 sm:-mx-7 px-5 sm:px-7 my-2 text-left">
                         <p className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-3 flex items-center gap-1.5">
                           <CreditCard className="h-4 w-4 text-wood-accent" />
                           Payment & Account Ledger
@@ -613,7 +559,7 @@ export default function UserOrdersPage() {
                           <div className="rounded-xl bg-amber-50 border border-amber-150 p-3 text-[10px] text-amber-850 flex items-start gap-2 mb-3 animate-pulse">
                             <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                             <div>
-                              <strong>Payment Submitted:</strong> Nagaraju has been notified to verify your UTR number. Once validated, your billing statement will update immediately.
+                              <strong>Payment Awaiting Approval:</strong> You sent a payment confirmation. Nagaraju is verifying it with their GPay/PhonePe account statement.
                             </div>
                           </div>
                         )}
@@ -623,14 +569,13 @@ export default function UserOrdersPage() {
                           {order.remainingBalance > 0 ? (
                             <>
                               <p className="text-[10px] text-wood-light font-light max-w-sm italic">
-                                *You can pay a 50% advance, full price, or a custom installment to start work. Remaining balance is due on delivery.
+                                *Pay 50% Advance to start work. Remaining balance can be paid online before delivery, or cash on delivery.
                               </p>
                               <button
                                 disabled={hasPendingVerifications}
                                 onClick={() => {
                                   setActivePayOrder(order);
                                   setSelectedOption('50');
-                                  setCustomAmount('');
                                   setPaymentError('');
                                 }}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase transition-colors shadow-sm disabled:bg-neutral-400 cursor-pointer"
@@ -642,7 +587,7 @@ export default function UserOrdersPage() {
                           ) : (
                             <div className="w-full flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 font-bold">
                               <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
-                              <span>Order Fully Paid! Balance Due on Delivery: ₹0</span>
+                              <span>Order Fully Paid! Balance Due: ₹0</span>
                             </div>
                           )}
                         </div>
@@ -655,7 +600,7 @@ export default function UserOrdersPage() {
                               {order.payments.filter(p => p.status === 'Approved').map((pay) => (
                                 <div key={pay._id} className="flex justify-between items-center bg-white/70 border border-wood-border/20 rounded-lg px-3 py-1.5 text-[9.5px]">
                                   <span className="text-wood-medium font-light">
-                                    Verified Installment on {new Date(pay.createdAt).toLocaleDateString('en-IN')} (UTR: <span className="font-mono">{pay.utrNumber}</span>)
+                                    Verified Installment on {new Date(pay.createdAt).toLocaleDateString('en-IN')}
                                   </span>
                                   <span className="font-bold text-emerald-700">+₹{pay.amount.toLocaleString('en-IN')}</span>
                                 </div>
@@ -666,8 +611,44 @@ export default function UserOrdersPage() {
                       </div>
                     )}
 
+                    {/* CARRIER TRACKING PANEL */}
+                    {order.trackingNumber && (
+                      <div className="mt-4 p-4 bg-emerald-50/40 border border-emerald-250/30 rounded-2xl animate-fadeIn text-left">
+                        <p className="text-[10px] font-extrabold tracking-widest text-emerald-850 uppercase mb-2.5 flex items-center gap-1.5">
+                          <Truck className="h-4 w-4 text-emerald-600" />
+                          <span>Delivery Shipment Tracker</span>
+                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div>
+                            <p className="text-wood-dark font-semibold text-[13px]">
+                              Carrier: <span className="text-emerald-700 font-extrabold">{order.carrier || 'Xpressbees'}</span>
+                            </p>
+                            <p className="text-[10px] text-wood-light font-mono mt-0.5">
+                              Waybill / Consignment Tracking ID: <span className="font-bold select-all">{order.trackingNumber}</span>
+                            </p>
+                            {order.deliveryDate && (
+                              <p className="text-[10px] text-emerald-850 font-bold mt-1 animate-pulse">
+                                📅 Expected Arrival: {new Date(order.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+                            )}
+                          </div>
+                          <a
+                            href={
+                              order.carrier?.toLowerCase() === 'xpressbees'
+                                ? `https://www.xpressbees.com/track?wbn=${order.trackingNumber}`
+                                : `https://www.17track.net/en/track?nums=${order.trackingNumber}`
+                            }
+                            target="_blank"
+                            className="self-start sm:self-center inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-200 shadow-sm cursor-pointer select-none border border-emerald-500/20 active:scale-95"
+                          >
+                            <span>Track Package</span>
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Live Tracking Timeline */}
-                    <div className="py-6">
+                    <div className="py-6 text-left">
                       <p className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-5 flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 animate-pulse" />
                         Live Status Track
@@ -679,7 +660,7 @@ export default function UserOrdersPage() {
                           <div>
                             {order.updatedAt && (
                               <p className="text-[9px] text-red-650 font-bold mb-1">
-                                Cancelled: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                Cancelled: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
                               </p>
                             )}
                             <p className="font-bold text-red-700">Order Cancelled</p>
@@ -861,7 +842,7 @@ export default function UserOrdersPage() {
               </div>
             )}
 
-            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+            <form onSubmit={handlePaymentConfirm} className="space-y-4">
               {/* Payment Option Selector */}
               <div>
                 <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Amount Option</span>
@@ -926,7 +907,7 @@ export default function UserOrdersPage() {
                       <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
                     </a>
                     <p className="text-[8px] text-emerald-700/80 mt-1">
-                      *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Make payment and copy the 12-digit UPI UTR Ref number.
+                      *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Complete your payment inside the app.
                     </p>
                   </div>
 
@@ -949,65 +930,26 @@ export default function UserOrdersPage() {
                 </div>
               )}
 
-              {/* UTR Input Form */}
-              <div className="border-t border-wood-border/30 pt-3.5">
-                <label className="block text-[9px] uppercase font-bold tracking-wider text-wood-accent mb-1.5">
-                  Enter 12-Digit UPI Transaction UTR Reference Number
-                </label>
-                
-                {detectedUtr && (
-                  <div className="mb-2.5 p-2.5 bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl text-[10px] flex items-center justify-between animate-fadeIn">
-                    <span>📋 Detected UTR in Clipboard: <strong>{detectedUtr}</strong></span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUtrNumber(detectedUtr);
-                        setDetectedUtr('');
-                      }}
-                      className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-[9px] font-bold uppercase transition-transform active:scale-95 cursor-pointer shadow-xs border border-emerald-500/20"
-                    >
-                      Use This UTR
-                    </button>
-                  </div>
-                )}
-
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    required
-                    maxLength={12}
-                    pattern="\d{12}"
-                    value={utrNumber}
-                    onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
-                    placeholder="e.g. 628165399849"
-                    className="w-full rounded-xl border border-wood-border bg-white pl-3.5 pr-24 py-2.5 text-xs text-wood-dark font-mono focus:outline-none focus:border-wood-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAutoPaste}
-                    className="absolute right-2 px-2.5 py-1 bg-wood-beige hover:bg-wood-accent/20 text-wood-accent hover:text-wood-dark rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
-                  >
-                    📋 Auto-Paste
-                  </button>
-                </div>
-                <p className="text-[8px] text-wood-light mt-1">Once you pay via GPay/PhonePe, copy the 12-digit UTR/Ref number and paste it here.</p>
+              {/* Confirm Notification alert Button */}
+              <div className="border-t border-wood-border/30 pt-4 mt-2">
+                <p className="text-[9.5px] text-wood-light mb-3 leading-relaxed italic">
+                  *Once you complete the payment inside GPay/PhonePe, tap the green button below. This logs the payment in our dashboard and automatically notifies Pavansai on WhatsApp.
+                </p>
+                <button
+                  type="submit"
+                  disabled={submittingPayment}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
+                >
+                  {submittingPayment ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4.5 w-4.5" />
+                      <span>✅ I Have Completed Payment</span>
+                    </>
+                  )}
+                </button>
               </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submittingPayment}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
-              >
-                {submittingPayment ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Submit UTR for Verification</span>
-                  </>
-                )}
-              </button>
             </form>
           </div>
         </div>
