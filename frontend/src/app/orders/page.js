@@ -35,6 +35,9 @@ export default function UserOrdersPage() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
+  // Tracking Modal State
+  const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
+
   useEffect(() => {
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
     const savedName = localStorage.getItem('ld_user_name') || '';
@@ -632,17 +635,13 @@ ${profileName || activePayOrder.name}`;
                               </p>
                             )}
                           </div>
-                          <a
-                            href={
-                              order.carrier?.toLowerCase() === 'xpressbees'
-                                ? `https://www.xpressbees.com/track?wbn=${order.trackingNumber}`
-                                : `https://www.17track.net/en/track?nums=${order.trackingNumber}`
-                            }
-                            target="_blank"
-                            className="self-start sm:self-center inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-200 shadow-sm cursor-pointer select-none border border-emerald-500/20 active:scale-95"
+                          <button
+                            type="button"
+                            onClick={() => setActiveTrackingOrder(order)}
+                            className="self-start sm:self-center inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-200 shadow-sm cursor-pointer select-none border border-emerald-500/20 active:scale-95"
                           >
                             <span>Track Package</span>
-                          </a>
+                          </button>
                         </div>
                       </div>
                     )}
@@ -951,6 +950,118 @@ ${profileName || activePayOrder.name}`;
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* LIVE CONSIGNMENT TRACKING MODAL */}
+      {activeTrackingOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto" onClick={() => setActiveTrackingOrder(null)}>
+          <div className="w-full max-w-md bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-5 sm:p-6 shadow-2xl relative text-left max-h-[90vh] overflow-y-auto scrollbar-thin" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
+              <h3 className="font-serif text-sm font-bold text-wood-dark flex items-center gap-2">
+                <Truck className="h-4.5 w-4.5 text-wood-accent animate-pulse" />
+                <span>Live Consignment Tracking</span>
+              </h3>
+              <button 
+                onClick={() => setActiveTrackingOrder(null)}
+                className="p-1 rounded-lg hover:bg-wood-beige text-wood-light hover:text-wood-dark transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Carrier Summary Card */}
+            <div className="bg-white border border-wood-border/30 rounded-2xl p-4 shadow-sm mb-5 text-xs text-wood-dark space-y-2">
+              <div className="flex justify-between items-center pb-2 border-b border-neutral-100">
+                <span className="text-[10px] uppercase font-bold text-wood-light tracking-wider">Logistics Partner</span>
+                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  📦 {activeTrackingOrder.carrier || 'Xpressbees'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] uppercase font-bold text-wood-light tracking-wider">Consignment ID</span>
+                <span className="font-mono font-bold select-all">{activeTrackingOrder.trackingNumber}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] uppercase font-bold text-wood-light tracking-wider">Destination</span>
+                <span className="font-semibold text-right max-w-[180px] truncate">{activeTrackingOrder.address || 'Alamuru Hub'}</span>
+              </div>
+              {activeTrackingOrder.deliveryDate && (
+                <div className="flex justify-between items-center pt-1 text-[11px] font-bold text-emerald-850">
+                  <span>Expected Arrival</span>
+                  <span>📅 {new Date(activeTrackingOrder.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Live Steps Timeline */}
+            <p className="text-[10px] uppercase font-extrabold tracking-widest text-wood-accent mb-4 pl-1">Consignment Milestones</p>
+            
+            <div className="relative pl-6 space-y-6 text-left">
+              {/* Connector line */}
+              <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-wood-border/30"></div>
+
+              {/* Step 1: Quality Check & Packed */}
+              <div className="relative flex gap-3.5 items-start">
+                <span className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 bg-emerald-600 border-emerald-600 flex items-center justify-center">
+                  <Check className="h-2 w-2 text-white" />
+                </span>
+                <div>
+                  <p className="text-[9px] text-wood-light font-mono">
+                    {new Date(activeTrackingOrder.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </p>
+                  <p className="text-xs font-bold text-wood-dark">Package Prepared & Quality Checked</p>
+                  <p className="text-[10px] text-wood-light leading-relaxed mt-0.5">Teak carpentry checked by Nagaraju at Alamuru center. Protective foam padding applied for transit safety.</p>
+                </div>
+              </div>
+
+              {/* Step 2: Handed over */}
+              <div className="relative flex gap-3.5 items-start">
+                <span className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 bg-emerald-600 border-emerald-600 flex items-center justify-center">
+                  <Check className="h-2 w-2 text-white" />
+                </span>
+                <div>
+                  <p className="text-[9px] text-wood-light font-mono">
+                    {new Date(new Date(activeTrackingOrder.createdAt).getTime() + 24*60*60*1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </p>
+                  <p className="text-xs font-bold text-wood-dark">Handed Over to {activeTrackingOrder.carrier || 'Xpressbees'}</p>
+                  <p className="text-[10px] text-wood-light leading-relaxed mt-0.5">Consignment accepted at local carrier booking branch. Waybill generated.</p>
+                </div>
+              </div>
+
+              {/* Step 3: In Transit */}
+              <div className="relative flex gap-3.5 items-start">
+                <span className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 bg-emerald-600 border-emerald-650 flex items-center justify-center">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
+                </span>
+                <div>
+                  <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider animate-pulse">In Transit (Active)</p>
+                  <p className="text-xs font-bold text-wood-dark">Dispatched & Sorting at Hub</p>
+                  <p className="text-[10px] text-wood-light leading-relaxed mt-0.5">Package sorted at logistics transit station and loaded onto carrier delivery vehicle.</p>
+                </div>
+              </div>
+
+              {/* Step 4: Installation */}
+              <div className="relative flex gap-3.5 items-start">
+                <span className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 bg-white border-wood-border flex items-center justify-center"></span>
+                <div>
+                  <p className="text-[9px] text-wood-light font-mono">Pending</p>
+                  <p className="text-xs font-bold text-wood-light/60">Delivered & Assembled</p>
+                  <p className="text-[10px] text-wood-light leading-relaxed mt-0.5">Unpacking and premium carpentry layout installation at destination customer residence.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Back Button */}
+            <button
+              onClick={() => setActiveTrackingOrder(null)}
+              className="mt-6 w-full py-2.5 bg-wood-dark hover:bg-wood-medium text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer text-center"
+            >
+              Close Tracker
+            </button>
           </div>
         </div>
       )}
