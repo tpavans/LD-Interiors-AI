@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X } from 'lucide-react';
+import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone } from 'lucide-react';
 
 const UPI_IDS = {
   phonepe: { id: "9346325291@axl", name: "Pavansai Teki", label: "PhonePe" },
@@ -36,6 +36,7 @@ export default function UserOrdersPage() {
   const [utrNumber, setUtrNumber] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [detectedUtr, setDetectedUtr] = useState('');
 
   useEffect(() => {
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
@@ -75,6 +76,63 @@ export default function UserOrdersPage() {
 
     fetchCatalogAndTrack();
   }, []);
+
+  // Automatic Clipboard UTR detection when user returns to tab
+  useEffect(() => {
+    if (!activePayOrder) {
+      setDetectedUtr('');
+      return;
+    }
+
+    const tryAutoDetectUtr = async () => {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) return;
+        const text = await navigator.clipboard.readText();
+        const cleanText = text.trim().replace(/\D/g, '');
+        if (cleanText.length === 12) {
+          setDetectedUtr(cleanText);
+        } else {
+          setDetectedUtr('');
+        }
+      } catch (err) {
+        console.debug('Clipboard auto-read skipped or permission denied:', err);
+      }
+    };
+
+    // Auto-detect when modal opens
+    tryAutoDetectUtr();
+
+    // Auto-detect when window gains focus (user returns from banking app)
+    const handleFocus = () => {
+      setTimeout(tryAutoDetectUtr, 350);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [activePayOrder]);
+
+  const handleAutoPaste = async () => {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        alert('Your browser does not support clipboard reading. Please paste manually.');
+        return;
+      }
+      const text = await navigator.clipboard.readText();
+      const cleanText = text.trim().replace(/\D/g, '');
+      if (cleanText.length === 12) {
+        setUtrNumber(cleanText);
+        setDetectedUtr('');
+        setPaymentError('');
+      } else {
+        alert(`Could not find a valid 12-digit transaction number in your clipboard. Current text: "${text.substring(0, 30)}..."`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Clipboard permission denied. Please paste the UTR manually.');
+    }
+  };
 
   const handleSearch = async (e, forcePhone) => {
     if (e) e.preventDefault();
@@ -883,6 +941,22 @@ export default function UserOrdersPage() {
                 </div>
               </div>
 
+              {/* Pay via Mobile App Shortcut */}
+              {getPayableAmount() > 0 && (
+                <div className="animate-fadeIn">
+                  <a
+                    href={getUpiUrl()}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
+                  </a>
+                  <p className="text-[8px] text-wood-light text-center mt-1">
+                    *Tapping will launch Google Pay / PhonePe directly on your phone. Remember to copy the UTR Ref number afterwards!
+                  </p>
+                </div>
+              )}
+
               {/* Dynamic QR Code Box */}
               {getPayableAmount() > 0 && (
                 <div className="flex flex-col items-center justify-center bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner">
@@ -907,16 +981,42 @@ export default function UserOrdersPage() {
                 <label className="block text-[9px] uppercase font-bold tracking-wider text-wood-accent mb-1.5">
                   Enter 12-Digit UPI Transaction UTR Reference Number
                 </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={12}
-                  pattern="\d{12}"
-                  value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder="e.g. 628165399849 (Check GPay/PhonePe history)"
-                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark font-mono focus:outline-none focus:border-wood-accent"
-                />
+                
+                {detectedUtr && (
+                  <div className="mb-2.5 p-2.5 bg-emerald-50 border border-emerald-250 text-emerald-800 rounded-xl text-[10px] flex items-center justify-between animate-fadeIn">
+                    <span>📋 Detected UTR in Clipboard: <strong>{detectedUtr}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUtrNumber(detectedUtr);
+                        setDetectedUtr('');
+                      }}
+                      className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-[9px] font-bold uppercase transition-transform active:scale-95 cursor-pointer shadow-xs border border-emerald-500/20"
+                    >
+                      Use This UTR
+                    </button>
+                  </div>
+                )}
+
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    maxLength={12}
+                    pattern="\d{12}"
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
+                    placeholder="e.g. 628165399849"
+                    className="w-full rounded-xl border border-wood-border bg-white pl-3.5 pr-24 py-2.5 text-xs text-wood-dark font-mono focus:outline-none focus:border-wood-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAutoPaste}
+                    className="absolute right-2 px-2.5 py-1 bg-wood-beige hover:bg-wood-accent/20 text-wood-accent hover:text-wood-dark rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none"
+                  >
+                    📋 Auto-Paste
+                  </button>
+                </div>
                 <p className="text-[8px] text-wood-light mt-1">Once you pay via GPay/PhonePe, copy the 12-digit UTR/Ref number and paste it here.</p>
               </div>
 
