@@ -7,6 +7,9 @@ const {
   updateOrderStatus,
   deleteOrder,
   sendManualGreetingEmail,
+  updateOrderPricing,
+  submitPayment,
+  verifyPayment,
 } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -17,11 +20,20 @@ router.get('/track', trackOrders);
 // Public route to book/create a new order (handles optional reference image file upload)
 router.post('/', upload.single('referenceImage'), createOrder);
 
+// Public route to submit payment transaction proof
+router.post('/:id/payments', submitPayment);
+
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);
 
 // Admin-only route to manually send order greeting email
 router.post('/:id/send-greeting', protect, sendManualGreetingEmail);
+
+// Admin-only route to update pricing details
+router.put('/:id/pricing', protect, updateOrderPricing);
+
+// Admin-only route to approve or reject a payment
+router.post('/:id/payments/:paymentId/verify', protect, verifyPayment);
 
 // Admin-only routes to update or delete order status
 router.route('/:id')

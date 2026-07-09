@@ -268,6 +268,171 @@ const sendManualGreetingEmail = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Update order pricing & total cost
+ * @route   PUT /api/orders/:id/pricing
+ * @access  Private (Admin only)
+ */
+const updateOrderPricing = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { totalPrice, status } = req.body;
+    if (totalPrice === undefined) {
+      return res.status(400).json({ message: 'Total price value is required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    order.totalPrice = Number(totalPrice);
+    order.remainingBalance = Number(totalPrice) - order.paidAmount;
+    if (status) {
+      order.status = status;
+    }
+    order.updatedAt = Date.now();
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error updating order pricing:', error);
+    res.status(500).json({ message: 'Server error updating pricing.', error: error.message });
+  }
+};
+
+/**
+ * @desc    Customer submit payment UTR for verification
+ * @route   POST /api/orders/:id/payments
+ * @access  Public
+ */
+const submitPayment = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { amount, utrNumber, upiIdUsed } = req.body;
+    if (!amount || !utrNumber || !upiIdUsed) {
+      return res.status(400).json({ message: 'Amount, UTR number, and UPI ID are required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Append new payment to the payments array
+    order.payments.push({
+      amount: Number(amount),
+      utrNumber: utrNumber.trim(),
+      upiIdUsed: upiIdUsed.trim(),
+      status: 'Pending',
+      createdAt: Date.now()
+    });
+
+    order.paymentStatus = 'Pending Verification';
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+
+    // Trigger admin notification alert
+    try {
+      const { sendAdminPaymentAlertEmail } = require('../utils/sendEmail');
+      sendAdminPaymentAlertEmail(updatedOrder, amount, utrNumber).catch(e => console.error(e));
+    } catch (err) {
+      console.error('Failed to send admin payment alert:', err);
+    }
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error submitting payment:', error);
+    res.status(500).json({ message: 'Server error submitting payment.', error: error.message });
+  }
+};
+
+/**
+ * @desc    Admin approve or reject a payment installment
+ * @route   POST /api/orders/:id/payments/:paymentId/verify
+ * @access  Private (Admin only)
+ */
+const verifyPayment = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { action } = req.body; // 'approve' or 'reject'
+    const { paymentId } = req.params;
+
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ message: 'Valid action (approve or reject) is required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const payment = order.payments.id(paymentId);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment record not found' });
+    }
+
+    if (payment.status !== 'Pending') {
+      return res.status(400).json({ message: `Payment has already been ${payment.status.toLowerCase()}.` });
+    }
+
+    if (action === 'approve') {
+      payment.status = 'Approved';
+      order.paidAmount += payment.amount;
+      order.remainingBalance = order.totalPrice - order.paidAmount;
+
+      // Recalculate overall paymentStatus
+      if (order.paidAmount >= order.totalPrice) {
+        order.paymentStatus = 'Paid';
+        if (order.status === 'Pending' || order.status === 'Processing') {
+          order.status = 'In Progress';
+        }
+      } else {
+        order.paymentStatus = 'Partially Paid';
+      }
+
+      // Trigger customer PDF receipt dispatch
+      try {
+        const { sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
+        sendCustomerPaymentReceiptEmail(order, payment.amount).catch(e => console.error(e));
+      } catch (err) {
+        console.error('Failed to send payment receipt:', err);
+      }
+
+    } else {
+      payment.status = 'Rejected';
+      
+      const hasPending = order.payments.some(p => p.status === 'Pending');
+      const hasApproved = order.payments.some(p => p.status === 'Approved');
+
+      if (hasPending) {
+        order.paymentStatus = 'Pending Verification';
+      } else if (hasApproved) {
+        if (order.paidAmount >= order.totalPrice) {
+          order.paymentStatus = 'Paid';
+        } else {
+          order.paymentStatus = 'Partially Paid';
+        }
+      } else {
+        order.paymentStatus = 'Unpaid';
+      }
+    }
+
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ message: 'Server error verifying payment.', error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
@@ -275,4 +440,7 @@ module.exports = {
   updateOrderStatus,
   deleteOrder,
   sendManualGreetingEmail,
+  updateOrderPricing,
+  submitPayment,
+  verifyPayment,
 };

@@ -55,6 +55,32 @@ const OrderSchema = new mongoose.Schema({
     enum: ['Pending', 'Processing', 'In Progress', 'Completed', 'Cancelled'],
     default: 'Pending',
   },
+  totalPrice: {
+    type: Number,
+    default: 0,
+  },
+  paidAmount: {
+    type: Number,
+    default: 0,
+  },
+  remainingBalance: {
+    type: Number,
+    default: 0,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Unpaid', 'Pending Verification', 'Paid', 'Partially Paid'],
+    default: 'Unpaid',
+  },
+  payments: [
+    {
+      amount: { type: Number, required: true },
+      utrNumber: { type: String, required: true, trim: true },
+      upiIdUsed: { type: String, required: true },
+      status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

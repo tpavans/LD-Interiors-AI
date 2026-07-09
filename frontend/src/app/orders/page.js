@@ -2,7 +2,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check } from 'lucide-react';
+import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X } from 'lucide-react';
+
+const UPI_IDS = {
+  phonepe: { id: "9346325291@axl", name: "Pavansai Teki", label: "PhonePe" },
+  gpay: { id: "pavansaiteki7@okicici", name: "Pavansai Teki", label: "Google Pay" }
+};
 
 export default function UserOrdersPage() {
   const [phone, setPhone] = useState('');
@@ -23,8 +28,16 @@ export default function UserOrdersPage() {
   const [profileAddress, setProfileAddress] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // Payment Modal States
+  const [activePayOrder, setActivePayOrder] = useState(null);
+  const [selectedUpiKey, setSelectedUpiKey] = useState('phonepe');
+  const [selectedOption, setSelectedOption] = useState('50'); // '50', '100', 'custom'
+  const [customAmount, setCustomAmount] = useState('');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+
   useEffect(() => {
-    // 1. Pre-fill phone from localStorage on mount and run search
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
     const savedName = localStorage.getItem('ld_user_name') || '';
     const savedEmail = localStorage.getItem('ld_user_email') || '';
@@ -35,7 +48,6 @@ export default function UserOrdersPage() {
     setProfileEmail(savedEmail);
     setProfileAddress(savedAddress);
 
-    // Load rated orders from localStorage
     const savedRatings = localStorage.getItem('ld_rated_orders');
     if (savedRatings) {
       try {
@@ -45,7 +57,6 @@ export default function UserOrdersPage() {
       }
     }
 
-    // Fetch products catalog to resolve product IDs for feedback submission
     const fetchCatalogAndTrack = async () => {
       try {
         const prodRes = await api.get('/products');
@@ -79,7 +90,6 @@ export default function UserOrdersPage() {
       const ordersData = response.data;
       setOrders(ordersData);
       
-      // Auto-extract customer info from first order to restore details!
       if (ordersData && ordersData.length > 0) {
         const primaryOrder = ordersData[0];
         const recoveredName = primaryOrder.name || localStorage.getItem('ld_user_name') || '';
@@ -104,7 +114,6 @@ export default function UserOrdersPage() {
         setProfilePhone(queryPhone);
       }
       
-      // Dispatch storage event to sync navbar
       window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.error('Error tracking orders:', err);
@@ -122,12 +131,10 @@ export default function UserOrdersPage() {
     localStorage.setItem('ld_user_address', profileAddress.trim());
     localStorage.setItem('ld_user_registered', 'true');
     
-    // Sync phone state and fetch orders again with the new phone if changed
     setPhone(profilePhone.trim());
     handleSearch(null, profilePhone.trim());
     setIsEditingProfile(false);
     
-    // Dispatch storage event to navbar
     window.dispatchEvent(new Event('storage'));
     alert('Profile details saved successfully!');
   };
@@ -148,11 +155,9 @@ export default function UserOrdersPage() {
     setProfileAddress('');
     setIsEditingProfile(false);
     
-    // Dispatch storage event to navbar
     window.dispatchEvent(new Event('storage'));
   };
 
-  // Submit feedback rating directly from the orders page
   const handleRateProduct = async (orderId, productTitle, starValue) => {
     const matchedProduct = products.find(p => p.title.toLowerCase() === productTitle.toLowerCase());
     if (!matchedProduct) {
@@ -174,6 +179,67 @@ export default function UserOrdersPage() {
     }
   };
 
+  // Calculate dynamic payment amount based on option
+  const getPayableAmount = () => {
+    if (!activePayOrder) return 0;
+    const balance = activePayOrder.remainingBalance || activePayOrder.totalPrice || 0;
+    if (selectedOption === '50') {
+      return Math.round(balance / 2);
+    } else if (selectedOption === '100') {
+      return balance;
+    } else {
+      return Number(customAmount) || 0;
+    }
+  };
+
+  // Generate official UPI deep link
+  const getUpiUrl = () => {
+    if (!activePayOrder) return '';
+    const upi = UPI_IDS[selectedUpiKey];
+    const amount = getPayableAmount();
+    const orderShortId = activePayOrder._id.substring(18).toUpperCase();
+    return `upi://pay?pa=${upi.id}&pn=${encodeURIComponent(upi.name)}&am=${amount}&tn=Order%20LD-${orderShortId}&cu=INR`;
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!activePayOrder) return;
+    
+    const amount = getPayableAmount();
+    if (amount <= 0) {
+      setPaymentError('Please enter or select a valid payment amount.');
+      return;
+    }
+    if (!utrNumber || utrNumber.trim().length !== 12 || isNaN(utrNumber.trim())) {
+      setPaymentError('Please enter a valid 12-digit numerical UPI UTR transaction reference number.');
+      return;
+    }
+
+    setSubmittingPayment(true);
+    setPaymentError('');
+
+    try {
+      await api.post(`/orders/${activePayOrder._id}/payments`, {
+        amount,
+        utrNumber: utrNumber.trim(),
+        upiIdUsed: UPI_IDS[selectedUpiKey].id
+      });
+
+      alert('Payment proof submitted successfully! Nagaraju is verifying it now. Your receipt will be mailed shortly.');
+      
+      // Close modal and refresh order logs
+      setActivePayOrder(null);
+      setUtrNumber('');
+      setCustomAmount('');
+      await handleSearch(null, phone);
+    } catch (err) {
+      console.error('Payment submission failed:', err);
+      setPaymentError(err.response?.data?.message || 'Failed to submit payment UTR reference. Please try again.');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center">
@@ -189,7 +255,7 @@ export default function UserOrdersPage() {
   if (!phone) {
     return (
       <div className="mx-auto w-full max-w-md px-4 py-20 text-left">
-        <div className="bg-wood-cream border-2 border-wood-border/60 rounded-3xl p-8 shadow-xl text-center">
+        <div className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-8 shadow-xl text-center glow-on-hover">
           <span className="inline-flex items-center gap-1 bg-wood-accent/20 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-4">
             Customer Dashboard
           </span>
@@ -218,7 +284,7 @@ export default function UserOrdersPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="e.g., 9346325291"
-                className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-wood-dark focus:border-wood-dark focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
 
@@ -255,7 +321,7 @@ export default function UserOrdersPage() {
         </div>
         <button
           onClick={handleLogout}
-          className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-700 px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+          className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-red-250 hover:bg-red-50 text-red-700 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
         >
           <LogOut className="h-4.5 w-4.5" />
           <span>Logout</span>
@@ -265,8 +331,8 @@ export default function UserOrdersPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Profile Card */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-wood-cream border border-wood-border/60 rounded-3xl p-6 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-wood-beige/40 -z-10"></div>
+          <div className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-6 shadow-md relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-wood-beige/20 -z-10"></div>
             
             <h3 className="font-serif text-lg font-bold text-wood-dark mb-4 flex items-center gap-2 pb-2.5 border-b border-wood-border/30">
               <User className="h-5 w-5 text-wood-accent" />
@@ -282,7 +348,7 @@ export default function UserOrdersPage() {
                     required
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
                   />
                 </div>
                 <div>
@@ -292,7 +358,7 @@ export default function UserOrdersPage() {
                     required
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
                   />
                 </div>
                 <div>
@@ -302,7 +368,7 @@ export default function UserOrdersPage() {
                     required
                     value={profileEmail}
                     onChange={(e) => setProfileEmail(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
                   />
                 </div>
                 <div>
@@ -312,7 +378,7 @@ export default function UserOrdersPage() {
                     value={profileAddress}
                     onChange={(e) => setProfileAddress(e.target.value)}
                     rows="2.5"
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
                   />
                 </div>
 
@@ -362,7 +428,7 @@ export default function UserOrdersPage() {
 
                 <button
                   onClick={() => setIsEditingProfile(true)}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-wood-accent hover:bg-wood-beige text-wood-accent py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer mt-3"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-wood-accent hover:bg-wood-beige hover:text-wood-dark py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer mt-3"
                 >
                   <Edit3 className="h-4 w-4" />
                   <span>Edit Profile details</span>
@@ -384,7 +450,7 @@ export default function UserOrdersPage() {
               <Loader2 className="h-7 w-7 animate-spin text-wood-light" />
             </div>
           ) : orders.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-wood-border/60 p-12 text-center bg-wood-cream/50">
+            <div className="rounded-3xl border border-dashed border-wood-border/60 p-12 text-center bg-wood-cream/50 animate-fadeIn">
               <p className="text-sm text-wood-light font-light leading-relaxed mb-4">
                 No orders found under phone number <strong>{phone}</strong>. Let's create your first order!
               </p>
@@ -400,9 +466,13 @@ export default function UserOrdersPage() {
               {orders.map((order) => {
                 const isCancelled = order.status === 'Cancelled';
                 const userSubmittedRating = ratedOrders[order._id];
+                const orderShortId = order._id.substring(18).toUpperCase();
+                
+                // Check if payment is awaiting approval
+                const hasPendingVerifications = order.payments?.some(p => p.status === 'Pending');
                 
                 return (
-                  <div key={order._id} className="bg-wood-cream border border-wood-border/60 rounded-3xl p-5 sm:p-7 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+                  <div key={order._id} className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-5 sm:p-7 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg glow-on-hover">
                     {/* Product and Meta Row */}
                     <div className="flex flex-col md:flex-row gap-5 items-start pb-5 border-b border-wood-border/30">
                       {order.imageUrl ? (
@@ -412,33 +482,40 @@ export default function UserOrdersPage() {
                           className="w-20 h-20 rounded-2xl object-cover border border-wood-border/20 shadow-sm shrink-0"
                         />
                       ) : (
-                        <div className="w-20 h-20 rounded-2xl bg-wood-beige/50 border border-wood-border/20 shadow-sm flex items-center justify-center text-wood-accent font-serif font-extrabold text-lg shrink-0">
+                        <div className="w-20 h-20 rounded-2xl bg-wood-beige/20 border border-wood-border/20 shadow-sm flex items-center justify-center text-wood-accent font-serif font-extrabold text-lg shrink-0">
                           LD
                         </div>
                       )}
                       <div className="flex-grow space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="inline-flex items-center gap-1 bg-wood-beige/60 border border-wood-border/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-wood-accent">
                             <Tag className="h-3 w-3" />
-                            Custom Design
+                            ID: LD-{orderShortId}
                           </span>
+                          
+                          {/* Financial Badge Indicator */}
+                          {order.totalPrice > 0 && (
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                              order.paymentStatus === 'Paid'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-250'
+                                : order.paymentStatus === 'Pending Verification'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-250 animate-pulse'
+                                : 'bg-neutral-100 text-neutral-800 border border-neutral-200'
+                            }`}>
+                              Payment: {order.paymentStatus}
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-col gap-1 text-wood-light font-light text-[10px]">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5 text-wood-accent" />
                             Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          {order.updatedAt && new Date(order.updatedAt).getTime() !== new Date(order.createdAt).getTime() && (
-                            <span className="flex items-center gap-1 text-emerald-700 font-semibold animate-fadeIn">
-                              <Calendar className="h-3.5 w-3.5 text-emerald-600 animate-pulse" />
-                              Admin Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.updatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          )}
                         </div>
                         <h3 className="font-serif text-lg font-bold text-wood-dark leading-tight mt-1">{order.product}</h3>
                         
                         {/* Custom fields rendered if available */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white border border-wood-border/30 rounded-xl p-3 text-[10px] text-wood-medium mt-2 font-light">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-wood-beige/10 border border-wood-border/20 rounded-xl p-3 text-[10px] text-wood-medium mt-2 font-light">
                           {order.customSize && (
                             <p><strong>Custom Size:</strong> {order.customSize}</p>
                           )}
@@ -449,6 +526,87 @@ export default function UserOrdersPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* PAYMENT & INVOICE CENTER (Only visible if Admin has set a Total Price) */}
+                    {order.totalPrice > 0 && (
+                      <div className="py-5 border-b border-wood-border/30 bg-wood-beige/10 -mx-5 sm:-mx-7 px-5 sm:px-7 my-2">
+                        <p className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-3 flex items-center gap-1.5">
+                          <CreditCard className="h-4 w-4 text-wood-accent" />
+                          Payment & Account Ledger
+                        </p>
+                        
+                        <div className="grid grid-cols-3 gap-2 text-center mb-4">
+                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
+                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Contract Cost</span>
+                            <span className="font-serif text-xs font-bold text-wood-dark">₹{order.totalPrice.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
+                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Paid Amount</span>
+                            <span className="font-serif text-xs font-bold text-emerald-700">₹{order.paidAmount.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
+                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Due Balance</span>
+                            <span className="font-serif text-xs font-bold text-red-650">₹{order.remainingBalance.toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+
+                        {/* Payment Verification Alerts */}
+                        {hasPendingVerifications && (
+                          <div className="rounded-xl bg-amber-50 border border-amber-150 p-3 text-[10px] text-amber-850 flex items-start gap-2 mb-3 animate-pulse">
+                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                            <div>
+                              <strong>Payment Submitted:</strong> Nagaraju has been notified to verify your UTR number. Once validated, your billing statement will update immediately.
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Pay Button / Completed State */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 mt-3">
+                          {order.remainingBalance > 0 ? (
+                            <>
+                              <p className="text-[10px] text-wood-light font-light max-w-sm italic">
+                                *You can pay a 50% advance, full price, or a custom installment to start work. Remaining balance is due on delivery.
+                              </p>
+                              <button
+                                disabled={hasPendingVerifications}
+                                onClick={() => {
+                                  setActivePayOrder(order);
+                                  setSelectedOption('50');
+                                  setCustomAmount('');
+                                  setPaymentError('');
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase transition-colors shadow-sm disabled:bg-neutral-400 cursor-pointer"
+                              >
+                                <QrCode className="h-3.5 w-3.5" />
+                                <span>Pay Installment / Advance</span>
+                              </button>
+                            </>
+                          ) : (
+                            <div className="w-full flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 font-bold">
+                              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+                              <span>Order Fully Paid! Balance Due on Delivery: ₹0</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Approved Payments History */}
+                        {order.payments && order.payments.filter(p => p.status === 'Approved').length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-wood-border/25">
+                            <span className="text-[8px] font-bold uppercase tracking-wider text-wood-light block mb-2">Payment Transaction History</span>
+                            <div className="space-y-1.5">
+                              {order.payments.filter(p => p.status === 'Approved').map((pay) => (
+                                <div key={pay._id} className="flex justify-between items-center bg-white/70 border border-wood-border/20 rounded-lg px-3 py-1.5 text-[9.5px]">
+                                  <span className="text-wood-medium font-light">
+                                    Verified Installment on {new Date(pay.createdAt).toLocaleDateString('en-IN')} (UTR: <span className="font-mono">{pay.utrNumber}</span>)
+                                  </span>
+                                  <span className="font-bold text-emerald-700">+₹{pay.amount.toLocaleString('en-IN')}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Live Tracking Timeline */}
                     <div className="py-6">
@@ -617,6 +775,170 @@ export default function UserOrdersPage() {
           Browse Designs Catalog
         </Link>
       </div>
+
+      {/* DYNAMIC UPI QR PAYMENT MODAL */}
+      {activePayOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setActivePayOrder(null)}>
+          <div className="w-full max-w-md bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-6 sm:p-7 shadow-2xl relative text-left" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
+              <h3 className="font-serif text-sm font-bold text-wood-dark flex items-center gap-2">
+                <QrCode className="h-4.5 w-4.5 text-wood-accent animate-pulse" />
+                <span>UPI Payment Gateway</span>
+              </h3>
+              <button 
+                onClick={() => setActivePayOrder(null)}
+                className="p-1 rounded-lg hover:bg-wood-beige text-wood-light hover:text-wood-dark transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {paymentError && (
+              <div className="rounded-xl bg-red-50 border border-red-150 p-3 text-[10.5px] text-red-800 flex items-start gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+              {/* Payment Option Selector */}
+              <div>
+                <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Amount Option</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOption('50')}
+                    className={`py-2 px-1 text-[10px] font-bold rounded-xl border text-center transition-all ${
+                      selectedOption === '50'
+                        ? 'bg-wood-dark text-white border-wood-dark'
+                        : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
+                    }`}
+                  >
+                    50% Advance (₹{Math.round((activePayOrder.remainingBalance || activePayOrder.totalPrice) / 2).toLocaleString('en-IN')})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOption('100')}
+                    className={`py-2 px-1 text-[10px] font-bold rounded-xl border text-center transition-all ${
+                      selectedOption === '100'
+                        ? 'bg-wood-dark text-white border-wood-dark'
+                        : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
+                    }`}
+                  >
+                    100% Full (₹{(activePayOrder.remainingBalance || activePayOrder.totalPrice).toLocaleString('en-IN')})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOption('custom')}
+                    className={`py-2 px-1 text-[10px] font-bold rounded-xl border text-center transition-all ${
+                      selectedOption === 'custom'
+                        ? 'bg-wood-dark text-white border-wood-dark'
+                        : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
+                    }`}
+                  >
+                    Custom Amount
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Amount Input Field */}
+              {selectedOption === 'custom' && (
+                <div className="animate-fadeIn">
+                  <label className="block text-[9px] uppercase font-bold tracking-wider text-wood-accent mb-1">Enter Payable Amount (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    max={activePayOrder.remainingBalance}
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    placeholder="Enter custom amount"
+                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
+                  />
+                  <p className="text-[9px] text-wood-light mt-1">Maximum payable amount is ₹{activePayOrder.remainingBalance.toLocaleString('en-IN')}</p>
+                </div>
+              )}
+
+              {/* UPI Selector */}
+              <div>
+                <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Pay App / Bank UPI</span>
+                <div className="flex gap-2">
+                  {Object.entries(UPI_IDS).map(([key, value]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedUpiKey(key)}
+                      className={`flex-1 py-2 text-center text-xs font-bold rounded-xl border transition-all ${
+                        selectedUpiKey === key
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
+                      }`}
+                    >
+                      {value.label} ({value.name})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dynamic QR Code Box */}
+              {getPayableAmount() > 0 && (
+                <div className="flex flex-col items-center justify-center bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
+                    alt="Scan UPI QR Code"
+                    className="w-40 h-40 object-contain border border-neutral-100 rounded-lg p-1 bg-white"
+                  />
+                  
+                  <div className="mt-2.5">
+                    <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
+                    <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
+                    <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
+                      ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* UTR Input Form */}
+              <div className="border-t border-wood-border/30 pt-3.5">
+                <label className="block text-[9px] uppercase font-bold tracking-wider text-wood-accent mb-1.5">
+                  Enter 12-Digit UPI Transaction UTR Reference Number
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={12}
+                  pattern="\d{12}"
+                  value={utrNumber}
+                  onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 628165399849 (Check GPay/PhonePe history)"
+                  className="w-full rounded-xl border border-wood-border bg-white px-3.5 py-2.5 text-xs text-wood-dark font-mono focus:outline-none focus:border-wood-accent"
+                />
+                <p className="text-[8px] text-wood-light mt-1">Once you pay via GPay/PhonePe, copy the 12-digit UTR/Ref number and paste it here.</p>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={submittingPayment}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500"
+              >
+                {submittingPayment ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Submit Payment Proof</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

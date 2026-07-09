@@ -826,9 +826,146 @@ Please contact the customer to resolve the issue as soon as possible.`;
   });
 };
 
+const sendAdminPaymentAlertEmail = async (order, amount, utrNumber) => {
+  const textContent = `Hello Pavan Sai! A customer has submitted a payment for order verification:
+  
+Customer Details:
+- Name: ${order.name}
+- Phone: ${order.phone}
+- Order Product: ${order.product}
+- Submitted Amount: ₹${amount.toLocaleString('en-IN')}
+- UPI ID / UTR Number: ${utrNumber}
+
+Please check your GooglePay/PhonePe account and verify the transaction.`;
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #ebdcc5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
+      <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
+        <h2 style="color: #6d553b; margin: 0; font-family: Georgia, serif;">LD Interiors & Furnitures</h2>
+        <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #f0ad4e; margin: 5px 0 0 0; font-weight: bold;">💰 New Payment Verification Request</p>
+      </div>
+
+      <p style="font-size: 15px; font-weight: bold; color: #6d553b; margin-bottom: 15px;">Hello Pavan Sai!</p>
+      <p style="font-size: 14px; margin-bottom: 15px;">A payment verification submission has been received for order <strong>${order.product}</strong>:</p>
+
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Payment & UTR Details</h3>
+        <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
+          <li style="margin-bottom: 8px;"><strong>• Customer Name:</strong> ${order.name}</li>
+          <li style="margin-bottom: 8px;"><strong>• Phone Number:</strong> ${order.phone}</li>
+          <li style="margin-bottom: 8px;"><strong>• Submitted Amount:</strong> <span style="font-size: 16px; font-weight: bold; color: #2e7d32;">₹${amount.toLocaleString('en-IN')}</span></li>
+          <li style="margin-bottom: 8px;"><strong>• UTR / Transaction ID:</strong> <span style="font-family: monospace; font-weight: bold; color: #c9302c;">${utrNumber}</span></li>
+        </ul>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
+        <a href="https://ld-interiors-ai.vercel.app/admin" style="background-color: #2e7d32; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #1b5e20;">
+          🔑 Open Admin Dashboard to Verify
+        </a>
+      </div>
+
+      <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
+        This notification was sent automatically to verify order payment.
+      </div>
+    </div>
+  `;
+
+  const subject = `💰 Verify Payment: ₹${amount.toLocaleString('en-IN')} from ${order.name}`;
+  return sendGenericEmail({
+    to: 'ldinteriors.in@gmail.com',
+    subject,
+    html: htmlContent,
+    text: textContent,
+    orderId: order._id,
+    productName: 'Payment Alert'
+  });
+};
+
+const sendCustomerPaymentReceiptEmail = async (order, amountPaid) => {
+  const balanceStr = order.remainingBalance > 0 ? `₹${order.remainingBalance.toLocaleString('en-IN')}` : 'Nil (Paid in Full)';
+  const dateStr = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  const textContent = `🏠 Payment Receipt - LD Interiors & Furnitures
+
+Dear ${order.name},
+
+Thank you for your payment! We have successfully verified your transaction.
+
+Payment Details:
+- Order Reference: ${order.product}
+- Amount Paid: ₹${amountPaid.toLocaleString('en-IN')}
+- Total Paid to Date: ₹${order.paidAmount.toLocaleString('en-IN')}
+- Remaining Balance (Due on Delivery): ${balanceStr}
+- Receipt Date: ${dateStr}
+
+We have updated your project timeline. You can view your project status on the orders tracker at:
+https://ld-interiors-ai.vercel.app/orders
+
+Warm regards,
+Nagaraju (Owner)
+LD Interiors & Furnitures`;
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #ebdcc5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
+      <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
+        <h2 style="color: #6d553b; margin: 0; font-family: Georgia, serif;">LD Interiors & Furnitures</h2>
+        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #2e7d32; margin: 5px 0 0 0; font-weight: bold;">📄 Official Payment Receipt / రసీదు</p>
+      </div>
+
+      <p style="font-size: 14px;">Dear <strong>${order.name}</strong> గారికి, 🙏</p>
+      <p style="font-size: 14px;">We are pleased to inform you that your payment has been successfully verified and credited to your order statement.</p>
+
+      <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(44, 26, 15, 0.02);">
+        <h3 style="color: #8e7a65; font-size: 12px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">🧾 Payment Summary / ఇన్వాయిస్ వివరాలు</h3>
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px;">
+          <tr style="border-bottom: 1px solid #f9f6f0;"><td style="padding: 8px 0; color: #8e7a65;">🪑 Product:</td><td style="padding: 8px 0; font-weight: bold; text-align: right;">${order.product}</td></tr>
+          <tr style="border-bottom: 1px solid #f9f6f0;"><td style="padding: 8px 0; color: #8e7a65;">💵 Total Agreed Cost:</td><td style="padding: 8px 0; font-weight: bold; text-align: right;">₹${order.totalPrice.toLocaleString('en-IN')}</td></tr>
+          <tr style="border-bottom: 1px solid #f9f6f0;"><td style="padding: 8px 0; color: #2e7d32; font-weight: bold;">💰 Amount Verified (Installment):</td><td style="padding: 8px 0; font-weight: bold; color: #2e7d32; text-align: right;">₹${amountPaid.toLocaleString('en-IN')}</td></tr>
+          <tr style="border-bottom: 1px solid #f9f6f0;"><td style="padding: 8px 0; color: #8e7a65;">📊 Total Paid to Date:</td><td style="padding: 8px 0; font-weight: bold; text-align: right;">₹${order.paidAmount.toLocaleString('en-IN')}</td></tr>
+          <tr style="background-color: #fdfaf5;"><td style="padding: 10px 8px; color: #c9302c; font-weight: bold;">⚖️ Remaining Balance (Due on Delivery):</td><td style="padding: 10px 8px; font-weight: bold; color: #c9302c; text-align: right; font-size: 14px;">₹${order.remainingBalance.toLocaleString('en-IN')}</td></tr>
+        </table>
+      </div>
+
+      <div style="background-color: #e8f5e9; border-left: 4px solid #2e7d32; border-radius: 4px; padding: 12px; font-size: 13px; color: #1b5e20; line-height: 1.5; margin-bottom: 20px;">
+        <strong>Telugu / తెలుగు:</strong> మీ ఆర్దర్ (ఉత్పత్తి: ${order.product}) కి పంపిన బుకింగ్ అడ్వాన్స్ <strong>₹${amountPaid.toLocaleString('en-IN')}</strong> విజయవంతంగా జమ చేయబడింది. డెలివరీ సమయంలో చెల్లించాల్సిన మిగిలిన బ్యాలెన్స్ మొత్తం <strong>₹${order.remainingBalance.toLocaleString('en-IN')}</strong>.
+      </div>
+
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="https://ld-interiors-ai.vercel.app/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+          🔎 Track Project Progress
+        </a>
+      </div>
+
+      <p style="font-size: 13px; margin-bottom: 5px;">Thank you for your business! We look forward to delivering your design.</p>
+      <p style="font-size: 13px; font-weight: bold; color: #6d553b; margin: 0;">Nagaraju (Owner)</p>
+      <p style="font-size: 11px; color: #8e7a65; margin: 0;">LD Interiors & Furnitures</p>
+
+      <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
+        This receipt statement was sent automatically to ${order.email} on ${dateStr}.
+      </div>
+    </div>
+  `;
+
+  const subject = `📄 Receipt Statement: verified payment of ₹${amountPaid.toLocaleString('en-IN')} | LD Interiors`;
+  return sendGenericEmail({
+    to: order.email,
+    subject,
+    html: htmlContent,
+    text: textContent,
+    orderId: order._id,
+    productName: order.product
+  });
+};
+
 module.exports = {
   sendOrderEmail,
   sendCustomerGreetingEmail,
   sendCustomerStatusUpdateEmail,
   sendCustomerSupportEmail,
+  sendAdminPaymentAlertEmail,
+  sendCustomerPaymentReceiptEmail,
 };
