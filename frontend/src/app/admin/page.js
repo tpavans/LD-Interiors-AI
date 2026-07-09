@@ -1247,8 +1247,8 @@ export default function AdminPage() {
 
       {/* EDIT PRICE MODAL POPUP */}
       {activePricingOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setActivePricingOrder(null)}>
-          <div className="w-full max-w-sm bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-6 shadow-2xl relative text-left" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto" onClick={() => setActivePricingOrder(null)}>
+          <div className="w-full max-w-sm bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-5 sm:p-7 shadow-2xl relative text-left max-h-[90vh] overflow-y-auto scrollbar-thin" onClick={(e) => e.stopPropagation()}>
             
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
               <h3 className="font-serif text-sm font-bold text-wood-dark flex items-center gap-2">
