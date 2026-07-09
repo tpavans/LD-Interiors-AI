@@ -34,11 +34,18 @@ export default function UserOrdersPage() {
   const [selectedOption, setSelectedOption] = useState('50'); // '50', '100'
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' or 'gateway'
 
   // Tracking Modal State
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
 
   useEffect(() => {
+    // Load Razorpay Checkout SDK Script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
     const savedPhone = localStorage.getItem('ld_user_phone') || '';
     const savedName = localStorage.getItem('ld_user_name') || '';
     const savedEmail = localStorage.getItem('ld_user_email') || '';
@@ -75,6 +82,10 @@ export default function UserOrdersPage() {
     };
 
     fetchCatalogAndTrack();
+
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   const handleSearch = async (e, forcePhone) => {
@@ -214,14 +225,69 @@ export default function UserOrdersPage() {
     setPaymentError('');
 
     try {
-      await api.post(`/orders/${activePayOrder._id}/confirm-payment`, {
-        amount,
-        upiIdUsed: UPI_IDS[selectedUpiKey].id
-      });
+      if (paymentMethod === 'gateway') {
+        const convenienceFee = Math.round(amount * 0.0236);
+        // 1. Create order on backend
+        const orderRes = await api.post(`/orders/${activePayOrder._id}/razorpay-order`, {
+          amount,
+          fee: convenienceFee
+        });
 
-      // 2. Open WhatsApp Chat prefilled to Admin Pavansai (9346325291)
-      const orderShortId = activePayOrder._id.substring(18).toUpperCase();
-      const waMsg = `🔔 Payment Notification / పేమెంట్ సమాచారం
+        // 2. Launch Razorpay Checkout widget
+        if (typeof window !== 'undefined' && window.Razorpay) {
+          const options = {
+            key: orderRes.data.keyId,
+            amount: Math.round(orderRes.data.amount * 100), // paise
+            currency: orderRes.data.currency,
+            name: "LD Interiors & Furnitures",
+            description: `Payment installment for ${activePayOrder.product}`,
+            order_id: orderRes.data.orderId,
+            handler: async function (response) {
+              setSubmittingPayment(true);
+              try {
+                const verifyRes = await api.post(`/orders/${activePayOrder._id}/razorpay-verify`, {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature || 'mock_signature',
+                  actualAmountPaid: amount
+                });
+                alert('🎉 Payment verified and processed instantly! Your balance ledger has been updated.');
+                setActivePayOrder(null);
+                handleSearch(null, phone);
+              } catch (err) {
+                console.error('Razorpay verification failed:', err);
+                alert(err.response?.data?.message || 'Payment verification failed. Please contact Nagaraju / Pavansai.');
+              } finally {
+                setSubmittingPayment(false);
+              }
+            },
+            prefill: {
+              name: profileName || activePayOrder.name,
+              email: profileEmail || activePayOrder.email || 'customer@example.com',
+              contact: profilePhone || activePayOrder.phone
+            },
+            notes: {
+              order_id: activePayOrder._id
+            },
+            theme: {
+              color: "#8B5A2B" // Teak wood brand color
+            }
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          alert("Payment gateway script failed to load. Please refresh and check your internet connection.");
+        }
+      } else {
+        // Direct UPI transfer flow
+        await api.post(`/orders/${activePayOrder._id}/confirm-payment`, {
+          amount,
+          upiIdUsed: UPI_IDS[selectedUpiKey].id
+        });
+
+        // 2. Open WhatsApp Chat prefilled to Admin Pavansai (9346325291)
+        const orderShortId = activePayOrder._id.substring(18).toUpperCase();
+        const waMsg = `🔔 Payment Notification / పేమెంట్ సమాచారం
 
 Hello Pavansai/Nagaraju,
 
@@ -232,14 +298,15 @@ Please check your bank account and approve my order.
 Thank you,
 ${profileName || activePayOrder.name}`;
 
-      const waUrl = `https://wa.me/919346325291?text=${encodeURIComponent(waMsg)}`;
-      window.open(waUrl, '_blank');
+        const waUrl = `https://wa.me/919346325291?text=${encodeURIComponent(waMsg)}`;
+        window.open(waUrl, '_blank');
 
-      alert('Payment confirmation registered! We opened WhatsApp to notify Pavansai. Nagaraju will check the account and verify the transaction in the dashboard.');
-      
-      // Close modal and refresh order logs
-      setActivePayOrder(null);
-      await handleSearch(null, phone);
+        alert('Payment confirmation registered! We opened WhatsApp to notify Pavansai. Nagaraju will check the account and verify the transaction in the dashboard.');
+        
+        // Close modal and refresh order logs
+        setActivePayOrder(null);
+        await handleSearch(null, phone);
+      }
     } catch (err) {
       console.error('Payment confirmation failed:', err);
       setPaymentError(err.response?.data?.message || 'Failed to register payment confirmation. Please try again.');
@@ -884,83 +951,153 @@ ${profileName || activePayOrder.name}`;
                 </div>
               </div>
 
-              {/* UPI Selector */}
+              {/* Payment Method Selector Tab */}
               <div>
-                <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Pay App / Bank UPI</span>
-                <div className="flex gap-2">
-                  {Object.entries(UPI_IDS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setSelectedUpiKey(key)}
-                      className={`flex-1 py-2 text-center text-xs font-bold rounded-xl border transition-all ${
-                        selectedUpiKey === key
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                          : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
-                      }`}
-                    >
-                      {value.label} ({value.name})
-                    </button>
-                  ))}
+                <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Choose Payment Method</span>
+                <div className="grid grid-cols-2 gap-2 bg-white border border-wood-border/40 rounded-xl p-1 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('upi')}
+                    className={`py-2 px-2 text-[10.5px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                      paymentMethod === 'upi'
+                        ? 'bg-wood-dark text-white shadow-xs'
+                        : 'text-wood-light hover:text-wood-dark hover:bg-wood-beige/25'
+                    }`}
+                  >
+                    📱 Direct UPI (0% Fee)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('gateway')}
+                    className={`py-2 px-2 text-[10.5px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                      paymentMethod === 'gateway'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-wood-light hover:text-wood-dark hover:bg-wood-beige/25'
+                    }`}
+                  >
+                    💳 Cards / EMI (2.36% Fee)
+                  </button>
                 </div>
               </div>
 
-              {/* Pay options split layout */}
-              {getPayableAmount() > 0 && (
-                <div className="space-y-4 pt-2">
-                  {/* Option 1: Mobile App launcher */}
-                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5 animate-fadeIn">
-                    <span className="text-[9.5px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Option 1: Mobile App Shortcut (Tap to Pay)</span>
-                    <a
-                      href={getUpiUrl()}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer"
-                    >
-                      <Smartphone className="h-4 w-4" />
-                      <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
-                    </a>
-                    <p className="text-[8px] text-emerald-700/80 mt-1">
-                      *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Complete your payment inside the app.
-                    </p>
+              {/* Direct P2P UPI Payment Subform */}
+              {paymentMethod === 'upi' && getPayableAmount() > 0 && (
+                <div className="space-y-4">
+                  {/* UPI Key Selector */}
+                  <div>
+                    <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Pay App / Bank UPI</span>
+                    <div className="flex gap-2">
+                      {Object.entries(UPI_IDS).map(([key, value]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSelectedUpiKey(key)}
+                          className={`flex-1 py-2 text-center text-xs font-bold rounded-xl border transition-all ${
+                            selectedUpiKey === key
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                              : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
+                          }`}
+                        >
+                          {value.label} ({value.name})
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Option 2: Scan QR code */}
-                  <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
-                    <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Scan QR Code (Laptops/Computers)</span>
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
-                      alt="Scan UPI QR Code"
-                      className="w-36 h-36 object-contain border border-neutral-100 rounded-lg p-1 bg-white"
-                    />
-                    <div className="mt-2.5">
-                      <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
-                      <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
-                      <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
-                        ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                  <div className="space-y-4 pt-2">
+                    {/* Option 1: Mobile App launcher */}
+                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5 animate-fadeIn">
+                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Option 1: Mobile App Shortcut (Tap to Pay)</span>
+                      <a
+                        href={getUpiUrl()}
+                        className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer"
+                      >
+                        <Smartphone className="h-4 w-4" />
+                        <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
+                      </a>
+                      <p className="text-[8px] text-emerald-700/80 mt-1">
+                        *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Complete your payment inside the app.
                       </p>
+                    </div>
+
+                    {/* Option 2: Scan QR code */}
+                    <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
+                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Scan QR Code (Laptops/Computers)</span>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
+                        alt="Scan UPI QR Code"
+                        className="w-36 h-36 object-contain border border-neutral-100 rounded-lg p-1 bg-white"
+                      />
+                      <div className="mt-2.5">
+                        <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
+                        <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
+                        <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
+                          ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Confirm Notification alert Button */}
+              {/* Gateway Surcharge Subform */}
+              {paymentMethod === 'gateway' && getPayableAmount() > 0 && (
+                <div className="bg-white border border-wood-border/40 rounded-2xl p-4 shadow-inner text-xs text-wood-dark space-y-2.5 animate-fadeIn">
+                  <div className="flex justify-between items-center text-[10px] text-wood-light uppercase font-bold tracking-wider">
+                    <span>Base Payment Amount</span>
+                    <span className="font-mono text-xs font-semibold">₹{getPayableAmount().toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] text-wood-light uppercase font-bold tracking-wider pb-2 border-b border-neutral-100">
+                    <span>Gateway Processing Charge (2.36%)</span>
+                    <span className="font-mono text-xs text-red-650 font-semibold">+₹{Math.round(getPayableAmount() * 0.0236).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center font-bold text-emerald-850 text-[13px] pt-1">
+                    <span>Total Amount Payable</span>
+                    <span className="font-mono text-sm bg-emerald-50 border border-emerald-250 px-2 py-0.5 rounded-lg">
+                      ₹{(getPayableAmount() + Math.round(getPayableAmount() * 0.0236)).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Buttons */}
               <div className="border-t border-wood-border/30 pt-4 mt-2">
-                <p className="text-[9.5px] text-wood-light mb-3 leading-relaxed italic">
-                  *Once you complete the payment inside GPay/PhonePe, tap the green button below. This logs the payment in our dashboard and automatically notifies Pavansai on WhatsApp.
-                </p>
-                <button
-                  type="submit"
-                  disabled={submittingPayment}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
-                >
-                  {submittingPayment ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4.5 w-4.5" />
-                      <span>✅ I Have Completed Payment</span>
-                    </>
-                  )}
-                </button>
+                {paymentMethod === 'gateway' ? (
+                  <button
+                    type="submit"
+                    disabled={submittingPayment}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
+                  >
+                    {submittingPayment ? (
+                      <Loader2 className="h-4.5 w-4.5 animate-spin text-white" />
+                    ) : (
+                      <>
+                        <CreditCard className="h-4.5 w-4.5" />
+                        <span>Pay via Gateway (₹{(getPayableAmount() + Math.round(getPayableAmount() * 0.0236)).toLocaleString('en-IN')})</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <>
+                    <p className="text-[9.5px] text-wood-light mb-3 leading-relaxed italic">
+                      *Once you complete the payment inside GPay/PhonePe, tap the green button below. This logs the payment in our dashboard and automatically notifies Pavansai on WhatsApp.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={submittingPayment}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
+                    >
+                      {submittingPayment ? (
+                        <Loader2 className="h-4.5 w-4.5 animate-spin text-white" />
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4.5 w-4.5" />
+                          <span>✅ I Have Completed Payment</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           </div>

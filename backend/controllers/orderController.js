@@ -1,8 +1,18 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const Razorpay = require('razorpay');
 const Order = require('../models/Order');
 const { sendOrderEmail, sendCustomerGreetingEmail, sendCustomerStatusUpdateEmail } = require('../utils/sendEmail');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 const { triggerCustomerVoiceCall } = require('../utils/voiceCall');
+
+let razorpayInstance = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+}
 
 /**
  * @desc    Create new order
@@ -523,6 +533,145 @@ const updateDeliveryTracking = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Create a new Razorpay Order (with convenience fee)
+ * @route   POST /api/orders/:id/razorpay-order
+ * @access  Public
+ */
+const createRazorpayOrder = async (req, res) => {
+  try {
+    const { amount, fee } = req.body;
+    if (!amount) {
+      return res.status(400).json({ message: 'Amount is required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const baseAmount = Number(amount);
+    const feeAmount = Number(fee || 0);
+    const totalAmount = baseAmount + feeAmount;
+
+    let razorpayOrderId = `order_mock_${Date.now()}`;
+
+    // If live credentials exist, create actual Razorpay order
+    if (razorpayInstance) {
+      const options = {
+        amount: Math.round(totalAmount * 100), // paise
+        currency: "INR",
+        receipt: `receipt_order_${order._id}_${Date.now()}`
+      };
+      const rpOrder = await razorpayInstance.orders.create(options);
+      razorpayOrderId = rpOrder.id;
+    }
+
+    // Append to payments array in database as Pending
+    order.payments.push({
+      amount: baseAmount,
+      utrNumber: `RP-Order: ${razorpayOrderId}`,
+      upiIdUsed: 'Razorpay Gateway',
+      status: 'Pending',
+      createdAt: Date.now()
+    });
+
+    await order.save();
+
+    res.json({
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockkey_9346325291',
+      orderId: razorpayOrderId,
+      amount: totalAmount,
+      currency: 'INR',
+      isMock: !razorpayInstance
+    });
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    res.status(500).json({ message: 'Failed to initiate gateway payment.', error: error.message });
+  }
+};
+
+/**
+ * @desc    Verify Razorpay Payment Signature
+ * @route   POST /api/orders/:id/razorpay-verify
+ * @access  Public
+ */
+const verifyRazorpaySignature = async (req, res) => {
+  try {
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, actualAmountPaid } = req.body;
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    let isVerified = false;
+
+    if (razorpayInstance && razorpay_signature) {
+      const generated_signature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest('hex');
+
+      if (generated_signature === razorpay_signature) {
+        isVerified = true;
+      }
+    } else {
+      // Mock mode verification automatically passes for testing
+      isVerified = true;
+    }
+
+    if (!isVerified) {
+      return res.status(400).json({ message: 'Payment verification failed. Invalid signature.' });
+    }
+
+    // Find the corresponding payment in order payments array
+    const payment = order.payments.find(p => p.utrNumber === `RP-Order: ${razorpay_order_id}`);
+    if (payment) {
+      payment.status = 'Approved';
+      payment.utrNumber = `Razorpay PayID: ${razorpay_payment_id}`;
+    } else {
+      // Create a new approved payment if not pre-logged
+      order.payments.push({
+        amount: Number(actualAmountPaid),
+        utrNumber: `Razorpay PayID: ${razorpay_payment_id}`,
+        upiIdUsed: 'Razorpay Gateway',
+        status: 'Approved',
+        createdAt: Date.now()
+      });
+    }
+
+    order.paidAmount += Number(actualAmountPaid);
+    order.remainingBalance = order.totalPrice - order.paidAmount;
+
+    // Recalculate overall paymentStatus
+    if (order.paidAmount >= order.totalPrice) {
+      order.paymentStatus = 'Paid';
+      if (order.status === 'Pending' || order.status === 'Processing') {
+        order.status = 'In Progress';
+      }
+    } else {
+      order.paymentStatus = 'Partially Paid';
+    }
+
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+
+    // Trigger customer receipt email
+    try {
+      const { sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
+      sendCustomerPaymentReceiptEmail(updatedOrder, Number(actualAmountPaid)).catch(e => console.error(e));
+    } catch (err) {
+      console.error('Failed to send payment receipt:', err);
+    }
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error('Error verifying Razorpay payment:', error);
+    res.status(500).json({ message: 'Payment verification error.', error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
@@ -535,4 +684,6 @@ module.exports = {
   verifyPayment,
   confirmCustomerPayment,
   updateDeliveryTracking,
+  createRazorpayOrder,
+  verifyRazorpaySignature,
 };
