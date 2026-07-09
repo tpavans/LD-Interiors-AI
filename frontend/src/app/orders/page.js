@@ -912,7 +912,11 @@ export default function UserOrdersPage() {
                     min="1"
                     max={activePayOrder.remainingBalance}
                     value={customAmount}
-                    onChange={(e) => setCustomAmount(e.target.value)}
+                    onChange={(e) => {
+                      setCustomAmount(e.target.value);
+                      setSelectedOption('custom');
+                    }}
+                    onFocus={() => setSelectedOption('custom')}
                     placeholder="Enter custom amount"
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
                   />
@@ -941,37 +945,39 @@ export default function UserOrdersPage() {
                 </div>
               </div>
 
-              {/* Pay via Mobile App Shortcut */}
+              {/* Pay options split layout */}
               {getPayableAmount() > 0 && (
-                <div className="animate-fadeIn">
-                  <a
-                    href={getUpiUrl()}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center"
-                  >
-                    <Smartphone className="h-4 w-4" />
-                    <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
-                  </a>
-                  <p className="text-[8px] text-wood-light text-center mt-1">
-                    *Tapping will launch Google Pay / PhonePe directly on your phone. Remember to copy the UTR Ref number afterwards!
-                  </p>
-                </div>
-              )}
-
-              {/* Dynamic QR Code Box */}
-              {getPayableAmount() > 0 && (
-                <div className="flex flex-col items-center justify-center bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
-                    alt="Scan UPI QR Code"
-                    className="w-40 h-40 object-contain border border-neutral-100 rounded-lg p-1 bg-white"
-                  />
-                  
-                  <div className="mt-2.5">
-                    <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
-                    <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
-                    <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
-                      ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                <div className="space-y-4 pt-2">
+                  {/* Option 1: Mobile App launcher */}
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5 animate-fadeIn">
+                    <span className="text-[9.5px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Option 1: Mobile App Shortcut (Tap to Pay)</span>
+                    <a
+                      href={getUpiUrl()}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer"
+                    >
+                      <Smartphone className="h-4 w-4" />
+                      <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
+                    </a>
+                    <p className="text-[8px] text-emerald-700/80 mt-1">
+                      *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Make payment and copy the 12-digit UPI UTR Ref number.
                     </p>
+                  </div>
+
+                  {/* Option 2: Scan QR code */}
+                  <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
+                    <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Scan QR Code (Laptops/Computers)</span>
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
+                      alt="Scan UPI QR Code"
+                      className="w-36 h-36 object-contain border border-neutral-100 rounded-lg p-1 bg-white"
+                    />
+                    <div className="mt-2.5">
+                      <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
+                      <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
+                      <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
+                        ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1024,14 +1030,14 @@ export default function UserOrdersPage() {
               <button
                 type="submit"
                 disabled={submittingPayment}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500"
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-widest transition-all cursor-pointer shadow-md disabled:bg-neutral-500 animate-fadeIn"
               >
                 {submittingPayment ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4" />
-                    <span>Submit Payment Proof</span>
+                    <span>Submit ₹{getPayableAmount().toLocaleString('en-IN')} Payment Proof</span>
                   </>
                 )}
               </button>
