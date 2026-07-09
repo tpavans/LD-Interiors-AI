@@ -505,6 +505,8 @@ ${profileName || activePayOrder.name}`;
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                               order.paymentStatus === 'Paid'
                                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-250'
+                                : order.paymentStatus === 'Partially Paid'
+                                ? 'bg-teal-50 border border-teal-200 text-teal-800'
                                 : order.paymentStatus === 'Pending Verification'
                                 ? 'bg-amber-100 text-amber-800 border border-amber-250 animate-pulse'
                                 : 'bg-neutral-100 text-neutral-800 border border-neutral-200'
@@ -567,7 +569,18 @@ ${profileName || activePayOrder.name}`;
                           </div>
                         )}
 
-                        {/* Pay Button / Completed State */}
+                        {/* Rejected Payment Warning */}
+                        {!hasPendingVerifications && order.payments && order.payments.some(p => p.status === 'Rejected') && (
+                          <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 mb-3 text-left animate-fadeIn">
+                            <AlertTriangle className="h-4.5 w-4.5 text-red-500 shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="block text-red-700 font-bold uppercase tracking-wider text-[9px] mb-0.5">⚠️ Payment Verification Rejected</strong>
+                              <p className="text-[10px] text-red-800 leading-relaxed font-light">
+                                Your last payment confirmation of <span className="font-bold">₹{order.payments.filter(p => p.status === 'Rejected').pop().amount.toLocaleString('en-IN')}</span> was rejected by Nagaraju. Reason: Funds not received in our bank statement. Please verify your transaction and make a fresh payment.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <div className="flex flex-wrap items-center justify-between gap-4 mt-3">
                           {order.remainingBalance > 0 ? (
                             <>

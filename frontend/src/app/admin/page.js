@@ -1317,6 +1317,14 @@ LD Interiors & Furnitures
               <span className="text-[10px] text-wood-light/75 italic mt-1 block">When clients confirm payment on the website, they will pop up here instantly!</span>
             </div>
           ) : (
+            <>
+              <div className="p-4 mx-6 my-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800 animate-fadeIn">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <strong>⚠️ IMPORTANT VERIFICATION NOTICE FOR NAGARAJU / PAVANSAI:</strong> Please verify the transaction details inside your PhonePe / GPay app statement <strong>before</strong> clicking <strong>Approve</strong>. If the customer clicked "I Have Paid" but no funds landed in your bank, you must click <strong>Reject</strong>. The user's status will revert to Unpaid, their Pay button will be enabled again, and they will be prompted to submit proof again.
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
@@ -1406,6 +1414,7 @@ LD Interiors & Furnitures
                 </tbody>
               </table>
             </div>
+          </>
           )}
         </div>
       )}
