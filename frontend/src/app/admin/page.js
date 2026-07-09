@@ -196,6 +196,7 @@ export default function AdminPage() {
 
   // Payments verification action loading
   const [paymentActionLoading, setPaymentActionLoading] = useState({}); // paymentId -> boolean
+  const [verifiedAmounts, setVerifiedAmounts] = useState({}); // paymentId -> number string
 
   const fileInputRef = useRef(null);
 
@@ -514,14 +515,17 @@ export default function AdminPage() {
   };
 
   // 11. Verify payment installment
-  const handleVerifyPayment = async (orderId, paymentId, action) => {
+  const handleVerifyPayment = async (orderId, paymentId, action, finalAmt) => {
     const confirmation = window.confirm(`Are you sure you want to ${action} this payment installment?`);
     if (!confirmation) return;
 
     setPaymentActionLoading(prev => ({ ...prev, [paymentId]: true }));
 
     try {
-      const res = await api.post(`/orders/${orderId}/payments/${paymentId}/verify`, { action });
+      const res = await api.post(`/orders/${orderId}/payments/${paymentId}/verify`, { 
+        action,
+        verifiedAmount: finalAmt !== undefined ? Number(finalAmt) : undefined
+      });
       
       // Update order state locally
       setOrders(prev => prev.map(o => o._id === orderId ? res.data : o));
@@ -1173,15 +1177,21 @@ export default function AdminPage() {
                     <th className="py-4 px-6">Customer</th>
                     <th className="py-4 px-6">Product</th>
                     <th className="py-4 px-6">UTR Ref Number</th>
-                    <th className="py-4 px-6">Amount Submitted</th>
+                    <th className="py-4 px-6">Submitted (Hint)</th>
+                    <th className="py-4 px-6">Actual Recd (₹)</th>
                     <th className="py-4 px-6">UPI Gateway</th>
-                    <th className="py-4 px-6">Date Submitted</th>
+                    <th className="py-4 px-6">Date</th>
                     <th className="py-4 px-6 text-right">Verification Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-wood-border/30">
                   {pendingPayments.map((p) => {
                     const actionLoading = paymentActionLoading[p._id];
+                    
+                    // Default to submitted amount. If submitted amount is 0, prefill with full balance.
+                    const defaultPrefill = p.amount > 0 ? p.amount : p.fullOrder.remainingBalance;
+                    const finalVerifiedAmt = verifiedAmounts[p._id] !== undefined ? verifiedAmounts[p._id] : defaultPrefill;
+                    
                     return (
                       <tr key={p._id} className="hover:bg-wood-beige/10 transition-colors animate-fadeIn">
                         <td className="py-4 px-6 font-bold text-wood-dark">
@@ -1198,33 +1208,42 @@ export default function AdminPage() {
                             {p.utrNumber}
                           </span>
                         </td>
-                        <td className="py-4 px-6 font-bold text-emerald-700 text-xs">
-                          ₹{p.amount.toLocaleString('en-IN')}
+                        <td className="py-4 px-6 font-semibold text-neutral-600 text-xs">
+                          {p.amount > 0 ? `₹${p.amount.toLocaleString('en-IN')}` : 'No hint (UTR only)'}
+                        </td>
+                        <td className="py-4 px-6">
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            value={finalVerifiedAmt}
+                            onChange={(e) => setVerifiedAmounts(prev => ({ ...prev, [p._id]: e.target.value }))}
+                            placeholder="Amt recd"
+                            className="w-24 rounded-xl border border-wood-border bg-white px-2.5 py-1.5 text-xs text-wood-dark font-bold text-center focus:outline-none focus:border-wood-accent"
+                          />
                         </td>
                         <td className="py-4 px-6 text-wood-light text-xs font-mono select-all">
                           {p.upiIdUsed}
                         </td>
-                        <td className="py-4 px-6 text-wood-light font-light text-xs">
+                        <td className="py-4 px-6 text-wood-light font-light text-[11px] whitespace-nowrap">
                           {new Date(p.createdAt).toLocaleDateString('en-IN', {
                             day: 'numeric',
                             month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
                           })}
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               disabled={actionLoading}
                               onClick={() => handleVerifyPayment(p.orderId, p._id, 'reject')}
-                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer disabled:bg-neutral-300"
+                              className="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer disabled:bg-neutral-300"
                             >
                               Reject
                             </button>
                             <button
                               disabled={actionLoading}
-                              onClick={() => handleVerifyPayment(p.orderId, p._id, 'approve')}
-                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow-sm disabled:bg-neutral-300 flex items-center gap-1"
+                              onClick={() => handleVerifyPayment(p.orderId, p._id, 'approve', finalVerifiedAmt)}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow-sm disabled:bg-neutral-300 flex items-center gap-1"
                             >
                               {actionLoading ? (
                                 <Loader2 className="h-3 w-3 animate-spin text-white" />

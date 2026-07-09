@@ -314,8 +314,8 @@ const submitPayment = async (req, res) => {
   }
   try {
     const { amount, utrNumber, upiIdUsed } = req.body;
-    if (!amount || !utrNumber || !upiIdUsed) {
-      return res.status(400).json({ message: 'Amount, UTR number, and UPI ID are required.' });
+    if (!utrNumber || !upiIdUsed) {
+      return res.status(400).json({ message: 'UTR number and UPI ID are required.' });
     }
 
     const order = await Order.findById(req.params.id);
@@ -325,7 +325,7 @@ const submitPayment = async (req, res) => {
 
     // Append new payment to the payments array
     order.payments.push({
-      amount: Number(amount),
+      amount: amount ? Number(amount) : 0,
       utrNumber: utrNumber.trim(),
       upiIdUsed: upiIdUsed.trim(),
       status: 'Pending',
@@ -339,7 +339,7 @@ const submitPayment = async (req, res) => {
     // Trigger admin notification alert
     try {
       const { sendAdminPaymentAlertEmail } = require('../utils/sendEmail');
-      sendAdminPaymentAlertEmail(updatedOrder, amount, utrNumber).catch(e => console.error(e));
+      sendAdminPaymentAlertEmail(updatedOrder, amount || 0, utrNumber).catch(e => console.error(e));
     } catch (err) {
       console.error('Failed to send admin payment alert:', err);
     }
@@ -361,7 +361,7 @@ const verifyPayment = async (req, res) => {
     return res.status(503).json({ message: 'Database connection is offline.' });
   }
   try {
-    const { action } = req.body; // 'approve' or 'reject'
+    const { action, verifiedAmount } = req.body; // 'approve' or 'reject', verifiedAmount entered by admin
     const { paymentId } = req.params;
 
     if (!action || !['approve', 'reject'].includes(action)) {
@@ -383,8 +383,14 @@ const verifyPayment = async (req, res) => {
     }
 
     if (action === 'approve') {
+      const finalAmount = verifiedAmount !== undefined ? Number(verifiedAmount) : payment.amount;
+      if (isNaN(finalAmount) || finalAmount < 0) {
+        return res.status(400).json({ message: 'Please provide a valid verified amount received.' });
+      }
+
+      payment.amount = finalAmount;
       payment.status = 'Approved';
-      order.paidAmount += payment.amount;
+      order.paidAmount += finalAmount;
       order.remainingBalance = order.totalPrice - order.paidAmount;
 
       // Recalculate overall paymentStatus
@@ -400,7 +406,7 @@ const verifyPayment = async (req, res) => {
       // Trigger customer PDF receipt dispatch
       try {
         const { sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
-        sendCustomerPaymentReceiptEmail(order, payment.amount).catch(e => console.error(e));
+        sendCustomerPaymentReceiptEmail(order, finalAmount).catch(e => console.error(e));
       } catch (err) {
         console.error('Failed to send payment receipt:', err);
       }

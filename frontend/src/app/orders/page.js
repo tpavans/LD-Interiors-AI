@@ -865,7 +865,7 @@ export default function UserOrdersPage() {
               {/* Payment Option Selector */}
               <div>
                 <span className="text-[9px] uppercase font-bold tracking-wider text-wood-accent block mb-2">Select Amount Option</span>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setSelectedOption('50')}
@@ -888,41 +888,8 @@ export default function UserOrdersPage() {
                   >
                     100% Full (₹{(activePayOrder.remainingBalance || activePayOrder.totalPrice).toLocaleString('en-IN')})
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOption('custom')}
-                    className={`py-2 px-1 text-[10px] font-bold rounded-xl border text-center transition-all ${
-                      selectedOption === 'custom'
-                        ? 'bg-wood-dark text-white border-wood-dark'
-                        : 'bg-white text-wood-light border-wood-border/50 hover:bg-wood-beige'
-                    }`}
-                  >
-                    Custom Amount
-                  </button>
                 </div>
               </div>
-
-              {/* Custom Amount Input Field */}
-              {selectedOption === 'custom' && (
-                <div className="animate-fadeIn">
-                  <label className="block text-[9px] uppercase font-bold tracking-wider text-wood-accent mb-1">Enter Payable Amount (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    max={activePayOrder.remainingBalance}
-                    value={customAmount}
-                    onChange={(e) => {
-                      setCustomAmount(e.target.value);
-                      setSelectedOption('custom');
-                    }}
-                    onFocus={() => setSelectedOption('custom')}
-                    placeholder="Enter custom amount"
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
-                  />
-                  <p className="text-[9px] text-wood-light mt-1">Maximum payable amount is ₹{activePayOrder.remainingBalance.toLocaleString('en-IN')}</p>
-                </div>
-              )}
 
               {/* UPI Selector */}
               <div>
@@ -1037,7 +1004,7 @@ export default function UserOrdersPage() {
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4" />
-                    <span>Submit ₹{getPayableAmount().toLocaleString('en-IN')} Payment Proof</span>
+                    <span>Submit UTR for Verification</span>
                   </>
                 )}
               </button>
