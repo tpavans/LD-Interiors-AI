@@ -38,6 +38,7 @@ export default function UserOrdersPage() {
 
   // Tracking Modal State
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
 
   useEffect(() => {
     // Load Razorpay Checkout SDK Script
@@ -209,6 +210,13 @@ export default function UserOrdersPage() {
     const amount = getPayableAmount();
     const orderShortId = activePayOrder._id.substring(18).toUpperCase();
     return `upi://pay?pa=${upi.id}&pn=${encodeURIComponent(upi.name)}&am=${amount}&tn=Order%20LD-${orderShortId}&cu=INR`;
+  };
+
+  const handleCopyUpiId = () => {
+    const upiId = UPI_IDS[selectedUpiKey].id;
+    navigator.clipboard.writeText(upiId);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2000);
   };
 
   const handlePaymentConfirm = async (e) => {
@@ -1010,19 +1018,37 @@ ${profileName || activePayOrder.name}`;
                       <span className="text-[9.5px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Option 1: Mobile App Shortcut (Tap to Pay)</span>
                       <a
                         href={getUpiUrl()}
-                        className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer"
+                        className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer mb-2"
                       >
                         <Smartphone className="h-4 w-4" />
                         <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
                       </a>
-                      <p className="text-[8px] text-emerald-700/80 mt-1">
-                        *Tapping will launch Google Pay / PhonePe / Paytm directly on your phone. Complete your payment inside the app.
+                      <p className="text-[8px] text-red-650 font-semibold leading-relaxed">
+                        ⚠️ NOTE: Some apps (like PhonePe/GPay) decline browser web links for security reasons. If PhonePe/GPay shows a security error, please use <strong>Option 3 (Copy UPI ID)</strong> below!
                       </p>
                     </div>
 
-                    {/* Option 2: Scan QR code */}
+                    {/* Option 2: Copy UPI ID & Pay Manually */}
                     <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
-                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Scan QR Code (Laptops/Computers)</span>
+                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Copy UPI ID & Pay Manually (Best for Mobile)</span>
+                      <div className="w-full flex items-center justify-between bg-wood-cream border border-wood-border/30 rounded-xl px-3.5 py-2.5 font-mono text-[11px] font-bold text-wood-dark mb-2 shadow-xs">
+                        <span className="select-all truncate mr-1.5">{UPI_IDS[selectedUpiKey].id}</span>
+                        <button
+                          type="button"
+                          onClick={handleCopyUpiId}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                        >
+                          {copiedUpi ? '✓ Copied' : '📋 Copy'}
+                        </button>
+                      </div>
+                      <p className="text-[8px] text-wood-light leading-relaxed">
+                        *Copy the UPI ID, open GPay / PhonePe / Paytm manually, paste the ID, and complete payment. It never fails!
+                      </p>
+                    </div>
+
+                    {/* Option 3: Scan QR code */}
+                    <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
+                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 3: Scan QR Code (Laptops/Computers)</span>
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
                         alt="Scan UPI QR Code"
