@@ -135,7 +135,7 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} LD Interiors & Furnitures. All rights reserved.
         </div>
         <div className="flex items-center gap-1.5">
-          Developed & Maintained by <span className="font-semibold text-wood-dark hover:text-wood-accent transition-colors">Pavan Sai</span>
+          Developed & Maintained by <Link href="/admin?pavan=true" className="font-semibold text-wood-dark hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
         </div>
       </div>
     </footer>
