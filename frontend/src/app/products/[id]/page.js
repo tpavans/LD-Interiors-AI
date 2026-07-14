@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -18,6 +18,7 @@ export default function ProductDetailPage() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
   
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/products/${id}` : '';
 
@@ -234,12 +235,23 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
         {/* Left Col: High-Res Image Display with Thumbnails */}
         <div className="lg:col-span-8">
-          <div className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative">
+          <div 
+            onClick={() => setShowLightbox(true)}
+            className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative cursor-zoom-in group"
+          >
             <img
               src={images && images.length > 0 ? images[activeImageIndex] : image}
               alt={title}
-              className="w-full h-auto object-contain max-h-[70vh] mx-auto"
+              className="w-full h-auto object-contain max-h-[70vh] mx-auto transition-transform duration-500 group-hover:scale-[1.01]"
             />
+            {/* Play Button Overlay for Videos */}
+            {product.video && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/15 group-hover:bg-black/30 transition-colors duration-300">
+                <div className="bg-white/95 backdrop-blur-sm p-4 rounded-full text-wood-dark shadow-xl border border-wood-border/30 transform transition-transform group-hover:scale-110 duration-350">
+                  <Play className="h-8 w-8 fill-current text-wood-dark ml-0.5" />
+                </div>
+              </div>
+            )}
           </div>
           {images && images.length > 1 && (
             <div className="flex flex-wrap gap-2 mt-4 justify-center">
@@ -627,6 +639,66 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             <p className="text-[9px] text-wood-light font-light text-center mt-4">
               Copy this link to share on Instagram posts, stories, or other platforms!
             </p>
+          </div>
+        </div>
+      )}
+      {/* Floating Lightbox Popup Modal */}
+      {showLightbox && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn"
+          onClick={() => setShowLightbox(false)}
+        >
+          <div 
+            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLightbox(false)}
+              className="absolute -top-10 right-2 sm:top-2 sm:-right-12 bg-white/15 hover:bg-white/25 border border-white/20 p-2.5 rounded-full text-white transition-all cursor-pointer shadow-lg z-50 hover:scale-105 active:scale-95"
+              title="Close View"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Media Canvas container */}
+            <div className="w-full flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-2xl relative min-h-[300px]">
+              {product.video ? (
+                <video
+                  src={product.video}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="max-w-full max-h-[75vh] object-contain rounded-2xl"
+                  poster={images && images.length > 0 ? images[activeImageIndex] : image}
+                />
+              ) : (
+                <img
+                  src={images && images.length > 0 ? images[activeImageIndex] : image}
+                  alt={title}
+                  className="max-w-full max-h-[75vh] object-contain rounded-2xl animate-scaleIn select-none"
+                />
+              )}
+            </div>
+
+            {/* Info and Actions Overlay Panel */}
+            <div className="w-full max-w-2xl bg-wood-dark/90 backdrop-blur-md border border-wood-border/10 rounded-2xl p-4 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-white shadow-xl animate-fadeIn">
+              <div className="text-center sm:text-left">
+                <span className="text-[9px] uppercase font-bold tracking-widest text-wood-accent font-semibold">{category}</span>
+                <h4 className="font-serif text-sm sm:text-base font-bold tracking-wide mt-0.5">{title}</h4>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowLightbox(false);
+                    setShowOrderModal(true);
+                  }}
+                  className="px-6 py-2.5 bg-wood-accent hover:brightness-110 active:scale-95 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 text-white cursor-pointer shadow-sm w-full sm:w-auto"
+                >
+                  Place Inquiry / Order
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

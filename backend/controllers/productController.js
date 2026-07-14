@@ -232,18 +232,32 @@ const createProduct = async (req, res) => {
       });
     }
 
-    if (!req.files || req.files.length === 0) {
+    let images = [];
+    let imagesPublicIds = [];
+    let videoUrl = '';
+    let videoPublicId = '';
+
+    // Handle images array
+    if (req.files && req.files.images && req.files.images.length > 0) {
+      const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image'));
+      const uploadResults = await Promise.all(uploadPromises);
+      images = uploadResults.map(res => res.url);
+      imagesPublicIds = uploadResults.map(res => res.publicId);
+    }
+
+    // Handle video upload
+    if (req.files && req.files.video && req.files.video.length > 0) {
+      const videoFile = req.files.video[0];
+      const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
+      videoUrl = videoResult.url;
+      videoPublicId = videoResult.publicId;
+    }
+
+    if (images.length === 0) {
       return res.status(400).json({
         message: 'At least one image file is required',
       });
     }
-
-    // Upload all files to Cloudinary
-    const uploadPromises = req.files.map(file => uploadToCloudinary(file.path));
-    const uploadResults = await Promise.all(uploadPromises);
-
-    const images = uploadResults.map(res => res.url);
-    const imagesPublicIds = uploadResults.map(res => res.publicId);
 
     const product = await Product.create({
       title,
@@ -252,6 +266,8 @@ const createProduct = async (req, res) => {
       imagePublicId: imagesPublicIds[0],
       images,
       imagesPublicIds,
+      video: videoUrl,
+      videoPublicId,
       price,
       description,
       rating,
@@ -308,24 +324,26 @@ const updateProduct = async (req, res) => {
     let imagePublicId = product.imagePublicId;
     let images = product.images || [];
     let imagesPublicIds = product.imagesPublicIds || [];
+    let videoUrl = product.video || '';
+    let videoPublicId = product.videoPublicId || '';
 
     // If new images uploaded
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => uploadToCloudinary(file.path));
+    if (req.files && req.files.images && req.files.images.length > 0) {
+      const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image'));
       const uploadResults = await Promise.all(uploadPromises);
 
       // delete all old images safely
       if (product.imagesPublicIds && product.imagesPublicIds.length > 0) {
         for (const id of product.imagesPublicIds) {
           try {
-            await deleteFromCloudinary(id);
+            await deleteFromCloudinary(id, 'image');
           } catch (err) {
             console.error('Old image deletion failed:', err.message);
           }
         }
       } else if (product.imagePublicId) {
         try {
-          await deleteFromCloudinary(product.imagePublicId);
+          await deleteFromCloudinary(product.imagePublicId, 'image');
         } catch (err) {
           console.error('Old image deletion failed:', err.message);
         }
@@ -337,10 +355,29 @@ const updateProduct = async (req, res) => {
       imagePublicId = imagesPublicIds[0];
     }
 
+    // If new video uploaded
+    if (req.files && req.files.video && req.files.video.length > 0) {
+      // Delete old video if exists
+      if (product.videoPublicId) {
+        try {
+          await deleteFromCloudinary(product.videoPublicId, 'video');
+        } catch (err) {
+          console.error('Old video deletion failed:', err.message);
+        }
+      }
+
+      const videoFile = req.files.video[0];
+      const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
+      videoUrl = videoResult.url;
+      videoPublicId = videoResult.publicId;
+    }
+
     product.image = imageUrl;
     product.imagePublicId = imagePublicId;
     product.images = images;
     product.imagesPublicIds = imagesPublicIds;
+    product.video = videoUrl;
+    product.videoPublicId = videoPublicId;
 
     const updatedProduct = await product.save();
 
@@ -376,22 +413,31 @@ const deleteProduct = async (req, res) => {
     if (product.imagesPublicIds && product.imagesPublicIds.length > 0) {
       for (const id of product.imagesPublicIds) {
         try {
-          await deleteFromCloudinary(id);
+          await deleteFromCloudinary(id, 'image');
         } catch (err) {
           console.error('Cloudinary delete failed for ID:', id, err.message);
         }
       }
     } else if (product.imagePublicId) {
       try {
-        await deleteFromCloudinary(product.imagePublicId);
+        await deleteFromCloudinary(product.imagePublicId, 'image');
       } catch (err) {
         console.error('Cloudinary delete failed:', err.message);
       }
     }
 
+    // Delete video from Cloudinary safely
+    if (product.videoPublicId) {
+      try {
+        await deleteFromCloudinary(product.videoPublicId, 'video');
+      } catch (err) {
+        console.error('Cloudinary delete failed for video:', product.videoPublicId, err.message);
+      }
+    }
+
     await Product.deleteOne({ _id: req.params.id });
 
-    res.json({ message: 'Product deleted successfully' });
+    res.json({ message: 'Product and all associated media deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({

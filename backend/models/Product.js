@@ -47,6 +47,14 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     default: 5,
   },
+  video: {
+    type: String,
+    default: '',
+  },
+  videoPublicId: {
+    type: String,
+    default: '',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -175,6 +175,8 @@ export default function AdminPage() {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState('5');
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState('');
 
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
@@ -421,6 +423,9 @@ export default function AdminPage() {
           formData.append('images', file);
         });
       }
+      if (videoFile) {
+        formData.append('video', videoFile);
+      }
 
       if (isEditing) {
         await api.put(`/products/${editId}`, formData, {
@@ -458,6 +463,8 @@ export default function AdminPage() {
     setRating(product.rating ? product.rating.toString() : '5');
     setImagePreviews(product.images && product.images.length > 0 ? product.images : [product.image]);
     setImageFiles([]);
+    setVideoPreview(product.video || '');
+    setVideoFile(null);
     setFormError('');
     setFormSuccess('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -490,6 +497,8 @@ export default function AdminPage() {
     setRating('5');
     setImageFiles([]);
     setImagePreviews([]);
+    setVideoFile(null);
+    setVideoPreview('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -969,6 +978,57 @@ LD Interiors & Furnitures
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
+                  Showcase Video (Optional)
+                </label>
+                <div className="mt-1 flex justify-center rounded-xl border border-dashed border-wood-border px-6 py-6 bg-wood-beige/10 hover:bg-wood-beige/20 transition-colors">
+                  <div className="space-y-2 text-center w-full">
+                    {videoPreview ? (
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-full max-w-xs aspect-video max-h-40 rounded-xl overflow-hidden border border-wood-border bg-black flex items-center justify-center">
+                          <video src={videoPreview} controls className="max-w-full max-h-full object-contain" />
+                        </div>
+                        <div className="mt-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVideoFile(null);
+                              setVideoPreview('');
+                            }}
+                            className="text-[10px] text-red-650 hover:text-red-500 font-bold uppercase tracking-wider cursor-pointer bg-red-50 hover:bg-red-100/80 px-3 py-1 rounded-full border border-red-200 transition-colors"
+                          >
+                            Remove Video
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <Play className="mx-auto h-8 w-8 text-wood-accent stroke-1" />
+                        <div className="flex text-xs text-wood-light justify-center pt-1.5">
+                          <label className="relative cursor-pointer rounded-md bg-transparent font-semibold text-wood-accent hover:text-amber-500 focus-within:outline-none">
+                            <span>Select video file</span>
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  setVideoFile(file);
+                                  setVideoPreview(URL.createObjectURL(file));
+                                }
+                              }}
+                              accept="video/*"
+                              className="sr-only"
+                            />
+                          </label>
+                        </div>
+                        <p className="text-[10px] text-wood-light mt-1">MP4, WEBM up to 50MB (Ideal for short clips)</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {formError && (
                 <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3.5 text-xs text-red-800 border border-red-200 animate-fadeIn">
                   <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-red-650 mt-0.5" />
@@ -1047,12 +1107,17 @@ LD Interiors & Furnitures
                     {products.map((p) => (
                       <tr key={p._id} className="hover:bg-wood-beige/10 transition-colors">
                         <td className="py-4 px-6">
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10">
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 relative">
                             <img
                               src={p.image}
                               alt=""
                               className="h-full w-full object-cover"
                             />
+                            {p.video && (
+                              <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                                <Play className="h-3.5 w-3.5 text-white fill-current" />
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-4 px-6 font-serif font-bold text-wood-dark max-w-[180px] truncate">
