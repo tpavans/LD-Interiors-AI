@@ -1,0 +1,112 @@
+"use client";
+import React, { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { MessageSquare, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
+
+export default function WhatsAppWidget() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { language } = useLanguage();
+
+  const isTelugu = language === 'TE';
+
+  const contacts = [
+    {
+      name: isTelugu ? "శ్రీ నాగరాజు గారు" : "Mr. Nagaraju",
+      role: isTelugu ? "చీఫ్ కార్పెంటర్ & ఆర్డర్స్" : "Chief Carpenter & Orders",
+      desc: isTelugu ? "టేకు చెక్కడాల నిపుణుడు" : "Teak Carvings Specialist",
+      phone: "916301290966",
+      avatar: "N"
+    },
+    {
+      name: isTelugu ? "పవన్ సాయి" : "Pavan Sai",
+      role: isTelugu ? "టెక్నికల్ & సపోర్ట్" : "Technical & Support",
+      desc: isTelugu ? "ఆర్డర్ల ట్రాకింగ్ సహాయం" : "Technical Consultations",
+      phone: "919346325291",
+      avatar: "P"
+    }
+  ];
+
+  const handleChatRedirect = (phone, name) => {
+    const greeting = isTelugu 
+      ? `నమస్తే ${name}! నేను LD ఇంటీరియర్స్ వెబ్‌సైట్ ద్వారా సంప్రదిస్తున్నాను. నాకు ఒక ఆర్డర్/ఎంక్వైరీ కి సంబంధించిన వివరాలు కావాలి.`
+      : `Hello ${name}! I am visiting your LD Interiors website and would like to inquire about a custom woodwork design.`;
+    
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(greeting)}`, '_blank');
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 font-sans">
+      {/* Expanded Widget Popup Card */}
+      {isOpen && (
+        <div className="mb-4 w-76 sm:w-80 rounded-3xl bg-white/90 backdrop-blur-xl border border-wood-border/60 p-5 shadow-2xl animate-fadeIn transition-all duration-350">
+          <div className="flex items-center justify-between border-b border-wood-border/30 pb-3 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
+              <div>
+                <h4 className="text-xs font-bold text-wood-dark font-serif">
+                  {isTelugu ? "వాట్సాప్ లైవ్ చాట్" : "WhatsApp Live Support"}
+                </h4>
+                <p className="text-[9px] text-wood-light font-light">
+                  {isTelugu ? "సాధారణంగా నిమిషాల్లో సమాధానమిస్తాము" : "Typically replies in minutes"}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsOpen(false)}
+              className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-wood-dark transition-colors cursor-pointer"
+              title="Close Support Window"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {contacts.map((c, i) => (
+              <div 
+                key={i}
+                onClick={() => handleChatRedirect(c.phone, c.name)}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-wood-cream/40 border border-wood-border/30 hover:border-emerald-500/40 hover:bg-emerald-500/5 cursor-pointer transition-all duration-300 group"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-extrabold text-sm select-none shadow-md group-hover:scale-105 transition-transform">
+                  {c.avatar}
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-wood-dark truncate leading-none">{c.name}</p>
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[7px] font-bold text-emerald-800 uppercase leading-none">
+                      Online
+                    </span>
+                  </div>
+                  <p className="text-[9px] font-semibold text-wood-accent mt-1 leading-none">{c.role}</p>
+                  <p className="text-[8px] text-wood-light font-light mt-0.5 truncate">{c.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-wood-border/30 text-center flex items-center justify-center gap-1 text-[8px] text-wood-light font-light uppercase tracking-wider">
+            <ShieldCheck className="h-3 w-3 text-wood-accent" />
+            <span>Official LD Interiors Channels</span>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Circle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 duration-300 cursor-pointer group"
+        title="WhatsApp Support Chat"
+      >
+        {/* Pulsing Backlight Effect */}
+        <span className="absolute inset-0 rounded-full bg-emerald-500/30 animate-pulse duration-1000 -z-10 group-hover:scale-110 transition-transform"></span>
+        <span className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping -z-10"></span>
+        
+        {isOpen ? (
+          <X className="h-6 w-6 animate-spin-once" />
+        ) : (
+          <MessageSquare className="h-6 w-6 fill-current" />
+        )}
+      </button>
+    </div>
+  );
+}

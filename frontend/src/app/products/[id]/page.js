@@ -4,6 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
 import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/utils/translations';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -13,6 +15,9 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isTelugu = language === 'TE';
 
   // Form Modal State
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -302,7 +307,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
         <div className="lg:col-span-4 lg:sticky lg:top-28 bg-wood-cream border border-wood-border/60 rounded-2xl p-6 sm:p-8 shadow-sm text-left">
           <span className="inline-flex items-center gap-1.5 bg-wood-beige border border-wood-border/40 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-6">
             <Tag className="h-3 w-3" />
-            {category}
+            {isTelugu && category === "Gummalu" ? "గుమ్మాలు" : isTelugu && category === "Puja Mandiralu" ? "పూజ మందిరాలు" : category}
           </span>
           
           <h1 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-wood-dark leading-tight">
@@ -311,21 +316,21 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           <div className="mt-3 text-lg font-bold text-wood-accent">
             {price && price > 0 ? (
               <span>
-                Estimated Price: <span className="font-bold text-xl">₹{price.toLocaleString('en-IN')}</span>
-                <span className="block text-[10px] sm:text-xs font-normal text-wood-light mt-0.5">(Contact Nagaraju for fixed price)</span>
+                {isTelugu ? "అంచనా ధర" : "Estimated Price"}: <span className="font-bold text-xl">₹{price.toLocaleString('en-IN')}</span>
+                <span className="block text-[10px] sm:text-xs font-normal text-wood-light mt-0.5">({isTelugu ? "ఖచ్చితమైన కొటేషన్ కోసం నాగరాజు గారిని సంప్రదించండి" : "Contact Nagaraju for fixed price"})</span>
               </span>
             ) : (
-              <span className="text-base sm:text-lg">Contact Nagaraju for pricing</span>
+              <span className="text-base sm:text-lg">{isTelugu ? "ధర కొరకు సంప్రదించండి" : "Contact Nagaraju for pricing"}</span>
             )}
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-500">
             <span>{'★'.repeat(rating || 5)}{'☆'.repeat(5 - (rating || 5))}</span>
-            <span className="text-wood-light text-[10px]">({rating || 5}.0 rating)</span>
+            <span className="text-wood-light text-[10px]">({rating || 5}.0 {isTelugu ? "రేటింగ్" : "rating"})</span>
           </div>
 
           {description && (
             <div className="mt-5 pt-4 border-t border-wood-border/30">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-wood-accent mb-1.5">Design Details</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-wood-accent mb-1.5">{isTelugu ? "డిజైన్ వివరాలు" : "Design Details"}</p>
               <p className="text-xs text-wood-medium leading-relaxed font-light whitespace-pre-wrap">{description}</p>
             </div>
           )}
@@ -334,9 +339,9 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             <div className="flex items-center gap-3 text-wood-medium">
               <Calendar className="h-5 w-5 text-wood-light stroke-1.2" />
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">Date Uploaded</p>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">{isTelugu ? "అప్‌లోడ్ చేసిన తేదీ" : "Date Uploaded"}</p>
                 <p className="text-xs font-light mt-0.5">
-                  {new Date(createdAt).toLocaleDateString('en-US', {
+                  {new Date(createdAt).toLocaleDateString(isTelugu ? 'te-IN' : 'en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -348,7 +353,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
           {/* User Feedback Star Rating Widget */}
           <div className="mt-6 pt-5 border-t border-wood-border/30 text-left">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">Rate this Design</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">{t.rateTitle}</span>
             <div className="flex flex-col gap-1 mt-1">
               <div className="flex items-center gap-1.5">
                 {[1, 2, 3, 4, 5].map((star) => {
@@ -372,7 +377,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   );
                 })}
                 <span className="text-[10px] text-wood-light font-light ml-1">
-                  {isRatingSubmitted ? 'Feedback submitted' : 'Click to submit feedback'}
+                  {isRatingSubmitted ? (isTelugu ? 'సమీక్ష సమర్పించబడింది' : 'Feedback submitted') : (isTelugu ? 'సమీక్షను సబ్మిట్ చేయడానికి క్లిక్ చేయండి' : 'Click to submit feedback')}
                 </span>
               </div>
               {ratingMessage && (
@@ -390,7 +395,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             <div className="flex flex-col gap-3">
               {/* Call for Pricing Note */}
               <div className="text-[10px] sm:text-xs text-wood-light text-center font-medium italic mt-0.5 leading-none">
-                Contact Nagaraju for pricing & custom sizes
+                {isTelugu ? "ధర మరియు సైజు వివరాల కోసం:" : "Contact Nagaraju for pricing & custom sizes"}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -401,7 +406,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   title="Call Nagaraju (Manager)"
                 >
                   <Phone className="h-4 w-4 text-wood-accent" />
-                  <span>Call Nagaraju</span>
+                  <span>{isTelugu ? "యజమాని కాల్" : "Call Owner"}</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a
@@ -410,7 +415,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   title="Call Pavan Sai (Tech Admin)"
                 >
                   <Phone className="h-4 w-4 text-wood-accent/80" />
-                  <span>Call Pavan Sai</span>
+                  <span>{isTelugu ? "సపోర్ట్ కాల్" : "Call Admin"}</span>
                 </a>
               </div>
 
@@ -420,7 +425,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-md cursor-pointer"
               >
                 <ShoppingBag className="h-4 w-4" />
-                Order Now
+                {t.orderBtn}
               </button>
             </div>
 
@@ -430,14 +435,14 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-wood-accent hover:bg-wood-accent hover:text-wood-dark px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-accent font-semibold"
             >
               <Share2 className="h-4 w-4" />
-              <span>Share Design</span>
+              <span>{isTelugu ? "డిజైన్ షేర్ చేయండి" : "Share Design"}</span>
             </button>
 
             <Link
               href="/products"
               className="block w-full text-center rounded-xl border border-wood-border hover:bg-wood-cream hover:text-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-wood-light uppercase shadow-sm transition-colors duration-300"
             >
-              Browse Gallery
+              {t.backToGallery}
             </Link>
           </div>
         </div>
@@ -460,14 +465,14 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             </div>
 
             <div className="mb-4">
-              <p className="text-[10px] uppercase font-bold tracking-widest text-wood-accent">Selected Item</p>
-              <p className="text-xs font-semibold text-wood-dark mt-0.5">{title} ({category})</p>
+              <p className="text-[10px] uppercase font-bold tracking-widest text-wood-accent">{isTelugu ? "ఎంపిక చేసిన డిజైన్" : "Selected Item"}</p>
+              <p className="text-xs font-semibold text-wood-dark mt-0.5">{title} ({isTelugu && category === "Gummalu" ? "గుమ్మాలు" : isTelugu && category === "Puja Mandiralu" ? "పూజ మందిరాలు" : category})</p>
             </div>
 
             <form onSubmit={handleOrderSubmit} className="space-y-4">
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Your Full Name
+                  {t.fullName}
                 </label>
                 <input
                   type="text"
@@ -475,13 +480,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   value={orderName}
                   onChange={(e) => setOrderName(e.target.value)}
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                  placeholder="Your full name"
+                  placeholder={isTelugu ? "మీ పూర్తి పేరు వ్రాయండి" : "Your full name"}
                 />
               </div>
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Mobile Number *
+                  {t.phoneNumber}
                 </label>
                 <input
                   type="tel"
@@ -489,13 +494,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   value={orderPhone}
                   onChange={(e) => setOrderPhone(e.target.value)}
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                  placeholder="Your contact number"
+                  placeholder={isTelugu ? "మీ వాట్సాప్ నెంబర్" : "Your contact number"}
                 />
               </div>
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Gmail/Email Address *
+                  {t.gmail}
                 </label>
                 <input
                   type="email"
@@ -509,7 +514,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Delivery Address *
+                  {t.address}
                 </label>
                 <input
                   type="text"
@@ -517,48 +522,48 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   value={orderAddress}
                   onChange={(e) => setOrderAddress(e.target.value)}
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                  placeholder="House No, Street, City, Pincode"
+                  placeholder={isTelugu ? "ఇంటి నెంబర్, వీధి, ఊరు, పిన్‌కోడ్" : "House No, Street, City, Pincode"}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                    Custom Size (Optional)
+                    {t.customSize}
                   </label>
                   <input
                     type="text"
                     value={customSize}
                     onChange={(e) => setCustomSize(e.target.value)}
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                    placeholder="e.g., 6x7 feet"
+                    placeholder={t.customSizePlaceholder}
                   />
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                    Your Budget (Optional)
+                    {t.budget}
                   </label>
                   <input
                     type="text"
                     value={desiredPrice}
                     onChange={(e) => setDesiredPrice(e.target.value)}
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                    placeholder="e.g., ₹25,000"
+                    placeholder={t.budgetPlaceholder}
                   />
                 </div>
               </div>
 
               <div className="bg-wood-beige/30 p-3 rounded-2xl border border-wood-border/40 space-y-3">
-                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent font-semibold">Material Brand Preferences</p>
+                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent font-semibold">{t.materialPref}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Plywood Brand</label>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.plywoodBrand}</label>
                     <select
                       value={plywoodBrand}
                       onChange={(e) => setPlywoodBrand(e.target.value)}
                       className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
                     >
-                      <option value="Pure Teak Wood (No Plywood)">Pure Teak Wood (No Ply)</option>
+                      <option value="Pure Teak Wood (No Plywood)">{isTelugu ? "ప్యూర్ టేకు కలప (ప్లైవుడ్ లేదు)" : "Pure Teak Wood (No Ply)"}</option>
                       <option value="CenturyPly (Club Prime)">CenturyPly (Club Prime)</option>
                       <option value="Greenply (Gold Platinum)">Greenply (Gold Platinum)</option>
                       <option value="Kitply (Boiling Water Resistant)">Kitply (BWR Marine)</option>
@@ -566,7 +571,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Wood Polish Brand</label>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.polishBrand}</label>
                     <select
                       value={polishBrand}
                       onChange={(e) => setPolishBrand(e.target.value)}
@@ -579,7 +584,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Adhesive/Glue (Gum)</label>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.glueBrand}</label>
                     <select
                       value={glueBrand}
                       onChange={(e) => setGlueBrand(e.target.value)}
@@ -591,7 +596,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Cupboard Channels</label>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.channelsBrand}</label>
                     <select
                       value={hardwareBrand}
                       onChange={(e) => setHardwareBrand(e.target.value)}
@@ -608,7 +613,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Upload Reference Image (Optional)
+                  {t.refImage}
                 </label>
                 <input
                   type="file"
@@ -620,25 +625,25 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  Custom Notes / Special Requests (Optional)
+                  {t.customNotes}
                 </label>
                 <textarea
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                   rows="2"
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark placeholder-neutral-400 font-light"
-                  placeholder="e.g., Teak Wood, specific carving..."
+                  placeholder={t.customNotesPlaceholder}
                 ></textarea>
               </div>
 
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
-                ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
+                ⚠️ {t.disclaimer}
               </div>
 
               {orderSuccess && (
                 <div className="rounded-xl bg-emerald-50 border border-emerald-150 p-3 text-[11px] text-emerald-800 flex items-center gap-1.5">
                   <Check className="h-4.5 w-4.5 text-emerald-600 animate-bounce" />
-                  <span>Redirecting to WhatsApp...</span>
+                  <span>{t.orderSuccessMsg}</span>
                 </div>
               )}
 
@@ -649,7 +654,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               >
                 <MessageCircle className="h-4 w-4" />
                 <span>
-                  {orderSuccess ? 'Submitting Order...' : 'Submit Order to WhatsApp (Both Admins)'}
+                  {orderSuccess ? t.submitting : (isTelugu ? "వాట్సాప్ ద్వారా ఆర్డర్ చేయండి" : "Submit Order to WhatsApp")}
                 </span>
               </button>
             </form>

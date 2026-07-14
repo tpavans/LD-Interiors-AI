@@ -4,6 +4,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientWrapper from "@/components/ClientWrapper";
 import FloatingActions from "@/components/FloatingActions";
+import { LanguageProvider } from "@/context/LanguageContext";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 const inter = Inter({
   subsets: ["sans-serif", "latin"],
@@ -26,13 +28,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans">
-        <Navbar />
-        <main className="flex-grow wood-plank-bg">
-          {children}
-        </main>
-        <Footer />
-        <ClientWrapper />
-        <FloatingActions />
+        <LanguageProvider>
+          <Navbar />
+          <main className="flex-grow wood-plank-bg">
+            {children}
+          </main>
+          <Footer />
+          <ClientWrapper />
+          <FloatingActions />
+          <WhatsAppWidget />
+        </LanguageProvider>
       </body>
     </html>
   );

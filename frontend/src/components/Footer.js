@@ -1,21 +1,28 @@
+"use client";
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/utils/translations';
 
 export default function Footer() {
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isTelugu = language === 'TE';
+
   return (
     <footer className="w-full border-t border-wood-border/40 bg-wood-cream/95 py-14 text-wood-light">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 text-left">
         {/* Column 1: About LD Interiors */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
-            About LD Interiors
+            {t.aboutTitle}
           </h4>
           <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/about" className="hover:text-wood-dark transition-colors">About Us</Link>
+            <Link href="/about" className="hover:text-wood-dark transition-colors">{isTelugu ? "మా గురించి" : "About Us"}</Link>
             <div>
-              <p className="font-semibold text-wood-dark mt-1">Office Location:</p>
+              <p className="font-semibold text-wood-dark mt-1">{t.locationTitle}:</p>
               <p className="mt-1 leading-relaxed">
-                Mulasthanam, Alamuru Mandal,<br />
-                Konaseema District, AP - 533233
+                {isTelugu ? "మూలస్థానం, ఆలమూరు మండలం," : "Mulasthanam, Alamuru Mandal,"}<br />
+                {isTelugu ? "కోనసీమ జిల్లా, ఆంధ్రా - 533233" : "Konaseema District, AP - 533233"}
               </p>
               <a 
                 href="https://maps.google.com/?q=Mulasthanam,Alamuru,AP" 
@@ -23,14 +30,14 @@ export default function Footer() {
                 rel="noopener noreferrer" 
                 className="inline-block mt-2 text-[10px] font-bold text-wood-accent hover:underline uppercase tracking-wider"
               >
-                📍 View on Google Maps
+                {isTelugu ? "📍 గూగుల్ మ్యాప్స్‌లో చూడండి" : "📍 View on Google Maps"}
               </a>
             </div>
             <div>
-              <p className="font-semibold text-wood-dark mt-2.5">Working Hours:</p>
+              <p className="font-semibold text-wood-dark mt-2.5">{t.hoursTitle}:</p>
               <p className="mt-1 leading-relaxed">
-                Morning 7:00 AM - 10:00 PM<br />
-                All 7 Days a week
+                {isTelugu ? "ఉదయం 7:00 - రాత్రి 10:00 గంటల వరకు" : "Morning 7:00 AM - 10:00 PM"}<br />
+                {isTelugu ? "వారంలో 7 రోజులూ" : "All 7 Days a week"}
               </p>
             </div>
           </div>
@@ -39,36 +46,36 @@ export default function Footer() {
         {/* Column 2: Services */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
-            Our Services
+            {t.servicesTitle}
           </h4>
           <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">• Re-installation Works</Link>
-            <Link href="/products" className="hover:text-wood-dark transition-colors">• Loose Fittings carpentry</Link>
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">• Complete Interior Design</Link>
-            <Link href="/products" className="hover:text-wood-dark transition-colors">• Custom Designs & Furniture</Link>
+            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "• రీ-ఇన్‌స్టాలేషన్ పనులు" : "• Re-installation Works"}</Link>
+            <Link href="/products" className="hover:text-wood-dark transition-colors">{isTelugu ? "• లూజ్ ఫిట్టింగ్స్ కార్పెంటరీ" : "• Loose Fittings carpentry"}</Link>
+            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "• కంప్లీట్ ఇంటీరియర్ డిజైనింగ్" : "• Complete Interior Design"}</Link>
+            <Link href="/products" className="hover:text-wood-dark transition-colors">{isTelugu ? "• కస్టమ్ డిజైన్స్ & ఫర్నిచర్" : "• Custom Designs & Furniture"}</Link>
           </div>
         </div>
 
         {/* Column 3: Need Help */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
-            Need Help?
+            {t.helpTitle}
           </h4>
           <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/orders" className="hover:text-wood-dark transition-colors">My Account</Link>
-            <Link href="/orders" className="hover:text-wood-dark transition-colors">Track Order</Link>
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">Contact Us</Link>
-            <Link href="/support" className="hover:text-wood-dark transition-colors">Customer Support</Link>
+            <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.myAccount}</Link>
+            <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.trackOrder}</Link>
+            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "సంప్రదించండి" : "Contact Us"}</Link>
+            <Link href="/support" className="hover:text-wood-dark transition-colors">{t.support}</Link>
           </div>
         </div>
 
         {/* Column 4: Office Connect */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
-            Office Connect
+            {isTelugu ? "ఆఫీస్ కనెక్ట్" : "Office Connect"}
           </h4>
           <p className="text-xs font-light leading-relaxed">
-            Follow our design daily logs and workshop reels on our social channels.
+            {isTelugu ? "మా సోషల్ ఛానెల్స్ ద్వారా రోజువారీ వర్క్‌షాప్ పనులను మరియు వీడియోలను ఫాలో అవ్వండి." : "Follow our design daily logs and workshop reels on our social channels."}
           </p>
           {/* Social Media Circular Logo Buttons */}
           <div className="flex flex-wrap gap-3.5 pt-2">
@@ -135,7 +142,7 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} LD Interiors & Furnitures. All rights reserved.
         </div>
         <div className="flex items-center gap-1.5">
-          Developed & Maintained by <Link href="/admin?pavan=true" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
+          {t.developedBy} <Link href="/admin?pavan=true" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
         </div>
       </div>
     </footer>

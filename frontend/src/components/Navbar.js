@@ -4,12 +4,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LogOut, User, LayoutDashboard, Menu, X } from 'lucide-react';
 
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/utils/translations';
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminName, setAdminName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
 
   // Sync login status from localstorage
   const checkLogin = () => {
@@ -63,7 +68,7 @@ export default function Navbar() {
         </Link>
 
         {/* Navigation Links */}
-        <nav className="flex items-center gap-4 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
+        <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
           <Link
             href="/"
             className={`relative pb-1 transition-colors duration-300 ${
@@ -72,7 +77,7 @@ export default function Navbar() {
               pathname === '/' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
-            Home
+            {t.home}
           </Link>
           <Link
             href="/products"
@@ -82,7 +87,27 @@ export default function Navbar() {
               pathname === '/products' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
-            Designs
+            {t.designs}
+          </Link>
+          <Link
+            href="/wood-guide"
+            className={`relative pb-1 transition-colors duration-300 ${
+              pathname === '/wood-guide' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/wood-guide' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+            }`}
+          >
+            {t.woodGuide}
+          </Link>
+          <Link
+            href="/reels"
+            className={`relative pb-1 transition-colors duration-300 ${
+              pathname === '/reels' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/reels' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+            }`}
+          >
+            {t.reels}
           </Link>
 
           {/* Desktop Only Links */}
@@ -95,7 +120,7 @@ export default function Navbar() {
                 pathname === '/orders' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
-              Orders
+              {t.orders}
             </Link>
             <Link
               href="/contact"
@@ -105,7 +130,7 @@ export default function Navbar() {
                 pathname === '/contact' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
-              Contact
+              {t.contact}
             </Link>
             {isLoggedIn && (
               <Link
@@ -117,7 +142,7 @@ export default function Navbar() {
                 }`}
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
-                <span>Dashboard</span>
+                <span>{t.dashboard}</span>
               </Link>
             )}
             {isLoggedIn && (
@@ -126,10 +151,19 @@ export default function Navbar() {
                 className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 cursor-pointer"
               >
                 <LogOut className="h-3 w-3" />
-                <span>Logout</span>
+                <span>{t.logout}</span>
               </button>
             )}
           </div>
+
+          {/* Global Language Toggle Switcher (EN / TE) */}
+          <button
+            onClick={() => toggleLanguage()}
+            className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer ml-1 select-none whitespace-nowrap"
+            title="Switch Language / భాషను మార్చండి"
+          >
+            <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
+          </button>
 
           {/* Mobile Hamburger Button */}
           <button
@@ -152,7 +186,7 @@ export default function Navbar() {
               pathname === '/orders' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
             }`}
           >
-            Orders
+            {t.orders}
           </Link>
           <Link
             href="/contact"
@@ -161,7 +195,7 @@ export default function Navbar() {
               pathname === '/contact' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
             }`}
           >
-            Contact
+            {t.contact}
           </Link>
           {isLoggedIn && (
             <Link
@@ -171,7 +205,7 @@ export default function Navbar() {
                 pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
               }`}
             >
-              Dashboard ({adminName})
+              {t.dashboard} ({adminName})
             </Link>
           )}
           {isLoggedIn && (
@@ -180,7 +214,7 @@ export default function Navbar() {
               className="w-full flex items-center justify-start gap-1.5 py-2.5 text-left border-t border-wood-accent/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <span>{t.logout}</span>
             </button>
           )}
         </div>

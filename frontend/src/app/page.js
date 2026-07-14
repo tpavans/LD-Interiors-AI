@@ -4,6 +4,8 @@ import Link from 'next/link';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
 import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations } from '@/utils/translations';
 
 const HOMEPAGE_CATEGORIES = ["All", "Gummalu", "Puja Mandiralu", "TV Units", "Sofas"];
 
@@ -122,6 +124,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const isTelugu = language === 'TE';
 
   useEffect(() => {
     const fetchAllProducts = async () => {
@@ -158,14 +163,14 @@ export default function Home() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-wood-accent/20 px-4 py-1.5 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-6 border border-wood-accent/30 backdrop-blur-md">
             <Sparkles className="h-3.5 w-3.5 text-wood-accent animate-pulse" />
-            Premium Design Studio
+            {isTelugu ? "ప్రీమియం డిజైన్ స్టూడియో" : "Premium Design Studio"}
           </div>
           <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none uppercase">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-wood-beige to-amber-100 block">LD INTERIORS</span>
-            <span className="bg-gradient-to-r from-wood-accent via-amber-400 to-amber-200 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">& Furnitures</span>
+            <span className="bg-gradient-to-r from-wood-accent via-amber-400 to-amber-200 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">{isTelugu ? "& ఫర్నిచర్స్" : "& Furnitures"}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg font-light leading-relaxed text-wood-beige/90 drop-shadow-sm">
-            Brings you high-end, contemporary interior designs and premium woodwork. Explore our collection of premium residential and commercial spaces designed to inspire.
+            {t.heroDesc}
           </p>
           
           {/* Custom Elegant Bilingual Quote Card */}
@@ -199,7 +204,7 @@ export default function Home() {
               href="/products"
               className="flex items-center gap-2 rounded-full bg-wood-accent hover:bg-amber-500 px-7 py-4 text-xs font-bold uppercase tracking-widest text-wood-dark shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer btn-3d-accent"
             >
-              Explore Showcase
+              {t.exploreBtn}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -214,8 +219,8 @@ export default function Home() {
               <Award className="h-6 w-6" />
             </div>
             <div>
-              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">25+ Years Legacy</h4>
-              <p className="text-xs text-wood-light font-light mt-0.5">Generations of trusted regional craftsmanship.</p>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "25+ సంవత్సరాల అనుభవం" : "25+ Years Legacy"}</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "కోనసీమ ప్రాంతంలో నమ్మకమైన సేవలు." : "Generations of trusted regional craftsmanship."}</p>
             </div>
           </div>
           <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
@@ -223,8 +228,8 @@ export default function Home() {
               <Flame className="h-6 w-6 animate-pulse" />
             </div>
             <div>
-              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">Premium Teak Wood</h4>
-              <p className="text-xs text-wood-light font-light mt-0.5">Highest grade seasoned timber guarantee.</p>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "ప్యూర్ టేకు కలప" : "Premium Teak Wood"}</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "ఫారెస్ట్ డిపో గ్రేడ్ నాణ్యమైన కలప హామీ." : "Highest grade seasoned timber guarantee."}</p>
             </div>
           </div>
           <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
@@ -232,8 +237,8 @@ export default function Home() {
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
-              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">Structural Warranty</h4>
-              <p className="text-xs text-wood-light font-light mt-0.5">Termite-resistant, sturdy joint engineering.</p>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "మన్నికైన వారంటీ" : "Structural Warranty"}</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "చెదలు నిరోధకత, బలమైన ఇంటర్‌లాకింగ్ జాయింట్లు." : "Termite-resistant, sturdy joint engineering."}</p>
             </div>
           </div>
         </div>
@@ -315,17 +320,17 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-wood-border/30 pb-6 gap-4">
           <div>
             <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-              Fresh Daily
+              {t.gallerySub}
             </span>
             <h2 className="font-serif text-3xl font-bold tracking-tight text-wood-dark mt-1">
-              Design Gallery
+              {t.galleryTitle}
             </h2>
           </div>
           <Link
             href="/products"
             className="group inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-wood-dark hover:text-wood-accent transition-colors"
           >
-            View all designs
+            {t.viewAll}
             <ArrowRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
@@ -343,7 +348,10 @@ export default function Home() {
                     : 'bg-white/60 text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
                 }`}
               >
-                {tab === "Gummalu" ? "Main Doors (Gummalu)" : tab === "Puja Mandiralu" ? "Puja Mandirs" : tab}
+                {isTelugu 
+                  ? (tab === "Gummalu" ? "గుమ్మాలు" : tab === "Puja Mandiralu" ? "పూజ మందిరాలు" : tab === "TV Units" ? "టీవీ యూనిట్లు" : tab === "Sofas" ? "సోఫాలు" : tab === "All" ? "అన్నీ" : tab)
+                  : (tab === "Gummalu" ? "Main Doors" : tab === "Puja Mandiralu" ? "Puja Mandirs" : tab)
+                }
               </button>
             ))}
           </div>
@@ -353,21 +361,21 @@ export default function Home() {
           <div className="flex h-60 w-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-wood-light" />
-              <p className="text-sm text-wood-light font-light animate-pulse">Loading showcase...</p>
+              <p className="text-sm text-wood-light font-light animate-pulse">{t.loadingShowcase}</p>
             </div>
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-wood-border/60 bg-wood-cream/90 backdrop-blur-md p-12 text-center">
             <Compass className="mx-auto h-12 w-12 text-wood-light stroke-1 mb-4 animate-bounce" />
-            <h3 className="text-lg font-serif font-bold text-wood-dark">Connection Offline</h3>
+            <h3 className="text-lg font-serif font-bold text-wood-dark">{t.offlineTitle}</h3>
             <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">{error}</p>
           </div>
         ) : filteredShowcase.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-wood-border p-12 text-center">
             <ImageIcon className="mx-auto h-12 w-12 text-wood-light mb-4" />
-            <h3 className="text-lg font-serif font-bold text-wood-dark">No designs in this category</h3>
+            <h3 className="text-lg font-serif font-bold text-wood-dark">{t.noDesigns}</h3>
             <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">
-              We are preparing to upload catalog items for "{activeTab}". Click "All" to browse other design collections.
+              {t.preparingCatalog} "{activeTab}". {t.clickAll}
             </p>
           </div>
         ) : (
@@ -383,13 +391,13 @@ export default function Home() {
       <section className="py-16 border-t border-wood-border/30 bg-wood-cream/25 mt-16 overflow-hidden">
         <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 text-center mb-8">
           <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-            Quality Standards
+            {t.qualitySubtitle}
           </span>
           <h3 className="font-serif text-2xl font-bold text-wood-dark mt-1">
-            Our Trusted Material Brands
+            {t.qualityTitle}
           </h3>
           <p className="text-xs text-wood-light font-light mt-2 max-w-md mx-auto">
-            We use only the most premium, durable, and genuine brand materials for wood carving, bonding, and smooth cupboard hardware.
+            {t.qualityDesc}
           </p>
         </div>
 
