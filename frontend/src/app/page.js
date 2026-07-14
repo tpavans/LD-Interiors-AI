@@ -15,7 +15,11 @@ const BRAND_LOGOS = [
   { name: "Hettich", type: "Drawer Channels" },
   { name: "Ebco", type: "Telescopic Runners" },
   { name: "Sheenlac", type: "Wood Sealers" },
-  { name: "Godrej", type: "Premium Hardware" }
+  { name: "Godrej", type: "Premium Hardware" },
+  { name: "Hafele", type: "Luxury Fittings" },
+  { name: "Merino", type: "High-End Laminates" },
+  { name: "Berger", type: "Acrylic Polishes" },
+  { name: "Araldite", type: "Epoxy Adhesives" }
 ];
 
 const renderBrandLogo = (name) => {
@@ -79,6 +83,32 @@ const renderBrandLogo = (name) => {
       return (
         <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
           <text x="10" y="28" fill="#8b0000" fontFamily="'Georgia', serif" fontSize="24" fontWeight="bold" fontStyle="italic" letterSpacing="-0.5">Godrej</text>
+        </svg>
+      );
+    case "Hafele":
+      return (
+        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#e31b23" fontFamily="sans-serif" fontSize="24" fontWeight="bold" letterSpacing="-0.5">HÄFELE</text>
+        </svg>
+      );
+    case "Merino":
+      return (
+        <svg viewBox="0 0 150 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#005ea6" fontFamily="sans-serif" fontSize="22" fontWeight="bold">merino</text>
+          <path d="M110 20 L130 20" stroke="#f8a51b" strokeWidth="4" />
+        </svg>
+      );
+    case "Berger":
+      return (
+        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#0072bc" fontFamily="sans-serif" fontSize="26" fontWeight="bold" letterSpacing="0.5">BERGER</text>
+        </svg>
+      );
+    case "Araldite":
+      return (
+        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="140" height="40" rx="6" fill="#002b66" />
+          <text x="15" y="27" fill="#ffffff" fontFamily="sans-serif" fontSize="20" fontWeight="bold" fontStyle="italic">Araldite</text>
         </svg>
       );
     default:
