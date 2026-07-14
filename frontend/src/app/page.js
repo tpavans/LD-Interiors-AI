@@ -252,12 +252,6 @@ export default function Home() {
             <Compass className="mx-auto h-12 w-12 text-wood-light stroke-1 mb-4 animate-bounce" />
             <h3 className="text-lg font-serif font-bold text-wood-dark">Connection Offline</h3>
             <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">{error}</p>
-            <Link
-              href="/admin"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-wood-border px-5 py-2 text-xs font-semibold hover:bg-wood-dark hover:text-white hover:border-wood-dark transition-all duration-300"
-            >
-              Access Admin Panel
-            </Link>
           </div>
         ) : filteredShowcase.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-wood-border p-12 text-center">

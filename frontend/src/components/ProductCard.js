@@ -196,23 +196,23 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 Get pricing & custom sizing info:
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-1.5 md:gap-2">
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
                   title="Call Nagaraju (Manager)"
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
+                  className="w-full sm:flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
                 >
-                  <Phone className="h-3 w-3 text-wood-accent" />
+                  <Phone className="h-3 w-3 text-wood-accent shrink-0" />
                   <span>Call Owner</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a
                   href="tel:+919346325291"
                   title="Call Pavan Sai (Tech Admin)"
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
+                  className="w-full sm:flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
                 >
-                  <Phone className="h-3 w-3 text-wood-accent/80" />
+                  <Phone className="h-3 w-3 text-wood-accent/80 shrink-0" />
                   <span>Call Admin</span>
                 </a>
               </div>

@@ -107,26 +107,19 @@ export default function Navbar() {
             >
               Contact
             </Link>
-            <Link
-              href="/admin"
-              className={`relative pb-1 flex items-center gap-1 transition-colors duration-300 ${
-                pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
-                pathname.startsWith('/admin') ? 'after:w-full' : 'after:w-0 hover:after:w-full'
-              }`}
-            >
-              {isLoggedIn ? (
-                <>
-                  <LayoutDashboard className="h-3.5 w-3.5" />
-                  <span>Dashboard</span>
-                </>
-              ) : (
-                <>
-                  <User className="h-3.5 w-3.5" />
-                  <span>Admin</span>
-                </>
-              )}
-            </Link>
+            {isLoggedIn && (
+              <Link
+                href="/admin"
+                className={`relative pb-1 flex items-center gap-1 transition-colors duration-300 ${
+                  pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+                } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+                  pathname.startsWith('/admin') ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+                }`}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span>Dashboard</span>
+              </Link>
+            )}
             {isLoggedIn && (
               <button
                 onClick={handleLogout}
@@ -170,15 +163,17 @@ export default function Navbar() {
           >
             Contact
           </Link>
-          <Link
-            href="/admin"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors ${
-              pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            }`}
-          >
-            {isLoggedIn ? `Dashboard (${adminName})` : 'Admin Login'}
-          </Link>
+          {isLoggedIn && (
+            <Link
+              href="/admin"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`py-1.5 block transition-colors ${
+                pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+              }`}
+            >
+              Dashboard ({adminName})
+            </Link>
+          )}
           {isLoggedIn && (
             <button
               onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
