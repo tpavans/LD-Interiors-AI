@@ -8,15 +8,83 @@ import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, Shie
 const HOMEPAGE_CATEGORIES = ["All", "Gummalu", "Puja Mandiralu", "TV Units", "Sofas"];
 
 const BRAND_LOGOS = [
-  { name: "CenturyPly", logo: "CP", type: "Premium Plywood" },
-  { name: "Greenply", logo: "GP", type: "Plywood Panels" },
-  { name: "Fevicol Marine", logo: "FM", type: "Waterproof Glue" },
-  { name: "Asian Paints", logo: "AP", type: "PU Wood Polish" },
-  { name: "Hettich", logo: "H", type: "Drawer Channels" },
-  { name: "Ebco", logo: "E", type: "Telescopic Runners" },
-  { name: "Sheenlac", logo: "SL", type: "Wood Sealers" },
-  { name: "Godrej", logo: "G", type: "Premium Hardware" }
+  { name: "CenturyPly", type: "Premium Plywood" },
+  { name: "Greenply", type: "Plywood Panels" },
+  { name: "Fevicol Marine", type: "Waterproof Glue" },
+  { name: "Asian Paints", type: "PU Wood Polish" },
+  { name: "Hettich", type: "Drawer Channels" },
+  { name: "Ebco", type: "Telescopic Runners" },
+  { name: "Sheenlac", type: "Wood Sealers" },
+  { name: "Godrej", type: "Premium Hardware" }
 ];
+
+const renderBrandLogo = (name) => {
+  switch (name) {
+    case "CenturyPly":
+      return (
+        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#0c4da2" />
+          <rect width="10" height="40" fill="#e31e24" />
+          <text x="25" y="26" fill="#ffffff" fontFamily="sans-serif" fontSize="18" fontWeight="bold" letterSpacing="0.5">CenturyPLY</text>
+        </svg>
+      );
+    case "Greenply":
+      return (
+        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#007a3d" fontFamily="sans-serif" fontSize="22" fontWeight="bold">greenply</text>
+          <path d="M115 15 C125 10, 135 15, 130 25 C120 30, 110 25, 115 15 Z" fill="#8dc63f" />
+          <path d="M122 17 L126 22" stroke="#007a3d" strokeWidth="1.5" />
+        </svg>
+      );
+    case "Fevicol Marine":
+      return (
+        <svg viewBox="0 0 180 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="50" y="26" fill="#0f2c59" fontFamily="sans-serif" fontSize="18" fontWeight="900" letterSpacing="1">FEVICOL</text>
+          <circle cx="20" cy="20" r="10" fill="#005ea6" />
+          <circle cx="160" cy="20" r="10" fill="#005ea6" />
+          <rect x="20" y="18" width="140" height="4" fill="#f8a51b" />
+          <circle cx="90" cy="20" r="8" fill="#f8a51b" />
+        </svg>
+      );
+    case "Asian Paints":
+      return (
+        <svg viewBox="0 0 180 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#d2232a" fontFamily="sans-serif" fontSize="20" fontWeight="bold">asianpaints</text>
+          <path d="M135 25 C145 10, 165 10, 175 25" stroke="#fdb813" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M130 28 C140 13, 160 13, 170 28" stroke="#d2232a" strokeWidth="3" fill="none" strokeLinecap="round" />
+        </svg>
+      );
+    case "Hettich":
+      return (
+        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#00519e" fontFamily="sans-serif" fontSize="26" fontWeight="bold" fontStyle="italic" letterSpacing="-0.5">Hettich</text>
+        </svg>
+      );
+    case "Ebco":
+      return (
+        <svg viewBox="0 0 120 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="40" rx="6" fill="#e31b23" />
+          <text x="25" y="27" fill="#ffffff" fontFamily="sans-serif" fontSize="24" fontWeight="bold" letterSpacing="0.5">ebco</text>
+        </svg>
+      );
+    case "Sheenlac":
+      return (
+        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#0f75bc" fontFamily="sans-serif" fontSize="22" fontWeight="bold">SHEENLAC</text>
+          <circle cx="140" cy="20" r="8" fill="#d2232a" />
+          <circle cx="140" cy="20" r="4" fill="#ffcb05" />
+        </svg>
+      );
+    case "Godrej":
+      return (
+        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#8b0000" fontFamily="'Georgia', serif" fontSize="24" fontWeight="bold" fontStyle="italic" letterSpacing="-0.5">Godrej</text>
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -300,8 +368,10 @@ export default function Home() {
           <div className="logo-marquee-content gap-16 items-center flex">
             {/* Set 1 */}
             {BRAND_LOGOS.map((brand, index) => (
-              <div key={index} className="flex items-center gap-2.5 px-6 py-2.5 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
-                <span className="text-wood-accent font-extrabold font-serif text-base tracking-tight">{brand.logo}</span>
+              <div key={index} className="flex items-center gap-2.5 px-5 py-2 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+                <div className="flex items-center justify-center shrink-0">
+                  {renderBrandLogo(brand.name)}
+                </div>
                 <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
                 <div className="text-left">
                   <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
@@ -311,8 +381,10 @@ export default function Home() {
             ))}
             {/* Set 2 (Duplicate for infinite seamless scroll) */}
             {BRAND_LOGOS.map((brand, index) => (
-              <div key={`dup-${index}`} className="flex items-center gap-2.5 px-6 py-2.5 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
-                <span className="text-wood-accent font-extrabold font-serif text-base tracking-tight">{brand.logo}</span>
+              <div key={`dup-${index}`} className="flex items-center gap-2.5 px-5 py-2 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+                <div className="flex items-center justify-center shrink-0">
+                  {renderBrandLogo(brand.name)}
+                </div>
                 <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
                 <div className="text-left">
                   <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
