@@ -225,16 +225,27 @@ export default function AdminPage() {
           await api.get('/auth/me');
           setIsAuthenticated(true);
           setIsSecretPassed(true);
+          localStorage.setItem('ld_admin_secret_passed', 'true');
           fetchProducts();
           fetchOrders();
         } catch (err) {
-          console.error('Session verification failed:', err);
-          localStorage.removeItem('ld_token');
-          localStorage.removeItem('ld_admin');
-          window.dispatchEvent(new Event('admin-logout'));
-          if (!hasSecretParam && !hasStoredSecret) {
-            window.location.href = '/';
-            return;
+          console.error('Session verification error:', err);
+          const isUnauthorized = err.response && (err.response.status === 401 || err.response.status === 403);
+          if (isUnauthorized) {
+            localStorage.removeItem('ld_token');
+            localStorage.removeItem('ld_admin');
+            window.dispatchEvent(new Event('admin-logout'));
+            if (!hasSecretParam && !hasStoredSecret) {
+              window.location.href = '/';
+              return;
+            }
+          } else {
+            // Server cold start or network error: assume valid to prevent kick-out
+            setIsAuthenticated(true);
+            setIsSecretPassed(true);
+            localStorage.setItem('ld_admin_secret_passed', 'true');
+            fetchProducts();
+            fetchOrders();
           }
         }
       } else if (!hasSecretParam && !hasStoredSecret) {
@@ -345,7 +356,9 @@ export default function AdminPage() {
 
       localStorage.setItem('ld_token', token);
       localStorage.setItem('ld_admin', JSON.stringify(adminData));
+      localStorage.setItem('ld_admin_secret_passed', 'true');
       setIsAuthenticated(true);
+      setIsSecretPassed(true);
 
       window.dispatchEvent(new Event('admin-login'));
 

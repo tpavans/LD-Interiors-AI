@@ -106,6 +106,67 @@ export default function AboutPage() {
           </div>
         </div>
 
+        {/* Material Quality & Brand Trust Section */}
+        <div className="bg-wood-cream border border-wood-border/50 rounded-3xl p-8 sm:p-10 mb-20 shadow-sm">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+              Material Standards
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-wood-dark mt-2">
+              Premium Material Brands We Trust
+            </h2>
+            <p className="text-xs text-wood-light font-light leading-relaxed mt-2">
+              For custom wardrobes, modular kitchens, and loose furniture, we strictly utilize industry-leading, high-durability brands to guarantee decades of service.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Plywood */}
+            <div className="bg-white/60 border border-wood-border/30 rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <h4 className="font-serif text-sm font-bold text-wood-dark mb-1">Plywood Brands</h4>
+              <p className="text-[11px] text-wood-light font-light leading-relaxed mb-3">Boiling water-resistant and marine grade ply for kitchen and wardrobe panels.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">CenturyPly</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Greenply</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Kitply BWR</span>
+              </div>
+            </div>
+
+            {/* Polish & Sealers */}
+            <div className="bg-white/60 border border-wood-border/30 rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <h4 className="font-serif text-sm font-bold text-wood-dark mb-1">Polishes & Sealers</h4>
+              <p className="text-[11px] text-wood-light font-light leading-relaxed mb-3">Premium coatings to bring out natural wood grains while resisting moisture.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Asian Paints PU</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Sheenlac Shellac</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Melamine Seals</span>
+              </div>
+            </div>
+
+            {/* Adhesives */}
+            <div className="bg-white/60 border border-wood-border/30 rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <h4 className="font-serif text-sm font-bold text-wood-dark mb-1">Wood Glue (Gum)</h4>
+              <p className="text-[11px] text-wood-light font-light leading-relaxed mb-3">Strong structural bonding glue to ensure carpentry joins remain secure forever.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Fevicol Marine</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Fevicol SH</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Araldite</span>
+              </div>
+            </div>
+
+            {/* Hardware & Channels */}
+            <div className="bg-white/60 border border-wood-border/30 rounded-2xl p-5 hover:shadow-md transition-shadow">
+              <h4 className="font-serif text-sm font-bold text-wood-dark mb-1">Cupboard Channels</h4>
+              <p className="text-[11px] text-wood-light font-light leading-relaxed mb-3">Soft-close telescopic channels and heavy runners for smooth drawer movements.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Hettich Premium</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Ebco Drawer</span>
+                <span className="text-[9px] font-semibold bg-wood-beige text-wood-accent px-2 py-0.5 rounded-md border border-wood-border/30">Godrej Hardware</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* CTA section */}
         <div className="rounded-3xl bg-wood-dark text-white p-8 sm:p-12 text-center relative overflow-hidden shadow-xl">
           <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}></div>

@@ -42,6 +42,10 @@ export default function ProductDetailPage() {
   const [referenceImageFile, setReferenceImageFile] = useState(null);
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [plywoodBrand, setPlywoodBrand] = useState('Pure Teak Wood (No Plywood)');
+  const [polishBrand, setPolishBrand] = useState('Asian Paints PU Polish');
+  const [glueBrand, setGlueBrand] = useState('Fevicol Marine (Waterproof)');
+  const [hardwareBrand, setHardwareBrand] = useState('Hettich Soft-Close Channels');
 
   // Rating states
   const [userRating, setUserRating] = useState(0);
@@ -104,6 +108,10 @@ export default function ProductDetailPage() {
     setCustomSize('');
     setDesiredPrice('');
     setReferenceImageFile(null);
+    setPlywoodBrand('Pure Teak Wood (No Plywood)');
+    setPolishBrand('Asian Paints PU Polish');
+    setGlueBrand('Fevicol Marine (Waterproof)');
+    setHardwareBrand('Hettich Soft-Close Channels');
   }, [showOrderModal]);
 
   const handleOrderSubmit = async (e) => {
@@ -124,13 +132,22 @@ export default function ProductDetailPage() {
     const absoluteImageUrl = product.image ? (product.image.startsWith('http') ? product.image : `${window.location.origin}${product.image.startsWith('/') ? '' : '/'}${product.image}`) : '';
 
     try {
+      const finalNotes = `[Material Selections]
+Plywood Brand: ${plywoodBrand}
+Polish/Finish: ${polishBrand}
+Glue/Adhesive: ${glueBrand}
+Hardware/Channels: ${hardwareBrand}
+
+[Customer Customization Notes]
+${orderNotes.trim() || 'No custom notes.'}`;
+
       const formData = new FormData();
       formData.append('name', orderName.trim());
       formData.append('phone', orderPhone.trim());
       formData.append('email', orderEmail.trim());
       formData.append('address', orderAddress.trim());
       formData.append('product', product.title);
-      formData.append('notes', orderNotes.trim() || 'No custom notes.');
+      formData.append('notes', finalNotes);
       formData.append('productId', product._id);
       if (customSize.trim()) formData.append('customSize', customSize.trim());
       if (desiredPrice.trim()) formData.append('desiredPrice', desiredPrice.trim());
@@ -159,6 +176,11 @@ ${orderImage ? `- Image URL: ${orderImage}\n` : ''}
 - Phone: ${orderPhone.trim()}
 - Gmail: ${orderEmail.trim()}
 - Delivery Address: ${orderAddress.trim()}
+*Material Selections (High-Quality Brands):*
+- Plywood Brand: ${plywoodBrand}
+- Polish/Finish Type: ${polishBrand}
+- Adhesive/Glue: ${glueBrand}
+- Drawer Channels/Hardware: ${hardwareBrand}
 ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
 
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
@@ -523,6 +545,64 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
                     placeholder="e.g., ₹25,000"
                   />
+                </div>
+              </div>
+
+              <div className="bg-wood-beige/30 p-3 rounded-2xl border border-wood-border/40 space-y-3">
+                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent font-semibold">Material Brand Preferences</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Plywood Brand</label>
+                    <select
+                      value={plywoodBrand}
+                      onChange={(e) => setPlywoodBrand(e.target.value)}
+                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
+                    >
+                      <option value="Pure Teak Wood (No Plywood)">Pure Teak Wood (No Ply)</option>
+                      <option value="CenturyPly (Club Prime)">CenturyPly (Club Prime)</option>
+                      <option value="Greenply (Gold Platinum)">Greenply (Gold Platinum)</option>
+                      <option value="Kitply (Boiling Water Resistant)">Kitply (BWR Marine)</option>
+                      <option value="Local Gold Premium Plywood">Local Gold Premium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Wood Polish Brand</label>
+                    <select
+                      value={polishBrand}
+                      onChange={(e) => setPolishBrand(e.target.value)}
+                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
+                    >
+                      <option value="Asian Paints PU Polish (Luxury)">Asian Paints PU</option>
+                      <option value="Sheenlac Shellac & Sealer Finish">Sheenlac Shellac/Sealer</option>
+                      <option value="Melamine Glossy/Matte Finish">Melamine Polish</option>
+                      <option value="Natural Teak Oil Polish">Natural Teak Oil</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Adhesive/Glue (Gum)</label>
+                    <select
+                      value={glueBrand}
+                      onChange={(e) => setGlueBrand(e.target.value)}
+                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
+                    >
+                      <option value="Fevicol Marine (Waterproof Elite)">Fevicol Marine</option>
+                      <option value="Fevicol SH (Standard Glue)">Fevicol SH</option>
+                      <option value="Araldite Wood Adhesive">Araldite Adhesive</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">Cupboard Channels</label>
+                    <select
+                      value={hardwareBrand}
+                      onChange={(e) => setHardwareBrand(e.target.value)}
+                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
+                    >
+                      <option value="Hettich Premium Soft-Close">Hettich Soft-Close</option>
+                      <option value="Ebco Telescopic Channels">Ebco Telescopic</option>
+                      <option value="Godrej Drawer Hardware">Godrej Channels</option>
+                      <option value="Standard Smooth Ball-Bearing">Standard Runner</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
