@@ -248,3 +248,30 @@ body {
     0 10px 20px rgba(44, 26, 15, 0.08);
   border-color: rgba(181, 131, 79, 0.45) !important;
 }
+
+/* Infinite Scrolling Logo Marquee */
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.logo-marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+}
+
+.logo-marquee-content {
+  display: inline-flex;
+  animation: infinite-scroll 25s linear infinite;
+  width: max-content;
+}
+
+.logo-marquee-content:hover {
+  animation-play-state: paused;
+}

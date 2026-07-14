@@ -7,6 +7,17 @@ import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, Shie
 
 const HOMEPAGE_CATEGORIES = ["All", "Gummalu", "Puja Mandiralu", "TV Units", "Sofas"];
 
+const BRAND_LOGOS = [
+  { name: "CenturyPly", logo: "CP", type: "Premium Plywood" },
+  { name: "Greenply", logo: "GP", type: "Plywood Panels" },
+  { name: "Fevicol Marine", logo: "FM", type: "Waterproof Glue" },
+  { name: "Asian Paints", logo: "AP", type: "PU Wood Polish" },
+  { name: "Hettich", logo: "H", type: "Drawer Channels" },
+  { name: "Ebco", logo: "E", type: "Telescopic Runners" },
+  { name: "Sheenlac", logo: "SL", type: "Wood Sealers" },
+  { name: "Godrej", logo: "G", type: "Premium Hardware" }
+];
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [filteredShowcase, setFilteredShowcase] = useState([]);
@@ -268,6 +279,49 @@ export default function Home() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Premium Material Brands Scroll Section */}
+      <section className="py-16 border-t border-wood-border/30 bg-wood-cream/25 mt-16 overflow-hidden">
+        <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 text-center mb-8">
+          <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+            Quality Standards
+          </span>
+          <h3 className="font-serif text-2xl font-bold text-wood-dark mt-1">
+            Our Trusted Material Brands
+          </h3>
+          <p className="text-xs text-wood-light font-light mt-2 max-w-md mx-auto">
+            We use only the most premium, durable, and genuine brand materials for wood carving, bonding, and smooth cupboard hardware.
+          </p>
+        </div>
+
+        {/* CSS-Animation Marquee Slider */}
+        <div className="logo-marquee-container relative py-6 bg-white/45 backdrop-blur-sm border-t border-b border-wood-border/20">
+          <div className="logo-marquee-content gap-16 items-center flex">
+            {/* Set 1 */}
+            {BRAND_LOGOS.map((brand, index) => (
+              <div key={index} className="flex items-center gap-2.5 px-6 py-2.5 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+                <span className="text-wood-accent font-extrabold font-serif text-base tracking-tight">{brand.logo}</span>
+                <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
+                <div className="text-left">
+                  <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
+                  <p className="text-[7.5px] font-light text-wood-light leading-none mt-0.5">{brand.type}</p>
+                </div>
+              </div>
+            ))}
+            {/* Set 2 (Duplicate for infinite seamless scroll) */}
+            {BRAND_LOGOS.map((brand, index) => (
+              <div key={`dup-${index}`} className="flex items-center gap-2.5 px-6 py-2.5 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+                <span className="text-wood-accent font-extrabold font-serif text-base tracking-tight">{brand.logo}</span>
+                <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
+                <div className="text-left">
+                  <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
+                  <p className="text-[7.5px] font-light text-wood-light leading-none mt-0.5">{brand.type}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
