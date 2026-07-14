@@ -717,11 +717,11 @@ LD Interiors & Furnitures
                 Email Address
               </label>
               <input
-                type="email"
+                type="password"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@ldinteriors.com"
+                placeholder="••••••••"
                 className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
