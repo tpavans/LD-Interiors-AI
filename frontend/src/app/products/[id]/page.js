@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
@@ -18,6 +18,34 @@ export default function ProductDetailPage() {
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
+
+  // Touch Swipe Carousel State
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && product && product.images && product.images.length > 1) {
+      setActiveImageIndex((prev) => (prev < product.images.length - 1 ? prev + 1 : 0));
+    }
+    if (isRightSwipe && product && product.images && product.images.length > 1) {
+      setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : product.images.length - 1));
+    }
+  };
 
   // Form Modal State
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -264,11 +292,15 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
         <div className="lg:col-span-8">
           <div 
             onClick={() => setShowLightbox(true)}
-            className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative cursor-zoom-in group"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative cursor-zoom-in group select-none touch-pan-y"
           >
             <img
               src={images && images.length > 0 ? images[activeImageIndex] : image}
               alt={title}
+              draggable="false"
               className="w-full h-auto object-contain max-h-[70vh] mx-auto transition-transform duration-500 group-hover:scale-[1.01]"
             />
             {/* Play Button Overlay for Videos */}
@@ -277,6 +309,46 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 <div className="bg-white/95 backdrop-blur-sm p-4 rounded-full text-wood-dark shadow-xl border border-wood-border/30 transform transition-transform group-hover:scale-110 duration-350">
                   <Play className="h-8 w-8 fill-current text-wood-dark ml-0.5" />
                 </div>
+              </div>
+            )}
+
+            {/* Left/Right Swipe Navigation Arrows overlay */}
+            {images && images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+                  }}
+                  className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/65 hover:scale-105 active:scale-95 text-white p-2 rounded-full z-20 backdrop-blur-xs transition-all cursor-pointer border border-white/10 flex items-center justify-center"
+                  title="Previous Image"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+                  }}
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/65 hover:scale-105 active:scale-95 text-white p-2 rounded-full z-20 backdrop-blur-xs transition-all cursor-pointer border border-white/10 flex items-center justify-center"
+                  title="Next Image"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
+
+            {/* Carousel Dot Indicators overlay */}
+            {images && images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 bg-black/25 px-2.5 py-1.5 rounded-full backdrop-blur-xs border border-white/10">
+                {images.map((_, dotIdx) => (
+                  <span 
+                    key={dotIdx}
+                    className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                      dotIdx === activeImageIndex ? 'bg-wood-accent w-3.5' : 'bg-white/60'
+                    }`}
+                  />
+                ))}
               </div>
             )}
           </div>
