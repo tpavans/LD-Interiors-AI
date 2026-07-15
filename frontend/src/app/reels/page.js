@@ -45,7 +45,7 @@ export default function ReelsPage() {
       videoId = url;
     }
     
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0`;
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0`;
   };
 
   useEffect(() => {
@@ -158,7 +158,7 @@ export default function ReelsPage() {
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-105"
+            className="absolute inset-0 w-full h-full object-cover scale-105"
           />
         ) : (
           <video
@@ -221,19 +221,12 @@ export default function ReelsPage() {
 
           {/* Action Row */}
           <div className="flex gap-2.5 mt-4">
-            <button
-              onClick={() => handleWhatsAppInquiry(currentProduct)}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
-            >
-              <MessageSquare className="h-4 w-4 fill-current" />
-              <span>{t.inquireOnWA}</span>
-            </button>
             <Link
               href={`/products/${currentProduct._id}`}
-              className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-98 text-white transition-all border border-white/10 flex items-center justify-center"
-              title={t.viewProduct}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent hover:bg-amber-500 active:scale-98 text-wood-dark py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
             >
-              <Eye className="h-4.5 w-4.5" />
+              <Eye className="h-4 w-4" />
+              <span>{isTelugu ? "డిజైన్ వివరాలు చూడండి" : "View Product Details"}</span>
             </Link>
           </div>
         </div>
