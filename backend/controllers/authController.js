@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const twilio = require('twilio');
 
 // Helper function to generate JWT
 const generateToken = (id) => {
@@ -181,11 +182,57 @@ const sendOtp = async (req, res) => {
 
     console.log(`[OTP SERVICE] Generated OTP ${otp} for phone ${cleanedPhone}`);
 
-    return res.status(200).json({
-      message: 'OTP sent successfully (Simulated)',
-      phone: cleanedPhone,
-      otp: otp // Return OTP directly so the user/tester can see and enter it
-    });
+    // Try sending real Twilio SMS
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_FROM_NUMBER;
+    
+    let realSmsSent = false;
+    let smsError = '';
+
+    if (accountSid && authToken && fromNumber) {
+      let formattedPhone = cleanedPhone;
+      if (!formattedPhone.startsWith('+')) {
+        if (formattedPhone.startsWith('91') && formattedPhone.length === 12) {
+          formattedPhone = '+' + formattedPhone;
+        } else {
+          formattedPhone = '+91' + formattedPhone;
+        }
+      }
+
+      try {
+        const client = twilio(accountSid, authToken);
+        const message = await client.messages.create({
+          body: `Your LD Interiors verification code is: ${otp}. It is valid for 5 minutes.`,
+          from: fromNumber,
+          to: formattedPhone
+        });
+        console.log(`[SMS SERVICE] Twilio SMS sent successfully to ${formattedPhone}. Message SID: ${message.sid}`);
+        realSmsSent = true;
+      } catch (err) {
+        console.error('[SMS SERVICE] Twilio SMS failed to send:', err.message);
+        smsError = err.message;
+      }
+    } else {
+      console.warn('[SMS SERVICE] Twilio configuration is missing. Cannot send real SMS.');
+      smsError = 'Twilio config missing';
+    }
+
+    if (realSmsSent) {
+      return res.status(200).json({
+        message: 'OTP sent to your mobile number successfully',
+        phone: cleanedPhone,
+        realSms: true
+      });
+    } else {
+      // Fallback: send simulated OTP to keep system testable and responsive
+      return res.status(200).json({
+        message: `OTP generated (Real SMS failed: ${smsError})`,
+        phone: cleanedPhone,
+        otp: otp, // Fallback simulated OTP
+        realSms: false
+      });
+    }
   } catch (error) {
     console.error('SEND OTP EXCEPTION:', error);
     return res.status(500).json({
