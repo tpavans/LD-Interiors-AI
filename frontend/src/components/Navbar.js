@@ -164,6 +164,14 @@ export default function Navbar() {
 
         {/* Mobile controls bar (Language + Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2.5 py-0.5 text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer select-none whitespace-nowrap"
+            title="Go to Home / హోమ్‌కు వెళ్ళండి"
+          >
+            <span>{language === 'EN' ? 'Home' : 'హోమ్'}</span>
+          </Link>
+
           <button
             onClick={() => toggleLanguage()}
             className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2 py-0.5 text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer select-none whitespace-nowrap"

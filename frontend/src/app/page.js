@@ -184,7 +184,7 @@ export default function Home() {
             <div className="space-y-4 relative z-10 px-4">
               {/* Telugu Quote */}
               <p className="font-serif text-base sm:text-lg text-wood-dark font-bold tracking-wide leading-relaxed">
-                "మీ ఇల్లు మీ వ్యక్తిత్వాన్ని ప్రతిబింబించే అద్దం... మీ కలలను నిరంతర ఆనందాలుగా మార్చే అద్భుత శిల్పం. 25 సంవత్సరాలకు పైగా అనుభవంతో, మీ అభిరుచులకు అనుగుణంగా టేకు కలపతో అపురూపమైన డిజైన్లను రూపొందిస్తున్నాము."
+                "గృహమే కదా స్వర్గసీమ... ప్రతి ఇల్లు ఒక పవిత్ర దేవాలయం. మీ అభిరుచులకు, సాంప్రదాయాలకు తగినట్లుగా నూతన శైలిలో, మేలిరకం టేకు కలపతో మీ కలల గృహాన్ని అపురూపంగా అలంకరించడం మా శతాబ్దాల వృత్తి ధర్మం. నమ్మకమే పునాదిగా, నాణ్యతతో కూడిన నిండైన హస్తకళల నైపుణ్యాన్ని మీకు కానుకగా అందిస్తున్నాము."
               </p>
               
               {/* Divider */}
@@ -192,7 +192,7 @@ export default function Home() {
               
               {/* English Quote */}
               <p className="font-sans text-xs sm:text-sm font-light text-wood-medium/95 tracking-wide leading-relaxed italic">
-                "Your home should tell the story of who you are, and be a collection of what you love. We shape your dreams into premium teak wood and bespoke designs."
+                "A home is where the heart finds peace, and every space is a sacred temple of joy. With decades of dedicated craftsmanship and the finest teak wood, we shape your traditions and modern tastes into timeless masterpieces. Built on trust, delivered with quality, to last for generations."
               </p>
             </div>
             
