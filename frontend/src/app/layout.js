@@ -3,7 +3,6 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientWrapper from "@/components/ClientWrapper";
-import FloatingActions from "@/components/FloatingActions";
 import { LanguageProvider } from "@/context/LanguageContext";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 
@@ -35,7 +34,6 @@ export default function RootLayout({ children }) {
           </main>
           <Footer />
           <ClientWrapper />
-          <FloatingActions />
           <WhatsAppWidget />
         </LanguageProvider>
       </body>

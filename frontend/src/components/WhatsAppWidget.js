@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { MessageSquare, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { MessageSquare, X, ShieldCheck, Phone } from 'lucide-react';
 
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,21 +64,36 @@ export default function WhatsAppWidget() {
             {contacts.map((c, i) => (
               <div 
                 key={i}
-                onClick={() => handleChatRedirect(c.phone, c.name)}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-wood-cream/40 border border-wood-border/30 hover:border-emerald-500/40 hover:bg-emerald-500/5 cursor-pointer transition-all duration-300 group"
+                className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-wood-cream/40 border border-wood-border/30 transition-all duration-300 hover:bg-wood-cream/65"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-extrabold text-sm select-none shadow-md group-hover:scale-105 transition-transform">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wood-dark text-wood-accent font-extrabold text-xs select-none shadow-sm">
                   {c.avatar}
                 </div>
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-wood-dark truncate leading-none">{c.name}</p>
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[7px] font-bold text-emerald-800 uppercase leading-none">
-                      Online
-                    </span>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11px] font-bold text-wood-dark truncate leading-none">{c.name}</p>
+                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Online"></span>
                   </div>
                   <p className="text-[9px] font-semibold text-wood-accent mt-1 leading-none">{c.role}</p>
                   <p className="text-[8px] text-wood-light font-light mt-0.5 truncate">{c.desc}</p>
+                </div>
+                
+                {/* Actions: Call & WhatsApp */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <a
+                    href={`tel:+${c.phone}`}
+                    className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-wood-dark hover:bg-wood-medium text-white shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+                    title={isTelugu ? "కాల్ చేయండి" : "Call support phone"}
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                  </a>
+                  <button
+                    onClick={() => handleChatRedirect(c.phone, c.name)}
+                    className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+                    title={isTelugu ? "వాట్సాప్ చాట్" : "WhatsApp Chat"}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 fill-current" />
+                  </button>
                 </div>
               </div>
             ))}
