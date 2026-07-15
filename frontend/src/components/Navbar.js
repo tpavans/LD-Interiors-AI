@@ -89,16 +89,7 @@ export default function Navbar() {
           >
             {t.designs}
           </Link>
-          <Link
-            href="/wood-guide"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/wood-guide' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
-              pathname === '/wood-guide' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
-            }`}
-          >
-            {t.woodGuide}
-          </Link>
+
           <Link
             href="/reels"
             className={`relative pb-1 transition-colors duration-300 ${
@@ -211,15 +202,7 @@ export default function Navbar() {
           >
             {t.designs}
           </Link>
-          <Link
-            href="/wood-guide"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors border-b border-wood-accent/10 ${
-              pathname === '/wood-guide' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            }`}
-          >
-            {t.woodGuide}
-          </Link>
+
           <Link
             href="/reels"
             onClick={() => setIsMobileMenuOpen(false)}
