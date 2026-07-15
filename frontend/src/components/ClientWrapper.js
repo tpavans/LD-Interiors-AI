@@ -1709,10 +1709,10 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
       {/* 2. FLOATING ASSISTANT WIDGET */}
       {isRegistered && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div className="fixed bottom-6 right-6 landscape:bottom-4 landscape:right-4 z-50 flex flex-col items-end">
           {/* Chat Panel */}
           {isChatOpen && (
-            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] sm:h-[520px] bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/20 rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
+            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] max-h-[70vh] landscape:h-[260px] sm:h-[520px] sm:max-h-[80vh] bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/20 rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
               {/* Header */}
               <div className="bg-gradient-to-r from-[#423525] to-[#6d553b] px-5 py-4 text-white border-b border-wood-border/40">
                 <div className="flex items-center justify-between mb-3">
@@ -2382,7 +2382,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
+            className="flex items-center justify-center h-16 w-16 landscape:h-12 landscape:w-12 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
             {isChatOpen ? (
               <svg className="h-6 w-6 text-[#ebdcc5] transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -2390,7 +2390,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               </svg>
             ) : (
               <div className="relative w-full h-full flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="h-12 w-12 drop-shadow-md">
+                <svg viewBox="0 0 100 100" className="h-12 w-12 landscape:h-9 landscape:w-9 drop-shadow-md">
                   <style>{`
                     @keyframes girlBlink {
                       0%, 90%, 100% { transform: scaleY(1); }

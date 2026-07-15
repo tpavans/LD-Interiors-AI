@@ -35,10 +35,10 @@ export default function WhatsAppWidget() {
   };
 
   return (
-    <div className="fixed bottom-[96px] right-6 z-50 font-sans">
+    <div className="fixed bottom-[96px] right-6 landscape:bottom-4 landscape:right-[76px] z-50 font-sans">
       {/* Expanded Widget Popup Card */}
       {isOpen && (
-        <div className="mb-4 w-76 sm:w-80 rounded-3xl bg-white/90 backdrop-blur-xl border border-wood-border/60 p-5 shadow-2xl animate-fadeIn transition-all duration-350">
+        <div className="mb-4 w-76 sm:w-80 max-h-[72vh] landscape:max-h-[220px] overflow-y-auto rounded-3xl bg-white/90 backdrop-blur-xl border border-wood-border/60 p-5 shadow-2xl animate-fadeIn transition-all duration-350">
           <div className="flex items-center justify-between border-b border-wood-border/30 pb-3 mb-4">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
@@ -109,7 +109,7 @@ export default function WhatsAppWidget() {
       {/* Floating Action Circle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 duration-300 cursor-pointer group"
+        className="relative flex h-14 w-14 landscape:h-11 landscape:w-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 duration-300 cursor-pointer group"
         title="WhatsApp Support Chat"
       >
         {/* Pulsing Backlight Effect */}
@@ -117,9 +117,9 @@ export default function WhatsAppWidget() {
         <span className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping -z-10"></span>
         
         {isOpen ? (
-          <X className="h-6 w-6 animate-spin-once" />
+          <X className="h-6 w-6 landscape:h-4.5 landscape:w-4.5 animate-spin-once" />
         ) : (
-          <MessageSquare className="h-6 w-6 fill-current" />
+          <MessageSquare className="h-6 w-6 landscape:h-4.5 landscape:w-4.5 fill-current" />
         )}
       </button>
     </div>
