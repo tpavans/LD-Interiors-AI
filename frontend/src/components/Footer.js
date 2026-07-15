@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
+import { LayoutDashboard } from 'lucide-react';
 
 export default function Footer() {
   const { language } = useLanguage();
@@ -141,8 +142,15 @@ export default function Footer() {
         <div>
           &copy; {new Date().getFullYear()} LD Interiors & Furnitures. All rights reserved.
         </div>
-        <div className="flex items-center gap-1.5">
-          {t.developedBy} <Link href="/admin?pavan=true" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <span>
+            {t.developedBy} <Link href="/admin?pavan=true" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
+          </span>
+          <span className="text-wood-border hidden xs:inline">|</span>
+          <Link href="/admin?pavan=true" className="text-wood-light hover:text-wood-accent font-semibold transition-colors cursor-pointer flex items-center gap-1">
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            <span>Admin Login</span>
+          </Link>
         </div>
       </div>
     </footer>
