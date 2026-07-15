@@ -17,6 +17,17 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  phone: {
+    type: String,
+    trim: true,
+    sparse: true, // Allows multiple null/missing phone values
+  },
+  otp: {
+    type: String,
+  },
+  otpExpires: {
+    type: Date,
+  },
   role: {
     type: String,
     default: 'admin',

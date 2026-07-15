@@ -160,6 +160,11 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [loginMethod, setLoginMethod] = useState('password'); // 'password' or 'otp'
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [simulatedOtp, setSimulatedOtp] = useState('');
 
   // Products State
   const [products, setProducts] = useState([]);
@@ -368,6 +373,51 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Login error:', err);
       setLoginError(err.response?.data?.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    setSimulatedOtp('');
+    
+    try {
+      const response = await api.post('/auth/send-otp', { phone });
+      setIsOtpSent(true);
+      setSimulatedOtp(response.data.otp);
+    } catch (err) {
+      console.error('OTP Send error:', err);
+      setLoginError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    
+    try {
+      const response = await api.post('/auth/verify-otp', { phone, otp });
+      const { token, ...adminData } = response.data;
+
+      localStorage.setItem('ld_token', token);
+      localStorage.setItem('ld_admin', JSON.stringify(adminData));
+      localStorage.setItem('ld_admin_secret_passed', 'true');
+      setIsAuthenticated(true);
+      setIsSecretPassed(true);
+
+      window.dispatchEvent(new Event('admin-login'));
+
+      fetchProducts();
+      fetchOrders();
+    } catch (err) {
+      console.error('OTP Verification error:', err);
+      setLoginError(err.response?.data?.message || 'Invalid or expired OTP. Please try again.');
     } finally {
       setLoginLoading(false);
     }
@@ -709,7 +759,7 @@ LD Interiors & Furnitures
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-6 py-12 bg-wood-cream/30">
         <div className="w-full max-w-md bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-8 shadow-xl text-left glow-on-hover">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase bg-wood-accent/20 px-3 py-1 rounded-full">
               Secure Auth
             </span>
@@ -717,61 +767,196 @@ LD Interiors & Furnitures
               Admin Login
             </h1>
             <p className="mt-2 text-xs text-wood-light font-light">
-              Enter credentials to access the LD Interiors & Furnitures Dashboard
+              Access the LD Interiors & Furnitures Dashboard
             </p>
           </div>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                Email Address
-              </label>
-              <input
-                type="password"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-              />
-            </div>
-
-            {loginError && (
-              <div className="flex items-start gap-2.5 rounded-xl bg-red-50 p-4 text-xs text-red-700 border border-red-100 animate-fadeIn">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
-                <span>{loginError}</span>
-              </div>
-            )}
-
+          {/* Login Method Tabs */}
+          <div className="flex border-b border-wood-border/40 mb-6">
             <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:bg-wood-medium focus:outline-none disabled:bg-neutral-400 transition-all duration-300 cursor-pointer"
+              onClick={() => { setLoginMethod('password'); setLoginError(''); setSimulatedOtp(''); }}
+              className={`flex-1 pb-3 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                loginMethod === 'password'
+                  ? 'border-wood-accent text-wood-dark'
+                  : 'border-transparent text-wood-light hover:text-wood-dark'
+              }`}
             >
-              {loginLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Verifying...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              Password Login
             </button>
-          </form>
+            <button
+              onClick={() => { setLoginMethod('otp'); setLoginError(''); setSimulatedOtp(''); }}
+              className={`flex-1 pb-3 text-center text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                loginMethod === 'otp'
+                  ? 'border-wood-accent text-wood-dark'
+                  : 'border-transparent text-wood-light hover:text-wood-dark'
+              }`}
+            >
+              OTP Verification
+            </button>
+          </div>
+
+          {loginMethod === 'password' ? (
+            <form onSubmit={handleLoginSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                />
+              </div>
+
+              {loginError && (
+                <div className="flex items-start gap-2.5 rounded-xl bg-red-50 p-4 text-xs text-red-700 border border-red-100 animate-fadeIn">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:bg-wood-medium focus:outline-none disabled:bg-neutral-400 transition-all duration-300 cursor-pointer"
+              >
+                {loginLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-5">
+              {!isOtpSent ? (
+                <form onSubmit={handleSendOtp} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Enter 10-digit mobile number"
+                      className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  {loginError && (
+                    <div className="flex items-start gap-2.5 rounded-xl bg-red-50 p-4 text-xs text-red-700 border border-red-100 animate-fadeIn">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
+                      <span>{loginError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:bg-wood-medium focus:outline-none disabled:bg-neutral-400 transition-all duration-300 cursor-pointer"
+                  >
+                    {loginLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Sending OTP...
+                      </>
+                    ) : (
+                      'Send OTP'
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp} className="space-y-5">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] text-wood-light">OTP Sent to {phone}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setIsOtpSent(false); setOtp(''); setSimulatedOtp(''); }}
+                        className="text-[9px] text-wood-accent font-bold uppercase tracking-wider hover:text-amber-500 cursor-pointer"
+                      >
+                        Change Phone
+                      </button>
+                    </div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
+                      Enter 6-Digit OTP
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="••••••"
+                      className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm text-center font-bold tracking-widest focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  {loginError && (
+                    <div className="flex items-start gap-2.5 rounded-xl bg-red-50 p-4 text-xs text-red-700 border border-red-100 animate-fadeIn">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" />
+                      <span>{loginError}</span>
+                    </div>
+                  )}
+
+                  {simulatedOtp && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800 text-left animate-fadeIn">
+                      <p className="font-bold">🔑 Simulated SMS OTP Code:</p>
+                      <p className="text-sm font-mono font-extrabold tracking-widest mt-1 text-emerald-950">{simulatedOtp}</p>
+                      <p className="text-[10px] text-emerald-700/80 mt-1 font-light">Copy and paste this code above to complete your verification.</p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-sm hover:bg-wood-medium focus:outline-none disabled:bg-neutral-400 transition-all duration-300 cursor-pointer"
+                  >
+                    {loginLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Verifying OTP...
+                      </>
+                    ) : (
+                      'Verify & Log In'
+                    )}
+                  </button>
+
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      className="text-[9px] text-wood-light hover:text-wood-dark uppercase font-bold tracking-widest cursor-pointer"
+                    >
+                      Resend OTP
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );

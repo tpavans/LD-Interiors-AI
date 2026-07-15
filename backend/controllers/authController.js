@@ -147,7 +147,104 @@ const getMe = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Send OTP to phone number (simulated SMS)
+ * @route   POST /api/auth/send-otp
+ * @access  Public
+ */
+const sendOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: 'Please provide a phone number' });
+    }
+
+    const cleanedPhone = phone.trim();
+    let user = await User.findOne({ phone: cleanedPhone });
+
+    // If user does not exist, create a new admin/user with a dummy email/password
+    if (!user) {
+      user = await User.create({
+        name: `Admin (${cleanedPhone})`,
+        email: `${cleanedPhone}@ldinteriors.com`,
+        password: Math.random().toString(36).slice(-10),
+        phone: cleanedPhone,
+        role: 'admin'
+      });
+    }
+
+    // Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
+    await user.save();
+
+    console.log(`[OTP SERVICE] Generated OTP ${otp} for phone ${cleanedPhone}`);
+
+    return res.status(200).json({
+      message: 'OTP sent successfully (Simulated)',
+      phone: cleanedPhone,
+      otp: otp // Return OTP directly so the user/tester can see and enter it
+    });
+  } catch (error) {
+    console.error('SEND OTP EXCEPTION:', error);
+    return res.status(500).json({
+      message: 'Server error sending OTP',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Verify OTP and log user in
+ * @route   POST /api/auth/verify-otp
+ * @access  Public
+ */
+const verifyOtp = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ message: 'Please provide phone and OTP' });
+    }
+
+    const cleanedPhone = phone.trim();
+    const user = await User.findOne({ phone: cleanedPhone });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify OTP matching and expiry
+    if (user.otp !== otp || !user.otpExpires || user.otpExpires < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Clear OTP details upon success
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: token,
+    });
+  } catch (error) {
+    console.error('VERIFY OTP EXCEPTION:', error);
+    return res.status(500).json({
+      message: 'Server error verifying OTP',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   loginUser,
   getMe,
+  sendOtp,
+  verifyOtp,
 };
