@@ -251,6 +251,9 @@ const createProduct = async (req, res) => {
       const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
       videoUrl = videoResult.url;
       videoPublicId = videoResult.publicId;
+    } else if (req.body.video) {
+      videoUrl = req.body.video;
+      videoPublicId = '';
     }
 
     if (images.length === 0) {
@@ -370,6 +373,16 @@ const updateProduct = async (req, res) => {
       const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
       videoUrl = videoResult.url;
       videoPublicId = videoResult.publicId;
+    } else if (req.body.video !== undefined) {
+      if (req.body.video !== product.video && product.videoPublicId) {
+        try {
+          await deleteFromCloudinary(product.videoPublicId, 'video');
+        } catch (err) {
+          console.error('Old video deletion failed:', err.message);
+        }
+        videoPublicId = '';
+      }
+      videoUrl = req.body.video;
     }
 
     product.image = imageUrl;

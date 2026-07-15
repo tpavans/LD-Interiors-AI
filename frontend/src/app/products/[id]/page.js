@@ -47,6 +47,37 @@ export default function ProductDetailPage() {
     }
   };
 
+  const isYouTubeUrl = (url) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return '';
+    let videoId = '';
+    
+    if (url.includes('/shorts/')) {
+      const parts = url.split('/shorts/');
+      if (parts[1]) {
+        videoId = parts[1].split(/[?#]/)[0];
+      }
+    } else if (url.includes('youtu.be/')) {
+      const parts = url.split('youtu.be/');
+      if (parts[1]) {
+        videoId = parts[1].split(/[?#]/)[0];
+      }
+    } else if (url.includes('v=')) {
+      const parts = url.split('v=');
+      if (parts[1]) {
+        videoId = parts[1].split(/[&?#]/)[0];
+      }
+    } else {
+      videoId = url;
+    }
+    
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`;
+  };
+
   // Form Modal State
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -821,14 +852,27 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             {/* Media Canvas container */}
             <div className="w-full flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-2xl relative min-h-[300px]">
               {product.video ? (
-                <video
-                  src={product.video}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="max-w-full max-h-[75vh] object-contain rounded-2xl"
-                  poster={images && images.length > 0 ? images[activeImageIndex] : image}
-                />
+                isYouTubeUrl(product.video) ? (
+                  <div className="w-full aspect-video max-h-[75vh] max-w-full rounded-2xl overflow-hidden">
+                    <iframe
+                      src={getYouTubeEmbedUrl(product.video)}
+                      title={title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <video
+                    src={product.video}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-w-full max-h-[75vh] object-contain rounded-2xl"
+                    poster={images && images.length > 0 ? images[activeImageIndex] : image}
+                  />
+                )
               ) : (
                 <img
                   src={images && images.length > 0 ? images[activeImageIndex] : image}

@@ -17,6 +17,37 @@ export default function ReelsPage() {
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef(null);
 
+  const isYouTubeUrl = (url) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return '';
+    let videoId = '';
+    
+    if (url.includes('/shorts/')) {
+      const parts = url.split('/shorts/');
+      if (parts[1]) {
+        videoId = parts[1].split(/[?#]/)[0];
+      }
+    } else if (url.includes('youtu.be/')) {
+      const parts = url.split('youtu.be/');
+      if (parts[1]) {
+        videoId = parts[1].split(/[?#]/)[0];
+      }
+    } else if (url.includes('v=')) {
+      const parts = url.split('v=');
+      if (parts[1]) {
+        videoId = parts[1].split(/[&?#]/)[0];
+      }
+    } else {
+      videoId = url;
+    }
+    
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0`;
+  };
+
   useEffect(() => {
     const fetchReels = async () => {
       try {
@@ -119,15 +150,26 @@ export default function ReelsPage() {
       {/* Main Reels Viewport */}
       <div className="relative w-full max-w-sm h-[70vh] min-h-[480px] bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
         
-        {/* Looping video element */}
-        <video
-          ref={videoRef}
-          src={currentProduct.video}
-          loop
-          muted={isMuted}
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {/* Looping video element / YouTube Embed */}
+        {isYouTubeUrl(currentProduct.video) ? (
+          <iframe
+            src={getYouTubeEmbedUrl(currentProduct.video)}
+            title={currentProduct.title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-105"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={currentProduct.video}
+            loop
+            muted={isMuted}
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
 
         {/* Top controls: Mute overlay */}
         <div className="absolute top-4 right-4 z-30">

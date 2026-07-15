@@ -177,6 +177,7 @@ export default function AdminPage() {
   const [rating, setRating] = useState('5');
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
@@ -438,6 +439,8 @@ export default function AdminPage() {
       }
       if (videoFile) {
         formData.append('video', videoFile);
+      } else {
+        formData.append('video', youtubeUrl.trim());
       }
 
       if (isEditing) {
@@ -476,7 +479,13 @@ export default function AdminPage() {
     setRating(product.rating ? product.rating.toString() : '5');
     setImagePreviews(product.images && product.images.length > 0 ? product.images : [product.image]);
     setImageFiles([]);
-    setVideoPreview(product.video || '');
+    if (product.video && (product.video.includes('youtube.com') || product.video.includes('youtu.be'))) {
+      setYoutubeUrl(product.video);
+      setVideoPreview('');
+    } else {
+      setYoutubeUrl('');
+      setVideoPreview(product.video || '');
+    }
     setVideoFile(null);
     setFormError('');
     setFormSuccess('');
@@ -512,6 +521,7 @@ export default function AdminPage() {
     setImagePreviews([]);
     setVideoFile(null);
     setVideoPreview('');
+    setYoutubeUrl('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -1008,6 +1018,7 @@ LD Interiors & Furnitures
                             onClick={() => {
                               setVideoFile(null);
                               setVideoPreview('');
+                              setYoutubeUrl('');
                             }}
                             className="text-[10px] text-red-650 hover:text-red-500 font-bold uppercase tracking-wider cursor-pointer bg-red-50 hover:bg-red-100/80 px-3 py-1 rounded-full border border-red-200 transition-colors"
                           >
@@ -1028,6 +1039,7 @@ LD Interiors & Furnitures
                                 if (file) {
                                   setVideoFile(file);
                                   setVideoPreview(URL.createObjectURL(file));
+                                  setYoutubeUrl('');
                                 }
                               }}
                               accept="video/*"
@@ -1039,6 +1051,26 @@ LD Interiors & Furnitures
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="mt-3">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-wood-light mb-1.5">
+                    OR Paste YouTube Video URL (Alternative to file upload)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://www.youtube.com/shorts/... or https://youtu.be/..."
+                    value={youtubeUrl}
+                    onChange={(e) => {
+                      setYoutubeUrl(e.target.value);
+                      if (e.target.value) {
+                        setVideoFile(null);
+                        setVideoPreview('');
+                      }
+                    }}
+                    className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-xs text-wood-dark focus:border-wood-accent focus:outline-none transition-colors"
+                  />
+                  <p className="text-[9px] text-wood-light/80 mt-1 italic">Note: Pave a YouTube Shorts or video link to use as the product's showcase reel.</p>
                 </div>
               </div>
 
