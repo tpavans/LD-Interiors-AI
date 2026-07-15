@@ -147,7 +147,7 @@ export default function UserOrdersPage() {
     setSimulatedOtp('');
     
     try {
-      const response = await api.post('/auth/send-otp', { phone });
+      const response = await api.post('/auth/send-otp', { phone, isAdmin: false });
       setIsOtpSent(true);
       setSimulatedOtp(response.data.otp);
     } catch (err) {
@@ -164,7 +164,7 @@ export default function UserOrdersPage() {
     setLoginError('');
     
     try {
-      const response = await api.post('/auth/verify-otp', { phone, otp });
+      const response = await api.post('/auth/verify-otp', { phone, otp, isAdmin: false });
       const { token, ...userData } = response.data;
       
       localStorage.setItem('ld_user_token', token);

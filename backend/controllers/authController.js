@@ -155,7 +155,7 @@ const getMe = async (req, res) => {
  */
 const sendOtp = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, isAdmin } = req.body;
     if (!phone) {
       return res.status(400).json({ message: 'Please provide a phone number' });
     }
@@ -163,14 +163,24 @@ const sendOtp = async (req, res) => {
     const cleanedPhone = phone.trim();
     let user = await User.findOne({ phone: cleanedPhone });
 
-    // If user does not exist, create a new admin/user with a dummy email/password
+    // Admin validation checks
+    if (isAdmin) {
+      if (!user || user.role !== 'admin') {
+        console.warn(`[OTP AUTH WARNING] Attempted admin OTP send for unauthorized phone: ${cleanedPhone}`);
+        return res.status(403).json({
+          message: 'Access denied: This phone number is not registered as an Admin.'
+        });
+      }
+    }
+
+    // If user does not exist, create a new regular user with role: 'user'
     if (!user) {
       user = await User.create({
-        name: `Admin (${cleanedPhone})`,
+        name: `Customer (${cleanedPhone})`,
         email: `${cleanedPhone}@ldinteriors.com`,
         password: Math.random().toString(36).slice(-10),
         phone: cleanedPhone,
-        role: 'admin'
+        role: 'user'
       });
     }
 
@@ -249,7 +259,7 @@ const sendOtp = async (req, res) => {
  */
 const verifyOtp = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { phone, otp, isAdmin } = req.body;
     if (!phone || !otp) {
       return res.status(400).json({ message: 'Please provide phone and OTP' });
     }
@@ -259,6 +269,11 @@ const verifyOtp = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Role check for admin login
+    if (isAdmin && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied: Unauthorized mobile number' });
     }
 
     // Verify OTP matching and expiry

@@ -385,7 +385,7 @@ export default function AdminPage() {
     setSimulatedOtp('');
     
     try {
-      const response = await api.post('/auth/send-otp', { phone });
+      const response = await api.post('/auth/send-otp', { phone, isAdmin: true });
       setIsOtpSent(true);
       setSimulatedOtp(response.data.otp);
     } catch (err) {
@@ -402,7 +402,7 @@ export default function AdminPage() {
     setLoginLoading(true);
     
     try {
-      const response = await api.post('/auth/verify-otp', { phone, otp });
+      const response = await api.post('/auth/verify-otp', { phone, otp, isAdmin: true });
       const { token, ...adminData } = response.data;
 
       localStorage.setItem('ld_token', token);
