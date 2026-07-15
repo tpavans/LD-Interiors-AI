@@ -437,10 +437,10 @@ ${profileName || activePayOrder.name}`;
     );
   }
 
-  // If visitor is NOT logged in, render the login card
+  // If visitor is NOT logged in, render the login prompt directing to the Navbar Profile icon
   if (!phone) {
     return (
-      <div className="mx-auto w-full max-w-md px-4 py-20 text-left">
+      <div className="mx-auto w-full max-w-md px-4 py-24 text-left">
         <div className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-8 shadow-xl text-center glow-on-hover">
           <span className="inline-flex items-center gap-1 bg-wood-accent/20 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-4">
             Customer Dashboard
@@ -449,110 +449,17 @@ ${profileName || activePayOrder.name}`;
             Access My Account
           </h1>
           <p className="mt-2 text-xs text-wood-light font-light leading-relaxed mb-6">
-            Enter your mobile number to securely receive an OTP code and log in to your account.
+            Log in to view your orders timeline, check payment status, request custom configurations, and manage your delivery details.
           </p>
-
-          {loginError && (
-            <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 text-left mb-5">
-              <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-              <span>{loginError}</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 text-left mb-5">
-              <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {!isOtpSent ? (
-            <form onSubmit={handleSendOtp} className="space-y-4 text-left">
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-wood-accent mb-1.5">
-                  Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g., 9346325291"
-                  className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:bg-neutral-500 cursor-pointer"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Smartphone className="h-4 w-4" />
-                    <span>Send OTP</span>
-                  </>
-                )}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4 text-left">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-[9px] text-wood-light">OTP Sent to {phone}</span>
-                <button
-                  type="button"
-                  onClick={() => { setIsOtpSent(false); setOtp(''); setSimulatedOtp(''); }}
-                  className="text-[9px] text-wood-accent font-bold uppercase tracking-wider hover:text-amber-500 cursor-pointer"
-                >
-                  Change
-                </button>
-              </div>
-              
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-wood-accent mb-1.5">
-                  Enter 6-Digit OTP
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="••••••"
-                  className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-center font-bold tracking-widest text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-                />
-              </div>
-
-
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:bg-neutral-500 cursor-pointer"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Verify & Log In</span>
-                  </>
-                )}
-              </button>
-              
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  className="text-[9px] text-wood-light hover:text-wood-dark uppercase font-bold tracking-widest cursor-pointer"
-                >
-                  Resend OTP
-                </button>
-              </div>
-            </form>
-          )}
+          <button
+            onClick={() => {
+              window.dispatchEvent(new Event('open-profile-drawer'));
+            }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-colors shadow-sm cursor-pointer"
+          >
+            <User className="h-4 w-4 text-wood-accent" />
+            <span>Click to Log In</span>
+          </button>
         </div>
       </div>
     );
@@ -569,128 +476,10 @@ ${profileName || activePayOrder.name}`;
             My Account & Orders
           </h1>
         </div>
-        <button
-          onClick={handleLogout}
-          className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-red-250 hover:bg-red-50 text-red-700 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-        >
-          <LogOut className="h-4.5 w-4.5" />
-          <span>Logout</span>
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Profile Card */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-6 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-wood-beige/20 -z-10"></div>
-            
-            <h3 className="font-serif text-lg font-bold text-wood-dark mb-4 flex items-center gap-2 pb-2.5 border-b border-wood-border/30">
-              <User className="h-5 w-5 text-wood-accent" />
-              My Profile Info
-            </h3>
-
-            {isEditingProfile ? (
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div>
-                  <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1">Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={profileName}
-                    onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1">Mobile Number</label>
-                  <input
-                    type="tel"
-                    required
-                    value={profilePhone}
-                    onChange={(e) => setProfilePhone(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1">Gmail / Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={profileEmail}
-                    onChange={(e) => setProfileEmail(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1">Delivery Address</label>
-                  <textarea
-                    required
-                    value={profileAddress}
-                    onChange={(e) => setProfileAddress(e.target.value)}
-                    rows="2.5"
-                    className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-accent"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="submit"
-                    className="flex-grow flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>Save</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingProfile(false)}
-                    className="flex-grow rounded-xl border border-wood-border hover:bg-neutral-50 text-wood-light hover:text-wood-dark py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-wood-light">Registered Name</p>
-                  <p className="text-sm font-semibold text-wood-dark">{profileName || 'Not specified'}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-wood-light">Mobile Phone</p>
-                  <p className="text-sm font-semibold text-wood-dark">📞 {profilePhone}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-wood-light">Gmail Address</p>
-                  <p className="text-sm font-semibold text-wood-dark flex items-center gap-1">
-                    <Mail className="h-4 w-4 text-wood-light/70" />
-                    {profileEmail || 'Not specified'}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-wood-light">Delivery Address</p>
-                  <p className="text-xs text-wood-medium leading-relaxed bg-white border border-wood-border/40 rounded-xl p-3 font-light">
-                    {profileAddress || 'No address registered.'}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-wood-accent hover:bg-wood-beige hover:text-wood-dark py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer mt-3"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Edit Profile details</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Order Workspace */}
-        <div className="lg:col-span-8 space-y-6">
-          <h3 className="font-serif text-xl font-bold text-wood-dark flex items-center gap-2 pb-2.5 border-b border-wood-border/30">
+      <div className="w-full space-y-6">
+        <h3 className="font-serif text-xl font-bold text-wood-dark flex items-center gap-2 pb-2.5 border-b border-wood-border/30">
             <Compass className="h-5.5 w-5.5 text-wood-accent" />
             My Order Logs ({orders.length})
           </h3>
@@ -1081,7 +870,6 @@ ${profileName || activePayOrder.name}`;
             </div>
           )}
         </div>
-      </div>
 
       <div className="mt-16 text-center">
         <Link

@@ -6,6 +6,7 @@ import { LogOut, User, LayoutDashboard, Menu, X } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
+import ProfileDrawer from './ProfileDrawer';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,6 +14,11 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminName, setAdminName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Customer Login Drawer States
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language];
 
@@ -31,6 +37,15 @@ export default function Navbar() {
       setIsLoggedIn(false);
       setAdminName('');
     }
+
+    // Check user login
+    const userToken = localStorage.getItem('ld_user_token');
+    const userPhone = localStorage.getItem('ld_user_phone');
+    if (userToken && userPhone) {
+      setIsUserLoggedIn(true);
+    } else {
+      setIsUserLoggedIn(false);
+    }
   };
 
   useEffect(() => {
@@ -38,10 +53,15 @@ export default function Navbar() {
     window.addEventListener('storage', checkLogin);
     window.addEventListener('admin-login', checkLogin);
     window.addEventListener('admin-logout', checkLogin);
+
+    const openDrawer = () => setIsProfileDrawerOpen(true);
+    window.addEventListener('open-profile-drawer', openDrawer);
+
     return () => {
       window.removeEventListener('storage', checkLogin);
       window.removeEventListener('admin-login', checkLogin);
       window.removeEventListener('admin-logout', checkLogin);
+      window.removeEventListener('open-profile-drawer', openDrawer);
     };
   }, []);
 
@@ -151,6 +171,18 @@ export default function Navbar() {
           >
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
           </button>
+
+          {/* User Profile Button */}
+          <button
+            onClick={() => setIsProfileDrawerOpen(true)}
+            className="relative flex items-center justify-center p-1.5 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer ml-1.5"
+            title="User Profile Account"
+          >
+            <User className="h-4 w-4" />
+            {isUserLoggedIn && (
+              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-amber-950 animate-pulse" />
+            )}
+          </button>
         </nav>
 
         {/* Mobile controls bar (Language + Hamburger) */}
@@ -169,6 +201,18 @@ export default function Navbar() {
             title="Switch Language / భాషను మార్చండి"
           >
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
+          </button>
+
+          {/* Mobile User Profile Button */}
+          <button
+            onClick={() => setIsProfileDrawerOpen(true)}
+            className="relative flex items-center justify-center p-1.5 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer"
+            title="User Profile Account"
+          >
+            <User className="h-3.5 w-3.5" />
+            {isUserLoggedIn && (
+              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-amber-950 animate-pulse" />
+            )}
           </button>
 
           <button
@@ -252,6 +296,12 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+      {/* Slide Profile Drawer Overlay */}
+      <ProfileDrawer 
+        isOpen={isProfileDrawerOpen} 
+        onClose={() => setIsProfileDrawerOpen(false)} 
+      />
     </header>
   );
 }
