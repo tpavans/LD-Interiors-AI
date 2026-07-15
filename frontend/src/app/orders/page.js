@@ -75,9 +75,38 @@ export default function UserOrdersPage() {
         const prodRes = await api.get('/products');
         setProducts(prodRes.data);
         
-        if (savedPhone) {
-          setPhone(savedPhone);
-          await handleSearch(null, savedPhone);
+        const token = localStorage.getItem('ld_user_token');
+        let currentPhone = savedPhone;
+
+        if (token) {
+          try {
+            const profileRes = await api.get('/auth/me', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const userData = profileRes.data;
+            if (userData) {
+              localStorage.setItem('ld_user_name', userData.name || '');
+              localStorage.setItem('ld_user_phone', userData.phone || '');
+              localStorage.setItem('ld_user_email', userData.email || '');
+              localStorage.setItem('ld_user_address', userData.address || '');
+
+              setProfileName(userData.name || '');
+              setProfilePhone(userData.phone || '');
+              setProfileEmail(userData.email || '');
+              setProfileAddress(userData.address || '');
+              currentPhone = userData.phone || savedPhone;
+            }
+          } catch (profileErr) {
+            console.error('Session verify failed:', profileErr);
+            if (profileErr.response && profileErr.response.status === 401) {
+              localStorage.removeItem('ld_user_token');
+            }
+          }
+        }
+        
+        if (currentPhone) {
+          setPhone(currentPhone);
+          await handleSearch(null, currentPhone);
         }
       } catch (err) {
         console.error('Error fetching designs catalog:', err);
@@ -169,7 +198,15 @@ export default function UserOrdersPage() {
       
       localStorage.setItem('ld_user_token', token);
       localStorage.setItem('ld_user_phone', phone);
+      localStorage.setItem('ld_user_name', userData.name || '');
+      localStorage.setItem('ld_user_email', userData.email || '');
+      localStorage.setItem('ld_user_address', userData.address || '');
       localStorage.setItem('ld_user_registered', 'true');
+
+      setProfileName(userData.name || '');
+      setProfilePhone(phone);
+      setProfileEmail(userData.email || '');
+      setProfileAddress(userData.address || '');
       
       // Load orders timeline on verified login success
       await handleSearch(null, phone);
@@ -181,8 +218,25 @@ export default function UserOrdersPage() {
     }
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
+    
+    // Save to database if token is available
+    const token = localStorage.getItem('ld_user_token');
+    if (token) {
+      try {
+        await api.put('/auth/profile', {
+          name: profileName.trim(),
+          email: profileEmail.trim(),
+          address: profileAddress.trim()
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.error('Failed to save profile to database:', err);
+      }
+    }
+
     localStorage.setItem('ld_user_name', profileName.trim());
     localStorage.setItem('ld_user_phone', profilePhone.trim());
     localStorage.setItem('ld_user_email', profileEmail.trim());

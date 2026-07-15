@@ -32,6 +32,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: 'admin',
   },
+  address: {
+    type: String,
+    trim: true,
+  },
 }, { timestamps: true });
 
 // Pre-save middleware to hash the password before saving a new user

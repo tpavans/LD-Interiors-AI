@@ -67,6 +67,35 @@ const createOrder = async (req, res) => {
       productId: productId ? productId.trim() : undefined,
     });
 
+    // Auto-create/update customer profile on order placement
+    try {
+      const User = require('../models/User');
+      const cleanedPhone = phone.trim();
+      let user = await User.findOne({ phone: cleanedPhone });
+      if (!user) {
+        await User.create({
+          name: name.trim(),
+          email: email.trim(),
+          phone: cleanedPhone,
+          address: address.trim(),
+          password: Math.random().toString(36).slice(-10),
+          role: 'user'
+        });
+        console.log(`[AUTO-PROFILE] Created customer profile for phone: ${cleanedPhone}`);
+      } else {
+        let updated = false;
+        if (!user.address) { user.address = address.trim(); updated = true; }
+        if (user.name.startsWith('Customer (')) { user.name = name.trim(); updated = true; }
+        if (user.email.startsWith(cleanedPhone)) { user.email = email.trim(); updated = true; }
+        if (updated) {
+          await user.save();
+          console.log(`[AUTO-PROFILE] Updated customer profile details for phone: ${cleanedPhone}`);
+        }
+      }
+    } catch (profileErr) {
+      console.error('[AUTO-PROFILE ERROR] Failed to manage customer profile:', profileErr.message);
+    }
+
     // Dispatch notifications in parallel (so slow SMTP emails don't delay the Twilio voice call)
     sendOrderEmail(order).catch((err) => {
       console.error('Failed to send admin order email:', err);

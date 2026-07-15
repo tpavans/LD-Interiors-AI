@@ -132,6 +132,8 @@ const getMe = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        address: user.address,
         role: user.role,
       });
     } else {
@@ -303,9 +305,47 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Update customer profile details
+ * @route   PUT /api/auth/profile
+ * @access  Private (User and Admin)
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const { name, email, address } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name !== undefined) user.name = name.trim();
+    if (email !== undefined) user.email = email.trim();
+    if (address !== undefined) user.address = address.trim();
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      address: updatedUser.address,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    console.error('UPDATE PROFILE EXCEPTION:', error);
+    return res.status(500).json({
+      message: 'Server error updating user profile details.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   loginUser,
   getMe,
   sendOtp,
   verifyOtp,
+  updateProfile,
 };
