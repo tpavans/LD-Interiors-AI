@@ -235,11 +235,10 @@ const sendOtp = async (req, res) => {
         realSms: true
       });
     } else {
-      // Fallback: send simulated OTP to keep system testable and responsive
+      // In production/strict mode, do NOT send the OTP back to the client!
       return res.status(200).json({
-        message: `OTP generated (Real SMS failed: ${smsError})`,
+        message: `OTP generated (Real SMS delivery failed: ${smsError}). Check server logs.`,
         phone: cleanedPhone,
-        otp: otp, // Fallback simulated OTP
         realSms: false
       });
     }

@@ -146,11 +146,6 @@ export default function Footer() {
           <span>
             {t.developedBy} <Link href="/admin?pavan=true" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
           </span>
-          <span className="text-wood-border hidden xs:inline">|</span>
-          <Link href="/admin?pavan=true" className="text-wood-light hover:text-wood-accent font-semibold transition-colors cursor-pointer flex items-center gap-1">
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            <span>Admin Login</span>
-          </Link>
         </div>
       </div>
     </footer>

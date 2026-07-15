@@ -921,13 +921,7 @@ LD Interiors & Furnitures
                     </div>
                   )}
 
-                  {simulatedOtp && (
-                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800 text-left animate-fadeIn">
-                      <p className="font-bold">🔑 Simulated SMS OTP Code:</p>
-                      <p className="text-sm font-mono font-extrabold tracking-widest mt-1 text-emerald-950">{simulatedOtp}</p>
-                      <p className="text-[10px] text-emerald-700/80 mt-1 font-light">Copy and paste this code above to complete your verification.</p>
-                    </div>
-                  )}
+
 
                   <button
                     type="submit"
