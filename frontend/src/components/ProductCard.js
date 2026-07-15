@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Smartphone } from 'lucide-react';
 import api from '../utils/api';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
 export default function ProductCard({ product }) {
+  const router = useRouter();
   const { _id, title, category, image, price, rating, createdAt } = product;
   const isNew = createdAt ? (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24) <= 7 : false;
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -15,6 +17,14 @@ export default function ProductCard({ product }) {
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
+
+  const handleCardClick = (e) => {
+    // If user clicked inside active elements (buttons, inputs, links, modals), do not trigger navigation
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.modal') || e.target.closest('form')) {
+      return;
+    }
+    router.push(`/products/${_id}`);
+  };
   const [showLightbox, setShowLightbox] = useState(false);
   
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/products/${_id}` : '';
@@ -158,9 +168,12 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
   return (
     <>
       <div className="card-3d block">
-        <div className="card-3d-inner group overflow-hidden rounded-3xl bg-white/85 backdrop-blur-md border border-wood-border/40 transition-all duration-500 ease-out shadow-lg hover:shadow-xl hover:border-wood-accent/30 glow-on-hover">
+        <div 
+          onClick={handleCardClick}
+          className="card-3d-inner group overflow-hidden rounded-3xl bg-white/85 backdrop-blur-md border border-wood-border/40 transition-all duration-500 ease-out shadow-lg hover:shadow-xl hover:border-wood-accent/30 glow-on-hover cursor-pointer"
+        >
           <div 
-            onClick={() => setShowLightbox(true)}
+            onClick={handleCardClick}
             className="block relative overflow-hidden aspect-[4/5] bg-wood-beige/10 cursor-pointer group"
           >
             <img
@@ -594,12 +607,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 <h4 className="font-serif text-sm sm:text-base font-bold tracking-wide mt-0.5">{title}</h4>
               </div>
               <div className="flex items-center gap-2">
-                <Link
-                  href={`/products/${_id}`}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 text-white hover:border-white/30"
-                >
-                  View Specifications
-                </Link>
                 <button
                   onClick={() => {
                     setShowLightbox(false);
