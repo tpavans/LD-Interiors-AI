@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame } from 'lucide-react';
+import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
@@ -386,6 +386,72 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Workshop Reels Section */}
+      {products.filter(p => p.video).length > 0 && (
+        <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 mt-12 sm:mt-16">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
+            <div className="text-left">
+              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+                {isTelugu ? "లైవ్ వర్క్‌షాప్ రీల్స్" : "Live Workshop Videos"}
+              </span>
+              <h3 className="font-serif text-3xl font-bold text-wood-dark mt-1">
+                {isTelugu ? "వర్క్‌షాప్ డిజైన్ రీల్స్" : "Showcase Video Reels"}
+              </h3>
+              <p className="text-xs text-wood-light font-light mt-2 max-w-lg leading-relaxed">
+                {isTelugu 
+                  ? "మా వర్క్‌షాప్‌లో తయారవుతున్న మేలిరకం టేకు కలప చెక్కడాలు, ఫినిషింగ్ పనులు మరియు లైవ్ ఫర్నిచర్ వీడియోలను ఇక్కడ చూడండి."
+                  : "Watch live carpentry showcase, raw teak carvings, and finished luxury woodwork video reels directly from our workshop floor."}
+              </p>
+            </div>
+            <Link
+              href="/reels"
+              className="flex items-center gap-1 text-xs font-bold text-wood-accent hover:text-amber-500 uppercase tracking-widest transition-colors"
+            >
+              <span>{isTelugu ? "అన్ని రీల్స్ చూడండి" : "Watch All Reels"}</span>
+              <ArrowRight className="h-4.5 w-4.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {products.filter(p => p.video).slice(0, 4).map((prod) => (
+              <Link 
+                key={prod._id}
+                href="/reels"
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-wood-border/40 shadow-md hover:shadow-lg bg-neutral-900 cursor-pointer"
+              >
+                {/* Background Image */}
+                <img 
+                  src={prod.image} 
+                  alt={prod.title}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+                />
+                
+                {/* Dark Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
+                
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-11 w-11 rounded-full bg-white/95 text-wood-dark flex items-center justify-center shadow-lg border border-wood-border/30 transform transition-all duration-300 group-hover:scale-110 group-hover:bg-wood-accent group-hover:text-wood-dark">
+                    <Play className="h-5 w-5 fill-current ml-0.5" />
+                  </div>
+                </div>
+
+                {/* Info Text */}
+                <div className="absolute bottom-4 left-4 right-4 text-left">
+                  <span className="inline-block px-2 py-0.5 rounded-full bg-wood-accent text-wood-dark text-[7.5px] font-extrabold uppercase tracking-wider mb-1.5">
+                    {prod.category}
+                  </span>
+                  <h4 className="font-serif text-xs sm:text-sm font-bold text-white leading-tight truncate">
+                    {prod.title}
+                  </h4>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Premium Material Brands Scroll Section */}
       <section className="py-16 border-t border-wood-border/30 bg-wood-cream/25 mt-16 overflow-hidden">
