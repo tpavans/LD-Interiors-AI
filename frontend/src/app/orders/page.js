@@ -11,6 +11,10 @@ const UPI_IDS = {
 
 export default function UserOrdersPage() {
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [simulatedOtp, setSimulatedOtp] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -136,6 +140,47 @@ export default function UserOrdersPage() {
     }
   };
 
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setLoginError('');
+    setSimulatedOtp('');
+    
+    try {
+      const response = await api.post('/auth/send-otp', { phone });
+      setIsOtpSent(true);
+      setSimulatedOtp(response.data.otp);
+    } catch (err) {
+      console.error('OTP Send error:', err);
+      setLoginError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setLoginError('');
+    
+    try {
+      const response = await api.post('/auth/verify-otp', { phone, otp });
+      const { token, ...userData } = response.data;
+      
+      localStorage.setItem('ld_user_token', token);
+      localStorage.setItem('ld_user_phone', phone);
+      localStorage.setItem('ld_user_registered', 'true');
+      
+      // Load orders timeline on verified login success
+      await handleSearch(null, phone);
+    } catch (err) {
+      console.error('OTP Verification error:', err);
+      setLoginError(err.response?.data?.message || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSaveProfile = (e) => {
     e.preventDefault();
     localStorage.setItem('ld_user_name', profileName.trim());
@@ -158,6 +203,7 @@ export default function UserOrdersPage() {
     localStorage.removeItem('ld_user_email');
     localStorage.removeItem('ld_user_address');
     localStorage.removeItem('ld_user_registered');
+    localStorage.removeItem('ld_user_token');
     
     setPhone('');
     setOrders([]);
@@ -167,6 +213,9 @@ export default function UserOrdersPage() {
     setProfileEmail('');
     setProfileAddress('');
     setIsEditingProfile(false);
+    setIsOtpSent(false);
+    setOtp('');
+    setSimulatedOtp('');
     
     window.dispatchEvent(new Event('storage'));
   };
@@ -346,8 +395,15 @@ ${profileName || activePayOrder.name}`;
             Access My Account
           </h1>
           <p className="mt-2 text-xs text-wood-light font-light leading-relaxed mb-6">
-            Enter your registered mobile number to manage your profile, load your live order logs, and track status timelines.
+            Enter your mobile number to securely receive an OTP code and log in to your account.
           </p>
+
+          {loginError && (
+            <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 text-left mb-5">
+              <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+              <span>{loginError}</span>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 text-left mb-5">
@@ -356,36 +412,99 @@ ${profileName || activePayOrder.name}`;
             </div>
           )}
 
-          <form onSubmit={(e) => handleSearch(e)} className="space-y-4 text-left">
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-wood-accent mb-1.5">
-                Registered Mobile Number
-              </label>
-              <input
-                type="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g., 9346325291"
-                className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-              />
-            </div>
+          {!isOtpSent ? (
+            <form onSubmit={handleSendOtp} className="space-y-4 text-left">
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-wood-accent mb-1.5">
+                  Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g., 9346325291"
+                  className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:bg-neutral-500 cursor-pointer"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Search className="h-4 w-4" />
-                  <span>Verify and Login</span>
-                </>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:bg-neutral-500 cursor-pointer"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Smartphone className="h-4 w-4" />
+                    <span>Send OTP</span>
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4 text-left">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] text-wood-light">OTP Sent to {phone}</span>
+                <button
+                  type="button"
+                  onClick={() => { setIsOtpSent(false); setOtp(''); setSimulatedOtp(''); }}
+                  className="text-[9px] text-wood-accent font-bold uppercase tracking-wider hover:text-amber-500 cursor-pointer"
+                >
+                  Change
+                </button>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-wood-accent mb-1.5">
+                  Enter 6-Digit OTP
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="••••••"
+                  className="w-full rounded-xl border border-wood-border bg-white px-4 py-3 text-xs text-center font-bold tracking-widest text-wood-dark focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                />
+              </div>
+
+              {simulatedOtp && (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-250 p-3.5 text-[11px] text-emerald-800 text-left animate-fadeIn">
+                  <p className="font-bold">🔑 Simulated SMS OTP Code:</p>
+                  <p className="text-sm font-mono font-extrabold tracking-widest mt-1 text-emerald-950">{simulatedOtp}</p>
+                  <p className="text-[9px] text-emerald-700/80 mt-1 font-light">Copy and paste this code above to access your order logs.</p>
+                </div>
               )}
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:bg-neutral-500 cursor-pointer"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Verify & Log In</span>
+                  </>
+                )}
+              </button>
+              
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  className="text-[9px] text-wood-light hover:text-wood-dark uppercase font-bold tracking-widest cursor-pointer"
+                >
+                  Resend OTP
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     );
