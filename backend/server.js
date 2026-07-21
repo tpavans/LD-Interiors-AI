@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const supportRoutes = require('./routes/supportRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 // Global exception and rejection loggers
 process.on('uncaughtException', (err) => {
@@ -98,6 +99,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Fallback path for undefined routes
 app.use((req, res, next) => {

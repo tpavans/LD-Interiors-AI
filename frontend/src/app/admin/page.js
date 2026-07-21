@@ -216,6 +216,11 @@ export default function AdminPage() {
   const [paymentActionLoading, setPaymentActionLoading] = useState({}); // paymentId -> boolean
   const [verifiedAmounts, setVerifiedAmounts] = useState({}); // paymentId -> number string
 
+  // Category Management State
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [categoryLoading, setCategoryLoading] = useState(false);
+
   const fileInputRef = useRef(null);
 
   // 1. Check Authentication on Mount
@@ -234,6 +239,7 @@ export default function AdminPage() {
           localStorage.setItem('ld_admin_secret_passed', 'true');
           fetchProducts();
           fetchOrders();
+          fetchCategories();
         } catch (err) {
           console.error('Session verification error:', err);
           const isUnauthorized = err.response && (err.response.status === 401 || err.response.status === 403);
@@ -252,6 +258,7 @@ export default function AdminPage() {
             localStorage.setItem('ld_admin_secret_passed', 'true');
             fetchProducts();
             fetchOrders();
+            fetchCategories();
           }
         }
       } else if (!hasSecretParam && !hasStoredSecret) {
@@ -264,6 +271,7 @@ export default function AdminPage() {
         if (hasSecretParam) {
           localStorage.setItem('ld_admin_secret_passed', 'true');
         }
+        fetchCategories();
       }
       setAuthLoading(false);
     };
@@ -306,6 +314,53 @@ export default function AdminPage() {
       console.error('Error fetching orders:', err);
     } finally {
       setOrdersLoading(false);
+    }
+  };
+
+  // 2c. Fetch Categories
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategoriesList(response.data);
+      if (response.data.length > 0 && (!category || category === CATEGORIES[0])) {
+        setCategory(response.data[0].name);
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    if (e) e.preventDefault();
+    if (!newCategoryInput.trim()) return;
+    setFormError('');
+    setFormSuccess('');
+    setCategoryLoading(true);
+    try {
+      const res = await api.post('/categories', { name: newCategoryInput.trim() });
+      setNewCategoryInput('');
+      await fetchCategories();
+      setCategory(res.data.name);
+      setFormSuccess(`Category "${res.data.name}" added successfully!`);
+    } catch (err) {
+      console.error('Error adding category:', err);
+      setFormError(err.response?.data?.message || 'Failed to add category');
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
+  const handleDeleteCategory = async (catId, catName) => {
+    if (!confirm(`Are you sure you want to delete category "${catName}"?`)) return;
+    setFormError('');
+    setFormSuccess('');
+    try {
+      await api.delete(`/categories/${catId}`);
+      await fetchCategories();
+      setFormSuccess(`Category "${catName}" removed successfully!`);
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      setFormError(err.response?.data?.message || 'Failed to delete category');
     }
   };
 
@@ -900,6 +955,16 @@ LD Interiors & Furnitures
             </span>
           )}
         </button>
+        <button
+          onClick={() => { setAdminTab('categories'); fetchCategories(); }}
+          className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
+            adminTab === 'categories'
+              ? 'text-wood-accent border-b-2 border-wood-accent'
+              : 'text-wood-light hover:text-wood-dark'
+          }`}
+        >
+          <span>Manage Categories ({categoriesList.length})</span>
+        </button>
       </div>
 
       {/* SHOWCASE PRODUCT TAB */}
@@ -937,15 +1002,24 @@ LD Interiors & Furnitures
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                  Space Category
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light">
+                    Space Category
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setAdminTab('categories'); fetchCategories(); }}
+                    className="text-[10px] font-bold text-wood-accent hover:underline cursor-pointer"
+                  >
+                    + Manage Categories
+                  </button>
+                </div>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-sm focus:border-wood-accent focus:outline-none transition-colors text-wood-dark cursor-pointer"
                 >
-                  {CATEGORIES.map((cat) => (
+                  {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
                     <option key={cat} value={cat} className="bg-white text-wood-dark">
                       {cat}
                     </option>
@@ -1596,6 +1670,105 @@ LD Interiors & Furnitures
             </div>
           </>
           )}
+        </div>
+      )}
+
+      {/* CATEGORIES MANAGEMENT TAB */}
+      {adminTab === 'categories' && (
+        <div className="space-y-8 animate-fadeIn text-left">
+          {/* Add Category Form Card */}
+          <div className="bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-6 sm:p-8 shadow-md glow-on-hover">
+            <h2 className="font-serif text-xl font-bold text-wood-dark mb-2 flex items-center gap-2">
+              <Plus className="h-5 w-5 text-wood-accent" />
+              <span>Add New Space Category / కొత్త డిజైన్ విభాగం చేర్చండి</span>
+            </h2>
+            <p className="text-xs text-wood-medium mb-6 font-light leading-relaxed">
+              Create custom space and furniture categories (e.g. Wall Panels, Almirahs, Gummalu, Temple Mandir). New categories will instantly appear in design upload forms and customer gallery filters.
+            </p>
+
+            {formError && (
+              <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            {formSuccess && (
+              <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span>{formSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                required
+                value={newCategoryInput}
+                onChange={(e) => setNewCategoryInput(e.target.value)}
+                placeholder="e.g., Almirahs, WPC Wall Panels, Gummalu..."
+                className="flex-1 rounded-xl border border-wood-border bg-white px-4 py-3 text-sm focus:border-wood-accent focus:outline-none transition-colors text-wood-dark"
+              />
+              <button
+                type="submit"
+                disabled={categoryLoading || !newCategoryInput.trim()}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                {categoryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                <span>Add Category</span>
+              </button>
+            </form>
+          </div>
+
+          {/* Categories Grid Card */}
+          <div className="bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-6 sm:p-8 shadow-md">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-wood-border/30">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-wood-dark">
+                  All Active Categories ({categoriesList.length})
+                </h3>
+                <p className="text-xs text-wood-medium font-light mt-0.5">
+                  Click delete icon to remove custom categories. Default categories with active designs will remain protected.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchCategories}
+                className="text-xs font-bold text-wood-accent hover:underline cursor-pointer"
+              >
+                Refresh List
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {categoriesList.map((cat) => {
+                const productCount = products.filter(p => p.category?.toLowerCase() === cat.name.toLowerCase()).length;
+                return (
+                  <div
+                    key={cat._id || cat.name}
+                    className="flex items-center justify-between bg-wood-cream/40 border border-wood-border/40 hover:border-wood-accent/50 rounded-2xl p-4 transition-all"
+                  >
+                    <div>
+                      <h4 className="text-sm font-bold text-wood-dark">{cat.name}</h4>
+                      <p className="text-[10px] text-wood-medium font-medium mt-0.5">
+                        {productCount} {productCount === 1 ? 'Design' : 'Designs'}
+                      </p>
+                    </div>
+                    {cat._id && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat._id, cat.name)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title={`Delete ${cat.name} category`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 

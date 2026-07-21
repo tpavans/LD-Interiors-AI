@@ -4,11 +4,12 @@ import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
 import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle } from 'lucide-react';
 
-const CATEGORIES = ["All", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
+const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categories, setCategories] = useState(["All", ...DEFAULT_CATEGORIES]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -22,37 +23,54 @@ export default function ProductsPage() {
     : '';
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('/products');
-        setProducts(response.data);
+        const [prodRes, catRes] = await Promise.allSettled([
+          api.get('/products'),
+          api.get('/categories')
+        ]);
+
+        let fetchedProducts = [];
+        if (prodRes.status === 'fulfilled') {
+          fetchedProducts = prodRes.value.data;
+          setProducts(fetchedProducts);
+        } else {
+          setError('Could not connect to the API. Please make sure the backend is running.');
+        }
+
+        let catList = DEFAULT_CATEGORIES;
+        if (catRes.status === 'fulfilled' && Array.isArray(catRes.value.data)) {
+          catList = catRes.value.data.map(c => c.name);
+        }
+
+        const fullCatList = ["All", ...new Set([...catList])];
+        setCategories(fullCatList);
 
         // Read category query parameter from URL (e.g., ?category=Sofas)
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('category') || 'All';
         
         // Find match in categories list (case-insensitive)
-        const matchedCategory = CATEGORIES.find(
+        const matchedCategory = fullCatList.find(
           c => c.toLowerCase() === catParam.toLowerCase()
         ) || 'All';
 
         setSelectedCategory(matchedCategory);
 
         if (matchedCategory !== "All") {
-          setFilteredProducts(response.data.filter(
-            p => p.category.toLowerCase() === matchedCategory.toLowerCase()
+          setFilteredProducts(fetchedProducts.filter(
+            p => p.category && p.category.toLowerCase() === matchedCategory.toLowerCase()
           ));
         } else {
-          setFilteredProducts(response.data);
+          setFilteredProducts(fetchedProducts);
         }
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Could not connect to the API. Please make sure the backend is running.');
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   const filterProducts = (category, search) => {
@@ -160,7 +178,7 @@ export default function ProductsPage() {
 
       {/* Filter Buttons */}
       <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-wood-border/30 pb-8 select-none">
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <button
             key={category}
             onClick={() => handleCategoryChange(category)}

@@ -7,7 +7,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 const inter = Inter({
-  subsets: ["sans-serif", "latin"],
+  subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
