@@ -488,9 +488,12 @@ const confirmCustomerPayment = async (req, res) => {
     return res.status(503).json({ message: 'Database connection is offline.' });
   }
   try {
-    const { amount, upiIdUsed } = req.body;
+    const { amount, upiIdUsed, utrNumber } = req.body;
     if (!amount) {
       return res.status(400).json({ message: 'Amount is required.' });
+    }
+    if (!utrNumber || utrNumber.trim().length < 6) {
+      return res.status(400).json({ message: 'Valid 12-digit UTR / Reference number is required for manual payment verification.' });
     }
 
     const order = await Order.findById(req.params.id);
@@ -498,10 +501,12 @@ const confirmCustomerPayment = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
+    const cleanUtr = utrNumber.trim();
+
     // Append to payments with custom status
     order.payments.push({
       amount: Number(amount),
-      utrNumber: 'WhatsApp Alert Triggered',
+      utrNumber: cleanUtr,
       upiIdUsed: upiIdUsed || 'UPI QR / App Link',
       status: 'Pending',
       createdAt: Date.now()
@@ -514,7 +519,7 @@ const confirmCustomerPayment = async (req, res) => {
     // Trigger email alert to admin
     try {
       const { sendAdminPaymentAlertEmail } = require('../utils/sendEmail');
-      sendAdminPaymentAlertEmail(updatedOrder, amount, 'WhatsApp Alert Triggered').catch(e => console.error(e));
+      sendAdminPaymentAlertEmail(updatedOrder, amount, cleanUtr).catch(e => console.error(e));
     } catch (err) {
       console.error('Failed to send admin payment alert email:', err);
     }
@@ -595,17 +600,6 @@ const createRazorpayOrder = async (req, res) => {
       const rpOrder = await razorpayInstance.orders.create(options);
       razorpayOrderId = rpOrder.id;
     }
-
-    // Append to payments array in database as Pending
-    order.payments.push({
-      amount: baseAmount,
-      utrNumber: `RP-Order: ${razorpayOrderId}`,
-      upiIdUsed: 'Razorpay Gateway',
-      status: 'Pending',
-      createdAt: Date.now()
-    });
-
-    await order.save();
 
     res.json({
       keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockkey_9346325291',

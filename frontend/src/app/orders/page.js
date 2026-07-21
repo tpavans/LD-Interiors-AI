@@ -39,6 +39,7 @@ export default function UserOrdersPage() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' or 'gateway'
+  const [utrInput, setUtrInput] = useState('');
 
   // Tracking Modal State
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
@@ -391,20 +392,29 @@ export default function UserOrdersPage() {
         }
       } else {
         // Direct UPI transfer flow
+        if (!utrInput || utrInput.trim().length < 6) {
+          setPaymentError('Please enter your 12-digit UTR / Reference number from GPay / PhonePe / Paytm.');
+          setSubmittingPayment(false);
+          return;
+        }
+
         await api.post(`/orders/${activePayOrder._id}/confirm-payment`, {
           amount,
-          upiIdUsed: UPI_IDS[selectedUpiKey].id
+          upiIdUsed: UPI_IDS[selectedUpiKey].id,
+          utrNumber: utrInput.trim()
         });
 
         // 2. Open WhatsApp Chat prefilled to Admin Pavansai (9346325291)
         const orderShortId = activePayOrder._id.substring(18).toUpperCase();
-        const waMsg = `🔔 Payment Notification / పేమెంట్ సమాచారం
+        const waMsg = `🔔 Payment Verification Submitted / పేమెంట్ సమాచారం
 
 Hello Pavansai/Nagaraju,
 
-I have completed the UPI payment of ₹${amount.toLocaleString('en-IN')} for my order of "${activePayOrder.product}" (Order ID: LD-${orderShortId}).
+I have submitted a payment verification request of ₹${amount.toLocaleString('en-IN')} for my order "${activePayOrder.product}" (Order ID: LD-${orderShortId}).
 
-Please check your bank account and approve my order.
+📌 12-Digit UTR / Ref No: ${utrInput.trim()}
+
+Please check your bank statement and verify my payment.
 
 Thank you,
 ${profileName || activePayOrder.name}`;
@@ -412,9 +422,10 @@ ${profileName || activePayOrder.name}`;
         const waUrl = `https://wa.me/919346325291?text=${encodeURIComponent(waMsg)}`;
         window.open(waUrl, '_blank');
 
-        alert('Payment confirmation registered! We opened WhatsApp to notify Pavansai. Nagaraju will check the account and verify the transaction in the dashboard.');
+        alert('Payment verification submitted with UTR No! We opened WhatsApp to notify Pavansai. Nagaraju will check the account and verify the transaction in the dashboard.');
         
-        // Close modal and refresh order logs
+        // Clear inputs, close modal, and refresh order logs
+        setUtrInput('');
         setActivePayOrder(null);
         await handleSearch(null, phone);
       }
@@ -1039,6 +1050,24 @@ ${profileName || activePayOrder.name}`;
                           ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
                         </p>
                       </div>
+                    </div>
+
+                    {/* Step 2: Verification UTR Input */}
+                    <div className="bg-amber-50/70 border-2 border-amber-300/80 rounded-2xl p-4 animate-fadeIn text-left space-y-2">
+                      <label className="block text-[10px] uppercase font-extrabold tracking-wider text-amber-900">
+                        Enter 12-Digit Transaction Ref / UTR No (తప్పనిసరి) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={utrInput}
+                        onChange={(e) => setUtrInput(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                        placeholder="e.g. 420198765432 (12-digit Ref No)"
+                        className="w-full rounded-xl border border-amber-400 bg-white px-4 py-2.5 text-xs font-mono font-bold text-wood-dark focus:border-wood-accent focus:outline-none transition-colors shadow-xs"
+                      />
+                      <p className="text-[9px] text-amber-800 leading-relaxed font-medium">
+                        ⚠️ GPay / PhonePe / Paytm లో అమౌంట్ ట్రాన్స్‌ఫర్ చేసిన తర్వాత కనిపించే <strong>12 అంకెల Ref / UTR Number</strong> ను ఇక్కడ టైప్ చేసి కన్ఫర్మ్ చేయండి.
+                      </p>
                     </div>
                   </div>
                 </div>
