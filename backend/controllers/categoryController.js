@@ -43,6 +43,7 @@ const getCategories = async (req, res) => {
       categories = await Category.find({}).sort({ name: 1 });
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=1800, stale-while-revalidate=3600');
     return res.status(200).json(categories);
   } catch (error) {
     console.error('GET CATEGORIES EXCEPTION:', error);

@@ -32,6 +32,11 @@ export default function ClientWrapper() {
     };
   }, []);
 
+  // Background Server Warm-Up (Wakes Render backend on app start)
+  useEffect(() => {
+    api.get('/categories').catch(() => {});
+  }, []);
+
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'order'

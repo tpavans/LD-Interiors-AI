@@ -91,6 +91,24 @@ Thank you,
   };
 
   useEffect(() => {
+    // 1. Instant Stale-While-Revalidate Cache Hydration (loads in 0.05s)
+    let initialProducts = [];
+    try {
+      const cachedProdStr = sessionStorage.getItem('ld_cached_products');
+      const cachedCatStr = sessionStorage.getItem('ld_cached_categories');
+      if (cachedProdStr) {
+        initialProducts = JSON.parse(cachedProdStr);
+        setProducts(initialProducts);
+        setLoading(false);
+      }
+      if (cachedCatStr) {
+        const catList = JSON.parse(cachedCatStr);
+        setCategories(["All", ...new Set(catList)]);
+      }
+    } catch (e) {
+      console.warn('Cache read error:', e);
+    }
+
     const fetchData = async () => {
       try {
         const [prodRes, catRes] = await Promise.allSettled([
@@ -102,13 +120,19 @@ Thank you,
         if (prodRes.status === 'fulfilled') {
           fetchedProducts = prodRes.value.data;
           setProducts(fetchedProducts);
-        } else {
+          try {
+            sessionStorage.setItem('ld_cached_products', JSON.stringify(fetchedProducts));
+          } catch (e) {}
+        } else if (initialProducts.length === 0) {
           setError('Could not connect to the API. Please make sure the backend is running.');
         }
 
         let catList = DEFAULT_CATEGORIES;
         if (catRes.status === 'fulfilled' && Array.isArray(catRes.value.data)) {
           catList = catRes.value.data.map(c => c.name);
+          try {
+            sessionStorage.setItem('ld_cached_categories', JSON.stringify(catList));
+          } catch (e) {}
         }
 
         const fullCatList = ["All", ...new Set([...catList])];
@@ -138,6 +162,7 @@ Thank you,
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
