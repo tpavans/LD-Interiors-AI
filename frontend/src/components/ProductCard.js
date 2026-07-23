@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Smartphone } from 'lucide-react';
+import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Smartphone, Heart } from 'lucide-react';
 import api from '../utils/api';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
@@ -14,9 +14,47 @@ export default function ProductCard({ product }) {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
+
+  useEffect(() => {
+    const checkLiked = () => {
+      try {
+        const liked = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+        setIsLiked(liked.includes(_id));
+      } catch (err) {
+        setIsLiked(false);
+      }
+    };
+    checkLiked();
+    window.addEventListener('storage', checkLiked);
+    window.addEventListener('liked-updated', checkLiked);
+    return () => {
+      window.removeEventListener('storage', checkLiked);
+      window.removeEventListener('liked-updated', checkLiked);
+    };
+  }, [_id]);
+
+  const handleToggleLike = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const liked = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+      let updated;
+      if (liked.includes(_id)) {
+        updated = liked.filter(id => id !== _id);
+      } else {
+        updated = [...liked, _id];
+      }
+      localStorage.setItem('ld_liked_designs', JSON.stringify(updated));
+      setIsLiked(updated.includes(_id));
+      window.dispatchEvent(new Event('liked-updated'));
+    } catch (err) {
+      console.error('Failed to toggle liked design:', err);
+    }
+  };
 
   const handleCardClick = (e) => {
     // If user clicked inside active elements (buttons, inputs, links, modals), do not trigger navigation
@@ -211,6 +249,14 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               title="Share Design"
             >
               <Share2 className="h-3.5 w-3.5" />
+            </button>
+            {/* Like Overlay Button */}
+            <button
+              onClick={handleToggleLike}
+              className="absolute top-14 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full text-neutral-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-300 shadow-sm border border-wood-border/30 cursor-pointer z-10"
+              title={isLiked ? "Remove from Liked Designs" : "Add to Liked Designs"}
+            >
+              <Heart className={`h-3.5 w-3.5 transition-transform duration-300 hover:scale-110 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
             </button>
           </div>
           <div className="p-4 sm:p-5 flex flex-col gap-3 sm:gap-4">

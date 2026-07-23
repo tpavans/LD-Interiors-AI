@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle } from 'lucide-react';
+import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle, Heart, Trash2 } from 'lucide-react';
 
 const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
@@ -21,6 +21,62 @@ export default function ProductsPage() {
   const shareUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/products?category=${encodeURIComponent(selectedCategory)}` 
     : '';
+
+  // Liked Designs Board States
+  const [likedIds, setLikedIds] = useState([]);
+  const [showLikedDrawer, setShowLikedDrawer] = useState(false);
+
+  useEffect(() => {
+    const updateLikedList = () => {
+      try {
+        const liked = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+        setLikedIds(liked);
+      } catch (err) {
+        setLikedIds([]);
+      }
+    };
+    updateLikedList();
+    window.addEventListener('storage', updateLikedList);
+    window.addEventListener('liked-updated', updateLikedList);
+    return () => {
+      window.removeEventListener('storage', updateLikedList);
+      window.removeEventListener('liked-updated', updateLikedList);
+    };
+  }, []);
+
+  const handleRemoveLiked = (id) => {
+    try {
+      const updated = likedIds.filter(item => item !== id);
+      localStorage.setItem('ld_liked_designs', JSON.stringify(updated));
+      setLikedIds(updated);
+      window.dispatchEvent(new Event('liked-updated'));
+    } catch (err) {
+      console.error('Error removing liked design:', err);
+    }
+  };
+
+  const handleShareLikedOnWhatsApp = () => {
+    if (likedIds.length === 0) return;
+    const likedProducts = products.filter(p => likedIds.includes(p._id));
+    const listText = likedProducts.map((p, idx) => {
+      const productUrl = `${window.location.origin}/products/${p._id}`;
+      return `${idx + 1}. *${p.title}* (${p.category}) - ${p.price && p.price > 0 ? `₹${p.price.toLocaleString('en-IN')}` : 'Contact for price'}\n🔗 Link: ${productUrl}`;
+    }).join('\n\n');
+
+    const waMessage = `🔔 Dream Designs Board / నచ్చిన డిజైన్ల జాబితా
+
+Hello Nagaraju garu,
+
+I liked these designs on your LD Interiors & Furnitures website. Can you please check their wood pricing/sizing?
+
+${listText}
+
+Thank you,
+[Customer Name]`;
+
+    const waUrl = `https://wa.me/916281653998?text=${encodeURIComponent(waMessage)}`;
+    window.open(waUrl, '_blank');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,6 +341,103 @@ export default function ProductsPage() {
             <p className="text-[9px] text-wood-light font-light text-center mt-4">
               Sharing this link will automatically load the portfolio page filtered for only the "{selectedCategory}" designs!
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING LIKED DESIGNS BADGE */}
+      {likedIds.length > 0 && (
+        <button
+          onClick={() => setShowLikedDrawer(true)}
+          className="fixed bottom-24 right-6 z-40 flex items-center gap-2 rounded-full bg-wood-dark hover:bg-wood-medium text-white px-4 py-3 shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer select-none animate-bounce"
+        >
+          <Heart className="h-4.5 w-4.5 fill-red-500 text-red-500 animate-pulse" />
+          <span className="text-[10px] font-extrabold uppercase tracking-widest">
+            Dream Designs ({likedIds.length})
+          </span>
+        </button>
+      )}
+
+      {/* LIKED DESIGNS DRAWER PORTAL */}
+      {showLikedDrawer && (
+        <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn bg-black/50 backdrop-blur-xs" onClick={() => setShowLikedDrawer(false)}>
+          <div 
+            className="w-full max-w-md bg-wood-cream border-l border-wood-border/40 h-full flex flex-col shadow-2xl text-left animate-slideLeft animate-duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="px-6 py-5 border-b border-wood-border/30 flex items-center justify-between bg-wood-beige/10">
+              <div className="flex items-center gap-2">
+                <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+                <h3 className="font-serif text-sm sm:text-base font-bold text-wood-dark">
+                  Dream Designs / నచ్చిన డిజైన్లు
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowLikedDrawer(false)}
+                className="p-1 rounded-lg hover:bg-wood-beige text-wood-light hover:text-wood-dark transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+              {likedIds.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-wood-light py-20">
+                  <Heart className="h-10 w-10 text-wood-light/50 mb-3" />
+                  <p className="text-sm font-light">Your dream board is empty.</p>
+                  <p className="text-[10px] text-wood-light/75 italic mt-1">Tap the heart ❤️ on any design card to add it here!</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[11px] text-wood-medium font-light leading-relaxed">
+                    These are your selected favorite designs. You can discuss this custom shortlist directly with Nagaraju on WhatsApp for a custom quotation!
+                  </p>
+                  <div className="divide-y divide-wood-border/20">
+                    {products.filter(p => likedIds.includes(p._id)).map((prod) => (
+                      <div key={prod._id} className="py-3 flex items-center gap-3.5 first:pt-0 last:pb-0">
+                        <img 
+                          src={prod.image} 
+                          alt={prod.title} 
+                          className="h-12 w-12 rounded-xl object-cover border border-wood-border/30"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-bold text-wood-dark truncate">{prod.title}</h4>
+                          <span className="text-[9px] font-semibold text-wood-accent uppercase block mt-0.5">{prod.category}</span>
+                          <span className="text-[10px] text-wood-light block mt-0.5 font-mono">
+                            {prod.price && prod.price > 0 ? `₹${prod.price.toLocaleString('en-IN')}` : 'Contact for price'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveLiked(prod._id)}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer animate-fadeIn"
+                          title="Remove design"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            {likedIds.length > 0 && (
+              <div className="p-6 border-t border-wood-border/30 bg-wood-beige/10">
+                <button
+                  onClick={handleShareLikedOnWhatsApp}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-550 text-white py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer shadow-md"
+                >
+                  <MessageCircle className="h-4.5 w-4.5" />
+                  <span>Discuss list on WhatsApp</span>
+                </button>
+                <p className="text-[9px] text-wood-light font-light text-center mt-2.5 leading-relaxed">
+                  *This will format your favorite designs with links and open WhatsApp directly to Nagaraju.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
