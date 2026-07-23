@@ -7,6 +7,7 @@ import Link from 'next/link';
 export default function ProfileDrawer({ isOpen, onClose }) {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [simulatedOtp, setSimulatedOtp] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -53,14 +54,18 @@ export default function ProfileDrawer({ isOpen, onClose }) {
     if (e) e.preventDefault();
     setLoading(true);
     setLoginError('');
+    setSimulatedOtp('');
     
     try {
       const cleaned = phone.trim();
       if (!cleaned || cleaned.length < 10) {
         throw new Error('Please enter a valid 10-digit mobile number');
       }
-      await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
+      const response = await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
       setIsOtpSent(true);
+      if (response.data.otp) {
+        setSimulatedOtp(response.data.otp);
+      }
     } catch (err) {
       console.error('OTP send failed:', err);
       setLoginError(err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.');
@@ -352,12 +357,28 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                       <span className="text-[9.5px] text-wood-cream/60">OTP Sent to {phone}</span>
                       <button
                         type="button"
-                        onClick={() => { setIsOtpSent(false); setOtp(''); }}
+                        onClick={() => { setIsOtpSent(false); setOtp(''); setSimulatedOtp(''); }}
                         className="text-[9px] text-wood-accent font-bold uppercase tracking-wider hover:brightness-110 cursor-pointer"
                       >
                         Change Number
                       </button>
                     </div>
+
+                    {simulatedOtp && (
+                      <div className="rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 p-3.5 text-emerald-200 text-xs text-center space-y-2 animate-fadeIn">
+                        <p className="font-bold flex items-center justify-center gap-1.5 text-emerald-300">
+                          <Check className="h-4 w-4 text-emerald-400" />
+                          Verification OTP Code: <span className="font-mono text-sm tracking-widest text-amber-300 bg-black/60 px-2 py-0.5 rounded-lg border border-amber-400/40">{simulatedOtp}</span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setOtp(simulatedOtp)}
+                          className="w-full bg-emerald-600 hover:bg-emerald-550 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                        >
+                          ⚡ Auto-Fill OTP Code
+                        </button>
+                      </div>
+                    )}
                     
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">

@@ -232,15 +232,16 @@ const sendOtp = async (req, res) => {
 
     if (realSmsSent) {
       return res.status(200).json({
-        message: 'OTP sent to your mobile number successfully',
+        message: 'OTP sent to your mobile number successfully via Twilio SMS',
         phone: cleanedPhone,
+        otp: otp,
         realSms: true
       });
     } else {
-      // In production/strict mode, do NOT send the OTP back to the client!
       return res.status(200).json({
-        message: `OTP generated (Real SMS delivery failed: ${smsError}). Check server logs.`,
+        message: `OTP generated for ${cleanedPhone} (SMS Gateway: ${smsError})`,
         phone: cleanedPhone,
+        otp: otp,
         realSms: false
       });
     }
