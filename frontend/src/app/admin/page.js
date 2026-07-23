@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer } from 'lucide-react';
+import ShippingSlipModal from '@/components/ShippingSlipModal';
 import Link from 'next/link';
 
 const CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
@@ -203,8 +204,9 @@ export default function AdminPage() {
   const [pricingSuccess, setPricingSuccess] = useState('');
   const [pricingLoading, setPricingLoading] = useState(false);
 
-  // Delivery Tracking Modal State
+  // Delivery Tracking & Shipping Slip Modal State
   const [activeDeliveryOrder, setActiveDeliveryOrder] = useState(null);
+  const [activeShippingSlipOrder, setActiveShippingSlipOrder] = useState(null);
   const [deliveryDateInput, setDeliveryDateInput] = useState('');
   const [carrierInput, setCarrierInput] = useState('Xpressbees');
   const [trackingNumberInput, setTrackingNumberInput] = useState('');
@@ -1962,6 +1964,19 @@ LD Interiors & Furnitures
             </form>
           </div>
         </div>
+      )}
+
+      {/* PRINTABLE SHIPPING & DISPATCH BILLING SLIP MODAL */}
+      {activeShippingSlipOrder && (
+        <ShippingSlipModal
+          order={activeShippingSlipOrder}
+          userProfile={{
+            name: activeShippingSlipOrder.name,
+            phone: activeShippingSlipOrder.phone,
+            address: activeShippingSlipOrder.address
+          }}
+          onClose={() => setActiveShippingSlipOrder(null)}
+        />
       )}
     </div>
   );

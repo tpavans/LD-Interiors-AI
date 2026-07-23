@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck } from 'lucide-react';
+import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck, Printer } from 'lucide-react';
+import ShippingSlipModal from '@/components/ShippingSlipModal';
 
 const UPI_IDS = {
   phonepe: { id: "9346325291@axl", name: "Pavansai Teki", label: "PhonePe" },
@@ -41,8 +42,9 @@ export default function UserOrdersPage() {
   const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' or 'gateway'
   const [utrInput, setUtrInput] = useState('');
 
-  // Tracking Modal State
+  // Live Consignment & Shipping Slip States
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
+  const [activeShippingSlipOrder, setActiveShippingSlipOrder] = useState(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
 
   useEffect(() => {
@@ -537,10 +539,20 @@ ${profileName || activePayOrder.name}`;
                       )}
                       <div className="flex-grow space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="inline-flex items-center gap-1 bg-wood-beige/60 border border-wood-border/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-wood-accent">
-                            <Tag className="h-3 w-3" />
-                            ID: LD-{orderShortId}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 bg-wood-beige/60 border border-wood-border/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-wood-accent">
+                              <Tag className="h-3 w-3" />
+                              ID: LD-{orderShortId}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveShippingSlipOrder(order)}
+                              className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
+                            >
+                              <Printer className="h-3 w-3 text-amber-700" />
+                              <span>Package Billing Slip</span>
+                            </button>
+                          </div>
                           
                           {/* Financial Badge Indicator */}
                           {order.totalPrice > 0 && (
@@ -1247,6 +1259,19 @@ ${profileName || activePayOrder.name}`;
             </button>
           </div>
         </div>
+      )}
+
+      {/* PRINTABLE SHIPPING & DISPATCH BILLING SLIP MODAL */}
+      {activeShippingSlipOrder && (
+        <ShippingSlipModal
+          order={activeShippingSlipOrder}
+          userProfile={{
+            name: profileName,
+            phone: profilePhone,
+            address: profileAddress
+          }}
+          onClose={() => setActiveShippingSlipOrder(null)}
+        />
       )}
     </div>
   );
