@@ -194,15 +194,36 @@ const sendOtp = async (req, res) => {
 
     console.log(`[OTP SERVICE] Generated OTP ${otp} for phone ${cleanedPhone}`);
 
-    // Try sending real Twilio SMS
+    // Try sending real SMS via Fast2SMS (Indian SMS Gateway) or Twilio
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const fromNumber = process.env.TWILIO_FROM_NUMBER;
     
     let realSmsSent = false;
     let smsError = '';
+    const raw10Digit = cleanedPhone.replace(/\D/g, '').slice(-10);
 
-    if (accountSid && authToken && fromNumber) {
+    // 1. Try Fast2SMS Gateway (For Indian Mobile Numbers)
+    if (fast2smsKey && raw10Digit.length === 10) {
+      try {
+        const smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=otp&variables_values=${otp}&flash=0&numbers=${raw10Digit}`);
+        const smsData = await smsRes.json();
+        if (smsData && (smsData.return === true || smsData.status_code === 200)) {
+          console.log(`[SMS SERVICE] Fast2SMS OTP sent successfully to +91${raw10Digit}`);
+          realSmsSent = true;
+        } else {
+          console.error('[SMS SERVICE] Fast2SMS error response:', smsData);
+          smsError = smsData.message || 'Fast2SMS delivery failed';
+        }
+      } catch (err) {
+        console.error('[SMS SERVICE] Fast2SMS exception:', err.message);
+        smsError = err.message;
+      }
+    }
+
+    // 2. Try Twilio Gateway if Fast2SMS is not configured or failed
+    if (!realSmsSent && accountSid && authToken && fromNumber) {
       let formattedPhone = cleanedPhone;
       if (!formattedPhone.startsWith('+')) {
         if (formattedPhone.startsWith('91') && formattedPhone.length === 12) {
@@ -225,9 +246,11 @@ const sendOtp = async (req, res) => {
         console.error('[SMS SERVICE] Twilio SMS failed to send:', err.message);
         smsError = err.message;
       }
-    } else {
-      console.warn('[SMS SERVICE] Twilio configuration is missing. Cannot send real SMS.');
-      smsError = 'Twilio config missing';
+    }
+
+    if (!realSmsSent && !fast2smsKey && !accountSid) {
+      console.warn('[SMS SERVICE] No SMS Gateway API keys found (FAST2SMS_API_KEY / TWILIO_ACCOUNT_SID).');
+      smsError = 'SMS Gateway credentials missing on server';
     }
 
     if (realSmsSent) {
