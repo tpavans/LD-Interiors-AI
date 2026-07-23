@@ -379,12 +379,12 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                             ⚡ Auto-Fill OTP Code
                           </button>
                           <a
-                            href={`https://wa.me/916281653998?text=${encodeURIComponent(`Hello LD Interiors, my login OTP verification code for ${phone} is: ${simulatedOtp}`)}`}
+                            href={`https://wa.me/${phone.replace(/\D/g, '').slice(-10).length === 10 ? `91${phone.replace(/\D/g, '').slice(-10)}` : phone.trim()}?text=${encodeURIComponent(`🔒 Your LD Interiors Login OTP Verification Code is: ${simulatedOtp}\n\nValid for 5 minutes.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs text-center flex items-center justify-center gap-1"
                           >
-                            💬 Receive via WhatsApp
+                            💬 Send OTP to My WhatsApp
                           </a>
                         </div>
                       </div>
