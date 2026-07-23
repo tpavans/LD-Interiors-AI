@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
@@ -10,6 +10,27 @@ export default function ClientWrapper() {
   const [userPhone, setUserPhone] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [isRegistered, setIsRegistered] = useState(true);
+
+  // Liked Designs Count
+  const [likedCount, setLikedCount] = useState(0);
+
+  useEffect(() => {
+    const checkLiked = () => {
+      try {
+        const liked = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+        setLikedCount(liked.length);
+      } catch (err) {
+        setLikedCount(0);
+      }
+    };
+    checkLiked();
+    window.addEventListener('storage', checkLiked);
+    window.addEventListener('liked-updated', checkLiked);
+    return () => {
+      window.removeEventListener('storage', checkLiked);
+      window.removeEventListener('liked-updated', checkLiked);
+    };
+  }, []);
 
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -2377,6 +2398,28 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 </div>
               )}
             </div>
+          )}
+
+          {/* Red Love Symbol for Dream Designs / Liked Designs */}
+          {likedCount > 0 && (
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  if (window.location.pathname === '/products') {
+                    window.dispatchEvent(new Event('open-liked-drawer'));
+                  } else {
+                    window.location.href = '/products?openLiked=true';
+                  }
+                }
+              }}
+              className="mb-3.5 relative group flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer border-2 border-white/90 animate-bounce z-50"
+              title={`Dream Designs (${likedCount} Liked)`}
+            >
+              <Heart className="h-6 w-6 fill-white text-white drop-shadow-sm" />
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-wood-dark border-2 border-white text-[9px] font-extrabold text-white shadow-md">
+                {likedCount}
+              </span>
+            </button>
           )}
 
           {/* Chat Floating Button with Cute Animated Girl Mascot */}

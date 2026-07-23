@@ -38,9 +38,21 @@ export default function ProductsPage() {
     updateLikedList();
     window.addEventListener('storage', updateLikedList);
     window.addEventListener('liked-updated', updateLikedList);
+    const handleOpenDrawer = () => setShowLikedDrawer(true);
+    window.addEventListener('open-liked-drawer', handleOpenDrawer);
+
+    // Read openLiked param from URL
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('openLiked') === 'true') {
+        setShowLikedDrawer(true);
+      }
+    }
+
     return () => {
       window.removeEventListener('storage', updateLikedList);
       window.removeEventListener('liked-updated', updateLikedList);
+      window.removeEventListener('open-liked-drawer', handleOpenDrawer);
     };
   }, []);
 
@@ -343,19 +355,6 @@ Thank you,
             </p>
           </div>
         </div>
-      )}
-
-      {/* FLOATING LIKED DESIGNS BADGE */}
-      {likedIds.length > 0 && (
-        <button
-          onClick={() => setShowLikedDrawer(true)}
-          className="fixed bottom-24 right-6 z-40 flex items-center gap-2 rounded-full bg-wood-dark hover:bg-wood-medium text-white px-4 py-3 shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer select-none animate-bounce"
-        >
-          <Heart className="h-4.5 w-4.5 fill-red-500 text-red-500 animate-pulse" />
-          <span className="text-[10px] font-extrabold uppercase tracking-widest">
-            Dream Designs ({likedIds.length})
-          </span>
-        </button>
       )}
 
       {/* LIKED DESIGNS DRAWER PORTAL */}
