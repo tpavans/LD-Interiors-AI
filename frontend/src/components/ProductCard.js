@@ -250,11 +250,11 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
-                  title="Call Nagaraju (Manager)"
+                  title="Call Nagaraju (Owner)"
                   className="w-full sm:flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
                 >
                   <Phone className="h-3 w-3 text-wood-accent shrink-0" />
-                  <span>{isTelugu ? "యజమాని కాల్" : "Call Owner"}</span>
+                  <span>{isTelugu ? "నాగరాజు (యజమాని)" : "Nagaraju (Owner)"}</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a

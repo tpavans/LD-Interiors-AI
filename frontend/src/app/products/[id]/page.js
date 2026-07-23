@@ -505,10 +505,10 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 <a
                   href="tel:+916281653998"
                   className="flex-grow flex items-center justify-center gap-2 rounded-xl border border-wood-border hover:border-wood-accent hover:text-wood-accent px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 cursor-pointer text-wood-dark"
-                  title="Call Nagaraju (Manager)"
+                  title="Call Nagaraju (Owner)"
                 >
                   <Phone className="h-4 w-4 text-wood-accent" />
-                  <span>{isTelugu ? "యజమాని కాల్" : "Call Owner"}</span>
+                  <span>{isTelugu ? "నాగరాజు (యజమాని)" : "Nagaraju (Owner)"}</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a
