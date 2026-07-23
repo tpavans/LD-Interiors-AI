@@ -207,14 +207,24 @@ const sendOtp = async (req, res) => {
     // 1. Try Fast2SMS Gateway (For Indian Mobile Numbers)
     if (fast2smsKey && raw10Digit.length === 10) {
       try {
-        const smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=otp&variables_values=${otp}&flash=0&numbers=${raw10Digit}`);
-        const smsData = await smsRes.json();
+        // Attempt 1: Fast2SMS OTP route
+        let smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=otp&variables_values=${otp}&flash=0&numbers=${raw10Digit}`);
+        let smsData = await smsRes.json();
+
+        // Attempt 2: Quick Transactional route if OTP route requires DLT template
+        if (!smsData || (smsData.return !== true && smsData.status_code !== 200)) {
+          console.warn('[SMS SERVICE] Fast2SMS OTP route failed:', smsData, 'Trying Quick Transactional route...');
+          const msgText = encodeURIComponent(`Your LD Interiors verification OTP code is: ${otp}. Valid for 5 minutes.`);
+          smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=q&message=${msgText}&flash=0&numbers=${raw10Digit}`);
+          smsData = await smsRes.json();
+        }
+
         if (smsData && (smsData.return === true || smsData.status_code === 200)) {
           console.log(`[SMS SERVICE] Fast2SMS OTP sent successfully to +91${raw10Digit}`);
           realSmsSent = true;
         } else {
           console.error('[SMS SERVICE] Fast2SMS error response:', smsData);
-          smsError = smsData.message || 'Fast2SMS delivery failed';
+          smsError = Array.isArray(smsData?.message) ? smsData.message.join(', ') : (smsData?.message || 'Fast2SMS delivery failed');
         }
       } catch (err) {
         console.error('[SMS SERVICE] Fast2SMS exception:', err.message);
