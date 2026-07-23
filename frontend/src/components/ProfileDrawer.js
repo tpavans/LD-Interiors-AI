@@ -365,18 +365,28 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     </div>
 
                     {simulatedOtp && (
-                      <div className="rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 p-3.5 text-emerald-200 text-xs text-center space-y-2 animate-fadeIn">
+                      <div className="rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 p-3.5 text-emerald-200 text-xs text-center space-y-2.5 animate-fadeIn">
                         <p className="font-bold flex items-center justify-center gap-1.5 text-emerald-300">
                           <Check className="h-4 w-4 text-emerald-400" />
                           Verification OTP Code: <span className="font-mono text-sm tracking-widest text-amber-300 bg-black/60 px-2 py-0.5 rounded-lg border border-amber-400/40">{simulatedOtp}</span>
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => setOtp(simulatedOtp)}
-                          className="w-full bg-emerald-600 hover:bg-emerald-550 text-white font-bold py-1.5 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
-                        >
-                          ⚡ Auto-Fill OTP Code
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setOtp(simulatedOtp)}
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-550 text-white font-bold py-2 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                          >
+                            ⚡ Auto-Fill OTP Code
+                          </button>
+                          <a
+                            href={`https://wa.me/916281653998?text=${encodeURIComponent(`Hello LD Interiors, my login OTP verification code for ${phone} is: ${simulatedOtp}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs text-center flex items-center justify-center gap-1"
+                          >
+                            💬 Receive via WhatsApp
+                          </a>
+                        </div>
                       </div>
                     )}
                     
