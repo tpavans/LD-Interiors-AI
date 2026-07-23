@@ -35,7 +35,7 @@ export default function WhatsAppWidget() {
   };
 
   return (
-    <div className="fixed bottom-[96px] right-6 landscape:bottom-4 landscape:right-[76px] z-50 font-sans">
+    <div className="fixed bottom-6 left-6 landscape:bottom-4 landscape:left-4 z-50 font-sans flex flex-col items-start">
       {/* Expanded Widget Popup Card */}
       {isOpen && (
         <div className="mb-4 w-76 sm:w-80 max-h-[72vh] landscape:max-h-[220px] overflow-y-auto rounded-3xl bg-white/90 backdrop-blur-xl border border-wood-border/60 p-5 shadow-2xl animate-fadeIn transition-all duration-350">
