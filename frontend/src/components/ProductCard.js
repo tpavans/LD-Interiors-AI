@@ -131,7 +131,7 @@ ${orderNotes.trim() || 'No custom notes.'}`;
       const baseMessageBody = `*Product Details:*
 - Name: ${title}
 - Category: ${category}
-- Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')} (Estimated)` : 'Contact for pricing'}
+- Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for pricing'}
 ${orderImage ? `- Image URL: ${orderImage}\n` : ''}
 *Customer Details:*
 - Name: ${orderName.trim()}
@@ -227,9 +227,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 <span className="text-[10px] sm:text-xs font-semibold text-wood-accent leading-snug">
                   {price && price > 0 ? (
                     <span>
-                      {isTelugu ? "అంచనా ధర" : "Estimated Price"}: <span className="font-extrabold text-wood-dark">₹{price.toLocaleString('en-IN')}</span>
-                      <br />
-                      <span className="text-[8.5px] sm:text-[9.5px] font-normal text-wood-light">({isTelugu ? "కొటేషన్ కోసం నాగరాజు గారిని సంప్రదించండి" : "Contact Nagaraju for fixed quotation"})</span>
+                      {isTelugu ? "ధర" : "Price"}: <span className="font-extrabold text-wood-dark">₹{price.toLocaleString('en-IN')}</span>
                     </span>
                   ) : (
                     <span className="font-semibold text-wood-accent">{isTelugu ? "ధర కొరకు సంప్రదించండి" : "Contact Nagaraju for pricing"}</span>

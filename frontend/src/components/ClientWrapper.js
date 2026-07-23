@@ -1594,7 +1594,7 @@ Based on your room's style, here are some LD Interiors products that match beaut
       const baseMessageBody = `*Product Details:*
 - Name: ${selectedProduct}
 - Category: ${matchedProduct ? matchedProduct.category : 'General Inquiry'}
-- Price: ${productPrice > 0 ? `₹${productPrice.toLocaleString('en-IN')} (Estimated)` : 'Contact for pricing'}
+- Price: ${productPrice > 0 ? `₹${productPrice.toLocaleString('en-IN')}` : 'Contact for pricing'}
 ${orderImage ? `- Image URL: ${orderImage}\n` : ''}
 *Customer Details:*
 - Name: ${orderName.trim()}

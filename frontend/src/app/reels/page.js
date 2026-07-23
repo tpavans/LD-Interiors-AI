@@ -213,7 +213,7 @@ export default function ReelsPage() {
           
           <p className="text-xs text-wood-accent font-semibold mt-1">
             {currentProduct.price && currentProduct.price > 0 ? (
-              <span>₹{currentProduct.price.toLocaleString('en-IN')} ({t.estimated})</span>
+              <span>₹{currentProduct.price.toLocaleString('en-IN')}</span>
             ) : (
               <span>{t.contactPricing}</span>
             )}
