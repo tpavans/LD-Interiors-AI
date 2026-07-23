@@ -1,16 +1,19 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { X, User, LogOut, Check, Edit3, Mail, MapPin, Smartphone, Loader2, AlertTriangle, Eye, ShoppingBag } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { X, User, LogOut, Check, Edit3, Mail, MapPin, Smartphone, Loader2, AlertTriangle, Eye, ShoppingBag, ArrowRight, Lock, RefreshCw } from 'lucide-react';
 import api from '../utils/api';
 import Link from 'next/link';
 
 export default function ProfileDrawer({ isOpen, onClose }) {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [simulatedOtp, setSimulatedOtp] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [resendTimer, setResendTimer] = useState(30);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  const digitRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
   // Logged-in profile details
   const [profileName, setProfileName] = useState('');
@@ -50,22 +53,62 @@ export default function ProfileDrawer({ isOpen, onClose }) {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    let timer;
+    if (isOtpSent && resendTimer > 0) {
+      timer = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isOtpSent, resendTimer]);
+
+  const handleDigitChange = (index, value) => {
+    const char = value.replace(/\D/g, '').slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = char;
+    setOtpDigits(newDigits);
+    const fullCode = newDigits.join('');
+    setOtp(fullCode);
+
+    if (char && index < 5) {
+      digitRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      digitRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      const newDigits = pastedData.split('').concat(Array(6).fill('')).slice(0, 6);
+      setOtpDigits(newDigits);
+      setOtp(newDigits.join(''));
+      const nextFocus = Math.min(pastedData.length, 5);
+      digitRefs[nextFocus].current?.focus();
+    }
+  };
+
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
     setLoginError('');
-    setSimulatedOtp('');
     
     try {
-      const cleaned = phone.trim();
+      const cleaned = phone.replace(/\D/g, '').slice(-10);
       if (!cleaned || cleaned.length < 10) {
         throw new Error('Please enter a valid 10-digit mobile number');
       }
-      const response = await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
+      await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
       setIsOtpSent(true);
-      if (response.data.otp) {
-        setSimulatedOtp(response.data.otp);
-      }
+      setResendTimer(30);
+      setOtpDigits(['', '', '', '', '', '']);
+      setOtp('');
     } catch (err) {
       console.error('OTP send failed:', err);
       setLoginError(err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.');
@@ -307,118 +350,143 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                 </div>
               )
             ) : (
-              /* OTP Registration & Login Panel */
-              <div className="space-y-5">
-                <p className="text-xs text-wood-cream/80 font-light leading-relaxed text-left">
-                  Sign in securely with your mobile number to view and track your orders.
-                </p>
-
+              /* Amazon/Flipkart Style E-Commerce Login Panel */
+              <div className="space-y-6">
                 {loginError && (
-                  <div className="rounded-xl bg-red-950/40 border border-red-500/30 p-3.5 text-xs text-red-300 flex items-start gap-2.5 text-left">
+                  <div className="rounded-xl bg-red-950/40 border border-red-500/30 p-3.5 text-xs text-red-300 flex items-start gap-2.5 text-left animate-fadeIn">
                     <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                     <span>{loginError}</span>
                   </div>
                 )}
 
                 {!isOtpSent ? (
-                  <form onSubmit={handleSendOtp} className="space-y-4 text-left">
+                  /* Step 1: Mobile Phone Number Input (Amazon / Flipkart Style) */
+                  <form onSubmit={handleSendOtp} className="space-y-5 text-left animate-fadeIn">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Smartphone className="h-4 w-4 text-wood-accent" />
+                        <h4 className="font-serif text-base font-bold text-white">Login or Sign Up</h4>
+                      </div>
+                      <p className="text-[11px] text-wood-cream/70 font-light mb-4">
+                        Enter your 10-digit mobile number to receive an instant verification SMS.
+                      </p>
+
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-2">
                         Mobile Number
                       </label>
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="Enter 10-digit mobile number"
-                        className="w-full rounded-xl border border-wood-accent/30 bg-[#28170c] px-4 py-3 text-xs text-white focus:outline-none focus:border-wood-accent"
-                      />
+                      <div className="flex items-center rounded-2xl border border-wood-accent/30 bg-[#28170c] overflow-hidden focus-within:border-wood-accent focus-within:ring-2 focus-within:ring-wood-accent/20 transition-all">
+                        <div className="px-3.5 py-3 bg-[#1d0f07] border-r border-wood-accent/20 text-xs font-bold text-wood-cream flex items-center gap-1.5 shrink-0 select-none">
+                          <span>🇮🇳 +91</span>
+                        </div>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={10}
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          placeholder="e.g. 9346325291"
+                          className="w-full bg-transparent px-4 py-3 text-sm font-semibold tracking-wider text-white focus:outline-none placeholder:text-neutral-500 font-mono"
+                        />
+                      </div>
                     </div>
 
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-3.5 text-xs font-bold uppercase tracking-wider transition-all disabled:bg-neutral-600 cursor-pointer shadow-md"
+                      disabled={loading || phone.replace(/\D/g, '').length < 10}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-4 text-xs font-extrabold uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
                     >
                       {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin text-[#1d0f07]" />
                       ) : (
                         <>
-                          <Smartphone className="h-4 w-4" />
-                          <span>Request OTP Code</span>
+                          <span>CONTINUE</span>
+                          <ArrowRight className="h-4 w-4" />
                         </>
                       )}
                     </button>
+
+                    <p className="text-[9.5px] text-wood-cream/50 font-light text-center leading-relaxed pt-2">
+                      By continuing, you agree to LD Interiors & Furnitures{' '}
+                      <span className="text-wood-accent underline cursor-pointer">Terms of Use</span> &{' '}
+                      <span className="text-wood-accent underline cursor-pointer">Privacy Policy</span>.
+                    </p>
                   </form>
                 ) : (
-                  <form onSubmit={handleVerifyOtp} className="space-y-4 text-left">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[9.5px] text-wood-cream/60">OTP Sent to {phone}</span>
-                      <button
-                        type="button"
-                        onClick={() => { setIsOtpSent(false); setOtp(''); setSimulatedOtp(''); }}
-                        className="text-[9px] text-wood-accent font-bold uppercase tracking-wider hover:brightness-110 cursor-pointer"
-                      >
-                        Change Number
-                      </button>
-                    </div>
-
-                    {simulatedOtp && (
-                      <div className="rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 p-3.5 text-emerald-200 text-xs text-center space-y-2.5 animate-fadeIn">
-                        <p className="font-bold flex items-center justify-center gap-1.5 text-emerald-300">
-                          <Check className="h-4 w-4 text-emerald-400" />
-                          Verification OTP Code: <span className="font-mono text-sm tracking-widest text-amber-300 bg-black/60 px-2 py-0.5 rounded-lg border border-amber-400/40">{simulatedOtp}</span>
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setOtp(simulatedOtp)}
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-550 text-white font-bold py-2 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
-                          >
-                            ⚡ Auto-Fill OTP Code
-                          </button>
-                          <a
-                            href={`https://wa.me/${phone.replace(/\D/g, '').slice(-10).length === 10 ? `91${phone.replace(/\D/g, '').slice(-10)}` : phone.trim()}?text=${encodeURIComponent(`🔒 Your LD Interiors Login OTP Verification Code is: ${simulatedOtp}\n\nValid for 5 minutes.`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs text-center flex items-center justify-center gap-1"
-                          >
-                            💬 Send OTP to My WhatsApp
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                    
+                  /* Step 2: 6-Digit Separate Square Input Boxes (Flipkart / Amazon Style) */
+                  <form onSubmit={handleVerifyOtp} className="space-y-5 text-left animate-fadeIn">
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
-                        Enter 6-Digit OTP Code
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-serif text-base font-bold text-white flex items-center gap-2">
+                          <Lock className="h-4 w-4 text-wood-accent" />
+                          Verify with OTP
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => { setIsOtpSent(false); setOtp(''); setOtpDigits(['','','','','','']); }}
+                          className="text-[10px] text-wood-accent font-bold uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                          Edit Number
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-wood-cream/70 font-light mb-5">
+                        Sent via SMS to <span className="font-bold text-white font-mono">+91 {phone}</span>
+                      </p>
+
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-3 text-center">
+                        Enter 6-Digit Security Code
                       </label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="••••••"
-                        className="w-full rounded-xl border border-wood-accent/30 bg-[#28170c] px-4 py-3 text-sm text-center font-bold tracking-widest text-white focus:outline-none focus:border-wood-accent"
-                      />
+
+                      {/* 6 Individual Square Digit Input Boxes */}
+                      <div className="flex items-center justify-center gap-2 sm:gap-2.5 my-4" onPaste={handlePaste}>
+                        {otpDigits.map((digit, index) => (
+                          <input
+                            key={index}
+                            ref={digitRefs[index]}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleDigitChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(index, e)}
+                            className="w-10 h-12 sm:w-11 sm:h-13 rounded-xl border-2 border-wood-accent/30 bg-[#28170c] text-center text-lg font-bold font-mono text-white focus:border-wood-accent focus:bg-black/40 focus:ring-2 focus:ring-wood-accent/30 focus:outline-none transition-all shadow-inner"
+                          />
+                        ))}
+                      </div>
                     </div>
 
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-3.5 text-xs font-bold uppercase tracking-wider transition-all disabled:bg-neutral-600 cursor-pointer shadow-md"
+                      disabled={loading || otp.length < 6}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-4 text-xs font-extrabold uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
                     >
                       {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin text-[#1d0f07]" />
                       ) : (
                         <>
                           <Check className="h-4 w-4" />
-                          <span>Verify & Log In</span>
+                          <span>VERIFY & LOG IN</span>
                         </>
                       )}
                     </button>
+
+                    {/* Resend OTP Timer & Trigger */}
+                    <div className="text-center pt-2">
+                      {resendTimer > 0 ? (
+                        <p className="text-[10px] text-wood-cream/60 font-mono">
+                          Resend OTP via SMS in <span className="font-bold text-amber-300">00:{resendTimer < 10 ? `0${resendTimer}` : resendTimer}s</span>
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          className="text-[10.5px] font-bold text-wood-accent uppercase tracking-wider hover:underline flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          <span>RESEND OTP VIA SMS</span>
+                        </button>
+                      )}
+                    </div>
                   </form>
                 )}
               </div>
