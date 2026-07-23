@@ -1535,13 +1535,23 @@ LD Interiors & Furnitures
                           </select>
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <button
-                            onClick={() => handleDeleteOrder(o._id, o.name)}
-                            title="Delete Order Record"
-                            className="p-2 rounded-lg text-wood-light hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="h-4.5 w-4.5" />
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setActiveShippingSlipOrder(o)}
+                              title="Print E-Commerce Package Billing Slip"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 border border-amber-500/40"
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                              <span>Billing Slip</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOrder(o._id, o.name)}
+                              title="Delete Order Record"
+                              className="p-2 rounded-lg text-wood-light hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
