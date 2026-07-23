@@ -194,26 +194,50 @@ const sendOtp = async (req, res) => {
 
     console.log(`[OTP SERVICE] Generated OTP ${otp} for phone ${cleanedPhone}`);
 
-    // Try sending real SMS via Fast2SMS (Indian SMS Gateway) or Twilio
-    const fast2smsKey = process.env.FAST2SMS_API_KEY;
+    // Try sending real SMS via Twilio (Primary Verified Gateway) or Fast2SMS
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const fromNumber = process.env.TWILIO_FROM_NUMBER;
     
     let realSmsSent = false;
     let smsError = '';
+
+    // 1. Try Twilio SMS Gateway (Primary Verified SMS Gateway)
+    if (accountSid && authToken && fromNumber) {
+      let formattedPhone = cleanedPhone.replace(/\D/g, '');
+      if (formattedPhone.length === 10) {
+        formattedPhone = '+91' + formattedPhone;
+      } else if (formattedPhone.length === 12 && formattedPhone.startsWith('91')) {
+        formattedPhone = '+' + formattedPhone;
+      } else if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+' + formattedPhone;
+      }
+
+      try {
+        const client = twilio(accountSid, authToken);
+        const message = await client.messages.create({
+          body: `Your LD Interiors verification code is: ${otp}. Valid for 5 minutes.`,
+          from: fromNumber,
+          to: formattedPhone
+        });
+        console.log(`[SMS SERVICE] Twilio SMS sent successfully to ${formattedPhone}. Message SID: ${message.sid}`);
+        realSmsSent = true;
+      } catch (err) {
+        console.error('[SMS SERVICE] Twilio SMS failed to send:', err.message);
+        smsError = err.message;
+      }
+    }
+
+    // 2. Try Fast2SMS Gateway if Twilio did not send
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
     const raw10Digit = cleanedPhone.replace(/\D/g, '').slice(-10);
 
-    // 1. Try Fast2SMS Gateway (For Indian Mobile Numbers)
-    if (fast2smsKey && raw10Digit.length === 10) {
+    if (!realSmsSent && fast2smsKey && raw10Digit.length === 10) {
       try {
-        // Attempt 1: Fast2SMS OTP route
         let smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=otp&variables_values=${otp}&flash=0&numbers=${raw10Digit}`);
         let smsData = await smsRes.json();
 
-        // Attempt 2: Quick Transactional route if OTP route requires DLT template
         if (!smsData || (smsData.return !== true && smsData.status_code !== 200)) {
-          console.warn('[SMS SERVICE] Fast2SMS OTP route failed:', smsData, 'Trying Quick Transactional route...');
           const msgText = encodeURIComponent(`Your LD Interiors verification OTP code is: ${otp}. Valid for 5 minutes.`);
           smsRes = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&route=q&message=${msgText}&flash=0&numbers=${raw10Digit}`);
           smsData = await smsRes.json();
@@ -228,32 +252,6 @@ const sendOtp = async (req, res) => {
         }
       } catch (err) {
         console.error('[SMS SERVICE] Fast2SMS exception:', err.message);
-        smsError = err.message;
-      }
-    }
-
-    // 2. Try Twilio Gateway if Fast2SMS is not configured or failed
-    if (!realSmsSent && accountSid && authToken && fromNumber) {
-      let formattedPhone = cleanedPhone;
-      if (!formattedPhone.startsWith('+')) {
-        if (formattedPhone.startsWith('91') && formattedPhone.length === 12) {
-          formattedPhone = '+' + formattedPhone;
-        } else {
-          formattedPhone = '+91' + formattedPhone;
-        }
-      }
-
-      try {
-        const client = twilio(accountSid, authToken);
-        const message = await client.messages.create({
-          body: `Your LD Interiors verification code is: ${otp}. It is valid for 5 minutes.`,
-          from: fromNumber,
-          to: formattedPhone
-        });
-        console.log(`[SMS SERVICE] Twilio SMS sent successfully to ${formattedPhone}. Message SID: ${message.sid}`);
-        realSmsSent = true;
-      } catch (err) {
-        console.error('[SMS SERVICE] Twilio SMS failed to send:', err.message);
         smsError = err.message;
       }
     }
