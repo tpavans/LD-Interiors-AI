@@ -340,21 +340,27 @@ export default function Navbar() {
           >
             {t.contact}
           </Link>
-          {isLoggedIn && (
-            <Link
-              href="/admin"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`py-1.5 block transition-colors border-t border-wood-accent/20 pt-3 ${
-                pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-              }`}
-            >
-              {t.dashboard} ({adminName})
-            </Link>
-          )}
+          <Link
+            href="/admin"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`py-2.5 px-3.5 rounded-xl flex items-center justify-between border transition-all mt-1 ${
+              pathname.startsWith('/admin') 
+                ? 'bg-wood-accent/25 border-wood-accent text-wood-accent font-extrabold shadow-sm' 
+                : 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/60'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4 text-amber-400" />
+              <span>{isLoggedIn ? `${t.dashboard} (${adminName})` : (isTelugu ? '🔑 అడ్మిన్ లాగిన్ పోర్టల్' : '🔑 Admin Portal Login')}</span>
+            </div>
+            {!isLoggedIn && (
+              <span className="text-[9px] bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full font-bold">LOGIN</span>
+            )}
+          </Link>
           {isLoggedIn && (
             <button
               onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-              className="w-full flex items-center justify-start gap-1.5 py-2.5 text-left border-t border-wood-accent/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-start gap-1.5 py-2.5 text-left border-t border-wood-accent/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer mt-1"
             >
               <LogOut className="h-4 w-4" />
               <span>{t.logout}</span>
