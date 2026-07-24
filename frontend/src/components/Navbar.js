@@ -78,13 +78,23 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full glass-panel-dark border-b border-wood-accent/30 shadow-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
-          <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all sm:text-lg md:text-xl hidden xs:inline uppercase">
-            LD INTERIORS & FURNITURES
-          </span>
-          <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all xs:hidden uppercase">
-            LD INTERIORS
-          </span>
+        <Link href="/" className="group flex items-center gap-2.5 select-none shrink-0">
+          <img 
+            src="/logo.png" 
+            alt="LD Interiors Logo" 
+            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover border border-amber-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
+          />
+          <div className="flex flex-col">
+            <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all sm:text-base md:text-lg hidden xs:inline uppercase leading-tight">
+              LD INTERIORS & FURNITURES
+            </span>
+            <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all xs:hidden uppercase leading-tight">
+              LD INTERIORS
+            </span>
+            <span className="text-[8.5px] tracking-widest text-wood-accent/80 uppercase font-semibold hidden sm:inline">
+              Designing Spaces. Defining Lifestyles.
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation Links */}
