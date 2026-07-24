@@ -26,12 +26,12 @@ export default function Footer() {
                 {isTelugu ? "కోనసీమ జిల్లా, ఆంధ్రా - 533233" : "Konaseema District, AP - 533233"}
               </p>
               <a 
-                href="https://maps.google.com/?q=Mulasthanam,Alamuru,AP" 
+                href="https://www.google.com/maps/search/?api=1&query=LD+Interiors+Mulasthanam" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="inline-block mt-2 text-[10px] font-bold text-wood-accent hover:underline uppercase tracking-wider"
               >
-                {isTelugu ? "📍 గూగుల్ మ్యాప్స్‌లో చూడండి" : "📍 View on Google Maps"}
+                {isTelugu ? "📍 LD Interiors మూలస్థానం మ్యాప్స్ చూడండి" : "📍 View LD Interiors Mulasthanam Maps"}
               </a>
             </div>
             <div>

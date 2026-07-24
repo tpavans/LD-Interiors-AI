@@ -227,18 +227,18 @@ export default function ContactPage() {
               </h3>
             </div>
             <a
-              href="https://maps.google.com/?q=Mulasthanam,Alamuru,AP"
+              href="https://www.google.com/maps/search/?api=1&query=LD+Interiors+Mulasthanam"
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-xl bg-wood-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-wood-dark transition-all shadow-md flex items-center gap-2 cursor-pointer"
             >
-              📍 Open Live GPS in Google Maps
+              📍 Open LD Interiors Mulasthanam in Google Maps
             </a>
           </div>
           <div className="w-full h-80 rounded-2xl overflow-hidden border border-wood-border/30 shadow-inner">
             <iframe
-              title="LD Interiors Workshop Location"
-              src="https://maps.google.com/maps?q=Mulasthanam,Alamuru,Andhra%20Pradesh%20533233&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              title="LD Interiors Mulasthanam Workshop Location"
+              src="https://maps.google.com/maps?q=LD%20Interiors%20Mulasthanam&t=&z=15&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0 }}
