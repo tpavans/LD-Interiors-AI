@@ -26,12 +26,26 @@ export const metadata = {
     canonical: 'https://ldinteriors.in',
   },
   openGraph: {
-    title: "LD Interiors & Furnitures",
+    title: "LD Interiors & Furnitures | Alamuru",
     description: "Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.",
     url: 'https://ldinteriors.in',
     siteName: 'LD Interiors & Furnitures',
+    images: [
+      {
+        url: 'https://ldinteriors.in/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'LD Interiors & Furnitures Showcase'
+      }
+    ],
     locale: 'en_IN',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LD Interiors & Furnitures | Alamuru',
+    description: 'Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.',
+    images: ['https://ldinteriors.in/og-image.png'],
   },
 };
 
