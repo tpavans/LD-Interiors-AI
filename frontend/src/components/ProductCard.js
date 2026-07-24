@@ -19,6 +19,14 @@ export default function ProductCard({ product }) {
   const t = translations[language];
   const isTelugu = language === 'TE';
 
+  const formatImageUrl = (imgUrl) => {
+    if (!imgUrl || typeof imgUrl !== 'string') return '/images/hero-bg.png';
+    if (imgUrl.includes('res.cloudinary.com') && imgUrl.includes('/upload/') && !imgUrl.includes('f_auto')) {
+      return imgUrl.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+    }
+    return imgUrl;
+  };
+
   useEffect(() => {
     const checkLiked = () => {
       try {
