@@ -232,8 +232,8 @@ export default function Navbar() {
           </button>
         </nav>
 
-        {/* Mobile controls bar (Language + Hamburger) */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Mobile controls bar (Clean 3-item layout for mobile screens) */}
+        <div className="flex md:hidden items-center gap-1.5 shrink-0">
           {/* Mobile Dream Designs Heart Button */}
           <button
             onClick={() => {
@@ -243,7 +243,7 @@ export default function Navbar() {
                 router.push('/products?openLiked=true');
               }
             }}
-            className="relative flex items-center justify-center p-1.5 rounded-full border border-red-400/50 bg-red-950/30 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer select-none"
+            className="relative flex items-center justify-center p-2 rounded-full border border-red-400/50 bg-red-950/30 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer select-none"
             title="Dream Designs Board / నచ్చిన డిజైన్‌లు"
           >
             <Heart className="h-4 w-4 fill-red-500 text-red-500" />
@@ -253,52 +253,38 @@ export default function Navbar() {
               </span>
             )}
           </button>
-          <Link
-            href="/"
-            className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2.5 py-0.5 text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer select-none whitespace-nowrap"
-            title="Go to Home / హోమ్‌కు వెళ్ళండి"
-          >
-            <span>{language === 'EN' ? 'Home' : 'హోమ్'}</span>
-          </Link>
 
-          <button
-            onClick={() => toggleLanguage()}
-            className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2 py-0.5 text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer select-none whitespace-nowrap"
-            title="Switch Language / భాషను మార్చండి"
-          >
-            <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
-          </button>
-
-          {/* Mobile User Profile Button */}
+          {/* Mobile User Profile Account Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center justify-center p-1.5 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer"
+            className="relative flex items-center justify-center p-2 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer"
             title="User Profile Account"
           >
-            <User className="h-3.5 w-3.5" />
+            <User className="h-4 w-4" />
             {isUserLoggedIn && (
               <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-amber-950 animate-pulse" />
             )}
           </button>
 
+          {/* Hamburger Menu Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1.5 rounded-lg text-wood-cream/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-2 rounded-lg text-wood-cream/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ml-1"
             title="Open Menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? <X className="h-6 w-6 text-amber-300" /> : <Menu className="h-6 w-6 text-amber-300" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu Dropdown Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-wood-accent/30 bg-[#2c1a0f]/95 backdrop-blur-lg px-6 py-6 animate-fadeIn flex flex-col gap-5.5 text-xs font-bold uppercase tracking-wider text-left border-b-2 border-wood-accent/50">
+        <div className="md:hidden border-t border-wood-accent/30 bg-[#2c1a0f]/98 backdrop-blur-xl px-6 py-6 animate-fadeIn flex flex-col gap-4 text-xs font-bold uppercase tracking-wider text-left border-b-2 border-wood-accent/50 shadow-2xl">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors border-b border-wood-accent/10 ${
-              pathname === '/' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            className={`py-2 block transition-colors border-b border-wood-accent/10 ${
+              pathname === '/' ? 'text-wood-accent font-extrabold' : 'text-wood-cream/80 hover:text-white'
             }`}
           >
             {t.home}
@@ -306,8 +292,8 @@ export default function Navbar() {
           <Link
             href="/products"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors border-b border-wood-accent/10 ${
-              pathname === '/products' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            className={`py-2 block transition-colors border-b border-wood-accent/10 ${
+              pathname === '/products' ? 'text-wood-accent font-extrabold' : 'text-wood-cream/80 hover:text-white'
             }`}
           >
             {t.designs}
@@ -316,8 +302,8 @@ export default function Navbar() {
           <Link
             href="/reels"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors border-b border-wood-accent/10 ${
-              pathname === '/reels' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            className={`py-2 block transition-colors border-b border-wood-accent/10 ${
+              pathname === '/reels' ? 'text-wood-accent font-extrabold' : 'text-wood-cream/80 hover:text-white'
             }`}
           >
             {t.reels}
@@ -325,8 +311,8 @@ export default function Navbar() {
           <Link
             href="/orders"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors border-b border-wood-accent/10 ${
-              pathname === '/orders' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            className={`py-2 block transition-colors border-b border-wood-accent/10 ${
+              pathname === '/orders' ? 'text-wood-accent font-extrabold' : 'text-wood-cream/80 hover:text-white'
             }`}
           >
             {t.orders}
@@ -334,33 +320,26 @@ export default function Navbar() {
           <Link
             href="/contact"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-1.5 block transition-colors ${
-              pathname === '/contact' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
+            className={`py-2 block transition-colors border-b border-wood-accent/10 ${
+              pathname === '/contact' ? 'text-wood-accent font-extrabold' : 'text-wood-cream/80 hover:text-white'
             }`}
           >
             {t.contact}
           </Link>
-          <Link
-            href="/admin"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`py-2.5 px-3.5 rounded-xl flex items-center justify-between border transition-all mt-1 ${
-              pathname.startsWith('/admin') 
-                ? 'bg-wood-accent/25 border-wood-accent text-wood-accent font-extrabold shadow-sm' 
-                : 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/60'
-            }`}
+
+          {/* Language Toggle in Mobile Drawer */}
+          <button
+            onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }}
+            className="w-full flex items-center justify-between py-2.5 px-3.5 rounded-xl border border-wood-accent/30 bg-white/5 text-wood-accent hover:bg-wood-accent hover:text-white transition-all cursor-pointer mt-1"
           >
-            <div className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4 text-amber-400" />
-              <span>{isLoggedIn ? `${t.dashboard} (${adminName})` : (isTelugu ? '🔑 అడ్మిన్ లాగిన్ పోర్టల్' : '🔑 Admin Portal Login')}</span>
-            </div>
-            {!isLoggedIn && (
-              <span className="text-[9px] bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full font-bold">LOGIN</span>
-            )}
-          </Link>
+            <span>{isTelugu ? "🌐 భాష: తెలుగు" : "🌐 Language: English"}</span>
+            <span className="text-[10px] underline font-bold">{isTelugu ? "Switch to EN" : "తెలుగులోకి మార్చు"}</span>
+          </button>
+
           {isLoggedIn && (
             <button
               onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-              className="w-full flex items-center justify-start gap-1.5 py-2.5 text-left border-t border-wood-accent/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer mt-1"
+              className="w-full flex items-center justify-start gap-1.5 py-2.5 px-3.5 rounded-xl text-left border border-red-500/30 bg-red-950/30 text-red-400 hover:text-red-300 transition-colors cursor-pointer mt-2"
             >
               <LogOut className="h-4 w-4" />
               <span>{t.logout}</span>

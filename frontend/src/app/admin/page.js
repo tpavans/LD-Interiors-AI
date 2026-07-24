@@ -230,8 +230,10 @@ export default function AdminPage() {
     const checkAuth = async () => {
       const token = localStorage.getItem('ld_token');
       const params = new URLSearchParams(window.location.search);
-      const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan';
-      const hasStoredSecret = localStorage.getItem('ld_admin_secret_passed') === 'true';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      const isSecretPath = currentPath.includes('admin1255121');
+      const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
+      const hasStoredSecret = localStorage.getItem('ld_admin_secret_passed') === 'true' || isSecretPath;
 
       if (token) {
         try {

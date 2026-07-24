@@ -43,6 +43,16 @@ export const metadata = {
     locale: 'en_IN',
     type: 'website',
   },
+  icons: {
+    icon: [
+      { url: 'https://www.ldinteriors.in/logo.png', type: 'image/png' },
+      { url: 'https://www.ldinteriors.in/favicon.ico' },
+    ],
+    shortcut: ['https://www.ldinteriors.in/logo.png'],
+    apple: [
+      { url: 'https://www.ldinteriors.in/logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   twitter: {
     card: 'summary_large_image',
     title: 'LD Interiors & Furnitures | Alamuru',
@@ -51,9 +61,33 @@ export const metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  'name': 'LD Interiors & Furnitures',
+  'url': 'https://www.ldinteriors.in',
+  'logo': 'https://www.ldinteriors.in/logo.png',
+  'description': 'Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.',
+  'address': {
+    '@type': 'PostalAddress',
+    'streetAddress': 'Vinayaka Temple Street, Mulasthanam',
+    'addressLocality': 'Alamuru Mandal',
+    'addressRegion': 'Andhra Pradesh',
+    'postalCode': '533233',
+    'addressCountry': 'IN'
+  },
+  'telephone': '+916281653998'
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans">
         <LanguageProvider>
           <Navbar />
