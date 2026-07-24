@@ -277,7 +277,7 @@ const sendOrderEmail = async (order) => {
         category = prod.category || category;
         price = prod.price && prod.price > 0 ? `₹${prod.price.toLocaleString('en-IN')}` : 'Contact for pricing';
         if (prod.image) {
-          imageUrl = prod.image.startsWith('http') ? prod.image : `https://ld-interiors-ai.vercel.app${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
+          imageUrl = prod.image.startsWith('http') ? prod.image : `https://www.ldinteriors.in${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
         }
       }
     } catch (err) {
@@ -319,7 +319,7 @@ Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
 Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
 
 🌐 Track your order anytime by visiting our website:
-https://ld-interiors-ai.vercel.app/
+https://www.ldinteriors.in/
 
 If you have any questions or need assistance, feel free to contact us anytime.
 
@@ -353,7 +353,7 @@ LD Interiors ను ఎంపిక చేసుకున్నందుకు �
 📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
 
 🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://ld-interiors-ai.vercel.app/
+https://www.ldinteriors.in/
 
 🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
 
@@ -365,11 +365,11 @@ https://ld-interiors-ai.vercel.app/
 
 🏠 LD Interiors బృందం
 📞 +91 93463 25291
-🌐 https://ld-interiors-ai.vercel.app/
+🌐 https://www.ldinteriors.in/
 
 "మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
 
-  const dashboardLink = `https://ld-interiors-ai.vercel.app/admin?action=send-greeting&orderId=${order._id}`;
+  const dashboardLink = `https://www.ldinteriors.in/admin?action=send-greeting&orderId=${order._id}`;
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
@@ -383,7 +383,7 @@ https://ld-interiors-ai.vercel.app/
       <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
         <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Product Details</h3>
         <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
-          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://ld-interiors-ai.vercel.app/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
+          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://www.ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
           <li style="margin-bottom: 8px;"><strong>• Category:</strong> ${category}</li>
           <li style="margin-bottom: 8px;"><strong>• Price:</strong> <span style="color: #6d553b; font-weight: bold;">${price}</span></li>
           ${imageUrl ? `<li style="margin-bottom: 8px; word-break: break-all;"><strong>• Image URL:</strong> <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${imageUrl}</a></li>` : ''}
@@ -418,11 +418,11 @@ https://ld-interiors-ai.vercel.app/
         <img src="${imageUrl}" alt="Design Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid #ebdcc5;" />
         <p style="margin: 8px 0 0 0; font-size: 11px;">
           <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: none;">Open Full-Res Image</a>
-          ${order.productId ? ` &nbsp;|&nbsp; <a href="https://ld-interiors-ai.vercel.app/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
+          ${order.productId ? ` &nbsp;|&nbsp; <a href="https://www.ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">View Website Product Page</a>` : ''}
         </p>
         ${order.productId ? `
         <div style="margin-top: 10px; padding: 8px; background-color: #fcfbf9; border: 1px dashed #e5d8c3; border-radius: 6px; font-size: 10px; color: #8e7a65; word-break: break-all;">
-          <strong>Direct URL (Copy/Paste fallback):</strong> https://ld-interiors-ai.vercel.app/products/${order.productId}
+          <strong>Direct URL (Copy/Paste fallback):</strong> https://www.ldinteriors.in/products/${order.productId}
         </div>
         ` : ''}
       </div>
@@ -492,7 +492,7 @@ const sendCustomerGreetingEmail = async (order) => {
         category = prod.category || category;
         price = prod.price && prod.price > 0 ? `₹${prod.price.toLocaleString('en-IN')}` : 'Contact for pricing';
         if (prod.image) {
-          imageUrl = prod.image.startsWith('http') ? prod.image : `https://ld-interiors-ai.vercel.app${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
+          imageUrl = prod.image.startsWith('http') ? prod.image : `https://www.ldinteriors.in${prod.image.startsWith('/') ? '' : '/'}${prod.image}`;
         }
       }
     } catch (err) {
@@ -500,7 +500,7 @@ const sendCustomerGreetingEmail = async (order) => {
     }
   }
 
-  const resolvedImageUrl = imageUrl || 'https://ld-interiors-ai.vercel.app/products';
+  const resolvedImageUrl = imageUrl || 'https://www.ldinteriors.in/products';
 
   const textContent = `🏠 Welcome to LD Interiors!
 
@@ -521,7 +521,7 @@ Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
 Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
 
 🌐 Track your order anytime by visiting our website:
-https://ld-interiors-ai.vercel.app/
+https://www.ldinteriors.in/
 
 If you have any questions or need assistance, feel free to contact us anytime.
 
@@ -557,7 +557,7 @@ LD Interiors ను ఎంపిక చేసుకున్నందుకు �
 📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
 
 🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://ld-interiors-ai.vercel.app/
+https://www.ldinteriors.in/
 
 🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
 
@@ -569,7 +569,7 @@ https://ld-interiors-ai.vercel.app/
 
 🏠 LD Interiors బృందం
 📞 +91 93463 25291
-🌐 https://ld-interiors-ai.vercel.app/
+🌐 https://www.ldinteriors.in/
 
 "మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
 
@@ -602,7 +602,7 @@ https://ld-interiors-ai.vercel.app/
         <p style="font-size: 14px;">Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.</p>
         
         <div style="text-align: center; margin: 20px 0;">
-          <a href="https://ld-interiors-ai.vercel.app/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a;">
+          <a href="https://www.ldinteriors.in/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a;">
             🌐 Track Your Order
           </a>
         </div>
@@ -651,7 +651,7 @@ https://ld-interiors-ai.vercel.app/
       <div style="margin-top: 30px; padding-top: 15px; border-top: 2px solid #e2d7c5; font-size: 12px; color: #6d553b;">
         <p style="margin: 5px 0;"><strong>🏠 LD Interiors బృందం / LD Interiors Team</strong></p>
         <p style="margin: 5px 0;">📞 Call/WhatsApp: +91 93463 25291</p>
-        <p style="margin: 5px 0;">🌐 Website: <a href="https://ld-interiors-ai.vercel.app/" target="_blank" style="color: #a07d57; text-decoration: none;">https://ld-interiors-ai.vercel.app/</a></p>
+        <p style="margin: 5px 0;">🌐 Website: <a href="https://www.ldinteriors.in/" target="_blank" style="color: #a07d57; text-decoration: none;">https://www.ldinteriors.in/</a></p>
       </div>
     </div>
   `;
@@ -689,7 +689,7 @@ Your order status for "${order.product}" has been updated to: ${status}.
 ${statusNote}
 
 You can track your live orders timeline, view progress details, or submit reviews at any time:
-👉 https://ld-interiors-ai.vercel.app/orders
+👉 https://www.ldinteriors.in/orders
 
 Thank you for choosing LD Interiors!
 
@@ -717,11 +717,11 @@ LD Interiors & Furnitures`;
       </div>
 
       <div style="text-align: center; margin: 25px 0;">
-        <a href="https://ld-interiors-ai.vercel.app/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #523f2a;">
+        <a href="https://www.ldinteriors.in/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #523f2a;">
           🔎 Track Live Order Progress
         </a>
         <p style="margin: 8px 0 0 0; font-size: 10px; color: #a59582;">
-          Direct tracker: https://ld-interiors-ai.vercel.app/orders
+          Direct tracker: https://www.ldinteriors.in/orders
         </p>
       </div>
 
@@ -859,7 +859,7 @@ Please check your GooglePay/PhonePe account and verify the transaction.`;
       </div>
 
       <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
-        <a href="https://ld-interiors-ai.vercel.app/admin" style="background-color: #2e7d32; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #1b5e20;">
+        <a href="https://www.ldinteriors.in/admin" style="background-color: #2e7d32; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #1b5e20;">
           🔑 Open Admin Dashboard to Verify
         </a>
       </div>
@@ -903,7 +903,7 @@ Payment Details:
 - Receipt Date: ${dateStr}
 
 We have updated your project timeline. You can view your project status on the orders tracker at:
-https://ld-interiors-ai.vercel.app/orders
+https://www.ldinteriors.in/orders
 
 Warm regards,
 Nagaraju (Owner)
@@ -935,7 +935,7 @@ LD Interiors & Furnitures`;
       </div>
 
       <div style="text-align: center; margin: 25px 0;">
-        <a href="https://ld-interiors-ai.vercel.app/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+        <a href="https://www.ldinteriors.in/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
           🔎 Track Project Progress
         </a>
       </div>

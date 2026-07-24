@@ -22,6 +22,7 @@ export default function Navbar() {
 
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language];
+  const isTelugu = language === 'TE';
 
   // Sync login status from localstorage
   const checkLogin = () => {

@@ -213,6 +213,41 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
+
+        {/* Live Interactive Google Map Card */}
+        <div className="mt-8 overflow-hidden rounded-3xl border border-wood-border/40 bg-white/80 backdrop-blur-md shadow-lg p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+                Live Workshop Location
+              </span>
+              <h3 className="font-serif text-xl font-bold text-wood-dark flex items-center gap-2 mt-0.5">
+                <MapPin className="h-5 w-5 text-wood-accent" />
+                LD Interiors & Furnitures Workshop, Mulasthanam
+              </h3>
+            </div>
+            <a
+              href="https://maps.google.com/?q=Mulasthanam,Alamuru,AP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 rounded-xl bg-wood-accent text-white font-bold text-xs uppercase tracking-wider hover:bg-wood-dark transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              📍 Open Live GPS in Google Maps
+            </a>
+          </div>
+          <div className="w-full h-80 rounded-2xl overflow-hidden border border-wood-border/30 shadow-inner">
+            <iframe
+              title="LD Interiors Workshop Location"
+              src="https://maps.google.com/maps?q=Mulasthanam,Alamuru,Andhra%20Pradesh%20533233&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
       </div>
     </div>
   );
