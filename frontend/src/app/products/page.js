@@ -269,8 +269,15 @@ Thank you,
         </div>
       </div>
 
-      {/* Filter Buttons */}
+      {/* Filter Buttons & Dream Designs Quick Access */}
       <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-wood-border/30 pb-8 select-none">
+        <button
+          onClick={() => setShowLikedDrawer(true)}
+          className="flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold uppercase tracking-widest rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all duration-300 cursor-pointer animate-pulse"
+        >
+          <Heart className="h-4 w-4 fill-white text-white" />
+          <span>Dream Designs Board ({likedIds.length})</span>
+        </button>
         {categories.map((category) => (
           <button
             key={category}
@@ -408,10 +415,20 @@ Thank you,
             {/* Drawer Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
               {likedIds.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center text-wood-light py-20">
-                  <Heart className="h-10 w-10 text-wood-light/50 mb-3" />
-                  <p className="text-sm font-light">Your dream board is empty.</p>
-                  <p className="text-[10px] text-wood-light/75 italic mt-1">Tap the heart ❤️ on any design card to add it here!</p>
+                <div className="h-full flex flex-col items-center justify-center text-center text-wood-light py-16 px-4">
+                  <div className="bg-red-50 p-4 rounded-full mb-3">
+                    <Heart className="h-10 w-10 text-red-500 fill-red-200" />
+                  </div>
+                  <h4 className="text-base font-serif font-bold text-wood-dark">Dream Designs Board (నచ్చిన డిజైన్లు)</h4>
+                  <p className="text-xs text-wood-light font-light mt-1 max-w-xs leading-relaxed">
+                    Explore our handcrafted teak wood living rooms, bedrooms, kitchens, and doors. Tap the <strong className="text-red-500 font-bold">❤️ Heart icon</strong> on any design to save it here!
+                  </p>
+                  <button
+                    onClick={() => setShowLikedDrawer(false)}
+                    className="mt-6 px-6 py-2.5 bg-wood-dark text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-wood-accent transition-colors shadow-md cursor-pointer"
+                  >
+                    🎨 Explore All Designs & Tap ❤️
+                  </button>
                 </div>
               ) : (
                 <>

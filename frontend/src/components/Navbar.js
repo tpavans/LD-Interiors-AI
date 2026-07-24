@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut, User, LayoutDashboard, Menu, X } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, Menu, X, Heart } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
@@ -18,6 +18,7 @@ export default function Navbar() {
   // Customer Login Drawer States
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [likedCount, setLikedCount] = useState(0);
 
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language];
@@ -57,11 +58,26 @@ export default function Navbar() {
     const openDrawer = () => setIsProfileDrawerOpen(true);
     window.addEventListener('open-profile-drawer', openDrawer);
 
+    // Sync liked count
+    const updateLiked = () => {
+      try {
+        const liked = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+        setLikedCount(liked.length);
+      } catch (e) {
+        setLikedCount(0);
+      }
+    };
+    updateLiked();
+    window.addEventListener('liked-updated', updateLiked);
+    window.addEventListener('storage', updateLiked);
+
     return () => {
       window.removeEventListener('storage', checkLogin);
       window.removeEventListener('admin-login', checkLogin);
       window.removeEventListener('admin-logout', checkLogin);
       window.removeEventListener('open-profile-drawer', openDrawer);
+      window.removeEventListener('liked-updated', updateLiked);
+      window.removeEventListener('storage', updateLiked);
     };
   }, []);
 
@@ -182,6 +198,27 @@ export default function Navbar() {
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
           </button>
 
+          {/* Permanent Dream Designs Heart Button */}
+          <button
+            onClick={() => {
+              if (pathname === '/products') {
+                window.dispatchEvent(new Event('open-liked-drawer'));
+              } else {
+                router.push('/products?openLiked=true');
+              }
+            }}
+            className="relative flex items-center gap-1.5 rounded-full border border-red-400/50 bg-red-950/20 px-3 py-1 text-[10px] font-extrabold text-red-300 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer ml-1 select-none shadow-sm"
+            title="Dream Designs Board / నచ్చిన డిజైన్‌లు"
+          >
+            <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500 animate-pulse" />
+            <span>{language === 'EN' ? 'Dream Designs' : 'నచ్చిన డిజైన్‌లు'}</span>
+            {likedCount > 0 && (
+              <span className="ml-0.5 rounded-full bg-red-600 px-1.5 py-0.2 text-[8px] font-extrabold text-white">
+                {likedCount}
+              </span>
+            )}
+          </button>
+
           {/* User Profile Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
@@ -196,7 +233,26 @@ export default function Navbar() {
         </nav>
 
         {/* Mobile controls bar (Language + Hamburger) */}
-        <div className="flex md:hidden items-center gap-3">
+        <div className="flex md:hidden items-center gap-2">
+          {/* Mobile Dream Designs Heart Button */}
+          <button
+            onClick={() => {
+              if (pathname === '/products') {
+                window.dispatchEvent(new Event('open-liked-drawer'));
+              } else {
+                router.push('/products?openLiked=true');
+              }
+            }}
+            className="relative flex items-center justify-center p-1.5 rounded-full border border-red-400/50 bg-red-950/30 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer select-none"
+            title="Dream Designs Board / నచ్చిన డిజైన్‌లు"
+          >
+            <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+            {likedCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[8px] font-extrabold text-white ring-1 ring-amber-950">
+                {likedCount}
+              </span>
+            )}
+          </button>
           <Link
             href="/"
             className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2.5 py-0.5 text-[9px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer select-none whitespace-nowrap"
