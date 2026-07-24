@@ -19,23 +19,25 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  metadataBase: new URL('https://ldinteriors.in'),
+  metadataBase: new URL('https://www.ldinteriors.in'),
   title: "LD Interiors & Furnitures | Premium Custom Woodwork & Interior Design",
   description: "Official online store & portfolio of LD Interiors & Furnitures, Alamuru. Discover handcrafted teak wood furniture, living rooms, bedrooms, kitchens, and custom woodwork.",
   alternates: {
-    canonical: 'https://ldinteriors.in',
+    canonical: 'https://www.ldinteriors.in',
   },
   openGraph: {
     title: "LD Interiors & Furnitures | Alamuru",
     description: "Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.",
-    url: 'https://ldinteriors.in',
+    url: 'https://www.ldinteriors.in',
     siteName: 'LD Interiors & Furnitures',
     images: [
       {
-        url: 'https://ldinteriors.in/og-image.png',
+        url: 'https://www.ldinteriors.in/og-image.jpg',
+        secureUrl: 'https://www.ldinteriors.in/og-image.jpg',
         width: 1200,
-        height: 630,
-        alt: 'LD Interiors & Furnitures Showcase'
+        height: 1200,
+        type: 'image/jpeg',
+        alt: 'LD Interiors & Furnitures Logo'
       }
     ],
     locale: 'en_IN',
@@ -45,7 +47,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'LD Interiors & Furnitures | Alamuru',
     description: 'Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.',
-    images: ['https://ldinteriors.in/og-image.png'],
+    images: ['https://www.ldinteriors.in/og-image.jpg'],
   },
 };
 

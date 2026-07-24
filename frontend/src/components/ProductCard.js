@@ -215,7 +215,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             className="block relative overflow-hidden aspect-[4/5] bg-wood-beige/10 cursor-pointer group"
           >
             <img
-              src={image}
+              src={formatImageUrl(image)}
               alt={title}
               loading="lazy"
               className="h-full w-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
