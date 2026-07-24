@@ -44,9 +44,9 @@ export const translations = {
     // Product Card
     estimated: "Estimated",
     contactPricing: "Contact for pricing",
-    orderBtn: "Inquire / Customize",
+    orderBtn: "Order / Customize",
     shareBtn: "Share",
-    orderTitle: "Custom Order Inquiry",
+    orderTitle: "Custom Furniture Order Form",
     orderSub: "Place customized order sheet to Mr. Nagaraju via WhatsApp",
     fullName: "Full Name *",
     phoneNumber: "WhatsApp Number *",
@@ -150,9 +150,9 @@ export const translations = {
     // Product Card
     estimated: "అంచనా వ్యయం",
     contactPricing: "ధర కొరకు సంప్రదించండి",
-    orderBtn: "ఆర్డర్ / కస్టమైజ్",
+    orderBtn: "ఆర్డర్ / కస్టమైజ్ చేయండి",
     shareBtn: "షేర్ చేయండి",
-    orderTitle: "కస్టమ్ ఆర్డర్ ఎంక్వైరీ",
+    orderTitle: "కస్టమ్ ఫర్నిచర్ ఆర్డర్ ఫారం",
     orderSub: "వాట్సాప్ ద్వారా శ్రీ నాగరాజు గారికి కస్టమైజ్డ్ ఆర్డర్ షీట్ పంపండి",
     fullName: "పూర్తి పేరు *",
     phoneNumber: "వాట్సాప్ నెంబర్ *",
