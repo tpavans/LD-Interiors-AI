@@ -102,6 +102,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount routing endpoints
+const { createBulkProducts } = require('./controllers/productController');
+const { protect } = require('./middleware/authMiddleware');
+const upload = require('./middleware/uploadMiddleware');
+
+// Direct top-level route definition for Bulk Upload (Guarantees zero 404 route mismatch)
+app.post('/api/products/bulk', protect, upload.any(), createBulkProducts);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
