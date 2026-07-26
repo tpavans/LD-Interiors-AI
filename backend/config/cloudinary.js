@@ -17,10 +17,14 @@ cloudinary.config({
  */
 const uploadToCloudinary = async (filePath, folder = 'ld_interiors', resourceType = 'auto') => {
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
+    const options = {
       folder: folder,
       resource_type: resourceType,
-    });
+    };
+    if (resourceType === 'image' || resourceType === 'auto') {
+      options.transformation = [{ width: 1600, crop: 'limit', quality: 'auto:good' }];
+    }
+    const result = await cloudinary.uploader.upload(filePath, options);
     // Remove local file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
