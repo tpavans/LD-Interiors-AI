@@ -256,7 +256,6 @@ const sendOtp = async (req, res) => {
       }
     }
 
-    const raw10Digit = cleanedPhone.replace(/\D/g, '').slice(-10);
     const waText = `🏠 Welcome to LD Interiors & Furnitures!\n\nYour 6-Digit Security OTP Code is: *${otp}*\n\nValid for 5 minutes. Enter this code on www.ldinteriors.in to complete your login.`;
     const whatsappUrl = `https://wa.me/91${raw10Digit}?text=${encodeURIComponent(waText)}`;
 
