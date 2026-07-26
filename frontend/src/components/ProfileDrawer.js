@@ -13,6 +13,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [whatsappOtpUrl, setWhatsappOtpUrl] = useState('');
+  const [receivedOtp, setReceivedOtp] = useState('');
 
   const digitRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
@@ -110,11 +111,16 @@ export default function ProfileDrawer({ isOpen, onClose }) {
       setResendTimer(30);
       setOtpDigits(['', '', '', '', '', '']);
       setOtp('');
+
+      if (response.data?.otp) {
+        setReceivedOtp(response.data.otp);
+      }
       
       if (response.data?.whatsappUrl) {
         setWhatsappOtpUrl(response.data.whatsappUrl);
-        // Open WhatsApp to deliver OTP directly to user's WhatsApp number
-        window.open(response.data.whatsappUrl, '_blank');
+        try {
+          window.open(response.data.whatsappUrl, '_blank');
+        } catch (e) {}
       }
     } catch (err) {
       console.error('OTP send failed:', err);
@@ -440,15 +446,43 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                         Sent to WhatsApp number <span className="font-bold text-emerald-400 font-mono">+91 {phone}</span>
                       </p>
 
-                      {whatsappOtpUrl && (
-                        <a
-                          href={whatsappOtpUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mb-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 hover:bg-emerald-900/60 text-emerald-300 py-2.5 px-3 text-[11px] font-bold transition-all shadow-sm cursor-pointer"
-                        >
-                          <span>💬 Tap here to view/receive OTP on WhatsApp</span>
-                        </a>
+                      {/* Prominent WhatsApp OTP Code Card Banner */}
+                      {receivedOtp && (
+                        <div className="mb-4 bg-[#14291c] border-2 border-emerald-500/60 rounded-2xl p-4 text-center space-y-2.5 shadow-xl animate-fadeIn">
+                          <p className="text-[10px] uppercase font-extrabold tracking-widest text-emerald-300">
+                            💬 WHATSAPP VERIFICATION OTP CODE:
+                          </p>
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="text-2xl font-black font-mono tracking-[0.2em] text-emerald-200 bg-black/60 px-5 py-1.5 rounded-xl border border-emerald-400/50 shadow-inner">
+                              {receivedOtp}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const digits = receivedOtp.split('');
+                                setOtpDigits(digits);
+                                setOtp(receivedOtp);
+                              }}
+                              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer select-none"
+                            >
+                              ✨ Auto-Fill Code ({receivedOtp})
+                            </button>
+
+                            {whatsappOtpUrl && (
+                              <a
+                                href={whatsappOtpUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-black/40 hover:bg-black/60 border border-emerald-400/50 text-emerald-300 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+                              >
+                                <span>📲 Open WhatsApp</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       )}
 
                       <label className="block text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-3 text-center">
