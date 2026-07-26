@@ -161,43 +161,13 @@ export default function Home() {
       {/* Hero Section */}
       <section className="-mt-20 relative overflow-hidden border-b border-wood-border/30 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(44, 26, 15, 0.4), rgba(26, 15, 8, 0.75)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-wood-accent/20 px-4 py-1.5 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-6 border border-wood-accent/30 backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 text-wood-accent animate-pulse" />
-            {isTelugu ? "ప్రీమియం డిజైన్ స్టూడియో" : "Premium Design Studio"}
-          </div>
           <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none uppercase">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-wood-beige to-amber-100 block">LD INTERIORS</span>
-            <span className="bg-gradient-to-r from-wood-accent via-amber-400 to-amber-200 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">{isTelugu ? "& ఫర్నిచర్స్" : "& Furnitures"}</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-amber-100 block">LD INTERIORS</span>
+            <span className="bg-gradient-to-r from-sky-400 via-amber-300 to-amber-100 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">{isTelugu ? "& ఫర్నిచర్స్" : "& Furnitures"}</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg font-light leading-relaxed text-wood-beige/90 drop-shadow-sm">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg font-light leading-relaxed text-slate-100 drop-shadow-sm">
             {t.heroDesc}
           </p>
-          
-          {/* Custom Elegant Bilingual Quote Card */}
-          <div className="mx-auto mt-10 max-w-3xl glass-panel border border-wood-accent/30 rounded-3xl p-6 sm:p-8 shadow-inner mb-8 text-center relative overflow-hidden">
-            {/* Soft decorative background glows */}
-            <div className="absolute -left-16 -top-16 w-32 h-32 bg-wood-accent/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <span className="font-serif text-6xl text-wood-accent/20 absolute left-4 top-1 leading-none select-none">“</span>
-            
-            <div className="space-y-4 relative z-10 px-4">
-              {/* Telugu Quote */}
-              <p className="font-serif text-base sm:text-lg text-wood-dark font-bold tracking-wide leading-relaxed">
-                "గృహమే కదా స్వర్గసీమ... ప్రతి ఇల్లు ఒక పవిత్ర దేవాలయం. మీ అభిరుచులకు, సాంప్రదాయాలకు తగినట్లుగా నూతన శైలిలో, మేలిరకం టేకు కలపతో మీ కలల గృహాన్ని అపురూపంగా అలంకరించడం మా శతాబ్దాల వృత్తి ధర్మం. నమ్మకమే పునాదిగా, నాణ్యతతో కూడిన నిండైన హస్తకళల నైపుణ్యాన్ని మీకు కానుకగా అందిస్తున్నాము."
-              </p>
-              
-              {/* Divider */}
-              <div className="w-16 h-0.5 bg-wood-accent/30 mx-auto my-3" />
-              
-              {/* English Quote */}
-              <p className="font-sans text-xs sm:text-sm font-light text-wood-medium/95 tracking-wide leading-relaxed italic">
-                "A home is where the heart finds peace, and every space is a sacred temple of joy. With decades of dedicated craftsmanship and the finest teak wood, we shape your traditions and modern tastes into timeless masterpieces. Built on trust, delivered with quality, to last for generations."
-              </p>
-            </div>
-            
-            <span className="font-serif text-6xl text-wood-accent/20 absolute right-4 bottom-1 leading-none select-none">”</span>
-          </div>
 
           <div className="mt-8 flex items-center justify-center gap-x-6">
             <Link

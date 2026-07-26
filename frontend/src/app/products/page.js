@@ -279,28 +279,23 @@ Thank you,
         </div>
       </div>
 
-      {/* Filter Buttons & Dream Designs Quick Access */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12 border-b border-wood-border/30 pb-8 select-none">
-        <button
-          onClick={() => setShowLikedDrawer(true)}
-          className="flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold uppercase tracking-widest rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all duration-300 cursor-pointer animate-pulse"
-        >
-          <Heart className="h-4 w-4 fill-white text-white" />
-          <span>Dream Designs Board ({likedIds.length})</span>
-        </button>
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => handleCategoryChange(category)}
-            className={`px-4.5 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 cursor-pointer ${
-              selectedCategory === category
-                ? 'bg-wood-dark text-white shadow-md'
-                : 'bg-white/60 text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
+      {/* Aligned Category Filter Pills */}
+      <div className="w-full overflow-x-auto scrollbar-none mb-8 pb-4 border-b border-slate-200">
+        <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max px-2 select-none">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer shadow-sm ${
+                selectedCategory === category
+                  ? 'bg-[#008DDA] text-white ring-2 ring-[#008DDA]/40 scale-105'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Main Pinterest-Style Masonry Grid */}

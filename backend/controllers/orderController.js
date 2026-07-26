@@ -34,6 +34,7 @@ const createOrder = async (req, res) => {
       });
     }
 
+    // Always prioritize the official ordered product image URL
     let finalImageUrl = imageUrl ? imageUrl.trim() : undefined;
     let finalImagePublicId = undefined;
 
@@ -42,14 +43,13 @@ const createOrder = async (req, res) => {
       try {
         console.log('Uploading customer reference image to Cloudinary:', req.file.path);
         const uploadResult = await uploadToCloudinary(req.file.path, 'ld_orders');
-        finalImageUrl = uploadResult.url;
-        finalImagePublicId = uploadResult.publicId;
+        // Only use uploaded file as fallback if product imageUrl is missing
+        if (!finalImageUrl) {
+          finalImageUrl = uploadResult.url;
+          finalImagePublicId = uploadResult.publicId;
+        }
       } catch (uploadErr) {
         console.error('Failed to upload customer reference image:', uploadErr.message);
-        return res.status(500).json({
-          message: 'Failed to upload reference image. Please try again.',
-          error: uploadErr.message,
-        });
       }
     }
 

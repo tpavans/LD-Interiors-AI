@@ -3,17 +3,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 import api from '@/utils/api';
-import { Loader2, MessageSquare, ArrowUp, ArrowDown, Volume2, VolumeX, Eye, HelpCircle } from 'lucide-react';
+import { Loader2, Volume2, VolumeX, Eye, Play, X, Sparkles, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ReelsPage() {
   const { language } = useLanguage();
-  const t = translations[language];
+  const t = translations[language] || translations['EN'];
   const isTelugu = language === 'TE';
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeProduct, setActiveProduct] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef(null);
 
@@ -28,19 +28,13 @@ export default function ReelsPage() {
     
     if (url.includes('/shorts/')) {
       const parts = url.split('/shorts/');
-      if (parts[1]) {
-        videoId = parts[1].split(/[?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
     } else if (url.includes('youtu.be/')) {
       const parts = url.split('youtu.be/');
-      if (parts[1]) {
-        videoId = parts[1].split(/[?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
     } else if (url.includes('v=')) {
       const parts = url.split('v=');
-      if (parts[1]) {
-        videoId = parts[1].split(/[&?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[&?#]/)[0];
     } else {
       videoId = url;
     }
@@ -52,7 +46,6 @@ export default function ReelsPage() {
     const fetchReels = async () => {
       try {
         const response = await api.get('/products');
-        // Filter only products that have showcase video URLs
         const videoProducts = response.data.filter(p => p.video);
         setProducts(videoProducts);
       } catch (err) {
@@ -64,174 +57,191 @@ export default function ReelsPage() {
     fetchReels();
   }, []);
 
-  // Control video play/pause on index change or mute change
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.play().catch(e => console.log("Auto-play blocked:", e));
-    }
-  }, [activeIdx, products]);
-
-  const handleNext = () => {
-    if (activeIdx < products.length - 1) {
-      setActiveIdx(prev => prev + 1);
-    } else {
-      setActiveIdx(0); // loop back
-    }
-  };
-
-  const handlePrev = () => {
-    if (activeIdx > 0) {
-      setActiveIdx(prev => prev - 1);
-    } else {
-      setActiveIdx(products.length - 1); // loop to end
-    }
-  };
-
-  const currentProduct = products[activeIdx];
-
   const handleWhatsAppInquiry = (product) => {
     const message = isTelugu
-      ? `నమస్తే నాగరాజు గారు! నేను మీ వర్క్‌షాప్ రీల్స్ ద్వారా *${product.title}* వీడియోను చూశాను. దీని సైజ్ కస్టమైజేషన్ మరియు తయారీ వివరాలు తెలుసుకోవాలనుకుంటున్నాను.\n\nవీడియో లింక్: ${product.video}`
-      : `Hello Mr. Nagaraju! I saw your carpentry showcase video for *${product.title}* on your website reels. I would like to inquire about its customization, pricing, and delivery details.\n\nVideo: ${product.video}`;
+      ? `నమస్తే నాగరాజు గారు! నేను మీ LD ఇంటీరియర్స్ వర్క్‌షాప్ రీల్ ద్వారా *${product.title}* వీడియోను చూశాను. దీని గురించి వివరాలు తెలుసుకోవాలనుకుంటున్నాను.\n\nవీడియో: ${product.video}`
+      : `Hello Mr. Nagaraju! I watched your workshop reel for *${product.title}* on your LD Interiors website. I would like to inquire about this design.\n\nVideo: ${product.video}`;
     
     window.open(`https://wa.me/916301290966?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-[80vh] w-full flex-col items-center justify-center bg-wood-plank-bg">
-        <Loader2 className="h-8 w-8 animate-spin text-wood-accent mb-2" />
-        <p className="text-xs text-wood-light font-light animate-pulse">{t.loadingShowcase}</p>
-      </div>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <div className="flex min-h-[85vh] w-full flex-col items-center justify-center p-6 text-center bg-wood-plank-bg">
-        <div className="max-w-md bg-white/80 border border-wood-border/60 p-8 rounded-3xl shadow-lg">
-          <HelpCircle className="mx-auto h-12 w-12 text-wood-accent mb-4 stroke-1" />
-          <h3 className="text-lg font-serif font-bold text-wood-dark">{isTelugu ? "వీడియోలు ఏవీ లేవు" : "No Videos Showcase Yet"}</h3>
-          <p className="mt-2 text-xs text-wood-light leading-relaxed font-light mb-6">
-            {t.noVideosFound}
-          </p>
-          <Link 
-            href="/products" 
-            className="inline-block rounded-xl bg-wood-dark hover:bg-wood-dark/90 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors"
-          >
-            {isTelugu ? "గ్యాలరీ చూడండి" : "Go to Gallery"}
-          </Link>
-        </div>
+      <div className="flex min-h-[70vh] w-full flex-col items-center justify-center bg-[#FBF9F1]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#008DDA] mb-2" />
+        <p className="text-xs text-slate-600 font-medium animate-pulse">Loading Video Reels Showcase...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-neutral-950 flex flex-col justify-center items-center py-8 px-4 relative overflow-hidden">
-      {/* Dynamic blurred background canvas */}
-      {currentProduct.image && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-20 transition-all duration-700 -z-10"
-          style={{ backgroundImage: `url('${currentProduct.image}')` }}
-        ></div>
-      )}
-
-      {/* Title Header */}
-      <div className="text-center mb-4 z-10">
-        <h1 className="font-serif text-lg sm:text-2xl font-extrabold text-white tracking-wide gold-text-glow leading-none">
-          {t.reelsTitle}
+    <div className="min-h-[85vh] bg-[#FBF9F1] py-8 px-4 sm:px-8 max-w-7xl mx-auto text-left select-none">
+      {/* Header */}
+      <div className="mb-8 text-center max-w-2xl mx-auto">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-[#008DDA] text-[10px] font-extrabold uppercase tracking-widest mb-3">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>{isTelugu ? "కార్పెంటరీ వీడియో షోకేస్" : "Master Carpentry Videos"}</span>
+        </div>
+        <h1 className="font-serif text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          {t.reelsTitle || "Workshop Reels & Shorts"}
         </h1>
-        <p className="text-[10px] sm:text-xs text-wood-cream/70 font-light mt-1.5 leading-none">
-          {t.reelsDesc}
+        <p className="text-xs sm:text-sm text-slate-600 font-normal mt-2 leading-relaxed">
+          {isTelugu 
+            ? "మాములస్థానం వర్క్‌షాప్‌లో టేకు కలప చెక్కడాలు, పాలిష్ మరియు తయారీ లైవ్ వీడియోలను చూడటానికి ఏదైనా కార్డ్‌పై క్లిక్ చేయండి."
+            : "Tap any video card below to watch high-definition woodworking, carving, and polishing reels from our workshop!"}
         </p>
       </div>
 
-      {/* Main Reels Viewport */}
-      <div className="relative w-full max-w-sm h-[70vh] min-h-[480px] bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex items-center justify-center">
-        
-        {/* Looping video element / YouTube Embed */}
-        {isYouTubeUrl(currentProduct.video) ? (
-          <iframe
-            src={getYouTubeEmbedUrl(currentProduct.video)}
-            title={currentProduct.title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full object-cover scale-105"
-          />
-        ) : (
-          <video
-            ref={videoRef}
-            src={currentProduct.video}
-            loop
-            muted={isMuted}
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-
-        {/* Top controls: Mute overlay */}
-        <div className="absolute top-4 right-4 z-30">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-2.5 rounded-full bg-black/60 hover:bg-black/85 text-white transition-colors border border-white/10 cursor-pointer"
-            title={isMuted ? "Unmute" : "Mute"}
+      {/* Grid of Small Clickable Reel Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
+        {products.map((product) => (
+          <div
+            key={product._id}
+            onClick={() => setActiveProduct(product)}
+            className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col"
           >
-            {isMuted ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
-          </button>
-        </div>
+            {/* Reel Thumbnail Card Container */}
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-900">
+              <img
+                src={product.image}
+                alt={product.title}
+                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+              />
+              
+              {/* Dark Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
 
-        {/* Right side controls: Navigation Arrows */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3.5 z-30">
-          <button
-            onClick={handlePrev}
-            className="p-2.5 rounded-full bg-black/60 hover:bg-black/85 text-white transition-colors border border-white/10 cursor-pointer shadow-md hover:scale-105"
-            title="Previous Reel"
-          >
-            <ArrowUp className="h-4.5 w-4.5" />
-          </button>
-          <div className="text-[10px] text-white/80 font-bold bg-black/60 py-1.5 rounded-full select-none text-center border border-white/5">
-            {activeIdx + 1}/{products.length}
+              {/* Play Badge Overlay */}
+              <div className="absolute top-3 left-3 flex items-center gap-1 bg-[#008DDA] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md">
+                <Play className="h-3 w-3 fill-white" />
+                <span>REEL</span>
+              </div>
+
+              {/* Center Play Button Pulse Icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-11 w-11 rounded-full bg-white/30 backdrop-blur-md border border-white/60 flex items-center justify-center group-hover:scale-115 group-hover:bg-[#008DDA] transition-all shadow-lg">
+                  <Play className="h-5 w-5 fill-white text-white ml-0.5" />
+                </div>
+              </div>
+
+              {/* Category Badge */}
+              <div className="absolute bottom-3 left-3 right-3 text-left">
+                <span className="text-[9px] font-bold text-sky-300 uppercase tracking-widest block truncate mb-0.5">
+                  {product.category}
+                </span>
+                <h3 className="font-serif text-xs font-extrabold text-white line-clamp-1 group-hover:text-sky-200 transition-colors">
+                  {product.title}
+                </h3>
+              </div>
+            </div>
+
+            {/* Bottom Details Footer */}
+            <div className="p-3 bg-white flex items-center justify-between gap-1 text-left border-t border-slate-100">
+              <div>
+                <p className="text-[10px] text-slate-500 font-medium">Price</p>
+                <p className="text-xs font-black text-slate-900 font-mono">
+                  {product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Custom Rate'}
+                </p>
+              </div>
+
+              <span className="px-2.5 py-1 rounded-lg bg-sky-50 text-[#008DDA] font-bold text-[10px] uppercase tracking-wider group-hover:bg-[#008DDA] group-hover:text-white transition-all">
+                Watch ▶
+              </span>
+            </div>
           </div>
-          <button
-            onClick={handleNext}
-            className="p-2.5 rounded-full bg-black/60 hover:bg-black/85 text-white transition-colors border border-white/10 cursor-pointer shadow-md hover:scale-105"
-            title="Next Reel"
-          >
-            <ArrowDown className="h-4.5 w-4.5" />
-          </button>
-        </div>
-
-        {/* Bottom overlay: Product information */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-5 pt-10 text-left text-white z-20">
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-wood-accent text-wood-dark text-[8.5px] font-extrabold uppercase tracking-wider mb-2">
-            {currentProduct.category}
-          </span>
-          
-          <h3 className="font-serif text-base sm:text-lg font-bold leading-tight line-clamp-1">{currentProduct.title}</h3>
-          
-          <p className="text-xs text-wood-accent font-semibold mt-1">
-            {currentProduct.price && currentProduct.price > 0 ? (
-              <span>₹{currentProduct.price.toLocaleString('en-IN')}</span>
-            ) : (
-              <span>{t.contactPricing}</span>
-            )}
-          </p>
-
-          {/* Action Row */}
-          <div className="flex gap-2.5 mt-4">
-            <Link
-              href={`/products/${currentProduct._id}`}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent hover:bg-amber-500 active:scale-98 text-wood-dark py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
-            >
-              <Eye className="h-4 w-4" />
-              <span>{isTelugu ? "డిజైన్ వివరాలు చూడండి" : "View Product Details"}</span>
-            </Link>
-          </div>
-        </div>
-
+        ))}
       </div>
+
+      {/* POPUP FULLSCREEN REEL MODAL PLAYER */}
+      {activeProduct && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setActiveProduct(null)}
+        >
+          <div 
+            className="relative w-full max-w-sm h-[75vh] max-h-[620px] bg-slate-950 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col animate-slideUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close & Audio Bar */}
+            <div className="absolute top-4 inset-x-4 z-40 flex items-center justify-between">
+              <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
+                <Play className="h-3 w-3 fill-sky-400 text-sky-400" />
+                <span>{activeProduct.category}</span>
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+                  title={isMuted ? "Unmute Sound" : "Mute Sound"}
+                >
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <button
+                  onClick={() => setActiveProduct(null)}
+                  className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+                  title="Close Reel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Reel Video Player */}
+            <div className="relative flex-1 w-full h-full bg-black">
+              {isYouTubeUrl(activeProduct.video) ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(activeProduct.video)}
+                  title={activeProduct.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <video
+                  ref={videoRef}
+                  src={activeProduct.video}
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+
+            {/* Bottom Modal Actions */}
+            <div className="p-4 bg-slate-950 border-t border-slate-800 text-left text-white space-y-3">
+              <div>
+                <h3 className="font-serif text-sm font-extrabold text-white truncate">{activeProduct.title}</h3>
+                <p className="text-xs font-bold text-sky-400 mt-0.5 font-mono">
+                  {activeProduct.price && activeProduct.price > 0 ? `₹${activeProduct.price.toLocaleString('en-IN')}` : 'Custom Rate'}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Link
+                  href={`/products/${activeProduct._id}`}
+                  onClick={() => setActiveProduct(null)}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  <Eye className="h-4 w-4 text-[#008DDA]" />
+                  <span>View Product</span>
+                </Link>
+
+                <button
+                  onClick={() => handleWhatsAppInquiry(activeProduct)}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

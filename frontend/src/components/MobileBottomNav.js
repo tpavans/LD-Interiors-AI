@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Home, LayoutGrid, Film, ShoppingBag, Heart } from 'lucide-react';
+import { Home, LayoutGrid, Film, ShoppingBag, Phone } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
@@ -65,13 +65,11 @@ export default function MobileBottomNav() {
       icon: ShoppingBag
     },
     {
-      id: 'liked',
-      label: isTelugu ? 'డ్రీమ్స్' : 'Dreams',
-      labelTe: 'డ్రీమ్స్',
-      href: '/products?openLiked=true',
-      icon: Heart,
-      badgeCount: likedCount,
-      isAction: true
+      id: 'contact',
+      label: isTelugu ? 'సంప్రదించండి' : 'Contact',
+      labelTe: 'కాంటాక్ట్',
+      href: '/contact',
+      icon: Phone
     }
   ];
 

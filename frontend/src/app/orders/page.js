@@ -45,6 +45,7 @@ export default function UserOrdersPage() {
   // Live Consignment & Shipping Slip States
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
   const [activeShippingSlipOrder, setActiveShippingSlipOrder] = useState(null);
+  const [activeOrderDetail, setActiveOrderDetail] = useState(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
 
   useEffect(() => {
@@ -530,10 +531,15 @@ ${profileName || activePayOrder.name}`;
                         <img
                           src={order.imageUrl}
                           alt={order.product}
-                          className="w-20 h-20 rounded-2xl object-cover border border-wood-border/20 shadow-sm shrink-0"
+                          onClick={() => setActiveOrderDetail(order)}
+                          className="w-20 h-20 rounded-2xl object-cover border border-wood-border/20 shadow-sm shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                          title="Click to view order details"
                         />
                       ) : (
-                        <div className="w-20 h-20 rounded-2xl bg-wood-beige/20 border border-wood-border/20 shadow-sm flex items-center justify-center text-wood-accent font-serif font-extrabold text-lg shrink-0">
+                        <div 
+                          onClick={() => setActiveOrderDetail(order)}
+                          className="w-20 h-20 rounded-2xl bg-wood-beige/20 border border-wood-border/20 shadow-sm flex items-center justify-center text-wood-accent font-serif font-extrabold text-lg shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                        >
                           LD
                         </div>
                       )}
@@ -551,6 +557,14 @@ ${profileName || activePayOrder.name}`;
                             >
                               <Printer className="h-3 w-3 text-amber-700" />
                               <span>Package Billing Slip</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveOrderDetail(order)}
+                              className="inline-flex items-center gap-1 bg-sky-100 hover:bg-sky-200 border border-sky-300 text-sky-900 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
+                            >
+                              <FileText className="h-3 w-3 text-[#008DDA]" />
+                              <span>View Full Details</span>
                             </button>
                           </div>
                           
@@ -1272,6 +1286,101 @@ ${profileName || activePayOrder.name}`;
           }}
           onClose={() => setActiveShippingSlipOrder(null)}
         />
+      )}
+
+      {/* FULL CLICKABLE ORDER DETAILS MODAL */}
+      {activeOrderDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn" onClick={() => setActiveOrderDetail(null)}>
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl text-left relative animate-slideUp" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setActiveOrderDetail(null)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-[#008DDA] font-bold text-xs uppercase tracking-widest mb-1">
+              <FileText className="h-4 w-4" />
+              <span>Full Order Specification</span>
+            </div>
+            
+            <h3 className="font-serif text-xl font-black text-slate-900 leading-tight mb-4">
+              {activeOrderDetail.product}
+            </h3>
+
+            {/* Product Image */}
+            {activeOrderDetail.imageUrl && (
+              <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden mb-5 border border-slate-200 shadow-md bg-slate-950">
+                <img
+                  src={activeOrderDetail.imageUrl}
+                  alt={activeOrderDetail.product}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+
+            {/* Details Grid */}
+            <div className="space-y-3 divide-y divide-slate-100 text-xs text-slate-700">
+              <div className="pt-2 flex justify-between">
+                <span className="font-bold text-slate-500">Order ID:</span>
+                <span className="font-mono font-extrabold text-[#008DDA]">LD-{activeOrderDetail._id?.substring(18).toUpperCase()}</span>
+              </div>
+
+              <div className="pt-2.5 flex justify-between">
+                <span className="font-bold text-slate-500">Booking Status:</span>
+                <span className="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  {activeOrderDetail.status || 'Received'}
+                </span>
+              </div>
+
+              <div className="pt-2.5 flex justify-between">
+                <span className="font-bold text-slate-500">Payment Status:</span>
+                <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  {activeOrderDetail.paymentStatus || 'Pending'}
+                </span>
+              </div>
+
+              <div className="pt-2.5 flex justify-between">
+                <span className="font-bold text-slate-500">Total Valuation:</span>
+                <span className="font-extrabold text-slate-900 font-mono text-sm">
+                  {activeOrderDetail.totalPrice > 0 ? `₹${activeOrderDetail.totalPrice.toLocaleString('en-IN')}` : 'Custom Estimate'}
+                </span>
+              </div>
+
+              {activeOrderDetail.customSize && (
+                <div className="pt-2.5 flex justify-between">
+                  <span className="font-bold text-slate-500">Custom Dimensions:</span>
+                  <span className="font-medium text-slate-900">{activeOrderDetail.customSize}</span>
+                </div>
+              )}
+
+              {activeOrderDetail.address && (
+                <div className="pt-2.5">
+                  <span className="font-bold text-slate-500 block mb-1">Delivery Address:</span>
+                  <p className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium">
+                    {activeOrderDetail.address}
+                  </p>
+                </div>
+              )}
+
+              {activeOrderDetail.notes && (
+                <div className="pt-2.5">
+                  <span className="font-bold text-slate-500 block mb-1">Custom Notes:</span>
+                  <p className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 italic">
+                    {activeOrderDetail.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setActiveOrderDetail(null)}
+              className="mt-6 w-full py-3 bg-[#008DDA] hover:bg-[#0077B6] text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer"
+            >
+              Done / Close Details
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -129,23 +129,23 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-panel-dark border-b border-wood-accent/30 shadow-xl">
+    <header className="sticky top-0 z-50 w-full bg-[#0B192C] border-b border-sky-500/30 shadow-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
         {/* Brand Logo */}
         <Link href="/" className="group flex items-center gap-2.5 select-none shrink-0">
           <img 
             src="/logo.png" 
             alt="LD Interiors Logo" 
-            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover border border-amber-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
+            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
           />
           <div className="flex flex-col">
-            <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all sm:text-base md:text-lg hidden xs:inline uppercase leading-tight">
+            <span className="font-serif text-sm font-extrabold tracking-wider text-white hover:text-sky-300 transition-all sm:text-base md:text-lg hidden xs:inline uppercase leading-tight">
               LD INTERIORS & FURNITURES
             </span>
-            <span className="font-serif text-sm font-extrabold tracking-wider bg-gradient-to-r from-amber-100 via-amber-250 to-yellow-300 bg-clip-text text-transparent hover:brightness-110 transition-all xs:hidden uppercase leading-tight">
+            <span className="font-serif text-sm font-extrabold tracking-wider text-white hover:text-sky-300 transition-all xs:hidden uppercase leading-tight">
               LD INTERIORS
             </span>
-            <span className="text-[8.5px] tracking-widest text-wood-accent/80 uppercase font-semibold hidden sm:inline">
+            <span className="text-[8.5px] tracking-widest text-sky-300/80 uppercase font-semibold hidden sm:inline">
               Designing Spaces. Defining Lifestyles.
             </span>
           </div>
@@ -156,8 +156,8 @@ export default function Navbar() {
           <Link
             href="/"
             className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
               pathname === '/' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
@@ -166,8 +166,8 @@ export default function Navbar() {
           <Link
             href="/products"
             className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/products' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/products' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
               pathname === '/products' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
@@ -177,8 +177,8 @@ export default function Navbar() {
           <Link
             href="/reels"
             className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/reels' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/reels' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
               pathname === '/reels' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
@@ -187,8 +187,8 @@ export default function Navbar() {
           <Link
             href="/orders"
             className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/orders' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/orders' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
               pathname === '/orders' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
@@ -197,8 +197,8 @@ export default function Navbar() {
           <Link
             href="/contact"
             className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/contact' ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+              pathname === '/contact' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
               pathname === '/contact' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
             }`}
           >
@@ -208,8 +208,8 @@ export default function Navbar() {
             <Link
               href="/admin"
               className={`relative pb-1 flex items-center gap-1 transition-colors duration-300 ${
-                pathname.startsWith('/admin') ? 'text-wood-accent' : 'text-wood-cream/70 hover:text-white'
-              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-wood-accent after:transition-all after:duration-300 ${
+                pathname.startsWith('/admin') ? 'text-sky-300' : 'text-slate-200 hover:text-white'
+              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
                 pathname.startsWith('/admin') ? 'after:w-full' : 'after:w-0 hover:after:w-full'
               }`}
             >
@@ -230,7 +230,7 @@ export default function Navbar() {
           {/* Desktop Language Toggle */}
           <button
             onClick={() => toggleLanguage()}
-            className="flex items-center justify-center rounded-full border border-wood-accent/40 bg-wood-cream/10 px-2.5 py-1 text-[10px] font-extrabold text-wood-accent hover:bg-wood-accent hover:text-white transition-all duration-300 cursor-pointer ml-1 select-none whitespace-nowrap"
+            className="flex items-center justify-center rounded-full border border-sky-400/40 bg-white/10 px-2.5 py-1 text-[10px] font-extrabold text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer ml-1 select-none whitespace-nowrap"
             title="Switch Language / భాషను మార్చండి"
           >
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
@@ -239,12 +239,12 @@ export default function Navbar() {
           {/* User Profile Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center justify-center p-1.5 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer ml-1.5"
+            className="relative flex items-center justify-center p-1.5 rounded-full border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer ml-1.5"
             title="User Profile Account"
           >
             <User className="h-4 w-4" />
             {isUserLoggedIn && (
-              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-amber-950 animate-pulse" />
+              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-400 ring-1 ring-slate-900 animate-pulse" />
             )}
           </button>
         </nav>
@@ -255,33 +255,33 @@ export default function Navbar() {
           {/* Mobile User Profile Account Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center justify-center p-2 rounded-full border border-wood-accent/40 bg-wood-cream/10 text-wood-accent hover:bg-wood-accent hover:text-[#1d0f07] transition-all duration-300 cursor-pointer"
+            className="relative flex items-center justify-center p-2 rounded-full border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer"
             title="User Profile Account"
           >
             <User className="h-4 w-4" />
             {isUserLoggedIn && (
-              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-amber-950 animate-pulse" />
+              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-400 ring-1 ring-slate-900 animate-pulse" />
             )}
           </button>
 
           {/* Hamburger Menu Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-lg text-wood-cream/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ml-1"
+            className="p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ml-1"
             title="Open Menu"
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6 text-amber-300" /> : <Menu className="h-6 w-6 text-amber-300" />}
+            {isMobileMenuOpen ? <X className="h-6 w-6 text-sky-300" /> : <Menu className="h-6 w-6 text-sky-300" />}
           </button>
         </div>
       </div>
 
-      {/* Amazon / Flipkart Style Sub-Navbar Search Bar */}
-      <div className="w-full bg-[#071322]/95 border-t border-b border-sky-500/30 py-2.5 px-4 sm:px-8 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl relative flex flex-col md:flex-row items-center justify-between gap-2.5">
-          {/* Main Search Input Form */}
+      {/* Pure White Background Sub-Navbar Search Bar */}
+      <div className="w-full bg-white border-t border-b border-slate-200 py-3 px-4 sm:px-8">
+        <div className="mx-auto max-w-7xl relative flex flex-col md:flex-row items-center justify-between gap-3">
+          {/* Main Pure White Search Input Form */}
           <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-2xl flex items-center">
             <div className="relative w-full flex items-center">
-              <Search className="absolute left-3.5 h-4 w-4 text-sky-400 pointer-events-none" />
+              <Search className="absolute left-4 h-4.5 w-4.5 text-slate-500 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
@@ -289,20 +289,20 @@ export default function Navbar() {
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                 placeholder={isTelugu ? "500+ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, పూజ మందిరాలు, బెడ్స్, డైనింగ్...)" : "Search 500+ designs (Teak doors, Puja mandirams, Beds, Kitchens...)"}
-                className="w-full rounded-full border border-sky-400/40 bg-[#0F2137]/90 pl-10 pr-24 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-300/60 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30 transition-all shadow-inner"
+                className="w-full rounded-full border-2 border-sky-300 bg-white pl-11 pr-26 py-2.5 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/20 transition-all shadow-md"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
-                  className="absolute right-20 text-sky-300/70 hover:text-white text-xs p-1"
+                  className="absolute right-22 text-slate-400 hover:text-slate-700 text-xs p-1"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
               <button
                 type="submit"
-                className="absolute right-1 top-1 bottom-1 px-4 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center gap-1 cursor-pointer select-none"
+                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#008DDA] hover:bg-[#0077B6] text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center gap-1 cursor-pointer select-none"
               >
                 <span>{isTelugu ? "వెతుకు" : "Search"}</span>
               </button>
@@ -310,21 +310,21 @@ export default function Navbar() {
 
             {/* Live Autocomplete Dropdown */}
             {isSearchFocused && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#0B192C] border border-sky-500/40 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-2 divide-y divide-sky-900/40">
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-2 divide-y divide-slate-100">
                   {searchSuggestions.map((item) => (
                     <Link
                       key={item._id}
                       href={`/products/${item._id}`}
                       onClick={() => setIsSearchFocused(false)}
-                      className="flex items-center gap-3 p-2.5 hover:bg-sky-900/40 rounded-xl transition-colors cursor-pointer"
+                      className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer"
                     >
-                      <img src={item.image} alt={item.title} className="h-9 w-9 rounded-lg object-cover border border-sky-500/30" />
+                      <img src={item.image} alt={item.title} className="h-9 w-9 rounded-lg object-cover border border-slate-200" />
                       <div className="flex-1 min-w-0 text-left">
-                        <p className="text-xs font-bold text-slate-100 truncate">{item.title}</p>
-                        <p className="text-[9px] text-sky-400 uppercase font-semibold">{item.category}</p>
+                        <p className="text-xs font-bold text-slate-900 truncate">{item.title}</p>
+                        <p className="text-[9px] text-[#008DDA] uppercase font-semibold">{item.category}</p>
                       </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-sky-400/60" />
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                     </Link>
                   ))}
                 </div>
@@ -332,37 +332,37 @@ export default function Navbar() {
             )}
           </form>
 
-          {/* Quick Trending Tags Bar */}
-          <div className="w-full md:w-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 text-[9.5px] sm:text-[10px] font-bold text-slate-200 whitespace-nowrap">
-            <span className="text-sky-400 text-[9px] uppercase tracking-widest shrink-0 flex items-center gap-0.5 font-extrabold">
-              <Sparkles className="h-3 w-3 text-sky-400" />
+          {/* Neatly Aligned Quick Trending Tags Bar */}
+          <div className="w-full md:w-auto flex items-center justify-start md:justify-end gap-2 overflow-x-auto scrollbar-none py-0.5 text-xs font-bold text-slate-900 whitespace-nowrap">
+            <span className="text-slate-600 text-[10px] uppercase tracking-widest shrink-0 flex items-center gap-1 font-extrabold">
+              <Sparkles className="h-3.5 w-3.5 text-sky-500" />
               {isTelugu ? "ట్రెండింగ్:" : "Trending:"}
             </span>
             <button
               type="button"
               onClick={() => router.push('/products?category=Gummalu')}
-              className="px-2.5 py-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 transition-all cursor-pointer"
+              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
             >
               🚪 {isTelugu ? "గుమ్మాలు" : "Gummalu"}
             </button>
             <button
               type="button"
               onClick={() => router.push('/products?category=Puja%20Mandiralu')}
-              className="px-2.5 py-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 transition-all cursor-pointer"
+              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
             >
               🪵 {isTelugu ? "పూజ మందిరాలు" : "Puja Mandirams"}
             </button>
             <button
               type="button"
               onClick={() => router.push('/products?category=Wooden%20Beds')}
-              className="px-2.5 py-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 transition-all cursor-pointer"
+              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
             >
               🛏️ {isTelugu ? "బెడ్స్" : "Teak Beds"}
             </button>
             <button
               type="button"
               onClick={() => router.push('/products?category=Kitchen')}
-              className="px-2.5 py-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 transition-all cursor-pointer"
+              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
             >
               🍳 {isTelugu ? "కిచెన్స్" : "Kitchens"}
             </button>
