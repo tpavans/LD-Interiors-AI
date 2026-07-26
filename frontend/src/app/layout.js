@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ClientWrapper from "@/components/ClientWrapper";
 import { LanguageProvider } from "@/context/LanguageContext";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -88,7 +89,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans">
+      <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans pb-16 md:pb-0">
         <LanguageProvider>
           <Navbar />
           <main className="flex-grow wood-plank-bg">
@@ -97,6 +98,7 @@ export default function RootLayout({ children }) {
           <Footer />
           <ClientWrapper />
           <WhatsAppWidget />
+          <MobileBottomNav />
         </LanguageProvider>
       </body>
     </html>
