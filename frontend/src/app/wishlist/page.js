@@ -165,8 +165,12 @@ export default function WishlistPage() {
                 {/* Image Container */}
                 <div className="relative h-56 w-full bg-slate-900 overflow-hidden">
                   <img
-                    src={product.imageUrl}
+                    src={product.imageUrl || product.image || 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80'}
                     alt={product.name || product.title}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80';
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   

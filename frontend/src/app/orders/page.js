@@ -588,6 +588,32 @@ ${profileName || activePayOrder.name}`;
                   ? `In Progress (Crafting) • ETA ${order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) : 'Soon'}`
                   : `Order ${order.status || 'Received'}`;
 
+                // Image helper with fallback for Teakwood furniture
+                const getDisplayImage = (imgUrl, productName) => {
+                  if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 5) {
+                    return imgUrl.trim();
+                  }
+                  const pName = (productName || '').toLowerCase();
+                  if (pName.includes('door') || pName.includes('దారబంధం')) {
+                    return 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&q=80';
+                  }
+                  if (pName.includes('bed') || pName.includes('cot') || pName.includes('మంచం')) {
+                    return 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&q=80';
+                  }
+                  if (pName.includes('mandir') || pName.includes('pooja') || pName.includes('పూజ')) {
+                    return 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&q=80';
+                  }
+                  if (pName.includes('dining') || pName.includes('table')) {
+                    return 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=400&q=80';
+                  }
+                  if (pName.includes('sofa') || pName.includes('couch')) {
+                    return 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80';
+                  }
+                  return 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80';
+                };
+
+                const cardImgSrc = getDisplayImage(order.imageUrl || order.designImage || order.referenceImage || order.image, order.product);
+
                 return (
                   <div
                     key={order._id}
@@ -599,17 +625,15 @@ ${profileName || activePayOrder.name}`;
                       className="flex items-center justify-between gap-4 cursor-pointer"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
-                        {order.imageUrl ? (
-                          <img
-                            src={order.imageUrl}
-                            alt={order.product}
-                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100 bg-slate-50 shrink-0 group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#008DDA] font-serif font-black text-lg shrink-0">
-                            LD
-                          </div>
-                        )}
+                        <img
+                          src={cardImgSrc}
+                          alt={order.product}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80';
+                          }}
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100 bg-slate-50 shrink-0 group-hover:scale-105 transition-transform"
+                        />
 
                         <div className="min-w-0">
                           {/* Flipkart Status Title Line */}
@@ -1195,15 +1219,17 @@ ${profileName || activePayOrder.name}`;
             </h3>
 
             {/* Product Image */}
-            {activeOrderDetail.imageUrl && (
-              <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden mb-5 border border-slate-200 shadow-md bg-slate-950">
-                <img
-                  src={activeOrderDetail.imageUrl}
-                  alt={activeOrderDetail.product}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden mb-5 border border-slate-200 shadow-md bg-slate-950">
+              <img
+                src={activeOrderDetail.imageUrl || activeOrderDetail.designImage || activeOrderDetail.referenceImage || 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80'}
+                alt={activeOrderDetail.product}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80';
+                }}
+                className="w-full h-full object-contain"
+              />
+            </div>
 
             {/* Details Grid */}
             <div className="space-y-3 divide-y divide-slate-100 text-xs text-slate-700">
