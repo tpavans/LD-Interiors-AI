@@ -138,9 +138,10 @@ Thank you,
         const fullCatList = ["All", ...new Set([...catList])];
         setCategories(fullCatList);
 
-        // Read category query parameter from URL (e.g., ?category=Sofas)
+        // Read category and search query parameters from URL
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('category') || 'All';
+        const searchParam = params.get('search') || '';
         
         // Find match in categories list (case-insensitive)
         const matchedCategory = fullCatList.find(
@@ -148,14 +149,23 @@ Thank you,
         ) || 'All';
 
         setSelectedCategory(matchedCategory);
-
-        if (matchedCategory !== "All") {
-          setFilteredProducts(fetchedProducts.filter(
-            p => p.category && p.category.toLowerCase() === matchedCategory.toLowerCase()
-          ));
-        } else {
-          setFilteredProducts(fetchedProducts);
+        if (searchParam) {
+          setSearchQuery(searchParam);
         }
+
+        let filtered = fetchedProducts;
+        if (matchedCategory !== "All") {
+          filtered = filtered.filter(
+            p => p.category && p.category.toLowerCase() === matchedCategory.toLowerCase()
+          );
+        }
+        if (searchParam.trim() !== "") {
+          filtered = filtered.filter(
+            p => p.title?.toLowerCase().includes(searchParam.toLowerCase()) ||
+                 p.category?.toLowerCase().includes(searchParam.toLowerCase())
+          );
+        }
+        setFilteredProducts(filtered);
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {

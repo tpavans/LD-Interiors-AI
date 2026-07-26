@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut, User, LayoutDashboard, Menu, X, Heart } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, Menu, X, Heart, Search, Sparkles, ChevronRight } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
@@ -19,6 +19,11 @@ export default function Navbar() {
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [likedCount, setLikedCount] = useState(0);
+
+  // E-Commerce Sub-Navbar Search Bar States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
 
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language];
@@ -89,6 +94,38 @@ export default function Navbar() {
     setAdminName('');
     window.dispatchEvent(new Event('admin-logout'));
     router.push('/');
+  };
+
+  // Handle Search submit
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearchFocused(false);
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  // Filter live suggestions when typing
+  const handleSearchInputChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    try {
+      const cachedProdStr = sessionStorage.getItem('ld_cached_products');
+      if (cachedProdStr) {
+        const prods = JSON.parse(cachedProdStr);
+        const filtered = prods.filter(p => 
+          p.title?.toLowerCase().includes(query.toLowerCase()) || 
+          p.category?.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 5);
+        setSearchSuggestions(filtered);
+      }
+    } catch (err) {
+      setSearchSuggestions([]);
+    }
   };
 
   return (
@@ -275,6 +312,101 @@ export default function Navbar() {
           >
             {isMobileMenuOpen ? <X className="h-6 w-6 text-amber-300" /> : <Menu className="h-6 w-6 text-amber-300" />}
           </button>
+        </div>
+      </div>
+
+      {/* Amazon / Flipkart Style Sub-Navbar Search Bar */}
+      <div className="w-full bg-[#1b0d06]/95 border-t border-b border-amber-500/25 py-2.5 px-4 sm:px-8 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl relative flex flex-col md:flex-row items-center justify-between gap-2.5">
+          {/* Main Search Input Form */}
+          <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-2xl flex items-center">
+            <div className="relative w-full flex items-center">
+              <Search className="absolute left-3.5 h-4 w-4 text-amber-400/80 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                placeholder={isTelugu ? "500+ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, పూజ మందిరాలు, బెడ్స్, డైనింగ్...)" : "Search 500+ designs (Teak doors, Puja mandirams, Beds, Kitchens...)"}
+                className="w-full rounded-full border border-amber-500/40 bg-[#2d180d]/90 pl-10 pr-24 py-2 text-xs sm:text-sm text-amber-100 placeholder-amber-200/50 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
+                  className="absolute right-20 text-amber-300/70 hover:text-amber-200 text-xs p-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="absolute right-1 top-1 bottom-1 px-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-[#1d0f07] font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center gap-1 cursor-pointer select-none"
+              >
+                <span>{isTelugu ? "వెతుకు" : "Search"}</span>
+              </button>
+            </div>
+
+            {/* Live Autocomplete Dropdown */}
+            {isSearchFocused && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#26140a] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-2 divide-y divide-amber-900/40">
+                  {searchSuggestions.map((item) => (
+                    <Link
+                      key={item._id}
+                      href={`/products/${item._id}`}
+                      onClick={() => setIsSearchFocused(false)}
+                      className="flex items-center gap-3 p-2.5 hover:bg-amber-900/40 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <img src={item.image} alt={item.title} className="h-9 w-9 rounded-lg object-cover border border-amber-500/30" />
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-xs font-bold text-amber-100 truncate">{item.title}</p>
+                        <p className="text-[9px] text-amber-400/80 uppercase font-semibold">{item.category}</p>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-amber-400/60" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </form>
+
+          {/* Quick Trending Tags Bar */}
+          <div className="w-full md:w-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 text-[9.5px] sm:text-[10px] font-bold text-amber-200/90 whitespace-nowrap">
+            <span className="text-amber-400/70 text-[9px] uppercase tracking-widest shrink-0 flex items-center gap-0.5">
+              <Sparkles className="h-3 w-3 text-amber-400" />
+              {isTelugu ? "ట్రెండింగ్:" : "Trending:"}
+            </span>
+            <button
+              type="button"
+              onClick={() => router.push('/products?category=Gummalu')}
+              className="px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 transition-all cursor-pointer"
+            >
+              🚪 {isTelugu ? "గుమ్మాలు" : "Gummalu"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/products?category=Puja%20Mandiralu')}
+              className="px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 transition-all cursor-pointer"
+            >
+              🪵 {isTelugu ? "పూజ మందిరాలు" : "Puja Mandirams"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/products?category=Wooden%20Beds')}
+              className="px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 transition-all cursor-pointer"
+            >
+              🛏️ {isTelugu ? "బెడ్స్" : "Teak Beds"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/products?category=Kitchen')}
+              className="px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 transition-all cursor-pointer"
+            >
+              🍳 {isTelugu ? "కిచెన్స్" : "Kitchens"}
+            </button>
+          </div>
         </div>
       </div>
 
