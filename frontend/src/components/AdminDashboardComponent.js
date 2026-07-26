@@ -1715,6 +1715,7 @@ LD Interiors & Furnitures
                         <td className="py-4 px-6">
                           <div>
                             <p className="font-serif font-bold text-wood-dark">{o.product}</p>
+                            <p className="text-[9.5px] font-mono text-slate-600 font-bold">Product ID: #{o._id.substring(18).toUpperCase()}</p>
                             <p className="text-[10px] text-wood-light mt-0.5 truncate max-w-[155px] font-light italic">Notes: {o.notes || 'None'}</p>
                           </div>
                         </td>
@@ -1920,8 +1921,9 @@ LD Interiors & Furnitures
                             <p className="text-[10px] text-wood-light font-light font-mono mt-0.5">{p.fullOrder.phone}</p>
                           </div>
                         </td>
-                        <td className="py-4 px-6 font-serif text-wood-light font-semibold">
-                          {p.productName}
+                        <td className="py-4 px-6">
+                          <p className="font-serif font-bold text-wood-dark">{p.productName}</p>
+                          <p className="text-[9.5px] font-mono text-slate-600 font-bold">Product ID: #{p.orderId ? p.orderId.substring(18).toUpperCase() : 'N/A'}</p>
                         </td>
                         <td className="py-4 px-6">
                           <span className="font-mono text-[9px] font-bold bg-amber-50 border border-amber-250 text-amber-700 px-2 py-1 rounded-lg">

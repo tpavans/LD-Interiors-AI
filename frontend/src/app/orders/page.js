@@ -6,8 +6,9 @@ import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Sta
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 
 const UPI_IDS = {
-  phonepe: { id: "9346325291@axl", name: "Pavansai Teki", label: "PhonePe" },
-  gpay: { id: "pavansaiteki7@okicici", name: "Pavansai Teki", label: "Google Pay" }
+  phonepe: { id: "9346325291@ybl", name: "TEKI PAVAN SAI", label: "PhonePe" },
+  gpay: { id: "9346325291@ybl", name: "TEKI PAVAN SAI", label: "Google Pay" },
+  paytm: { id: "9346325291@paytm", name: "TEKI PAVAN SAI", label: "Paytm" }
 };
 
 export default function UserOrdersPage() {
@@ -333,13 +334,13 @@ export default function UserOrdersPage() {
     }
   };
 
-  // Generate official UPI deep link
+  // Generate official NPCI-compliant UPI deep link
   const getUpiUrl = () => {
     if (!activePayOrder) return '';
-    const upi = UPI_IDS[selectedUpiKey];
+    const upi = UPI_IDS[selectedUpiKey] || UPI_IDS.phonepe;
     const amount = getPayableAmount();
-    const orderShortId = activePayOrder._id.substring(18).toUpperCase();
-    return `upi://pay?pa=${upi.id}&pn=${encodeURIComponent(upi.name)}&am=${amount}&tn=Order%20LD-${orderShortId}&cu=INR`;
+    // Using clean NPCI format without tn= merchant note parameter that causes security decline on personal VPAs
+    return `upi://pay?pa=${upi.id}&pn=${encodeURIComponent(upi.name)}&am=${amount}&cu=INR`;
   };
 
   const handleCopyUpiId = () => {
@@ -809,6 +810,63 @@ ${profileName || activePayOrder.name}`;
                       </div>
                     )}
 
+                    {/* User Payment Receipt & Paid Bill Section */}
+                    {order.payments && order.payments.length > 0 && (
+                      <div className="mt-3.5 p-3.5 bg-emerald-50/70 border border-emerald-250 rounded-2xl text-left shadow-xs">
+                        <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-emerald-200/60">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                            <FileText className="h-4 w-4 text-emerald-700" />
+                            <span>💳 Payment Receipt & Paid Bill Details</span>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            Product ID: #{order._id.substring(18).toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 text-[11px] mb-2 font-semibold">
+                          <div className="bg-white p-2 rounded-xl border border-emerald-100 text-center">
+                            <span className="text-[9px] text-slate-500 uppercase font-bold block">Contract Cost</span>
+                            <span className="font-mono text-slate-900 font-bold">₹{(order.totalPrice || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="bg-white p-2 rounded-xl border border-emerald-100 text-center">
+                            <span className="text-[9px] text-emerald-700 uppercase font-bold block">Total Paid</span>
+                            <span className="font-mono text-emerald-700 font-black">₹{(order.paidAmount || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="bg-white p-2 rounded-xl border border-emerald-100 text-center">
+                            <span className="text-[9px] text-red-600 uppercase font-bold block">Balance Due</span>
+                            <span className="font-mono text-red-650 font-black">₹{(order.remainingBalance || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+
+                        {/* Payments Txn Log Table */}
+                        <div className="mt-2 pt-2 border-t border-emerald-200/60">
+                          <p className="text-[9.5px] font-black uppercase tracking-wider text-emerald-900 mb-1.5">Transaction Statement History:</p>
+                          <div className="space-y-1 text-[10.5px] font-mono">
+                            {order.payments.map((p, idx) => (
+                              <div key={idx} className="flex flex-wrap items-center justify-between bg-white p-2 rounded-xl border border-emerald-150 shadow-2xs">
+                                <div>
+                                  <span className="font-extrabold text-slate-900">₹{(p.amount || 0).toLocaleString('en-IN')}</span>
+                                  <span className="text-slate-600 font-sans ml-1.5 text-[9.5px]">via {p.paymentMethod || 'UPI'}</span>
+                                  {p.utr && <p className="text-emerald-800 text-[9px] font-bold mt-0.5">Ref / UTR: {p.utr}</p>}
+                                </div>
+                                <div className="text-right">
+                                  <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold uppercase tracking-wider ${
+                                    p.status === 'Verified' || p.status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                                    p.status === 'Rejected' ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                  }`}>
+                                    {p.status || 'Verified'}
+                                  </span>
+                                  <p className="text-[8.5px] text-slate-500 font-sans mt-0.5">
+                                    {new Date(p.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Flipkart Bottom Rate & Review Row */}
                     <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-2">
@@ -991,42 +1049,45 @@ ${profileName || activePayOrder.name}`;
                   </div>
 
                   <div className="space-y-4 pt-2">
+                    {/* Product Summary Box */}
+                    <div className="p-3 bg-[#008DDA]/10 border border-[#008DDA]/30 rounded-2xl text-left">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#008DDA]">Product & Order Details</p>
+                      <p className="text-xs font-bold text-slate-900 mt-0.5">{activePayOrder.product}</p>
+                      <p className="text-[10.5px] font-mono font-black text-slate-700 mt-0.5">
+                        Product ID: #{activePayOrder._id.substring(18).toUpperCase()}
+                      </p>
+                    </div>
+
                     {/* Option 1: Mobile App launcher */}
-                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5 animate-fadeIn">
-                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Option 1: Mobile App Shortcut (Tap to Pay)</span>
-                      <a
-                        href={getUpiUrl()}
-                        className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm text-center cursor-pointer mb-2"
-                      >
-                        <Smartphone className="h-4 w-4" />
-                        <span>Open UPI App & Pay ₹{getPayableAmount().toLocaleString('en-IN')}</span>
-                      </a>
-                      <p className="text-[8px] text-red-650 font-semibold leading-relaxed">
-                        ⚠️ NOTE: Some apps (like PhonePe/GPay) decline browser web links for security reasons. If PhonePe/GPay shows a security error, please use <strong>Option 3 (Copy UPI ID)</strong> below!
-                      </p>
-                    </div>
-
-                    {/* Option 2: Copy UPI ID & Pay Manually */}
-                    <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
-                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Copy UPI ID & Pay Manually (Best for Mobile)</span>
-                      <div className="w-full flex items-center justify-between bg-wood-cream border border-wood-border/30 rounded-xl px-3.5 py-2.5 font-mono text-[11px] font-bold text-wood-dark mb-2 shadow-xs">
-                        <span className="select-all truncate mr-1.5">{UPI_IDS[selectedUpiKey].id}</span>
-                        <button
-                          type="button"
-                          onClick={handleCopyUpiId}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold uppercase rounded-lg transition-transform active:scale-95 cursor-pointer shrink-0"
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 animate-fadeIn text-left">
+                      <span className="text-[10px] uppercase font-black tracking-wider text-emerald-900 block mb-2">⚡ Direct 1-Click Pay in PhonePe / GPay / Paytm</span>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                        <a
+                          href={`phonepe://pay?pa=9346325291@ybl&pn=TEKI%20PAVAN%20SAI&am=${getPayableAmount()}&cu=INR`}
+                          className="flex items-center justify-center gap-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 text-xs font-bold uppercase tracking-wider transition-all shadow-sm text-center cursor-pointer active:scale-95"
                         >
-                          {copiedUpi ? '✓ Copied' : '📋 Copy'}
-                        </button>
+                          <Smartphone className="h-4 w-4" />
+                          <span>🚀 Open PhonePe App (₹{getPayableAmount().toLocaleString('en-IN')})</span>
+                        </a>
+
+                        <a
+                          href={`upi://pay?pa=9346325291@ybl&pn=TEKI%20PAVAN%20SAI&am=${getPayableAmount()}&cu=INR`}
+                          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white py-3 text-xs font-bold uppercase tracking-wider transition-all shadow-sm text-center cursor-pointer active:scale-95"
+                        >
+                          <Smartphone className="h-4 w-4" />
+                          <span>🚀 Open GPay / Any UPI App</span>
+                        </a>
                       </div>
-                      <p className="text-[8px] text-wood-light leading-relaxed">
-                        *Copy the UPI ID, open GPay / PhonePe / Paytm manually, paste the ID, and complete payment. It never fails!
+
+                      <p className="text-[9px] text-emerald-800 font-medium">
+                        * బటన్ నొక్కగానే డైరెక్ట్‌గా PhonePe / GPay యాప్ ఓపెన్ అయ్యి, exact amount pre-fill అవుతుంది.
                       </p>
                     </div>
 
-                    {/* Option 3: Scan QR code */}
+                    {/* Option 2: Scan QR code */}
                     <div className="bg-white border border-wood-border/40 rounded-2xl p-4 text-center animate-fadeIn shadow-inner flex flex-col items-center justify-center">
-                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 3: Scan QR Code (Laptops/Computers)</span>
+                      <span className="text-[9.5px] uppercase font-bold tracking-wider text-wood-accent block mb-2.5">Option 2: Scan QR Code (Laptops/Computers)</span>
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(getUpiUrl())}`}
                         alt="Scan UPI QR Code"
@@ -1034,9 +1095,9 @@ ${profileName || activePayOrder.name}`;
                       />
                       <div className="mt-2.5">
                         <p className="text-[10px] text-wood-medium font-bold uppercase tracking-wider">Payable Amount: <span className="text-emerald-700 font-extrabold text-xs">₹{getPayableAmount().toLocaleString('en-IN')}</span></p>
-                        <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: {UPI_IDS[selectedUpiKey].id}</p>
-                        <p className="text-[8.5px] text-red-650 font-bold tracking-wide mt-1">
-                          ⚠️ MUST ADD NOTE: <span className="bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-mono select-all">LD-Order-LD-${activePayOrder._id.substring(18).toUpperCase()}</span>
+                        <p className="text-[9px] text-wood-light font-mono mt-0.5 select-all">UPI ID: 9346325291@ybl</p>
+                        <p className="text-[8.5px] text-slate-700 font-bold tracking-wide mt-1">
+                          Product ID: <span className="bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded font-mono font-bold select-all">#{activePayOrder._id.substring(18).toUpperCase()}</span>
                         </p>
                       </div>
                     </div>
