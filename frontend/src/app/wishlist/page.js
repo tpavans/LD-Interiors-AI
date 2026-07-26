@@ -164,7 +164,7 @@ export default function WishlistPage() {
             return (
               <div
                 key={product._id}
-                onClick={() => router.push(`/products?search=${encodeURIComponent(product.name || product.title)}`)}
+                onClick={() => setActivePaymentProduct(product)}
                 className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group animate-fadeIn cursor-pointer"
               >
                 {/* Image Container */}
@@ -223,7 +223,7 @@ export default function WishlistPage() {
                     </div>
 
                     <div className="flex items-center gap-1 text-xs font-bold text-[#008DDA] group-hover:translate-x-1 transition-transform">
-                      <span>View in Gallery</span>
+                      <span>Click to Order</span>
                       <ChevronRight className="h-4 w-4" />
                     </div>
                   </div>
