@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck, Printer } from 'lucide-react';
+import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck, Printer, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 
 const UPI_IDS = {
@@ -47,6 +47,8 @@ export default function UserOrdersPage() {
   const [activeShippingSlipOrder, setActiveShippingSlipOrder] = useState(null);
   const [activeOrderDetail, setActiveOrderDetail] = useState(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [orderCategoryTab, setOrderCategoryTab] = useState('All');
 
   useEffect(() => {
     // Load Razorpay Checkout SDK Script
@@ -480,426 +482,221 @@ ${profileName || activePayOrder.name}`;
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16 text-left">
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-wood-border/30 pb-6">
-        <div>
-          <span className="inline-flex items-center gap-1 bg-wood-accent/20 px-3 py-0.5 rounded-full text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-2">
-            Secure Client Workspace
-          </span>
-          <h1 className="font-serif text-3xl font-extrabold tracking-tight text-wood-dark">
-            My Account & Orders
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 text-left select-none bg-[#FBF9F1] min-h-[85vh]">
+      {/* Flipkart Header Bar */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="p-1 text-slate-700 hover:text-slate-900 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="font-serif text-xl sm:text-2xl font-black text-slate-900">
+            My Orders
           </h1>
+        </div>
+        <span className="text-xs font-bold text-[#008DDA] bg-sky-50 border border-sky-200 px-3 py-1 rounded-full">
+          {orders.length} {orders.length === 1 ? 'Order' : 'Orders'}
+        </span>
+      </div>
+
+      {/* Flipkart Search & Filter Bar */}
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={orderSearchQuery}
+              onChange={(e) => setOrderSearchQuery(e.target.value)}
+              placeholder="Search your order here"
+              className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#008DDA] shadow-xs"
+            />
+            {orderSearchQuery && (
+              <button
+                onClick={() => setOrderSearchQuery('')}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-700 text-xs"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer shrink-0 shadow-xs"
+          >
+            <SlidersHorizontal className="h-4 w-4 text-slate-500" />
+            <span>Filters</span>
+          </button>
+        </div>
+
+        {/* Category Pills Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+          {['All', 'In Progress', 'Completed', 'Processing'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setOrderCategoryTab(tab)}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                orderCategoryTab === tab
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {tab === 'All' ? 'All Orders' : tab}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="w-full space-y-6">
-        <h3 className="font-serif text-xl font-bold text-wood-dark flex items-center gap-2 pb-2.5 border-b border-wood-border/30">
-            <Compass className="h-5.5 w-5.5 text-wood-accent" />
-            My Order Logs ({orders.length})
-          </h3>
-
-          {loading ? (
-            <div className="flex py-20 w-full items-center justify-center bg-wood-cream/30 border border-dashed border-wood-border/50 rounded-3xl">
-              <Loader2 className="h-7 w-7 animate-spin text-wood-light" />
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-wood-border/60 p-12 text-center bg-wood-cream/50 animate-fadeIn">
-              <p className="text-sm text-wood-light font-light leading-relaxed mb-4">
-                No orders found under phone number <strong>{phone}</strong>. Let's create your first order!
-              </p>
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
-              >
-                Explore Teak Designs
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {orders.map((order) => {
+      <div className="w-full space-y-4">
+        {loading ? (
+          <div className="flex py-20 w-full items-center justify-center bg-white border border-slate-200 rounded-2xl">
+            <Loader2 className="h-7 w-7 animate-spin text-[#008DDA]" />
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 p-12 text-center bg-white shadow-xs animate-fadeIn">
+            <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
+              No orders found under phone number <strong>{phone}</strong>. Let's create your first order!
+            </p>
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#008DDA] hover:bg-[#0077B6] text-white px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-md"
+            >
+              Explore Teak Designs
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders
+              .filter(o => {
+                if (orderCategoryTab !== 'All' && o.status !== orderCategoryTab) return false;
+                if (orderSearchQuery.trim() !== '') {
+                  const q = orderSearchQuery.toLowerCase();
+                  return o.product?.toLowerCase().includes(q) || o._id?.toLowerCase().includes(q);
+                }
+                return true;
+              })
+              .map((order) => {
                 const isCancelled = order.status === 'Cancelled';
                 const userSubmittedRating = ratedOrders[order._id];
                 const orderShortId = order._id.substring(18).toUpperCase();
-                
                 const hasPendingVerifications = order.payments?.some(p => p.status === 'Pending');
-                
+
+                // Flipkart Style Delivery Status Text
+                const displayStatusText = order.status === 'Completed'
+                  ? `Delivered on ${new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}`
+                  : order.status === 'In Progress'
+                  ? `In Progress (Crafting) • ETA ${order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) : 'Soon'}`
+                  : `Order ${order.status || 'Received'}`;
+
                 return (
-                  <div key={order._id} className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-5 sm:p-7 shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-lg glow-on-hover animate-fadeIn">
-                    {/* Product and Meta Row */}
-                    <div className="flex flex-col md:flex-row gap-5 items-start pb-5 border-b border-wood-border/30">
-                      {order.imageUrl ? (
-                        <img
-                          src={order.imageUrl}
-                          alt={order.product}
-                          onClick={() => setActiveOrderDetail(order)}
-                          className="w-20 h-20 rounded-2xl object-cover border border-wood-border/20 shadow-sm shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                          title="Click to view order details"
-                        />
-                      ) : (
-                        <div 
-                          onClick={() => setActiveOrderDetail(order)}
-                          className="w-20 h-20 rounded-2xl bg-wood-beige/20 border border-wood-border/20 shadow-sm flex items-center justify-center text-wood-accent font-serif font-extrabold text-lg shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                        >
-                          LD
-                        </div>
-                      )}
-                      <div className="flex-grow space-y-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1 bg-wood-beige/60 border border-wood-border/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-wood-accent">
-                              <Tag className="h-3 w-3" />
+                  <div
+                    key={order._id}
+                    className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 text-left animate-fadeIn group"
+                  >
+                    {/* Top Main Row (Clickable to open Order Details Modal) */}
+                    <div 
+                      onClick={() => setActiveOrderDetail(order)}
+                      className="flex items-center justify-between gap-4 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {order.imageUrl ? (
+                          <img
+                            src={order.imageUrl}
+                            alt={order.product}
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100 bg-slate-50 shrink-0 group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[#008DDA] font-serif font-black text-lg shrink-0">
+                            LD
+                          </div>
+                        )}
+
+                        <div className="min-w-0">
+                          {/* Flipkart Status Title Line */}
+                          <div className="flex items-center gap-1.5">
+                            <span className={`h-2 w-2 rounded-full ${order.status === 'Completed' ? 'bg-emerald-500' : 'bg-[#008DDA] animate-pulse'}`}></span>
+                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                              {displayStatusText}
+                            </h4>
+                          </div>
+
+                          {/* Product Title */}
+                          <p className="text-xs text-slate-600 line-clamp-1 mt-0.5 font-medium">
+                            {order.product}
+                          </p>
+
+                          {/* Meta ID & Price */}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-slate-400 font-mono">
                               ID: LD-{orderShortId}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setActiveShippingSlipOrder(order)}
-                              className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
-                            >
-                              <Printer className="h-3 w-3 text-amber-700" />
-                              <span>Package Billing Slip</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setActiveOrderDetail(order)}
-                              className="inline-flex items-center gap-1 bg-sky-100 hover:bg-sky-200 border border-sky-300 text-sky-900 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
-                            >
-                              <FileText className="h-3 w-3 text-[#008DDA]" />
-                              <span>View Full Details</span>
-                            </button>
-                          </div>
-                          
-                          {/* Financial Badge Indicator */}
-                          {order.totalPrice > 0 && (
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                              order.paymentStatus === 'Paid'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-250'
-                                : order.paymentStatus === 'Partially Paid'
-                                ? 'bg-teal-50 border border-teal-200 text-teal-800'
-                                : order.paymentStatus === 'Pending Verification'
-                                ? 'bg-amber-100 text-amber-800 border border-amber-250 animate-pulse'
-                                : 'bg-neutral-100 text-neutral-800 border border-neutral-200'
-                            }`}>
-                              Payment: {order.paymentStatus}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-1 text-wood-light font-light text-[10px]">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5 text-wood-accent" />
-                            Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <h3 className="font-serif text-lg font-bold text-wood-dark leading-tight mt-1">{order.product}</h3>
-                        
-                        {/* Custom fields rendered if available */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-wood-beige/10 border border-wood-border/20 rounded-xl p-3 text-[10px] text-wood-medium mt-2 font-light">
-                          {order.customSize && (
-                            <p><strong>Custom Size:</strong> {order.customSize}</p>
-                          )}
-                          {order.desiredPrice && (
-                            <p><strong>Desired Cost:</strong> {order.desiredPrice}</p>
-                          )}
-                          <p className="sm:col-span-2"><strong>Notes:</strong> {order.notes || 'No custom details provided.'}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* PAYMENT & INVOICE CENTER */}
-                    {order.totalPrice > 0 && (
-                      <div className="py-5 border-b border-wood-border/30 bg-wood-beige/10 -mx-5 sm:-mx-7 px-5 sm:px-7 my-2 text-left">
-                        <p className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-3 flex items-center gap-1.5">
-                          <CreditCard className="h-4 w-4 text-wood-accent" />
-                          Payment & Account Ledger
-                        </p>
-                        
-                        <div className="grid grid-cols-3 gap-2 text-center mb-4">
-                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
-                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Contract Cost</span>
-                            <span className="font-serif text-xs font-bold text-wood-dark">₹{order.totalPrice.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
-                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Paid Amount</span>
-                            <span className="font-serif text-xs font-bold text-emerald-700">₹{order.paidAmount.toLocaleString('en-IN')}</span>
-                          </div>
-                          <div className="bg-white border border-wood-border/30 rounded-xl p-2.5">
-                            <span className="text-[8px] uppercase tracking-wider text-wood-light block">Due Balance</span>
-                            <span className="font-serif text-xs font-bold text-red-650">₹{order.remainingBalance.toLocaleString('en-IN')}</span>
-                          </div>
-                        </div>
-
-                        {/* Payment Verification Alerts */}
-                        {hasPendingVerifications && (
-                          <div className="rounded-xl bg-amber-50 border border-amber-150 p-3.5 text-xs text-amber-800 flex flex-col gap-2.5 mb-3 text-left">
-                            <div className="flex items-start gap-2">
-                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
-                              <div className="text-[10px] text-amber-850">
-                                <strong>Payment Awaiting Approval:</strong> You sent a payment confirmation. Nagaraju is verifying it with their GPay/PhonePe account statement.
-                              </div>
-                            </div>
-                            <div className="border-t border-wood-border/20 pt-2 flex items-center justify-between gap-2">
-                              <span className="text-[8.5px] text-wood-light italic font-light">Payment failed or cancelled halfway?</span>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (window.confirm("Did your payment fail/cancel? Click OK to reset the payment button and try again.")) {
-                                    try {
-                                      await api.post(`/orders/${order._id}/cancel-pending-verification`);
-                                      alert("Payment reset successfully. You can now try paying again!");
-                                      handleSearch(null, phone);
-                                    } catch (err) {
-                                      console.error("Failed to reset verification:", err);
-                                      alert("Could not reset payment status. Please try again.");
-                                    }
-                                  }
-                                }}
-                                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0"
-                              >
-                                🔄 Reset & Retry Payment
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Rejected Payment Warning */}
-                        {!hasPendingVerifications && order.payments && order.payments.some(p => p.status === 'Rejected') && (
-                          <div className="rounded-xl bg-red-50 border border-red-150 p-3.5 text-xs text-red-800 flex items-start gap-2.5 mb-3 text-left animate-fadeIn">
-                            <AlertTriangle className="h-4.5 w-4.5 text-red-500 shrink-0 mt-0.5" />
-                            <div>
-                              <strong className="block text-red-700 font-bold uppercase tracking-wider text-[9px] mb-0.5">⚠️ Payment Verification Rejected</strong>
-                              <p className="text-[10px] text-red-800 leading-relaxed font-light">
-                                Your last payment confirmation of <span className="font-bold">₹{order.payments.filter(p => p.status === 'Rejected').pop().amount.toLocaleString('en-IN')}</span> was rejected by Nagaraju. Reason: Funds not received in our bank statement. Please verify your transaction and make a fresh payment.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex flex-wrap items-center justify-between gap-4 mt-3">
-                          {order.remainingBalance > 0 ? (
-                            <>
-                              <p className="text-[10px] text-wood-light font-light max-w-sm italic">
-                                *Pay 50% Advance to start work. Remaining balance can be paid online before delivery, or cash on delivery.
-                              </p>
-                              <button
-                                disabled={hasPendingVerifications}
-                                onClick={() => {
-                                  setActivePayOrder(order);
-                                  setSelectedOption('50');
-                                  setPaymentError('');
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-5 py-2.5 text-[10px] font-bold tracking-widest uppercase transition-colors shadow-sm disabled:bg-neutral-400 cursor-pointer"
-                              >
-                                <QrCode className="h-3.5 w-3.5" />
-                                <span>Pay Installment / Advance</span>
-                              </button>
-                            </>
-                          ) : (
-                            <div className="w-full flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 font-bold">
-                              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
-                              <span>Order Fully Paid! Balance Due: ₹0</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Approved Payments History */}
-                        {order.payments && order.payments.filter(p => p.status === 'Approved').length > 0 && (
-                          <div className="mt-4 pt-3 border-t border-wood-border/25">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-wood-light block mb-2">Payment Transaction History</span>
-                            <div className="space-y-1.5">
-                              {order.payments.filter(p => p.status === 'Approved').map((pay) => (
-                                <div key={pay._id} className="flex justify-between items-center bg-white/70 border border-wood-border/20 rounded-lg px-3 py-1.5 text-[9.5px]">
-                                  <span className="text-wood-medium font-light">
-                                    Verified Installment on {new Date(pay.createdAt).toLocaleDateString('en-IN')}
-                                  </span>
-                                  <span className="font-bold text-emerald-700">+₹{pay.amount.toLocaleString('en-IN')}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* CARRIER TRACKING PANEL */}
-                    {order.trackingNumber && (
-                      <div className="mt-4 p-4 bg-emerald-50/40 border border-emerald-250/30 rounded-2xl animate-fadeIn text-left">
-                        <p className="text-[10px] font-extrabold tracking-widest text-emerald-850 uppercase mb-2.5 flex items-center gap-1.5">
-                          <Truck className="h-4 w-4 text-emerald-600" />
-                          <span>Delivery Shipment Tracker</span>
-                        </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                          <div>
-                            <p className="text-wood-dark font-semibold text-[13px]">
-                              Carrier: <span className="text-emerald-700 font-extrabold">{order.carrier || 'Xpressbees'}</span>
-                            </p>
-                            <p className="text-[10px] text-wood-light font-mono mt-0.5">
-                              Waybill / Consignment Tracking ID: <span className="font-bold select-all">{order.trackingNumber}</span>
-                            </p>
-                            {order.deliveryDate && (
-                              <p className="text-[10px] text-emerald-850 font-bold mt-1 animate-pulse">
-                                📅 Expected Arrival: {new Date(order.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </p>
+                            {order.totalPrice > 0 && (
+                              <span className="text-xs font-black text-slate-900 font-mono">
+                                ₹{order.totalPrice.toLocaleString('en-IN')}
+                              </span>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTrackingOrder(order)}
-                            className="self-start sm:self-center inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-200 shadow-sm cursor-pointer select-none border border-emerald-500/20 active:scale-95"
-                          >
-                            <span>Track Package</span>
-                          </button>
                         </div>
                       </div>
-                    )}
 
-                    {/* Live Tracking Timeline */}
-                    <div className="py-6 text-left">
-                      <p className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase mb-5 flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 animate-pulse" />
-                        Live Status Track
-                      </p>
-
-                      {isCancelled ? (
-                        <div className="rounded-xl bg-red-50 border border-red-150 p-4 text-xs text-red-800 flex items-start gap-2 max-w-md animate-fadeIn">
-                          <AlertTriangle className="h-4.5 w-4.5 text-red-500 shrink-0 mt-0.5" />
-                          <div>
-                            {order.updatedAt && (
-                              <p className="text-[9px] text-red-650 font-bold mb-1">
-                                Cancelled: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
-                            )}
-                            <p className="font-bold text-red-700">Order Cancelled</p>
-                            <p className="text-[10px] text-wood-light mt-0.5">This order record was cancelled. Contact Pavan Sai or Nagaraju for details.</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="relative pl-6 space-y-6">
-                          {/* Vertical Connector Line */}
-                          <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-wood-border/30 -z-10"></div>
-
-                          {/* Pending Step */}
-                          <div className="relative flex gap-3.5 items-start">
-                            <span className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 bg-emerald-600 border-emerald-600 flex items-center justify-center">
-                              <CheckCircle className="h-2 w-2 text-white" />
-                            </span>
-                            <div>
-                              <p className="text-[9px] text-wood-accent font-semibold mb-0.5">
-                                Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
-                              <p className="text-xs font-bold text-wood-dark">Order Booked</p>
-                              <p className="text-[10px] text-wood-light font-light mt-0.5">Inquiry received and logged successfully in our system.</p>
-                            </div>
-                          </div>
-
-                          {/* Processing Step */}
-                          <div className="relative flex gap-3.5 items-start">
-                            <span className={`absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center ${
-                              ['Processing', 'In Progress', 'Completed'].includes(order.status)
-                                ? 'bg-emerald-600 border-emerald-600'
-                                : 'bg-white border-wood-border'
-                            }`}>
-                              {['Processing', 'In Progress', 'Completed'].includes(order.status) && (
-                                <CheckCircle className="h-2 w-2 text-white" />
-                              )}
-                            </span>
-                            <div>
-                              {order.status === 'Processing' && order.updatedAt && (
-                                <p className="text-[9px] text-wood-accent font-semibold mb-0.5 animate-fadeIn">
-                                  Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
-                              )}
-                              <p className={`text-xs font-bold ${['Processing', 'In Progress', 'Completed'].includes(order.status) ? 'text-wood-dark' : 'text-wood-light/60'}`}>
-                                Processing & Design Sizing
-                              </p>
-                              <p className="text-[10px] text-wood-light font-light mt-0.5">Nagaraju checks logs, selects teak lumber options, and confirms details.</p>
-                            </div>
-                          </div>
-
-                          {/* In Progress Step */}
-                          <div className="relative flex gap-3.5 items-start">
-                            <span className={`absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center ${
-                              ['In Progress', 'Completed'].includes(order.status)
-                                ? 'bg-amber-500 border-amber-500'
-                                : 'bg-white border-wood-border'
-                            }`}>
-                              {['In Progress', 'Completed'].includes(order.status) && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
-                              )}
-                            </span>
-                            <div>
-                              {order.status === 'In Progress' && order.updatedAt && (
-                                <p className="text-[9px] text-wood-accent font-semibold mb-0.5 animate-fadeIn">
-                                  Updated: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
-                              )}
-                              <p className={`text-xs font-bold ${['In Progress', 'Completed'].includes(order.status) ? 'text-wood-dark font-extrabold' : 'text-wood-light/60'}`}>
-                                In Progress (Crafting wood carvings)
-                              </p>
-                              <p className="text-[10px] text-wood-light font-light mt-0.5">Wood cuts, sizing framing, and PU polish application at Alamuru workshop.</p>
-                            </div>
-                          </div>
-
-                          {/* Completed Step */}
-                          <div className="relative flex gap-3.5 items-start">
-                            <span className={`absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center ${
-                              order.status === 'Completed'
-                                ? 'bg-emerald-600 border-emerald-600'
-                                : 'bg-white border-wood-border'
-                            }`}>
-                              {order.status === 'Completed' && (
-                                <CheckCircle className="h-2 w-2 text-white" />
-                              )}
-                            </span>
-                            <div>
-                              {order.status === 'Completed' && order.updatedAt && (
-                                <p className="text-[9px] text-emerald-600 font-semibold mb-0.5 animate-fadeIn">
-                                  Completed: {new Date(order.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
-                              )}
-                              <p className={`text-xs font-bold ${order.status === 'Completed' ? 'text-emerald-700 font-extrabold' : 'text-wood-light/60'}`}>
-                                Completed & Installed
-                              </p>
-                              <p className="text-[10px] text-wood-light font-light mt-0.5">Bespoke furniture setup installed successfully at client location.</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      {/* Flipkart Right Arrow Chevron */}
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
 
-                    {/* Sizing description / Star feedback block */}
-                    <div className="pt-5 border-t border-wood-border/30 flex flex-wrap items-center justify-between gap-4 text-left">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">Submit Feedback</span>
-                        <p className="text-[10px] text-wood-light font-light mt-0.5">Rate this carpentry design to help our workshop improve layouts.</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 bg-wood-beige/40 px-4 py-2 rounded-2xl border border-wood-border/40">
+                    {/* Flipkart Bottom Rate & Review Row */}
+                    <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-700">Rate & Review</span>
                         {userSubmittedRating ? (
-                          <div className="flex items-center gap-1.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-4 w-4 ${
-                                  star <= userSubmittedRating ? 'text-amber-500 fill-amber-500' : 'text-neutral-300'
-                                }`}
-                              />
-                            ))}
-                            <span className="text-[10px] text-emerald-800 font-bold ml-1.5">Submitted ({userSubmittedRating}★)</span>
-                          </div>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            Rated {userSubmittedRating} ★
+                          </span>
                         ) : (
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                onClick={() => handleRateProduct(order._id, order.product, star)}
-                                className="text-neutral-300 hover:text-amber-500 hover:scale-125 transition-all duration-150 cursor-pointer text-lg"
-                                title={`Rate ${star} Stars`}
-                              >
-                                ★
-                              </button>
-                            ))}
-                            <span className="text-[10px] text-wood-light font-light ml-1">Rate item</span>
-                          </div>
+                          <span className="text-[10px] text-slate-400 font-light">Earn ⭐ rating points</span>
                         )}
                       </div>
+
+                      {/* 5 Flipkart Rating Stars */}
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRateProduct(order._id, order.product, star);
+                            }}
+                            className={`text-lg transition-transform hover:scale-125 cursor-pointer ${
+                              userSubmittedRating && star <= userSubmittedRating
+                                ? 'text-amber-400'
+                                : 'text-slate-300 hover:text-amber-400'
+                            }`}
+                            title={`Rate ${star} Stars`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Action Buttons Bar */}
+                    <div className="mt-3 flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-dashed border-slate-100">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setActiveShippingSlipOrder(order); }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[10px] font-bold transition-all cursor-pointer"
+                      >
+                        <Printer className="h-3 w-3 text-amber-700" />
+                        <span>Package Billing Slip</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setActiveOrderDetail(order); }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-200 text-[#008DDA] text-[10px] font-bold transition-all cursor-pointer"
+                      >
+                        <FileText className="h-3 w-3" />
+                        <span>View Details</span>
+                      </button>
                     </div>
                   </div>
                 );
