@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
-import { X, User, LogOut, Check, Edit3, Mail, MapPin, Smartphone, Loader2, AlertTriangle, Eye, ShoppingBag, ArrowRight, Lock, RefreshCw } from 'lucide-react';
+import { X, User, LogOut, Check, Edit3, Mail, MapPin, Smartphone, Loader2, AlertTriangle, Eye, ShoppingBag, ArrowRight, Lock, RefreshCw, Heart, Trash2, ExternalLink } from 'lucide-react';
 import api from '../utils/api';
 import Link from 'next/link';
 
@@ -24,8 +24,37 @@ export default function ProfileDrawer({ isOpen, onClose }) {
   const [profileAddress, setProfileAddress] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   
-  // Status check
+  // Status check & Wishlist state
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [wishlistProducts, setWishlistProducts] = useState([]);
+
+  const loadWishlistProducts = async () => {
+    try {
+      const likedIds = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+      if (!likedIds || likedIds.length === 0) {
+        setWishlistProducts([]);
+        return;
+      }
+      const response = await api.get('/products');
+      const allProducts = response.data.products || response.data || [];
+      const filtered = allProducts.filter(p => likedIds.includes(p._id));
+      setWishlistProducts(filtered);
+    } catch (err) {
+      console.error('Failed to load wishlist products:', err);
+    }
+  };
+
+  const handleRemoveWishlist = (productId) => {
+    try {
+      const likedIds = JSON.parse(localStorage.getItem('ld_liked_designs') || '[]');
+      const updated = likedIds.filter(id => id !== productId);
+      localStorage.setItem('ld_liked_designs', JSON.stringify(updated));
+      setWishlistProducts(prev => prev.filter(p => p._id !== productId));
+      window.dispatchEvent(new Event('liked-updated'));
+    } catch (err) {
+      console.error('Failed to remove item from wishlist:', err);
+    }
+  };
 
   const checkUserSession = () => {
     if (typeof window !== 'undefined') {
@@ -49,9 +78,14 @@ export default function ProfileDrawer({ isOpen, onClose }) {
 
   useEffect(() => {
     checkUserSession();
+    loadWishlistProducts();
     window.addEventListener('storage', checkUserSession);
+    window.addEventListener('storage', loadWishlistProducts);
+    window.addEventListener('liked-updated', loadWishlistProducts);
     return () => {
       window.removeEventListener('storage', checkUserSession);
+      window.removeEventListener('storage', loadWishlistProducts);
+      window.removeEventListener('liked-updated', loadWishlistProducts);
     };
   }, [isOpen]);
 
@@ -359,6 +393,78 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                       <Edit3 className="h-4 w-4 text-wood-accent" />
                       <span>Edit Profile details</span>
                     </button>
+                  </div>
+
+                  {/* WISHLIST / DREAM DESIGNS SECTION */}
+                  <div className="pt-4 border-t border-wood-accent/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1.5 text-wood-accent font-bold text-xs uppercase tracking-wider">
+                        <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+                        <span>Dream Designs Wishlist ({wishlistProducts.length})</span>
+                      </div>
+                      <Link
+                        href="/products"
+                        onClick={onClose}
+                        className="text-[10px] text-wood-cream/70 hover:text-wood-accent flex items-center gap-1 transition-colors"
+                      >
+                        <span>Browse Catalog</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+
+                    {wishlistProducts.length === 0 ? (
+                      <div className="bg-[#28170c]/50 border border-dashed border-wood-accent/20 rounded-xl p-4 text-center">
+                        <p className="text-xs text-wood-cream/70 font-light">No saved designs yet.</p>
+                        <p className="text-[10px] text-wood-accent/80 font-light mt-0.5">
+                          Tap the ❤️ icon on any product in our catalog to save your dream designs here!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                        {wishlistProducts.map((prod) => (
+                          <div
+                            key={prod._id}
+                            className="bg-[#28170c] border border-wood-accent/20 rounded-xl p-2.5 flex items-center justify-between gap-3 text-left hover:border-wood-accent/40 transition-all"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={prod.imageUrl}
+                                alt={prod.name || prod.title}
+                                className="w-12 h-12 rounded-lg object-cover border border-wood-accent/20 shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <h5 className="text-xs font-bold text-white truncate">
+                                  {prod.name || prod.title}
+                                </h5>
+                                <p className="text-[10px] text-wood-accent font-mono font-semibold">
+                                  ₹{(prod.price || prod.estimatePrice || 0).toLocaleString('en-IN')}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <a
+                                href={`https://wa.me/919346325291?text=${encodeURIComponent(`Hello Nagaraju Sir, I am interested in custom designing "${prod.name || prod.title}" from LD Interiors.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-colors"
+                                title="Discuss on WhatsApp"
+                              >
+                                <Smartphone className="h-3.5 w-3.5" />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveWishlist(prod._id)}
+                                className="p-1.5 rounded-lg bg-red-950/40 hover:bg-red-600/30 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                                title="Remove from Wishlist"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
