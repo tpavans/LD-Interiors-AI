@@ -9,7 +9,7 @@ const getBaseURL = () => {
       return 'http://localhost:5004/api';
     }
   }
-  return 'https://ld-interiors-backend.onrender.com/api';
+  return 'https://ld-interiors-ai.onrender.com/api';
 };
 
 const api = axios.create({

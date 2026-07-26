@@ -33,7 +33,7 @@ const initiatePhonePePayment = async (req, res) => {
     const amountInPaise = Math.round(Number(amount) * 100);
 
     const redirectUrl = process.env.PHONEPE_REDIRECT_URL || `https://www.ldinteriors.in/orders?txnId=${merchantTransactionId}`;
-    const callbackUrl = process.env.PHONEPE_CALLBACK_URL || `https://ld-interiors-backend.onrender.com/api/phonepe/callback`;
+    const callbackUrl = process.env.PHONEPE_CALLBACK_URL || `https://ld-interiors-ai.onrender.com/api/phonepe/callback`;
 
     const payPayload = {
       merchantId: PHONEPE_MERCHANT_ID,
