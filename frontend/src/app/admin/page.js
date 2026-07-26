@@ -233,6 +233,7 @@ export default function AdminPage() {
   const [categoryLoading, setCategoryLoading] = useState(false);
 
   const fileInputRef = useRef(null);
+  const bulkFileInputRef = useRef(null);
 
   // 1. Check Authentication on Mount
   useEffect(() => {
@@ -1157,33 +1158,59 @@ LD Interiors & Furnitures
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#008DDA] mb-1.5">
-                    Select Multiple Design Images (Up to 30 photos)
+                    Select Multiple Design Images (Batch Upload)
                   </label>
-                  <div className="mt-1 flex justify-center rounded-xl border border-dashed border-[#008DDA]/40 px-6 py-6 bg-sky-50/50 hover:bg-sky-50 transition-colors text-center cursor-pointer">
-                    <div className="space-y-2 w-full">
-                      <Upload className="mx-auto h-8 w-8 text-[#008DDA]" />
-                      <div className="flex text-xs text-slate-700 justify-center">
-                        <label className="relative cursor-pointer rounded-md bg-transparent font-bold text-[#008DDA]">
-                          <span>{bulkFiles.length > 0 ? `${bulkFiles.length} Photos Selected (Click to change)` : 'Choose Batch Images'}</span>
-                          <input
-                            type="file"
-                            onChange={handleBulkFileChange}
-                            accept="image/*"
-                            multiple
-                            className="sr-only"
-                          />
-                        </label>
-                      </div>
-                      <p className="text-[10px] text-slate-500">Select 10, 20, or up to 30 images to upload all in 1 click!</p>
-                    </div>
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (bulkFileInputRef.current) bulkFileInputRef.current.click();
+                    }}
+                    className="mt-1 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#008DDA]/50 p-6 bg-sky-50/60 hover:bg-sky-100/70 transition-all text-center cursor-pointer group shadow-xs active:scale-[0.99]"
+                  >
+                    <input
+                      type="file"
+                      ref={bulkFileInputRef}
+                      onChange={handleBulkFileChange}
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                    />
+                    <Upload className="h-9 w-9 text-[#008DDA] mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-xs font-black text-slate-900">
+                      {bulkFiles.length > 0
+                        ? `✅ ${bulkFiles.length} Photos Selected`
+                        : '📁 Click anywhere here to choose batch photos'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {bulkFiles.length > 0
+                        ? 'Click to change or select different images'
+                        : 'Select multiple photos across categories. Max 5 images per category.'}
+                    </p>
                   </div>
                 </div>
 
                 {bulkPreviews.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 justify-center max-h-32 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
-                    {bulkPreviews.map((src, i) => (
-                      <img key={i} src={src} alt="" className="w-12 h-12 object-cover rounded-lg border border-slate-300" />
-                    ))}
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase">Previews ({bulkFiles.length} Total)</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setBulkFiles([]);
+                          setBulkPreviews([]);
+                          if (bulkFileInputRef.current) bulkFileInputRef.current.value = '';
+                        }}
+                        className="text-[10px] text-red-600 font-bold uppercase hover:underline cursor-pointer"
+                      >
+                        Clear Selected
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 justify-center max-h-32 overflow-y-auto">
+                      {bulkPreviews.map((src, i) => (
+                        <img key={i} src={src} alt="" className="w-12 h-12 object-cover rounded-lg border border-slate-300 shadow-xs" />
+                      ))}
+                    </div>
                   </div>
                 )}
 
