@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Heart, Trash2, ShoppingBag, ArrowLeft, Loader2, Smartphone, CreditCard, Sparkles, CheckCircle2, ShieldCheck, QrCode } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Heart, Trash2, ArrowLeft, Loader2, Sparkles, ExternalLink, ChevronRight } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function WishlistPage() {
+  const router = useRouter();
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePaymentProduct, setActivePaymentProduct] = useState(null);
@@ -156,14 +158,17 @@ export default function WishlistPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlistProducts.map((product) => {
-            const price = product.price || product.estimatePrice || 25000;
+            const hasAdminPrice = product.price || product.estimatePrice;
+            const price = hasAdminPrice ? Number(hasAdminPrice) : null;
+
             return (
               <div
                 key={product._id}
-                className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group animate-fadeIn"
+                onClick={() => router.push(`/products?search=${encodeURIComponent(product.name || product.title)}`)}
+                className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group animate-fadeIn cursor-pointer"
               >
                 {/* Image Container */}
-                <div className="relative h-56 w-full bg-slate-900 overflow-hidden">
+                <div className="relative h-60 w-full bg-slate-900 overflow-hidden">
                   <img
                     src={product.imageUrl || product.image || 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80'}
                     alt={product.name || product.title}
@@ -177,8 +182,11 @@ export default function WishlistPage() {
                   {/* Remove Button */}
                   <button
                     type="button"
-                    onClick={() => handleRemoveWishlist(product._id)}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-red-600 text-white backdrop-blur-md transition-all cursor-pointer shadow-md"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveWishlist(product._id);
+                    }}
+                    className="absolute top-3 right-3 p-2.5 rounded-full bg-black/60 hover:bg-red-600 text-white backdrop-blur-md transition-all cursor-pointer shadow-md"
                     title="Remove from Wishlist"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -190,9 +198,9 @@ export default function WishlistPage() {
                 </div>
 
                 {/* Content Container */}
-                <div className="p-5 text-left flex-grow flex flex-col justify-between space-y-4">
+                <div className="p-5 text-left flex-grow flex flex-col justify-between space-y-3">
                   <div>
-                    <h3 className="font-serif text-lg font-bold text-slate-900 leading-snug line-clamp-1 mb-1">
+                    <h3 className="font-serif text-lg font-bold text-slate-900 leading-snug line-clamp-1 mb-1 group-hover:text-[#008DDA] transition-colors">
                       {product.name || product.title}
                     </h3>
                     <p className="text-xs text-slate-500 font-light line-clamp-2 leading-relaxed">
@@ -200,41 +208,24 @@ export default function WishlistPage() {
                     </p>
                   </div>
 
-                  {/* Price & Rating */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  {/* Price Row (Only admin set price displayed) */}
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Valuation</span>
-                      <span className="font-mono text-base font-black text-slate-900">
-                        ₹{price.toLocaleString('en-IN')}
-                      </span>
+                      {price ? (
+                        <span className="font-mono text-base font-black text-slate-900">
+                          ₹{price.toLocaleString('en-IN')}
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                          Custom Pricing / Quote
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full text-amber-700 font-bold text-[10px]">
-                      <span>★ 4.9</span>
-                      <span className="text-slate-400 font-normal">| Verified</span>
+                    <div className="flex items-center gap-1 text-xs font-bold text-[#008DDA] group-hover:translate-x-1 transition-transform">
+                      <span>View in Gallery</span>
+                      <ChevronRight className="h-4 w-4" />
                     </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setActivePaymentProduct(product)}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#008DDA] hover:bg-[#0077B6] text-white py-3 text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer active:scale-98"
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      <span>Book / Pay Online</span>
-                    </button>
-
-                    <a
-                      href={`https://wa.me/919346325291?text=${encodeURIComponent(`Hello Nagaraju Sir, I saved "${product.name || product.title}" (₹${price.toLocaleString('en-IN')}) in my LD Interiors wishlist. Can we discuss custom sizing & order?`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
-                    >
-                      <Smartphone className="h-4 w-4 text-emerald-600" />
-                      <span>WhatsApp Consultation</span>
-                    </a>
                   </div>
                 </div>
               </div>
