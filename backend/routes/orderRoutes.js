@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createOrder,
   getOrders,
+  getPublicOrderById,
   trackOrders,
   updateOrderStatus,
   deleteOrder,
@@ -21,6 +22,7 @@ const upload = require('../middleware/uploadMiddleware');
 
 // Public route to track orders by phone query parameter
 router.get('/track', trackOrders);
+router.get('/public/:id', getPublicOrderById);
 
 // Public route to book/create a new order (handles optional reference image file upload)
 router.post('/', upload.single('referenceImage'), createOrder);

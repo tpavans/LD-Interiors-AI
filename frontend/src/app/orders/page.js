@@ -114,6 +114,27 @@ export default function UserOrdersPage() {
           setPhone(currentPhone);
           await handleSearch(null, currentPhone);
         }
+
+        // Check if URL has payOrderId query param
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const payOrderId = urlParams.get('payOrderId');
+          if (payOrderId) {
+            try {
+              const directOrderRes = await api.get(`/orders/public/${payOrderId}`);
+              if (directOrderRes.data) {
+                const targetOrd = directOrderRes.data;
+                setOrders(prev => {
+                  const exists = prev.some(o => o._id === targetOrd._id);
+                  return exists ? prev : [targetOrd, ...prev];
+                });
+                setActivePayOrder(targetOrd);
+              }
+            } catch (pErr) {
+              console.error('Failed to load direct payOrderId:', pErr);
+            }
+          }
+        }
       } catch (err) {
         console.error('Error fetching designs catalog:', err);
       } finally {

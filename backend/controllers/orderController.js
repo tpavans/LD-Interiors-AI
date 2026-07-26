@@ -143,6 +143,24 @@ const getOrders = async (req, res) => {
 };
 
 /**
+ * @desc    Get order by ID for direct payment link
+ * @route   GET /api/orders/public/:id
+ * @access  Public
+ */
+const getPublicOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching public order:', error);
+    res.status(500).json({ message: 'Server error fetching order details' });
+  }
+};
+
+/**
  * @desc    Track orders by customer phone number
  * @route   GET /api/orders/track
  * @access  Public
@@ -736,6 +754,7 @@ const cancelPendingPaymentVerification = async (req, res) => {
 module.exports = {
   createOrder,
   getOrders,
+  getPublicOrderById,
   trackOrders,
   updateOrderStatus,
   deleteOrder,
