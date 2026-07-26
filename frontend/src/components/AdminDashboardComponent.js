@@ -599,7 +599,8 @@ export default function AdminDashboardComponent() {
           canvas.toBlob(
             (blob) => {
               if (blob && blob.size < file.size) {
-                const compressedFile = new File([blob], file.name, {
+                const safeName = (file && file.name) ? file.name : `design_${Date.now()}.jpg`;
+                const compressedFile = new File([blob], safeName, {
                   type: 'image/jpeg',
                   lastModified: Date.now(),
                 });

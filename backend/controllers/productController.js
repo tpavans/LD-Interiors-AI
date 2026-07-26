@@ -341,18 +341,32 @@ const createBulkProducts = async (req, res) => {
 
     console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Categorize: ${isAiAutoDetect})...`);
 
-    // Upload all files to Cloudinary in parallel
-    const uploadPromises = files.map(file => uploadToCloudinary(file.path));
-    const uploadResults = await Promise.all(uploadPromises);
+    // Upload files to Cloudinary gracefully, handling individual image errors without failing the entire batch
+    const uploadPromises = files.map(async (file, idx) => {
+      try {
+        if (!file || !file.path) return null;
+        const res = await uploadToCloudinary(file.path);
+        return { ...res, fileRef: file, fileIdx: idx };
+      } catch (err) {
+        console.error(`[Bulk Upload Error] File #${idx} (${file?.originalname || 'image'}) upload failed:`, err.message);
+        return null;
+      }
+    });
+
+    const rawResults = await Promise.all(uploadPromises);
+    const uploadResults = rawResults.filter(Boolean);
+
+    if (uploadResults.length === 0) {
+      return res.status(500).json({ message: 'Could not upload selected images to Cloudinary. Please try selecting different photos.' });
+    }
 
     // Track category distribution counts for max 5 per category cap
     const categoryCounts = {};
     const productsToCreate = [];
 
-    const availableCategories = ['Doors', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
-
-    uploadResults.forEach((result, idx) => {
-      const file = files[idx];
+    uploadResults.forEach((result) => {
+      const file = result.fileRef;
+      const idx = result.fileIdx;
       let assignedCategory = selectedCategory;
 
       if (isAiAutoDetect) {
