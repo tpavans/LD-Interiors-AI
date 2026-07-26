@@ -238,12 +238,15 @@ export default function AdminPage() {
   // 1. Check Authentication on Mount
   useEffect(() => {
     const checkAuth = async () => {
+      if (typeof window === 'undefined') return;
+
       const token = localStorage.getItem('ld_token');
-      const params = new URLSearchParams(window.location.search);
+      const searchStr = typeof window !== 'undefined' ? window.location.search : '';
+      const params = new URLSearchParams(searchStr);
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
       const isSecretPath = currentPath.includes('admin1255121');
       const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
-      const hasStoredSecret = localStorage.getItem('ld_admin_secret_passed') === 'true' || isSecretPath;
+      const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
 
       if (token) {
         try {
@@ -294,13 +297,17 @@ export default function AdminPage() {
 
   // 1b. Check query params for mail-initiated actions
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    if (typeof window === 'undefined') return;
+    const searchStr = typeof window !== 'undefined' ? window.location.search : '';
+    const urlParams = new URLSearchParams(searchStr);
     const action = urlParams.get('action');
     const orderId = urlParams.get('orderId');
 
     if (action === 'send-greeting' && orderId) {
       setPendingGreetingOrder(orderId);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
       setAdminTab('orders');
     }
   }, []);
