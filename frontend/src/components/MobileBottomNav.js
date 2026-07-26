@@ -76,7 +76,7 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#160b05]/98 border-t-2 border-amber-500/40 backdrop-blur-xl px-2 py-1.5 shadow-[0_-10px_25px_rgba(0,0,0,0.6)] select-none">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0B192C]/98 border-t-2 border-sky-500/40 backdrop-blur-xl px-2 py-1.5 shadow-[0_-10px_25px_rgba(11,25,44,0.6)] select-none">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -116,19 +116,19 @@ export default function MobileBottomNav() {
               href={item.href}
               className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-300 ${
                 isActive
-                  ? 'text-amber-300 font-extrabold bg-amber-500/20 border border-amber-400/40 shadow-inner scale-105'
-                  : 'text-amber-100/70 hover:text-white hover:bg-white/5'
+                  ? 'text-sky-300 font-extrabold bg-sky-500/25 border border-sky-400/50 shadow-inner scale-105'
+                  : 'text-slate-200/80 hover:text-white hover:bg-white/5'
               }`}
             >
               <div className="relative">
-                <Icon className={`h-5 w-5 ${isActive ? 'text-amber-300 animate-pulse' : 'text-amber-200/80'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-sky-300 animate-pulse' : 'text-slate-300/80'}`} />
                 {item.badge && (
-                  <span className="absolute -top-1.5 -right-3 px-1 py-0.2 text-[7px] font-black bg-gradient-to-r from-red-600 to-amber-500 text-white rounded-full uppercase tracking-tighter">
+                  <span className="absolute -top-1.5 -right-3 px-1.2 py-0.2 text-[7.5px] font-black bg-gradient-to-r from-red-600 to-sky-500 text-white rounded-full uppercase tracking-tighter shadow-sm">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-[9px] tracking-wider mt-0.5 uppercase ${isActive ? 'font-black text-amber-300' : 'font-semibold'}`}>
+              <span className={`text-[9px] tracking-wider mt-0.5 uppercase ${isActive ? 'font-black text-sky-300' : 'font-semibold'}`}>
                 {isTelugu ? item.labelTe : item.label}
               </span>
             </Link>

@@ -4,21 +4,21 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
   
-  /* Restored Warm Wood & Mahogany Theme Mapping */
-  --color-wood-dark: #2c1a0f;
-  --color-wood-medium: #54351f;
-  --color-wood-light: #8e6241;
-  --color-wood-accent: #b5834f;
-  --color-wood-cream: #fdfcf9;
-  --color-wood-beige: #f5f0e6;
-  --color-wood-border: #dfd4c4;
+  /* Ultra-Professional Navy Sea Blue, Creamy White, Black & Light Gray Theme */
+  --color-wood-dark: #0B192C;     /* Deep Navy Sea Blue */
+  --color-wood-medium: #1E3E62;   /* Deep Ocean Blue */
+  --color-wood-light: #475569;    /* Slate Gray */
+  --color-wood-accent: #008DDA;   /* Vibrant Sea Blue Accent */
+  --color-wood-cream: #FBF9F1;    /* Creamy White */
+  --color-wood-beige: #F3F4F6;    /* Light Gray / Metallic Slate */
+  --color-wood-border: #E2E8F0;   /* Soft Border Gray */
   
-  --color-neutral-850: #2c1a0f;
+  --color-neutral-850: #0B192C;
 }
 
 :root {
-  --background: #f7f4ec;
-  --foreground: #2c1a0f;
+  --background: #FBF9F1;
+  --foreground: #111111;
 }
 
 html, body {
@@ -55,56 +55,51 @@ body {
 
 /* 3D Volumetric Card & Glassmorphism styles */
 .wood-card {
-  background-color: #fdfcf9;
-  border-color: #e6dac8;
-  box-shadow: 0 10px 24px rgba(44, 26, 15, 0.08);
+  background-color: #FBF9F1;
+  border-color: #E2E8F0;
+  box-shadow: 0 10px 24px rgba(11, 25, 44, 0.08);
 }
 
 .wood-header-gradient {
-  background: linear-gradient(135deg, #2c1a0f 0%, #4a2e1b 100%);
+  background: linear-gradient(135deg, #0B192C 0%, #1E3E62 100%);
 }
 
 .wood-light-gradient {
-  background: linear-gradient(180deg, #fdfcf9 0%, #f7f4ec 100%);
+  background: linear-gradient(180deg, #FBF9F1 0%, #F3F4F6 100%);
 }
 
-/* Professional Minimalist Luxury Ivory Background */
+/* Professional Navy & Creamy White Background */
 .wood-plank-bg {
-  background-color: #faf9f5;
+  background-color: #FBF9F1;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(245, 240, 230, 0.4) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(181, 131, 79, 0.04) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(243, 244, 246, 0.8) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(0, 141, 218, 0.05) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
-/* Luxury 3D Wood Slat Wall with Center Spotlight (for Hero Backgrounds) */
+/* Luxury Accent Background */
 .wood-slat-accent-bg {
   background: 
-    /* Soft center radial spotlight to keep text completely readable */
-    radial-gradient(circle at center, rgba(253, 252, 249, 0.95) 25%, rgba(245, 240, 230, 0.8) 75%, rgba(223, 212, 196, 0.6) 100%),
-    /* repeating vertical wood slats */
-    repeating-linear-gradient(
-      90deg,
-      #ecdcb9 0px,
-      #ecdcb9 30px,
-      #cfa86b 32px,
-      #442a18 33px,
-      #2c1a0f 37px,
-      #442a18 38px,
-      #dfcda2 40px
-    );
+    radial-gradient(circle at center, rgba(251, 249, 241, 0.96) 25%, rgba(243, 244, 246, 0.85) 75%, rgba(226, 232, 240, 0.7) 100%),
+    linear-gradient(135deg, #0B192C 0%, #1E3E62 100%);
 }
 
+/* Polished Navy Sea Blue Header - Glassmorphic */
+.glass-panel-dark {
+  background: rgba(11, 25, 44, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(30, 62, 98, 0.4);
+}
 
-/* Polished 3D Wooden Beam Header (Mahogany & Brass Accent) - Glassmorphic */
 .wood-header-3d {
-  background: rgba(44, 26, 15, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(11, 25, 44, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -1.5px 0 rgba(0, 0, 0, 0.35),
-    0 8px 24px rgba(44, 26, 15, 0.12);
+    0 8px 24px rgba(11, 25, 44, 0.15);
 }
 
 /* 3D Interactive Tilting Utilities */
