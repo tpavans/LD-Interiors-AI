@@ -296,7 +296,7 @@ const detectCategoryFromImage = (file, idx, totalFiles) => {
   const name = `${file.filename || ''} ${file.originalname || ''}`.toLowerCase();
   
   if (name.includes('door') || name.includes('gummalu') || name.includes('doorframe') || name.includes('darabandham') || name.includes('main_door') || name.includes('entrance') || name.includes('wooddoor')) {
-    return 'Gummalu';
+    return 'Doors';
   }
   if (name.includes('bed') || name.includes('cot') || name.includes('bedroom') || name.includes('mattress') || name.includes('king') || name.includes('queen')) {
     return 'Wooden Beds';
@@ -312,12 +312,12 @@ const detectCategoryFromImage = (file, idx, totalFiles) => {
   }
 
   // Smart fallback distribution across categories if filenames are numeric (e.g. IMG_001.jpg, photo2.jpg)
-  const defaultCategories = ['Gummalu', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
+  const defaultCategories = ['Doors', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
   return defaultCategories[idx % defaultCategories.length];
 };
 
 /**
- * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection)
+ * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection & Max 5 per category cap)
  * @route   POST /api/products/bulk
  * @access  Private (Admin only)
  */
@@ -328,7 +328,7 @@ const createBulkProducts = async (req, res) => {
   try {
     const { category, price, titlePrefix, aiAutoDetect } = req.body;
     const isAiAutoDetect = aiAutoDetect === 'true' || aiAutoDetect === true || category === 'AI_AUTO_DETECT';
-    const selectedCategory = category?.trim() || 'Living Room';
+    const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Living Room');
     const defaultPrice = price ? Number(price) : 0;
 
     const files = req.files || (req.file ? [req.file] : []);
@@ -342,24 +342,43 @@ const createBulkProducts = async (req, res) => {
     const uploadPromises = files.map(file => uploadToCloudinary(file.path));
     const uploadResults = await Promise.all(uploadPromises);
 
-    // Track category distribution counts for AI response
+    // Track category distribution counts for max 5 per category cap
     const categoryCounts = {};
+    const productsToCreate = [];
 
-    // Prepare batch documents with AI category assignment
-    const productsToCreate = uploadResults.map((result, idx) => {
+    const availableCategories = ['Doors', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
+
+    uploadResults.forEach((result, idx) => {
       const file = files[idx];
       let assignedCategory = selectedCategory;
 
       if (isAiAutoDetect) {
-        assignedCategory = detectCategoryFromImage(file, idx, files.length);
+        let detected = detectCategoryFromImage(file, idx, files.length);
+
+        // If detected category has already reached max 5 images, spill over to another under-limit category
+        if ((categoryCounts[detected] || 0) >= 5) {
+          const underLimitCat = availableCategories.find(c => (categoryCounts[c] || 0) < 5);
+          if (underLimitCat) {
+            assignedCategory = underLimitCat;
+          } else {
+            assignedCategory = detected; // Allow if all 5 categories are filled with 5 each (25 max total)
+          }
+        } else {
+          assignedCategory = detected;
+        }
+      } else {
+        // Single category mode: limit to max 5 images total for that category per batch
+        if ((categoryCounts[assignedCategory] || 0) >= 5) {
+          return; // Cap at max 5
+        }
       }
 
       categoryCounts[assignedCategory] = (categoryCounts[assignedCategory] || 0) + 1;
 
       const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
 
-      return {
-        title: `${baseTitle} #${idx + 1}`,
+      productsToCreate.push({
+        title: `${baseTitle} #${categoryCounts[assignedCategory]}`,
         category: assignedCategory,
         image: result.url,
         imageUrl: result.url,
@@ -372,16 +391,16 @@ const createBulkProducts = async (req, res) => {
         ratingsCount: 1,
         ratingsSum: 4.9,
         createdAt: new Date()
-      };
+      });
     });
 
     const insertedProducts = await Product.insertMany(productsToCreate);
-    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} items with AI Auto-Categorization!`);
+    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} items (capped at max 5 per category)!`);
 
     const summaryParts = Object.entries(categoryCounts).map(([cat, count]) => `${count} in ${cat}`);
 
     res.status(201).json({
-      message: `🎉 AI Auto-Categorized ${insertedProducts.length} images into: ${summaryParts.join(', ')}!`,
+      message: `🎉 Successfully uploaded ${insertedProducts.length} images (Max 5 per category): ${summaryParts.join(', ')}!`,
       count: insertedProducts.length,
       categoryCounts,
       products: insertedProducts

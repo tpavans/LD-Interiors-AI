@@ -5,7 +5,7 @@ import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Ey
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import Link from 'next/link';
 
-const CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
+const CATEGORIES = ["Doors", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
 const getBilingualGreetingText = (o) => {
   const orderDate = o.createdAt 
@@ -1065,7 +1065,11 @@ LD Interiors & Furnitures
               {!isEditing && (
                 <button
                   type="button"
-                  onClick={() => setIsBulkMode(!isBulkMode)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsBulkMode((prev) => !prev);
+                  }}
                   className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
                     isBulkMode
                       ? 'bg-[#008DDA] text-white border-[#008DDA] shadow-sm'
