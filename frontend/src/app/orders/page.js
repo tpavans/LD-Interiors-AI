@@ -474,27 +474,27 @@ ${profileName || activePayOrder.name}`;
     );
   }
 
-  // If visitor is NOT logged in, render the login prompt directing to the Navbar Profile icon
-  if (!phone) {
+  // If visitor is NOT logged in and has no orders or active payment order, render login prompt
+  if (!phone && orders.length === 0 && !activePayOrder) {
     return (
       <div className="mx-auto w-full max-w-md px-4 py-24 text-left">
-        <div className="bg-white/80 backdrop-blur-md border border-wood-border/40 rounded-3xl p-8 shadow-xl text-center glow-on-hover">
-          <span className="inline-flex items-center gap-1 bg-wood-accent/20 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest text-wood-accent uppercase mb-4">
-            Customer Dashboard
+        <div className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-3xl p-8 shadow-xl text-center">
+          <span className="inline-flex items-center gap-1 bg-sky-50 border border-sky-200 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest text-[#008DDA] uppercase mb-4">
+            Customer Account
           </span>
-          <h1 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-wood-dark">
+          <h1 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             Access My Account
           </h1>
-          <p className="mt-2 text-xs text-wood-light font-light leading-relaxed mb-6">
+          <p className="mt-2 text-xs text-slate-500 font-light leading-relaxed mb-6">
             Log in to view your orders timeline, check payment status, request custom configurations, and manage your delivery details.
           </p>
           <button
             onClick={() => {
               window.dispatchEvent(new Event('open-profile-drawer'));
             }}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-colors shadow-sm cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#008DDA] hover:bg-[#0077B6] text-white py-3.5 text-xs font-bold uppercase tracking-widest transition-colors shadow-sm cursor-pointer"
           >
-            <User className="h-4 w-4 text-wood-accent" />
+            <User className="h-4 w-4" />
             <span>Click to Log In</span>
           </button>
         </div>
@@ -756,26 +756,58 @@ ${profileName || activePayOrder.name}`;
                       </div>
                     </div>
 
-                    {/* Delivery Shipment Tracker Box */}
-                    <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                      <div>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                          <Truck className="h-4 w-4 text-[#008DDA]" />
-                          <span>Delivery Status: <strong className="text-emerald-600">{order.status === 'Completed' ? 'Delivered' : 'In Transit / Dispatch'}</strong></span>
+                    {/* Prominent Payment Action Bar (When payment is pending / balance > 0) */}
+                    {(order.remainingBalance > 0 || order.paymentStatus !== 'Paid') && order.totalPrice > 0 && (
+                      <div className="mt-3 p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between gap-3 text-left">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#008DDA]">
+                            Payment Required ({order.paymentStatus || 'Unpaid'})
+                          </p>
+                          <p className="text-xs font-bold text-slate-900">
+                            Balance Due: <span className="font-mono text-emerald-700 font-black">₹{(order.remainingBalance || order.totalPrice).toLocaleString('en-IN')}</span>
+                          </p>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                          Carrier: <strong className="text-slate-800">{order.carrier || 'LD Workshop Dispatch'}</strong> • Waybill: <span className="font-mono text-slate-700">{order.trackingNumber || `LD-${orderShortId}`}</span>
-                        </p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActivePayOrder(order);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#008DDA] to-[#0077B6] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 flex items-center gap-1.5 shrink-0"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          <span>Pay 50% Advance / Complete Payment</span>
+                        </button>
                       </div>
+                    )}
 
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setActiveTrackingOrder(order); }}
-                        className="px-3.5 py-1.5 bg-[#008DDA] hover:bg-[#0077B6] text-white rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs self-start sm:self-center"
-                      >
-                        🚚 Track Delivery Status
-                      </button>
-                    </div>
+                    {/* Delivery Shipment Tracker Box (Only displayed when admin assigns tracking number / carrier) */}
+                    {(order.trackingNumber || order.carrier) ? (
+                      <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                            <Truck className="h-4 w-4 text-[#008DDA]" />
+                            <span>Delivery Status: <strong className="text-emerald-600">{order.status === 'Completed' ? 'Delivered' : 'In Transit / Dispatched'}</strong></span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                            Carrier: <strong className="text-slate-800">{order.carrier || 'LD Workshop Courier'}</strong> • Waybill: <span className="font-mono text-slate-700">{order.trackingNumber}</span>
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveTrackingOrder(order); }}
+                          className="px-3.5 py-1.5 bg-[#008DDA] hover:bg-[#0077B6] text-white rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs self-start sm:self-center"
+                        >
+                          🚚 Track Delivery Status
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-3 p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-left flex items-center gap-2 text-[10px] text-slate-500 font-medium">
+                        <Truck className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>Order Status: <strong className="text-slate-700">{order.status || 'Processing'}</strong> • Shipment tracking number will be assigned by admin upon workshop dispatch.</span>
+                      </div>
+                    )}
 
                     {/* Flipkart Bottom Rate & Review Row */}
                     <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
