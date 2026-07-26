@@ -357,7 +357,7 @@ const createBulkProducts = async (req, res) => {
     const uploadResults = rawResults.filter(Boolean);
 
     if (uploadResults.length === 0) {
-      return res.status(500).json({ message: 'Could not upload selected images to Cloudinary. Please try selecting different photos.' });
+      return res.status(400).json({ message: 'Could not process or upload selected images to Cloudinary. Please try selecting different photos.' });
     }
 
     // Track category distribution counts for max 5 per category cap
@@ -365,8 +365,8 @@ const createBulkProducts = async (req, res) => {
     const productsToCreate = [];
 
     uploadResults.forEach((result) => {
-      const file = result.fileRef;
-      const idx = result.fileIdx;
+      const file = result.fileRef || {};
+      const idx = result.fileIdx || 0;
       let assignedCategory = selectedCategory;
 
       if (isAiAutoDetect) {
@@ -389,7 +389,7 @@ const createBulkProducts = async (req, res) => {
       const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
 
       productsToCreate.push({
-        title: `${baseTitle} #${categoryCounts[assignedCategory]}`,
+        title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[assignedCategory]}`,
         category: assignedCategory,
         image: result.url,
         imageUrl: result.url,
@@ -405,6 +405,10 @@ const createBulkProducts = async (req, res) => {
       });
     });
 
+    if (productsToCreate.length === 0) {
+      return res.status(400).json({ message: 'All selected images exceed the limit of 5 per category. Please select a specific category or different photos.' });
+    }
+
     const insertedProducts = await Product.insertMany(productsToCreate);
     console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} items (capped at max 5 per category)!`);
 
@@ -419,7 +423,7 @@ const createBulkProducts = async (req, res) => {
   } catch (error) {
     console.error('Error in bulk catalog upload:', error);
     res.status(500).json({
-      message: 'Server error during bulk catalog upload.',
+      message: 'Server error during bulk catalog upload: ' + error.message,
       error: error.message,
     });
   }
