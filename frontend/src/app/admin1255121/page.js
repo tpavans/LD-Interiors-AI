@@ -1,6 +1,6 @@
 "use client";
-import AdminDashboard from '../admin/page';
+import AdminDashboardComponent from '@/components/AdminDashboardComponent';
 
 export default function SecretAdminPage() {
-  return <AdminDashboard />;
+  return <AdminDashboardComponent />;
 }
