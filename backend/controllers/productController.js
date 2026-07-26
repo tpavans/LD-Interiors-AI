@@ -331,7 +331,10 @@ const createBulkProducts = async (req, res) => {
     const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Living Room');
     const defaultPrice = price ? Number(price) : 0;
 
-    const files = req.files || (req.file ? [req.file] : []);
+    const files = Array.isArray(req.files)
+      ? req.files
+      : (req.files ? Object.values(req.files).flat() : (req.file ? [req.file] : []));
+
     if (!files || files.length === 0) {
       return res.status(400).json({ message: 'Please select image files for bulk upload.' });
     }
