@@ -643,6 +643,95 @@ ${profileName || activePayOrder.name}`;
                       <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
 
+                    {/* Live Order Status Visual Progress Tracker Bar */}
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-600 mb-2">
+                        <span className="flex items-center gap-1 uppercase tracking-wider text-[#008DDA]">
+                          <MapPin className="h-3 w-3 animate-pulse" />
+                          Live Status Track
+                        </span>
+                        <span className="text-slate-400 font-mono">
+                          Updated: {new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+
+                      {/* 4-Step Progress Line Bar */}
+                      <div className="relative flex items-center justify-between my-3 px-2">
+                        <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-slate-200 -z-0"></div>
+                        <div 
+                          className="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 transition-all duration-500 -z-0"
+                          style={{
+                            width: order.status === 'Completed' ? '100%' : order.status === 'In Progress' ? '66%' : order.status === 'Processing' ? '33%' : '10%'
+                          }}
+                        ></div>
+
+                        {/* Step 1: Order Received */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
+                            ✓
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-700 mt-1">Booked</span>
+                        </div>
+
+                        {/* Step 2: Processing */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white ${
+                            ['Processing', 'In Progress', 'Completed'].includes(order.status)
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {['Processing', 'In Progress', 'Completed'].includes(order.status) ? '✓' : '2'}
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-700 mt-1">Sizing</span>
+                        </div>
+
+                        {/* Step 3: In Progress (Crafting) */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white ${
+                            ['In Progress', 'Completed'].includes(order.status)
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {['In Progress', 'Completed'].includes(order.status) ? '✓' : '3'}
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-700 mt-1">Crafting</span>
+                        </div>
+
+                        {/* Step 4: Delivered */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ring-2 ring-white ${
+                            order.status === 'Completed'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {order.status === 'Completed' ? '✓' : '4'}
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-700 mt-1">Delivered</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delivery Shipment Tracker Box */}
+                    <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                          <Truck className="h-4 w-4 text-[#008DDA]" />
+                          <span>Delivery Status: <strong className="text-emerald-600">{order.status === 'Completed' ? 'Delivered' : 'In Transit / Dispatch'}</strong></span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                          Carrier: <strong className="text-slate-800">{order.carrier || 'LD Workshop Dispatch'}</strong> • Waybill: <span className="font-mono text-slate-700">{order.trackingNumber || `LD-${orderShortId}`}</span>
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setActiveTrackingOrder(order); }}
+                        className="px-3.5 py-1.5 bg-[#008DDA] hover:bg-[#0077B6] text-white rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs self-start sm:self-center"
+                      >
+                        🚚 Track Delivery Status
+                      </button>
+                    </div>
+
                     {/* Flipkart Bottom Rate & Review Row */}
                     <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-2">
