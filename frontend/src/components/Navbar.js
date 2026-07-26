@@ -236,27 +236,6 @@ export default function Navbar() {
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
           </button>
 
-          {/* Permanent Dream Designs Heart Button */}
-          <button
-            onClick={() => {
-              if (pathname === '/products') {
-                window.dispatchEvent(new Event('open-liked-drawer'));
-              } else {
-                router.push('/products?openLiked=true');
-              }
-            }}
-            className="relative flex items-center gap-1.5 rounded-full border border-red-400/50 bg-red-950/20 px-3 py-1 text-[10px] font-extrabold text-red-300 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer ml-1 select-none shadow-sm"
-            title="Dream Designs Board / నచ్చిన డిజైన్‌లు"
-          >
-            <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500 animate-pulse" />
-            <span>{language === 'EN' ? 'Dream Designs' : 'నచ్చిన డిజైన్‌లు'}</span>
-            {likedCount > 0 && (
-              <span className="ml-0.5 rounded-full bg-red-600 px-1.5 py-0.2 text-[8px] font-extrabold text-white">
-                {likedCount}
-              </span>
-            )}
-          </button>
-
           {/* User Profile Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
@@ -270,27 +249,8 @@ export default function Navbar() {
           </button>
         </nav>
 
-        {/* Mobile controls bar (Clean 3-item layout for mobile screens) */}
+        {/* Mobile controls bar (Clean layout for mobile screens) */}
         <div className="flex md:hidden items-center gap-1.5 shrink-0">
-          {/* Mobile Dream Designs Heart Button */}
-          <button
-            onClick={() => {
-              if (pathname === '/products') {
-                window.dispatchEvent(new Event('open-liked-drawer'));
-              } else {
-                router.push('/products?openLiked=true');
-              }
-            }}
-            className="relative flex items-center justify-center p-2 rounded-full border border-red-400/50 bg-red-950/30 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-300 cursor-pointer select-none"
-            title="Dream Designs Board / నచ్చిన డిజైన్‌లు"
-          >
-            <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-            {likedCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[8px] font-extrabold text-white ring-1 ring-amber-950">
-                {likedCount}
-              </span>
-            )}
-          </button>
 
           {/* Mobile User Profile Account Button */}
           <button

@@ -1735,7 +1735,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
       {/* 2. FLOATING ASSISTANT WIDGET */}
       {isRegistered && (
-        <div className="fixed bottom-6 right-6 landscape:bottom-4 landscape:right-4 z-50 flex flex-col items-end">
+        <div className="fixed bottom-[4.5rem] md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end">
           {/* Chat Panel */}
           {isChatOpen && (
             <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] max-h-[70vh] landscape:h-[260px] sm:h-[520px] sm:max-h-[80vh] bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/20 rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
@@ -2405,32 +2405,10 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             </div>
           )}
 
-          {/* Red Love Symbol for Dream Designs / Liked Designs */}
-          {likedCount > 0 && (
-            <button
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  if (window.location.pathname === '/products') {
-                    window.dispatchEvent(new Event('open-liked-drawer'));
-                  } else {
-                    window.location.href = '/products?openLiked=true';
-                  }
-                }
-              }}
-              className="mb-3.5 relative group flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-tr from-red-600 to-red-500 text-white shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer border-2 border-white/90 animate-bounce z-50"
-              title={`Dream Designs (${likedCount} Liked)`}
-            >
-              <Heart className="h-6 w-6 fill-white text-white drop-shadow-sm" />
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-wood-dark border-2 border-white text-[9px] font-extrabold text-white shadow-md">
-                {likedCount}
-              </span>
-            </button>
-          )}
-
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="flex items-center justify-center h-16 w-16 landscape:h-12 landscape:w-12 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
+            className="flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
             {isChatOpen ? (
               <svg className="h-6 w-6 text-[#ebdcc5] transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
