@@ -655,63 +655,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 </div>
               </div>
 
-              <div className="bg-wood-beige/30 p-3 rounded-2xl border border-wood-border/40 space-y-3">
-                <p className="text-[9px] uppercase font-bold tracking-widest text-wood-accent font-semibold">{t.materialPref}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.plywoodBrand}</label>
-                    <select
-                      value={plywoodBrand}
-                      onChange={(e) => setPlywoodBrand(e.target.value)}
-                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
-                    >
-                      <option value="Pure Teak Wood (No Plywood)">{isTelugu ? "ప్యూర్ టేకు కలప (ప్లైవుడ్ లేదు)" : "Pure Teak Wood (No Ply)"}</option>
-                      <option value="CenturyPly (Club Prime)">CenturyPly (Club Prime)</option>
-                      <option value="Greenply (Gold Platinum)">Greenply (Gold Platinum)</option>
-                      <option value="Kitply (Boiling Water Resistant)">Kitply (BWR Marine)</option>
-                      <option value="Local Gold Premium Plywood">Local Gold Premium</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.polishBrand}</label>
-                    <select
-                      value={polishBrand}
-                      onChange={(e) => setPolishBrand(e.target.value)}
-                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
-                    >
-                      <option value="Asian Paints PU Polish (Luxury)">Asian Paints PU</option>
-                      <option value="Sheenlac Shellac & Sealer Finish">Sheenlac Shellac/Sealer</option>
-                      <option value="Melamine Glossy/Matte Finish">Melamine Polish</option>
-                      <option value="Natural Teak Oil Polish">Natural Teak Oil</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.glueBrand}</label>
-                    <select
-                      value={glueBrand}
-                      onChange={(e) => setGlueBrand(e.target.value)}
-                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
-                    >
-                      <option value="Fevicol Marine (Waterproof Elite)">Fevicol Marine</option>
-                      <option value="Fevicol SH (Standard Glue)">Fevicol SH</option>
-                      <option value="Araldite Wood Adhesive">Araldite Adhesive</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[8px] font-bold uppercase tracking-wider text-wood-light mb-1">{t.channelsBrand}</label>
-                    <select
-                      value={hardwareBrand}
-                      onChange={(e) => setHardwareBrand(e.target.value)}
-                      className="w-full rounded-lg border border-wood-border bg-white px-2 py-1.5 text-[10px] text-wood-dark focus:outline-none"
-                    >
-                      <option value="Hettich Premium Soft-Close">Hettich Soft-Close</option>
-                      <option value="Ebco Telescopic Channels">Ebco Telescopic</option>
-                      <option value="Godrej Drawer Hardware">Godrej Channels</option>
-                      <option value="Standard Smooth Ball-Bearing">Standard Runner</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
