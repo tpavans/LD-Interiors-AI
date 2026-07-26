@@ -759,12 +759,12 @@ ${profileName || activePayOrder.name}`;
 
                     {/* Prominent Payment Action Bar (When payment is pending / balance > 0) */}
                     {(order.remainingBalance > 0 || order.paymentStatus !== 'Paid') && order.totalPrice > 0 && (
-                      <div className="mt-3 p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between gap-3 text-left">
+                      <div className="mt-3 p-3.5 bg-sky-50/80 border border-sky-250 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-left shadow-xs">
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#008DDA]">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-[#008DDA]">
                             Payment Required ({order.paymentStatus || 'Unpaid'})
                           </p>
-                          <p className="text-xs font-bold text-slate-900">
+                          <p className="text-xs font-extrabold text-slate-900 mt-0.5">
                             Balance Due: <span className="font-mono text-emerald-700 font-black">₹{(order.remainingBalance || order.totalPrice).toLocaleString('en-IN')}</span>
                           </p>
                         </div>
@@ -774,10 +774,10 @@ ${profileName || activePayOrder.name}`;
                             e.stopPropagation();
                             setActivePayOrder(order);
                           }}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#008DDA] to-[#0077B6] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 flex items-center gap-1.5 shrink-0"
+                          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#008DDA] to-[#0077B6] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center gap-1.5 w-full sm:w-auto"
                         >
-                          <CreditCard className="h-4 w-4" />
-                          <span>Pay 50% Advance / Complete Payment</span>
+                          <CreditCard className="h-4 w-4 shrink-0" />
+                          <span>Pay Advance / Complete Payment</span>
                         </button>
                       </div>
                     )}
