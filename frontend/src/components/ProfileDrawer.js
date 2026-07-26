@@ -12,6 +12,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [whatsappOtpUrl, setWhatsappOtpUrl] = useState('');
 
   const digitRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
@@ -104,11 +105,17 @@ export default function ProfileDrawer({ isOpen, onClose }) {
       if (!cleaned || cleaned.length < 10) {
         throw new Error('Please enter a valid 10-digit mobile number');
       }
-      await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
+      const response = await api.post('/auth/send-otp', { phone: cleaned, isAdmin: false });
       setIsOtpSent(true);
       setResendTimer(30);
       setOtpDigits(['', '', '', '', '', '']);
       setOtp('');
+      
+      if (response.data?.whatsappUrl) {
+        setWhatsappOtpUrl(response.data.whatsappUrl);
+        // Open WhatsApp to deliver OTP directly to user's WhatsApp number
+        window.open(response.data.whatsappUrl, '_blank');
+      }
     } catch (err) {
       console.error('OTP send failed:', err);
       setLoginError(err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.');
@@ -364,17 +371,17 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                   <form onSubmit={handleSendOtp} className="space-y-5 text-left animate-fadeIn">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <Smartphone className="h-4 w-4 text-wood-accent" />
-                        <h4 className="font-serif text-base font-bold text-white">Login or Sign Up</h4>
+                        <Smartphone className="h-4 w-4 text-emerald-400" />
+                        <h4 className="font-serif text-base font-bold text-white">WhatsApp OTP Login</h4>
                       </div>
                       <p className="text-[11px] text-wood-cream/70 font-light mb-4">
-                        Enter your 10-digit mobile number to receive an instant verification SMS.
+                        Enter your 10-digit mobile number. We will send an instant 6-digit OTP code directly to your WhatsApp!
                       </p>
 
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-2">
-                        Mobile Number
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2">
+                        WhatsApp Mobile Number
                       </label>
-                      <div className="flex items-center rounded-2xl border border-wood-accent/30 bg-[#28170c] overflow-hidden focus-within:border-wood-accent focus-within:ring-2 focus-within:ring-wood-accent/20 transition-all">
+                      <div className="flex items-center rounded-2xl border border-emerald-500/40 bg-[#28170c] overflow-hidden focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-400/20 transition-all">
                         <div className="px-3.5 py-3 bg-[#1d0f07] border-r border-wood-accent/20 text-xs font-bold text-wood-cream flex items-center gap-1.5 shrink-0 select-none">
                           <span>🇮🇳 +91</span>
                         </div>
@@ -393,13 +400,13 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     <button
                       type="submit"
                       disabled={loading || phone.replace(/\D/g, '').length < 10}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-4 text-xs font-extrabold uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white py-4 text-xs font-extrabold uppercase tracking-widest transition-all disabled:opacity-50 cursor-pointer shadow-lg active:scale-98"
                     >
                       {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-[#1d0f07]" />
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
                       ) : (
                         <>
-                          <span>CONTINUE</span>
+                          <span>💬 GET OTP VIA WHATSAPP</span>
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -417,8 +424,8 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-serif text-base font-bold text-white flex items-center gap-2">
-                          <Lock className="h-4 w-4 text-wood-accent" />
-                          Verify with OTP
+                          <Lock className="h-4 w-4 text-emerald-400" />
+                          Verify WhatsApp OTP
                         </h4>
                         <button
                           type="button"
@@ -429,9 +436,20 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                           Edit Number
                         </button>
                       </div>
-                      <p className="text-[11px] text-wood-cream/70 font-light mb-5">
-                        Sent via SMS to <span className="font-bold text-white font-mono">+91 {phone}</span>
+                      <p className="text-[11px] text-wood-cream/70 font-light mb-3">
+                        Sent to WhatsApp number <span className="font-bold text-emerald-400 font-mono">+91 {phone}</span>
                       </p>
+
+                      {whatsappOtpUrl && (
+                        <a
+                          href={whatsappOtpUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mb-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 hover:bg-emerald-900/60 text-emerald-300 py-2.5 px-3 text-[11px] font-bold transition-all shadow-sm cursor-pointer"
+                        >
+                          <span>💬 Tap here to view/receive OTP on WhatsApp</span>
+                        </a>
+                      )}
 
                       <label className="block text-[10px] font-bold uppercase tracking-widest text-wood-accent mb-3 text-center">
                         Enter 6-Digit Security Code

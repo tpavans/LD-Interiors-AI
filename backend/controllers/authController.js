@@ -256,23 +256,24 @@ const sendOtp = async (req, res) => {
       }
     }
 
-    if (!realSmsSent && !fast2smsKey && !accountSid) {
-      console.warn('[SMS SERVICE] No SMS Gateway API keys found (FAST2SMS_API_KEY / TWILIO_ACCOUNT_SID).');
-      smsError = 'SMS Gateway credentials missing on server';
-    }
+    const raw10Digit = cleanedPhone.replace(/\D/g, '').slice(-10);
+    const waText = `🏠 Welcome to LD Interiors & Furnitures!\n\nYour 6-Digit Security OTP Code is: *${otp}*\n\nValid for 5 minutes. Enter this code on www.ldinteriors.in to complete your login.`;
+    const whatsappUrl = `https://wa.me/91${raw10Digit}?text=${encodeURIComponent(waText)}`;
 
     if (realSmsSent) {
       return res.status(200).json({
-        message: 'OTP sent to your mobile number successfully via Twilio SMS',
+        message: 'OTP sent to your mobile number successfully via SMS',
         phone: cleanedPhone,
         otp: otp,
+        whatsappUrl: whatsappUrl,
         realSms: true
       });
     } else {
       return res.status(200).json({
-        message: `OTP generated for ${cleanedPhone} (SMS Gateway: ${smsError})`,
+        message: `OTP generated for ${cleanedPhone}`,
         phone: cleanedPhone,
         otp: otp,
+        whatsappUrl: whatsappUrl,
         realSms: false
       });
     }
