@@ -236,6 +236,20 @@ export default function Navbar() {
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
           </button>
 
+          {/* Dedicated Wishlist Love Icon Button */}
+          <Link
+            href="/wishlist"
+            className="relative flex items-center justify-center p-1.5 rounded-full border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer ml-1.5 group"
+            title="My Dream Designs Wishlist"
+          >
+            <Heart className="h-4 w-4 fill-pink-500 text-pink-400 group-hover:fill-white group-hover:text-white" />
+            {likedCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-slate-900">
+                {likedCount}
+              </span>
+            )}
+          </Link>
+
           {/* User Profile Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
@@ -251,6 +265,20 @@ export default function Navbar() {
 
         {/* Mobile controls bar (Clean layout for mobile screens) */}
         <div className="flex md:hidden items-center gap-1.5 shrink-0">
+
+          {/* Mobile Wishlist Love Icon Link */}
+          <Link
+            href="/wishlist"
+            className="relative flex items-center justify-center p-2 rounded-full border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer"
+            title="My Dream Designs Wishlist"
+          >
+            <Heart className="h-4 w-4 fill-pink-500 text-pink-400" />
+            {likedCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-slate-900">
+                {likedCount}
+              </span>
+            )}
+          </Link>
 
           {/* Mobile User Profile Account Button */}
           <button
