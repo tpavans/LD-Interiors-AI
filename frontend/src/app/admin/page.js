@@ -240,57 +240,62 @@ export default function AdminPage() {
     const checkAuth = async () => {
       if (typeof window === 'undefined') return;
 
-      const token = localStorage.getItem('ld_token');
-      const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-      const params = new URLSearchParams(searchStr);
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-      const isSecretPath = currentPath.includes('admin1255121');
-      const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
-      const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
+      try {
+        const token = localStorage.getItem('ld_token');
+        const searchStr = typeof window !== 'undefined' ? window.location.search : '';
+        const params = new URLSearchParams(searchStr);
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isSecretPath = currentPath.includes('admin1255121');
+        const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
+        const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
 
-      if (token) {
-        try {
-          await api.get('/auth/me');
-          setIsAuthenticated(true);
-          setIsSecretPassed(true);
-          localStorage.setItem('ld_admin_secret_passed', 'true');
-          fetchProducts();
-          fetchOrders();
-          fetchCategories();
-        } catch (err) {
-          console.error('Session verification error:', err);
-          const isUnauthorized = err.response && (err.response.status === 401 || err.response.status === 403);
-          if (isUnauthorized) {
-            localStorage.removeItem('ld_token');
-            localStorage.removeItem('ld_admin');
-            window.dispatchEvent(new Event('admin-logout'));
-            if (!hasSecretParam && !hasStoredSecret) {
-              window.location.href = '/';
-              return;
-            }
-          } else {
-            // Server cold start or network error: assume valid to prevent kick-out
+        if (token) {
+          try {
+            await api.get('/auth/me');
             setIsAuthenticated(true);
             setIsSecretPassed(true);
             localStorage.setItem('ld_admin_secret_passed', 'true');
             fetchProducts();
             fetchOrders();
             fetchCategories();
+          } catch (err) {
+            console.error('Session verification error:', err);
+            const isUnauthorized = err.response && (err.response.status === 401 || err.response.status === 403);
+            if (isUnauthorized) {
+              localStorage.removeItem('ld_token');
+              localStorage.removeItem('ld_admin');
+              window.dispatchEvent(new Event('admin-logout'));
+              if (!hasSecretParam && !hasStoredSecret) {
+                window.location.href = '/';
+                return;
+              }
+            } else {
+              // Server cold start or network error: assume valid to prevent kick-out
+              setIsAuthenticated(true);
+              setIsSecretPassed(true);
+              localStorage.setItem('ld_admin_secret_passed', 'true');
+              fetchProducts();
+              fetchOrders();
+              fetchCategories();
+            }
           }
+        } else if (!hasSecretParam && !hasStoredSecret) {
+          window.location.href = '/';
+          return;
         }
-      } else if (!hasSecretParam && !hasStoredSecret) {
-        window.location.href = '/';
-        return;
-      }
 
-      if (hasSecretParam || hasStoredSecret) {
-        setIsSecretPassed(true);
-        if (hasSecretParam) {
-          localStorage.setItem('ld_admin_secret_passed', 'true');
+        if (hasSecretParam || hasStoredSecret) {
+          setIsSecretPassed(true);
+          if (hasSecretParam) {
+            localStorage.setItem('ld_admin_secret_passed', 'true');
+          }
+          fetchCategories();
         }
-        fetchCategories();
+      } catch (err) {
+        console.error('Error during checkAuth:', err);
+      } finally {
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     };
     checkAuth();
   }, []);
