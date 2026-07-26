@@ -870,9 +870,9 @@ Please check your GooglePay/PhonePe account and verify the transaction.`;
     </div>
   `;
 
-  const subject = `💰 Verify Payment: ₹${amount.toLocaleString('en-IN')} from ${order.name}`;
+  const subject = `💰 New Payment Alert: ₹${amount.toLocaleString('en-IN')} received from ${order.name}`;
   return sendGenericEmail({
-    to: 'ldinteriors.in@gmail.com',
+    to: ['ldinteriors.in@gmail.com', 'tpavansai@gmail.com', 'pavan@ldinteriors.in'],
     subject,
     html: htmlContent,
     text: textContent,

@@ -1455,6 +1455,21 @@ LD Interiors & Furnitures
                                 <p className="text-wood-dark">Cost: ₹{o.totalPrice.toLocaleString('en-IN')}</p>
                                 <p className="text-emerald-700">Paid: ₹{o.paidAmount.toLocaleString('en-IN')}</p>
                                 <p className="text-red-650">Bal: ₹{o.remainingBalance.toLocaleString('en-IN')}</p>
+                                
+                                {o.payments && o.payments.length > 0 && (
+                                  <div className="mt-1 pt-1 border-t border-slate-200 text-[9px] font-mono text-slate-600 space-y-0.5">
+                                    <p className="font-bold text-slate-800 uppercase tracking-widest text-[8px]">Latest Payment Txn:</p>
+                                    {o.payments.slice(-1).map((p, pIdx) => (
+                                      <div key={pIdx} className="bg-slate-50 p-1 rounded border border-slate-200">
+                                        <p>₹{p.amount?.toLocaleString('en-IN')} via {p.paymentMethod || 'UPI'}</p>
+                                        <p className="text-slate-400 font-sans text-[8px]">
+                                          📅 {new Date(p.createdAt || Date.now()).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                        </p>
+                                        {p.utr && <p className="truncate text-red-600">UTR: {p.utr}</p>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <span className="text-[10px] text-wood-light italic font-light">Price not set</span>
@@ -1473,6 +1488,23 @@ LD Interiors & Furnitures
                               <CreditCard className="h-3 w-3" />
                               <span>{o.totalPrice > 0 ? 'Edit Price' : 'Set Price'}</span>
                             </button>
+
+                            {o.totalPrice > 0 && (
+                              <button
+                                onClick={() => {
+                                  const cleanPhone = o.phone.replace(/\D/g, '');
+                                  const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+                                  const payUrl = `https://www.ldinteriors.in/orders?payOrderId=${o._id}`;
+                                  const msg = `Hello ${o.name} garu,\nYour custom quote for "${o.product}" is ₹${o.totalPrice.toLocaleString('en-IN')}.\n\nYou can select 50% Advance (₹${Math.round(o.totalPrice * 0.5).toLocaleString('en-IN')}) or 100% Full Payment & complete your booking online here:\n👉 ${payUrl}\n\nThank you,\nLD Interiors & Furnitures`;
+                                  navigator.clipboard.writeText(payUrl);
+                                  window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                  alert(`Payment Link generated and copied!\nOpening WhatsApp for ${o.name}...`);
+                                }}
+                                className="inline-flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-emerald-500/20 active:scale-95 w-full text-center mt-1"
+                              >
+                                <span>🔗 Send Payment Link</span>
+                              </button>
+                            )}
                           </div>
                         </td>
 

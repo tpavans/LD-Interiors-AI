@@ -133,6 +133,14 @@ const handlePhonePeCallback = async (req, res) => {
         }
         await order.save();
         console.log(`[PhonePe] Order ${order._id} payment verified successfully!`);
+
+        // Send instant automated email alert to admin Pavan Sai
+        try {
+          const { sendAdminPaymentAlertEmail } = require('../utils/sendEmail');
+          await sendAdminPaymentAlertEmail(order, amountPaid, merchantTransactionId);
+        } catch (mailErr) {
+          console.error('Failed to dispatch PhonePe admin email alert:', mailErr);
+        }
       }
     }
 
