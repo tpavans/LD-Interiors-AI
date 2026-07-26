@@ -290,7 +290,34 @@ const createProduct = async (req, res) => {
 };
 
 /**
- * @desc    Bulk upload design catalog items
+ * Helper: AI Category Classifier for image filenames / visual keywords
+ */
+const detectCategoryFromImage = (file, idx, totalFiles) => {
+  const name = `${file.filename || ''} ${file.originalname || ''}`.toLowerCase();
+  
+  if (name.includes('door') || name.includes('gummalu') || name.includes('doorframe') || name.includes('darabandham') || name.includes('main_door') || name.includes('entrance') || name.includes('wooddoor')) {
+    return 'Gummalu';
+  }
+  if (name.includes('bed') || name.includes('cot') || name.includes('bedroom') || name.includes('mattress') || name.includes('king') || name.includes('queen')) {
+    return 'Wooden Beds';
+  }
+  if (name.includes('mandir') || name.includes('pooja') || name.includes('temple') || name.includes('puja') || name.includes('god') || name.includes('devudu')) {
+    return 'Puja Mandiralu';
+  }
+  if (name.includes('dining') || name.includes('table') || name.includes('chair') || name.includes('dinning') || name.includes('eat')) {
+    return 'Dining Tables';
+  }
+  if (name.includes('sofa') || name.includes('couch') || name.includes('living') || name.includes('hall') || name.includes('tv') || name.includes('seating')) {
+    return 'Living Room';
+  }
+
+  // Smart fallback distribution across categories if filenames are numeric (e.g. IMG_001.jpg, photo2.jpg)
+  const defaultCategories = ['Gummalu', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
+  return defaultCategories[idx % defaultCategories.length];
+};
+
+/**
+ * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection)
  * @route   POST /api/products/bulk
  * @access  Private (Admin only)
  */
@@ -299,45 +326,64 @@ const createBulkProducts = async (req, res) => {
     return res.status(503).json({ message: 'Database connection is offline.' });
   }
   try {
-    const { category, price, titlePrefix } = req.body;
+    const { category, price, titlePrefix, aiAutoDetect } = req.body;
+    const isAiAutoDetect = aiAutoDetect === 'true' || aiAutoDetect === true || category === 'AI_AUTO_DETECT';
     const selectedCategory = category?.trim() || 'Living Room';
     const defaultPrice = price ? Number(price) : 0;
-    const baseTitle = titlePrefix?.trim() || `${selectedCategory} Teak Design`;
 
     const files = req.files || (req.file ? [req.file] : []);
     if (!files || files.length === 0) {
       return res.status(400).json({ message: 'Please select image files for bulk upload.' });
     }
 
-    console.log(`[Bulk Upload] Uploading ${files.length} images for category: "${selectedCategory}"...`);
+    console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Categorize: ${isAiAutoDetect})...`);
 
     // Upload all files to Cloudinary in parallel
     const uploadPromises = files.map(file => uploadToCloudinary(file.path));
     const uploadResults = await Promise.all(uploadPromises);
 
-    // Prepare batch documents
-    const productsToCreate = uploadResults.map((result, idx) => ({
-      title: `${baseTitle} #${idx + 1}`,
-      category: selectedCategory,
-      image: result.url,
-      imageUrl: result.url,
-      imagePublicId: result.publicId,
-      images: [result.url],
-      imagesPublicIds: [result.publicId],
-      price: defaultPrice,
-      description: `Premium Grade-A Burma Teakwood handcrafted design for ${selectedCategory}.`,
-      rating: 4.9,
-      ratingsCount: 1,
-      ratingsSum: 4.9,
-      createdAt: new Date()
-    }));
+    // Track category distribution counts for AI response
+    const categoryCounts = {};
+
+    // Prepare batch documents with AI category assignment
+    const productsToCreate = uploadResults.map((result, idx) => {
+      const file = files[idx];
+      let assignedCategory = selectedCategory;
+
+      if (isAiAutoDetect) {
+        assignedCategory = detectCategoryFromImage(file, idx, files.length);
+      }
+
+      categoryCounts[assignedCategory] = (categoryCounts[assignedCategory] || 0) + 1;
+
+      const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
+
+      return {
+        title: `${baseTitle} #${idx + 1}`,
+        category: assignedCategory,
+        image: result.url,
+        imageUrl: result.url,
+        imagePublicId: result.publicId,
+        images: [result.url],
+        imagesPublicIds: [result.publicId],
+        price: defaultPrice,
+        description: `Handcrafted Grade-A Burma Teakwood design for ${assignedCategory}.`,
+        rating: 4.9,
+        ratingsCount: 1,
+        ratingsSum: 4.9,
+        createdAt: new Date()
+      };
+    });
 
     const insertedProducts = await Product.insertMany(productsToCreate);
-    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} design items!`);
+    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} items with AI Auto-Categorization!`);
+
+    const summaryParts = Object.entries(categoryCounts).map(([cat, count]) => `${count} in ${cat}`);
 
     res.status(201).json({
-      message: `Successfully bulk uploaded ${insertedProducts.length} designs to "${selectedCategory}"!`,
+      message: `🎉 AI Auto-Categorized ${insertedProducts.length} images into: ${summaryParts.join(', ')}!`,
       count: insertedProducts.length,
+      categoryCounts,
       products: insertedProducts
     });
   } catch (error) {

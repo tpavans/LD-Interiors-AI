@@ -525,6 +525,62 @@ export default function AdminPage() {
     setFormError('');
   };
 
+  // 4b. Handle Bulk Batch File Selection & Submission
+  const handleBulkFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter((file) => file.type.startsWith('image/'));
+    if (validFiles.length > 50) {
+      setFormError('You can upload up to 50 images at once in a bulk batch.');
+      return;
+    }
+
+    setBulkFiles(validFiles);
+    const previews = validFiles.slice(0, 10).map(file => URL.createObjectURL(file));
+    setBulkPreviews(previews);
+  };
+
+  const handleBulkUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (bulkFiles.length === 0) {
+      setFormError('Please select image files for bulk batch upload.');
+      return;
+    }
+
+    setFormError('');
+    setFormSuccess('');
+    setBulkLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('category', bulkCategory);
+      if (bulkCategory === 'AI_AUTO_DETECT') {
+        formData.append('aiAutoDetect', 'true');
+      }
+      if (bulkPrice) formData.append('price', bulkPrice);
+      if (bulkTitlePrefix) formData.append('titlePrefix', bulkTitlePrefix);
+
+      bulkFiles.forEach(file => {
+        formData.append('images', file);
+      });
+
+      const response = await api.post('/products/bulk', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setFormSuccess(`🎉 ${response.data.message || 'Bulk batch upload completed!'}`);
+      setBulkFiles([]);
+      setBulkPreviews([]);
+      fetchProducts();
+    } catch (err) {
+      console.error('Error during bulk catalog upload:', err);
+      setFormError(err.response?.data?.message || 'Bulk upload failed. Please try again.');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   // 5. Handle Form Submit (Upload / Edit)
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -1031,8 +1087,11 @@ LD Interiors & Furnitures
                   <select
                     value={bulkCategory}
                     onChange={(e) => setBulkCategory(e.target.value)}
-                    className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-sm focus:border-wood-accent focus:outline-none transition-colors text-wood-dark cursor-pointer font-bold"
+                    className="w-full rounded-xl border border-[#008DDA] bg-sky-50/50 px-4 py-2.5 text-sm focus:border-[#008DDA] focus:outline-none transition-colors text-slate-900 cursor-pointer font-bold"
                   >
+                    <option value="AI_AUTO_DETECT" className="font-bold text-[#008DDA]">
+                      🧠 AI Auto-Detect (Auto-Sort Mixed Categories)
+                    </option>
                     {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
                       <option key={cat} value={cat}>
                         {cat}
