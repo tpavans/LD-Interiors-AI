@@ -651,9 +651,7 @@ export default function AdminDashboardComponent() {
         formData.append('images', file);
       });
 
-      const response = await api.post('/products/bulk', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/products/bulk', formData);
 
       setFormSuccess(`🎉 ${response.data?.message || 'Bulk batch upload completed!'}`);
       setBulkFiles([]);
@@ -705,19 +703,11 @@ export default function AdminDashboardComponent() {
       }
 
       if (isEditing) {
-        await api.put(`/products/${editId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        await api.put(`/products/${editId}`, formData);
         setFormSuccess('Product updated successfully!');
         resetForm();
       } else {
-        await api.post('/products', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        await api.post('/products', formData);
         setFormSuccess('Design product uploaded successfully!');
         resetForm();
       }
