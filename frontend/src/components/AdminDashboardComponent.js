@@ -659,7 +659,12 @@ export default function AdminDashboardComponent() {
       fetchProducts();
     } catch (err) {
       console.error('Error during bulk catalog upload:', err);
-      const errMsg = err.response?.data?.message || (err.message?.includes('413') ? 'Total image size is too large for 1 batch. Please upload 5-10 images at a time.' : 'Bulk upload failed. Please try again.');
+      let errMsg = err.response?.data?.message;
+      if (errMsg === 'API route not found' || err.message?.includes('404')) {
+        errMsg = '⚡ Backend API deployment in progress on Render. Please wait 30 seconds and click Upload again!';
+      } else if (!errMsg) {
+        errMsg = err.message?.includes('413') ? 'Total image size is too large for 1 batch. Please upload 5-10 images at a time.' : 'Bulk upload failed. Please try again.';
+      }
       setFormError(errMsg);
     } finally {
       setBulkLoading(false);
