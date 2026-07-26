@@ -1153,13 +1153,7 @@ LD Interiors & Furnitures
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#008DDA] mb-1.5">
                     Select Multiple Design Images (Batch Upload)
                   </label>
-                  <div
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (bulkFileInputRef.current) bulkFileInputRef.current.click();
-                    }}
-                    className="mt-1 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#008DDA]/50 p-6 bg-sky-50/60 hover:bg-sky-100/70 transition-all text-center cursor-pointer group shadow-xs active:scale-[0.99]"
-                  >
+                  <label className="mt-1 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#008DDA]/50 p-6 bg-sky-50/60 hover:bg-sky-100/70 transition-all text-center cursor-pointer group shadow-xs active:scale-[0.99]">
                     <input
                       type="file"
                       ref={bulkFileInputRef}
@@ -1179,7 +1173,7 @@ LD Interiors & Furnitures
                         ? 'Click to change or select different images'
                         : 'Select multiple photos across categories. Max 5 images per category.'}
                     </p>
-                  </div>
+                  </label>
                 </div>
 
                 {bulkPreviews.length > 0 && (
