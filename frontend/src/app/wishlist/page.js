@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, Trash2, ArrowLeft, Loader2, Sparkles, ExternalLink, ChevronRight } from 'lucide-react';
+import { Heart, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import api from '@/utils/api';
+import ProductCard from '@/components/ProductCard';
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -156,81 +157,10 @@ export default function WishlistPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-          {wishlistProducts.map((product) => {
-            const hasAdminPrice = product.price || product.estimatePrice;
-            const price = hasAdminPrice ? Number(hasAdminPrice) : null;
-
-            return (
-              <div
-                key={product._id}
-                onClick={() => setActivePaymentProduct(product)}
-                className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group animate-fadeIn cursor-pointer"
-              >
-                {/* Image Container */}
-                <div className="relative h-40 sm:h-56 w-full bg-slate-900 overflow-hidden">
-                  <img
-                    src={product.imageUrl || product.image || 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80'}
-                    alt={product.name || product.title}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=400&q=80';
-                    }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  
-                  {/* Remove Button */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveWishlist(product._id);
-                    }}
-                    className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2.5 rounded-full bg-black/60 hover:bg-red-600 text-white backdrop-blur-md transition-all cursor-pointer shadow-md"
-                    title="Remove from Wishlist"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </button>
-
-                  <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/70 backdrop-blur-md px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-white/20 text-[8px] sm:text-[10px] font-bold text-white uppercase tracking-wider truncate max-w-[80%]">
-                    {product.category || 'Teak Wood'}
-                  </div>
-                </div>
-
-                {/* Content Container */}
-                <div className="p-3 sm:p-5 text-left flex-grow flex flex-col justify-between space-y-2 sm:space-y-3">
-                  <div>
-                    <h3 className="font-serif text-xs sm:text-lg font-bold text-slate-900 leading-snug line-clamp-1 mb-0.5 group-hover:text-[#008DDA] transition-colors">
-                      {product.name || product.title}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-slate-500 font-light line-clamp-2 leading-relaxed">
-                      {product.description || 'Premium Grade-A Burma Teakwood handcrafted design.'}
-                    </p>
-                  </div>
-
-                  {/* Price Row (Only admin set price displayed) */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <div>
-                      {price ? (
-                        <span className="font-mono text-xs sm:text-base font-black text-slate-900">
-                          ₹{price.toLocaleString('en-IN')}
-                        </span>
-                      ) : (
-                        <span className="text-[9px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          Custom Quote
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-0.5 text-[10px] sm:text-xs font-bold text-[#008DDA] group-hover:translate-x-1 transition-transform">
-                      <span className="hidden xs:inline">Order</span>
-                      <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-3.5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {wishlistProducts.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
         </div>
       )}
 
