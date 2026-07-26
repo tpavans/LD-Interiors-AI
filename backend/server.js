@@ -85,10 +85,16 @@ connectDB()
 
 const app = express();
 
-// Middleware configuration
-app.use(cors());
-app.use(express.json()); // JSON parsing middleware
-app.use(express.urlencoded({ extended: true }));
+// Security & Anti-Abuse Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  next();
+});
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

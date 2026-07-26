@@ -185,6 +185,15 @@ export default function AdminPage() {
   const [videoPreview, setVideoPreview] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
 
+  // Bulk Upload Batch States
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState([]);
+  const [bulkPreviews, setBulkPreviews] = useState([]);
+  const [bulkCategory, setBulkCategory] = useState(CATEGORIES[0]);
+  const [bulkPrice, setBulkPrice] = useState('');
+  const [bulkTitlePrefix, setBulkTitlePrefix] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
@@ -976,21 +985,154 @@ LD Interiors & Furnitures
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Upload / Edit form */}
           <div className="lg:col-span-4 bg-white/80 backdrop-blur-md border border-wood-border/60 rounded-3xl p-6 shadow-md text-left glow-on-hover animate-fadeIn">
-            <h2 className="font-serif text-lg font-bold text-wood-dark mb-6 flex items-center gap-2">
-              {isEditing ? (
-                <>
-                  <Edit className="h-5 w-5 text-wood-accent" />
-                  Edit Layout Details
-                </>
-              ) : (
-                <>
-                  <Plus className="h-5 w-5 text-wood-accent" />
-                  Upload New Design
-                </>
-              )}
-            </h2>
+            {/* Mode Switcher Buttons */}
+            <div className="flex items-center justify-between border-b border-wood-border/40 pb-4 mb-6">
+              <h2 className="font-serif text-base font-bold text-wood-dark flex items-center gap-2">
+                {isBulkMode ? (
+                  <>
+                    <Sparkles className="h-5 w-5 text-[#008DDA]" />
+                    Bulk Catalog Upload
+                  </>
+                ) : isEditing ? (
+                  <>
+                    <Edit className="h-5 w-5 text-wood-accent" />
+                    Edit Layout Details
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 text-wood-accent" />
+                    Upload Single Design
+                  </>
+                )}
+              </h2>
 
-            <form onSubmit={handleFormSubmit} className="space-y-6">
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() => setIsBulkMode(!isBulkMode)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                    isBulkMode
+                      ? 'bg-[#008DDA] text-white border-[#008DDA] shadow-sm'
+                      : 'bg-sky-50 text-[#008DDA] border-sky-200 hover:bg-sky-100'
+                  }`}
+                >
+                  {isBulkMode ? 'Single Mode' : '📦 Bulk Mode'}
+                </button>
+              )}
+            </div>
+
+            {isBulkMode ? (
+              /* BULK BATCH CATALOG UPLOAD FORM */
+              <form onSubmit={handleBulkUploadSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-1.5">
+                    Target Space Category
+                  </label>
+                  <select
+                    value={bulkCategory}
+                    onChange={(e) => setBulkCategory(e.target.value)}
+                    className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-sm focus:border-wood-accent focus:outline-none transition-colors text-wood-dark cursor-pointer font-bold"
+                  >
+                    {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-1.5">
+                    Custom Title Prefix (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={bulkTitlePrefix}
+                    onChange={(e) => setBulkTitlePrefix(e.target.value)}
+                    placeholder={`e.g., Grade-A ${bulkCategory} Design`}
+                    className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-xs text-wood-dark"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-1.5">
+                    Default Price (₹ INR) - Optional
+                  </label>
+                  <input
+                    type="number"
+                    value={bulkPrice}
+                    onChange={(e) => setBulkPrice(e.target.value)}
+                    placeholder="e.g., 35000"
+                    className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-xs text-wood-dark font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#008DDA] mb-1.5">
+                    Select Multiple Design Images (Up to 30 photos)
+                  </label>
+                  <div className="mt-1 flex justify-center rounded-xl border border-dashed border-[#008DDA]/40 px-6 py-6 bg-sky-50/50 hover:bg-sky-50 transition-colors text-center cursor-pointer">
+                    <div className="space-y-2 w-full">
+                      <Upload className="mx-auto h-8 w-8 text-[#008DDA]" />
+                      <div className="flex text-xs text-slate-700 justify-center">
+                        <label className="relative cursor-pointer rounded-md bg-transparent font-bold text-[#008DDA]">
+                          <span>{bulkFiles.length > 0 ? `${bulkFiles.length} Photos Selected (Click to change)` : 'Choose Batch Images'}</span>
+                          <input
+                            type="file"
+                            onChange={handleBulkFileChange}
+                            accept="image/*"
+                            multiple
+                            className="sr-only"
+                          />
+                        </label>
+                      </div>
+                      <p className="text-[10px] text-slate-500">Select 10, 20, or up to 30 images to upload all in 1 click!</p>
+                    </div>
+                  </div>
+                </div>
+
+                {bulkPreviews.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 justify-center max-h-32 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    {bulkPreviews.map((src, i) => (
+                      <img key={i} src={src} alt="" className="w-12 h-12 object-cover rounded-lg border border-slate-300" />
+                    ))}
+                  </div>
+                )}
+
+                {formError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
+                {formSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>{formSuccess}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={bulkLoading || bulkFiles.length === 0}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#008DDA] to-[#0077B6] hover:brightness-110 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {bulkLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Uploading Batch ({bulkFiles.length} Items)...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>🚀 Upload {bulkFiles.length || 'Batch'} Designs in 1-Click</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleFormSubmit} className="space-y-6">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
                   Design Title
@@ -1242,17 +1384,35 @@ LD Interiors & Furnitures
                 </button>
               </div>
             </form>
+            )}
           </div>
 
           {/* Product listings */}
           <div className="lg:col-span-8 bg-white/80 backdrop-blur-md border border-wood-border rounded-3xl shadow-md overflow-hidden text-left glow-on-hover animate-fadeIn">
-            <div className="px-6 py-5 border-b border-wood-border/40 flex items-center justify-between">
-              <h3 className="font-serif text-lg font-bold text-wood-dark">
-                Manage Designs
-              </h3>
-              <span className="inline-flex items-center rounded-full bg-wood-beige/25 border border-wood-border/40 px-2.5 py-0.5 text-xs font-semibold text-wood-accent uppercase tracking-wider">
-                {products.length} {products.length === 1 ? 'Design' : 'Designs'} Total
-              </span>
+            <div className="px-6 py-5 border-b border-wood-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-wood-dark">
+                  Manage Designs Gallery
+                </h3>
+                <p className="text-[10px] text-wood-light font-medium">Category-relevant images are automatically pinned to the top</p>
+              </div>
+
+              {/* Category Quick Filter */}
+              <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
+                <span className="text-[10px] uppercase font-bold text-wood-accent shrink-0">Filter:</span>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="rounded-lg border border-wood-border bg-white text-xs font-bold text-wood-dark px-2.5 py-1 focus:outline-none cursor-pointer"
+                >
+                  <option value="All">All Categories ({products.length})</option>
+                  {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat} ({products.filter(p => p.category === cat).length})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {productsLoading ? (
@@ -1277,8 +1437,16 @@ LD Interiors & Furnitures
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-wood-border/30">
-                    {products.map((p) => (
-                      <tr key={p._id} className="hover:bg-wood-beige/10 transition-colors">
+                    {[...products]
+                      .sort((a, b) => {
+                        if (category !== 'All') {
+                          if (a.category === category && b.category !== category) return -1;
+                          if (a.category !== category && b.category === category) return 1;
+                        }
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                      })
+                      .map((p) => (
+                        <tr key={p._id} className={`hover:bg-wood-beige/10 transition-colors ${p.category === category && category !== 'All' ? 'bg-sky-50/50' : ''}`}>
                         <td className="py-4 px-6">
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 relative">
                             <img

@@ -290,6 +290,66 @@ const createProduct = async (req, res) => {
 };
 
 /**
+ * @desc    Bulk upload design catalog items
+ * @route   POST /api/products/bulk
+ * @access  Private (Admin only)
+ */
+const createBulkProducts = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { category, price, titlePrefix } = req.body;
+    const selectedCategory = category?.trim() || 'Living Room';
+    const defaultPrice = price ? Number(price) : 0;
+    const baseTitle = titlePrefix?.trim() || `${selectedCategory} Teak Design`;
+
+    const files = req.files || (req.file ? [req.file] : []);
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'Please select image files for bulk upload.' });
+    }
+
+    console.log(`[Bulk Upload] Uploading ${files.length} images for category: "${selectedCategory}"...`);
+
+    // Upload all files to Cloudinary in parallel
+    const uploadPromises = files.map(file => uploadToCloudinary(file.path));
+    const uploadResults = await Promise.all(uploadPromises);
+
+    // Prepare batch documents
+    const productsToCreate = uploadResults.map((result, idx) => ({
+      title: `${baseTitle} #${idx + 1}`,
+      category: selectedCategory,
+      image: result.url,
+      imageUrl: result.url,
+      imagePublicId: result.publicId,
+      images: [result.url],
+      imagesPublicIds: [result.publicId],
+      price: defaultPrice,
+      description: `Premium Grade-A Burma Teakwood handcrafted design for ${selectedCategory}.`,
+      rating: 4.9,
+      ratingsCount: 1,
+      ratingsSum: 4.9,
+      createdAt: new Date()
+    }));
+
+    const insertedProducts = await Product.insertMany(productsToCreate);
+    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} design items!`);
+
+    res.status(201).json({
+      message: `Successfully bulk uploaded ${insertedProducts.length} designs to "${selectedCategory}"!`,
+      count: insertedProducts.length,
+      products: insertedProducts
+    });
+  } catch (error) {
+    console.error('Error in bulk catalog upload:', error);
+    res.status(500).json({
+      message: 'Server error during bulk catalog upload.',
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @desc    Update product (with optional image replace)
  * @route   PUT /api/products/:id
  * @access  Private (Admin only)
@@ -508,6 +568,7 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  createBulkProducts,
   updateProduct,
   deleteProduct,
   rateProduct,
