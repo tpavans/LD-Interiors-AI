@@ -527,23 +527,47 @@ export default function AdminPage() {
 
   // 4b. Handle Bulk Batch File Selection & Submission
   const handleBulkFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+    try {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
 
-    const validFiles = files.filter((file) => file.type.startsWith('image/'));
-    if (validFiles.length > 50) {
-      setFormError('You can upload up to 50 images at once in a bulk batch.');
-      return;
+      const validFiles = files.filter((file) => file && file.type && file.type.startsWith('image/'));
+      if (validFiles.length > 25) {
+        setFormError('To ensure fast processing, please select up to 25 images per batch.');
+        setBulkFiles(validFiles.slice(0, 25));
+      } else {
+        setBulkFiles(validFiles);
+        setFormError('');
+      }
+
+      // Safely read previews using FileReader
+      const previews = [];
+      let count = 0;
+      const targetList = validFiles.slice(0, 8);
+      targetList.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result) previews.push(reader.result);
+          count++;
+          if (count === targetList.length) {
+            setBulkPreviews(previews);
+          }
+        };
+        reader.onerror = () => {
+          count++;
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (err) {
+      console.error('Error handling bulk file selection:', err);
     }
-
-    setBulkFiles(validFiles);
-    const previews = validFiles.slice(0, 10).map(file => URL.createObjectURL(file));
-    setBulkPreviews(previews);
   };
 
   const handleBulkUploadSubmit = async (e) => {
-    e.preventDefault();
-    if (bulkFiles.length === 0) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    if (!bulkFiles || bulkFiles.length === 0) {
       setFormError('Please select image files for bulk batch upload.');
       return;
     }
@@ -569,13 +593,14 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      setFormSuccess(`🎉 ${response.data.message || 'Bulk batch upload completed!'}`);
+      setFormSuccess(`🎉 ${response.data?.message || 'Bulk batch upload completed!'}`);
       setBulkFiles([]);
       setBulkPreviews([]);
       fetchProducts();
     } catch (err) {
       console.error('Error during bulk catalog upload:', err);
-      setFormError(err.response?.data?.message || 'Bulk upload failed. Please try again.');
+      const errMsg = err.response?.data?.message || (err.message?.includes('413') ? 'Total image size is too large for 1 batch. Please upload 5-10 images at a time.' : 'Bulk upload failed. Please try again.');
+      setFormError(errMsg);
     } finally {
       setBulkLoading(false);
     }

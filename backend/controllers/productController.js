@@ -355,17 +355,11 @@ const createBulkProducts = async (req, res) => {
       if (isAiAutoDetect) {
         let detected = detectCategoryFromImage(file, idx, files.length);
 
-        // If detected category has already reached max 5 images, spill over to another under-limit category
+        // Strict Rule: Once a category reaches 5 images, LEAVE IT / DISCARD remaining images for that category (NO spillover)
         if ((categoryCounts[detected] || 0) >= 5) {
-          const underLimitCat = availableCategories.find(c => (categoryCounts[c] || 0) < 5);
-          if (underLimitCat) {
-            assignedCategory = underLimitCat;
-          } else {
-            assignedCategory = detected; // Allow if all 5 categories are filled with 5 each (25 max total)
-          }
-        } else {
-          assignedCategory = detected;
+          return; // Skip/Leave remaining images for this category
         }
+        assignedCategory = detected;
       } else {
         // Single category mode: limit to max 5 images total for that category per batch
         if ((categoryCounts[assignedCategory] || 0) >= 5) {
