@@ -259,18 +259,18 @@ export default function ProfileDrawer({ isOpen, onClose }) {
       />
       
       {/* Drawer Panel */}
-      <div className="relative w-full max-w-md bg-[#1d0f07] border-l border-wood-accent/30 text-white p-6 sm:p-8 flex flex-col justify-between shadow-2xl h-full z-10 animate-slideLeft">
+      <div className="relative w-full max-w-md bg-white border-l border-slate-200 text-slate-900 p-6 sm:p-8 flex flex-col justify-between shadow-2xl h-full z-10 animate-slideLeft">
         
         {/* Header */}
         <div>
-          <div className="flex items-center justify-between border-b border-wood-accent/20 pb-4 mb-6">
-            <h3 className="font-serif text-lg font-bold tracking-wide text-wood-accent flex items-center gap-2">
-              <User className="h-5 w-5" />
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+            <h3 className="font-serif text-lg font-bold tracking-wide text-slate-900 flex items-center gap-2">
+              <User className="h-5 w-5 text-[#008DDA]" />
               <span>{isUserLoggedIn ? 'My Profile Account' : 'Customer Sign In'}</span>
             </h3>
             <button 
               onClick={onClose} 
-              className="p-1 rounded-lg text-wood-cream/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -283,42 +283,42 @@ export default function ProfileDrawer({ isOpen, onClose }) {
               isEditingProfile ? (
                 <form onSubmit={handleSaveProfile} className="space-y-4 text-left">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1">Full Name</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
                     <input
                       type="text"
                       required
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full rounded-xl border border-wood-accent/30 bg-[#28170c] px-4 py-2.5 text-xs text-white focus:outline-none focus:border-wood-accent"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008DDA]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1">Phone Number (Verified)</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Phone Number (Verified)</label>
                     <input
                       type="tel"
                       disabled
                       value={profilePhone}
-                      className="w-full rounded-xl border border-wood-accent/10 bg-[#28170c]/50 px-4 py-2.5 text-xs text-white/50 cursor-not-allowed"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs text-slate-500 cursor-not-allowed font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1">Email Address</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Email Address</label>
                     <input
                       type="email"
                       required
                       value={profileEmail}
                       onChange={(e) => setProfileEmail(e.target.value)}
-                      className="w-full rounded-xl border border-wood-accent/30 bg-[#28170c] px-4 py-2.5 text-xs text-white focus:outline-none focus:border-wood-accent"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008DDA]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-wood-accent mb-1">Shipping & Delivery Address</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Shipping & Delivery Address</label>
                     <textarea
                       required
                       value={profileAddress}
                       onChange={(e) => setProfileAddress(e.target.value)}
                       rows="3"
-                      className="w-full rounded-xl border border-wood-accent/30 bg-[#28170c] px-4 py-2.5 text-xs text-white focus:outline-none focus:border-wood-accent"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#008DDA]"
                     />
                   </div>
 
@@ -326,7 +326,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer disabled:bg-neutral-600"
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-[#008DDA] text-white hover:bg-[#0077B6] py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer disabled:bg-neutral-400"
                     >
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                       <span>Save Changes</span>
@@ -334,7 +334,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     <button
                       type="button"
                       onClick={() => setIsEditingProfile(false)}
-                      className="flex-1 rounded-xl border border-wood-accent/30 hover:bg-white/5 text-wood-cream py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                      className="flex-1 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -342,34 +342,33 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                 </form>
               ) : (
                 <div className="space-y-5 text-left">
-                  <div className="bg-[#28170c] border border-wood-accent/20 rounded-2xl p-4.5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-wood-accent/5 -mr-4 -mt-4" />
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-wood-accent mb-0.5">Welcome Back</p>
-                    <h4 className="font-serif text-lg font-bold">{profileName || 'Valued Customer'}</h4>
+                  <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4.5 relative overflow-hidden">
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-[#008DDA] mb-0.5">Welcome Back</p>
+                    <h4 className="font-serif text-lg font-black text-slate-900">{profileName || 'Valued Customer'}</h4>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <Smartphone className="h-4.5 w-4.5 text-wood-accent shrink-0 mt-0.5" />
+                      <Smartphone className="h-4.5 w-4.5 text-[#008DDA] shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[9px] uppercase font-bold tracking-widest text-wood-cream/60">Phone</p>
-                        <p className="text-sm font-semibold">{profilePhone}</p>
+                        <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400">Phone</p>
+                        <p className="text-sm font-bold font-mono text-slate-900">{profilePhone}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Mail className="h-4.5 w-4.5 text-wood-accent shrink-0 mt-0.5" />
+                      <Mail className="h-4.5 w-4.5 text-[#008DDA] shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[9px] uppercase font-bold tracking-widest text-wood-cream/60">Email</p>
-                        <p className="text-sm font-semibold break-all">{profileEmail || 'Not specified'}</p>
+                        <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400">Email</p>
+                        <p className="text-sm font-medium text-slate-800 break-all">{profileEmail || 'Not specified'}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin className="h-4.5 w-4.5 text-wood-accent shrink-0 mt-0.5" />
+                      <MapPin className="h-4.5 w-4.5 text-[#008DDA] shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[9px] uppercase font-bold tracking-widest text-wood-cream/60">Shipping Address</p>
-                        <p className="text-xs text-wood-cream font-light leading-relaxed bg-[#28170c]/40 border border-wood-accent/10 rounded-xl p-3 mt-1 max-w-full">
+                        <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400">Shipping Address</p>
+                        <p className="text-xs text-slate-800 font-medium leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 max-w-full">
                           {profileAddress || 'No address specified yet.'}
                         </p>
                       </div>
@@ -380,7 +379,7 @@ export default function ProfileDrawer({ isOpen, onClose }) {
                     <Link
                       href="/orders"
                       onClick={onClose}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-accent text-[#1d0f07] hover:brightness-110 py-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#008DDA] hover:bg-[#0077B6] text-white py-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                     >
                       <ShoppingBag className="h-4 w-4" />
                       <span>View My Orders Timeline</span>
@@ -388,83 +387,11 @@ export default function ProfileDrawer({ isOpen, onClose }) {
 
                     <button
                       onClick={() => setIsEditingProfile(true)}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-wood-accent/40 bg-transparent hover:bg-white/5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                     >
-                      <Edit3 className="h-4 w-4 text-wood-accent" />
+                      <Edit3 className="h-4 w-4 text-[#008DDA]" />
                       <span>Edit Profile details</span>
                     </button>
-                  </div>
-
-                  {/* WISHLIST / DREAM DESIGNS SECTION */}
-                  <div className="pt-4 border-t border-wood-accent/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1.5 text-wood-accent font-bold text-xs uppercase tracking-wider">
-                        <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                        <span>Dream Designs Wishlist ({wishlistProducts.length})</span>
-                      </div>
-                      <Link
-                        href="/products"
-                        onClick={onClose}
-                        className="text-[10px] text-wood-cream/70 hover:text-wood-accent flex items-center gap-1 transition-colors"
-                      >
-                        <span>Browse Catalog</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-
-                    {wishlistProducts.length === 0 ? (
-                      <div className="bg-[#28170c]/50 border border-dashed border-wood-accent/20 rounded-xl p-4 text-center">
-                        <p className="text-xs text-wood-cream/70 font-light">No saved designs yet.</p>
-                        <p className="text-[10px] text-wood-accent/80 font-light mt-0.5">
-                          Tap the ❤️ icon on any product in our catalog to save your dream designs here!
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
-                        {wishlistProducts.map((prod) => (
-                          <div
-                            key={prod._id}
-                            className="bg-[#28170c] border border-wood-accent/20 rounded-xl p-2.5 flex items-center justify-between gap-3 text-left hover:border-wood-accent/40 transition-all"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <img
-                                src={prod.imageUrl}
-                                alt={prod.name || prod.title}
-                                className="w-12 h-12 rounded-lg object-cover border border-wood-accent/20 shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <h5 className="text-xs font-bold text-white truncate">
-                                  {prod.name || prod.title}
-                                </h5>
-                                <p className="text-[10px] text-wood-accent font-mono font-semibold">
-                                  ₹{(prod.price || prod.estimatePrice || 0).toLocaleString('en-IN')}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              <a
-                                href={`https://wa.me/919346325291?text=${encodeURIComponent(`Hello Nagaraju Sir, I am interested in custom designing "${prod.name || prod.title}" from LD Interiors.`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-colors"
-                                title="Discuss on WhatsApp"
-                              >
-                                <Smartphone className="h-3.5 w-3.5" />
-                              </a>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveWishlist(prod._id)}
-                                className="p-1.5 rounded-lg bg-red-950/40 hover:bg-red-600/30 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-                                title="Remove from Wishlist"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               )
@@ -472,8 +399,8 @@ export default function ProfileDrawer({ isOpen, onClose }) {
               /* Amazon/Flipkart Style E-Commerce Login Panel */
               <div className="space-y-6">
                 {loginError && (
-                  <div className="rounded-xl bg-red-950/40 border border-red-500/30 p-3.5 text-xs text-red-300 flex items-start gap-2.5 text-left animate-fadeIn">
-                    <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                  <div className="rounded-xl bg-red-50 border border-red-200 p-3.5 text-xs text-red-800 flex items-start gap-2.5 text-left animate-fadeIn">
+                    <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
                     <span>{loginError}</span>
                   </div>
                 )}
