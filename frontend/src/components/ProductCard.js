@@ -173,22 +173,21 @@ ${orderNotes.trim() || 'No custom notes.'}`;
 
       const createdOrder = response.data;
       const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+      const productIdStr = _id ? _id.toString() : (createdOrder.productId || 'N/A');
+      const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
 
       const baseMessageBody = `*Product Details:*
+- Product ID: #${productIdStr}
 - Name: ${title}
 - Category: ${category}
 - Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-${orderImage ? `- Image URL: ${orderImage}\n` : ''}
+- Main Product Link: ${mainProductUrl}
+${orderImage ? `- Reference Image URL: ${orderImage}\n` : ''}
 *Customer Details:*
 - Name: ${orderName.trim()}
 - Phone: ${orderPhone.trim()}
 - Gmail: ${orderEmail.trim()}
 - Delivery Address: ${orderAddress.trim()}
-*Material Selections (High-Quality Brands):*
-- Plywood Brand: ${plywoodBrand}
-- Polish/Finish Type: ${polishBrand}
-- Adhesive/Glue: ${glueBrand}
-- Drawer Channels/Hardware: ${hardwareBrand}
 ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
 
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;

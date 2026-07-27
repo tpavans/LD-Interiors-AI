@@ -285,22 +285,26 @@ const sendOrderEmail = async (order) => {
     }
   }
 
+  const productIdDisplay = order.productId ? `#${order.productId}` : `#ORD-${(order._id || Date.now()).toString().slice(-6).toUpperCase()}`;
+  const mainProductUrl = order.productId ? `https://www.ldinteriors.in/products/${order.productId}` : 'https://www.ldinteriors.in/products';
+
   const textContent = `Hello Pavan Sai! I would like to place an order/inquiry via LD Interiors & Furnitures:
 
 *Product Details:*
+- Product ID: ${productIdDisplay}
 - Name: ${order.product}
 - Category: ${category}
 - Price: ${price}
-${imageUrl ? `- Image URL: ${imageUrl}` : ''}
-
+- Main Product Link: ${mainProductUrl}
+${imageUrl ? `- Reference Image URL: ${imageUrl}\n` : ''}
 *Customer Details:*
 - Name: ${order.name}
 - Phone: ${order.phone}
 - Gmail: ${order.email}
+- Delivery Address: ${order.address}
 - Custom Size: ${order.customSize || 'Not specified'}
 - Desired Cost: ${order.desiredPrice || 'Not specified'}
-- Address: ${order.address}
-- Notes/Sizing/Address: ${order.notes || 'No custom notes.'}`;
+- Notes/Customization: ${order.notes || 'No custom notes.'}`;
 
   const welcomeMsgText = `🏠 Welcome to LD Interiors!
 
@@ -383,10 +387,12 @@ https://www.ldinteriors.in/
       <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
         <h3 style="color: #8e7a65; font-size: 14px; margin-top: 0; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Product Details</h3>
         <ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px;">
-          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="https://www.ldinteriors.in/products/${order.productId}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
+          <li style="margin-bottom: 8px;"><strong>• Product ID:</strong> <span style="background-color: #f5eee4; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold;">${productIdDisplay}</span></li>
+          <li style="margin-bottom: 8px;"><strong>• Name:</strong> ${order.productId ? `<a href="${mainProductUrl}" target="_blank" style="color: #a07d57; text-decoration: none; font-weight: bold;">${order.product}</a>` : order.product}</li>
           <li style="margin-bottom: 8px;"><strong>• Category:</strong> ${category}</li>
           <li style="margin-bottom: 8px;"><strong>• Price:</strong> <span style="color: #6d553b; font-weight: bold;">${price}</span></li>
-          ${imageUrl ? `<li style="margin-bottom: 8px; word-break: break-all;"><strong>• Image URL:</strong> <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${imageUrl}</a></li>` : ''}
+          <li style="margin-bottom: 8px; word-break: break-all;"><strong>• Main Product Link:</strong> <a href="${mainProductUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${mainProductUrl}</a></li>
+          ${imageUrl ? `<li style="margin-bottom: 8px; word-break: break-all;"><strong>• Reference Image URL:</strong> <a href="${imageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${imageUrl}</a></li>` : ''}
         </ul>
       </div>
 

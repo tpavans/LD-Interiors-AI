@@ -1616,12 +1616,16 @@ Based on your room's style, here are some LD Interiors products that match beaut
 
       const createdOrder = response.data;
       const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+      const productIdStr = matchedProduct?._id ? matchedProduct._id.toString() : (createdOrder.productId || 'N/A');
+      const mainProductUrl = matchedProduct?._id ? `https://www.ldinteriors.in/products/${matchedProduct._id}` : 'https://www.ldinteriors.in/products';
 
       const baseMessageBody = `*Product Details:*
+- Product ID: #${productIdStr}
 - Name: ${selectedProduct}
 - Category: ${matchedProduct ? matchedProduct.category : 'General Inquiry'}
 - Price: ${productPrice > 0 ? `₹${productPrice.toLocaleString('en-IN')}` : 'Contact for pricing'}
-${orderImage ? `- Image URL: ${orderImage}\n` : ''}
+- Main Product Link: ${mainProductUrl}
+${orderImage ? `- Reference Image URL: ${orderImage}\n` : ''}
 *Customer Details:*
 - Name: ${orderName.trim()}
 - Phone: ${orderPhone.trim()}
