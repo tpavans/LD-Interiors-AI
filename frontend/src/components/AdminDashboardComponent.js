@@ -7,22 +7,31 @@ import Link from 'next/link';
 
 const CATEGORIES = ["Doors", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
-const getBilingualGreetingText = (o) => {
-  const orderDate = o.createdAt 
+const generateCustomerGreetingMessage = (o) => {
+  if (!o) return '';
+  const orderDate = o.createdAt
     ? new Date(o.createdAt).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata'
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Kolkata'
       })
     : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
 
-  const orderTime = o.createdAt 
+  const orderTime = o.createdAt
     ? new Date(o.createdAt).toLocaleTimeString('en-IN', {
-        hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata'
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
       })
     : new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
 
+  const resolvedProductId = o.productId ? o.productId.toString() : (o._id ? o._id.toString() : 'N/A');
+  const mainProductUrl = o.productId ? `https://www.ldinteriors.in/products/${o.productId}` : 'https://www.ldinteriors.in/products';
   const resolvedImageUrl = o.imageUrl
     ? (o.imageUrl.startsWith('http') ? o.imageUrl : `https://www.ldinteriors.in${o.imageUrl.startsWith('/') ? '' : '/'}${o.imageUrl}`)
-    : 'https://www.ldinteriors.in/products';
+    : mainProductUrl;
 
   return `🏠 Welcome to LD Interiors!
 
@@ -33,17 +42,18 @@ Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
 🎉 Your order has been received successfully!
 
 📦 Order Details
+🆔 Product ID: #${resolvedProductId}
 🪑 Name: ${o.product}
 📂 Category: ${o.category || 'Furniture Design'}
 💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-🖼️ Image URL: ${resolvedImageUrl}
-📅 Order Date: ${orderDate}
+🌐 Main Product Link: ${mainProductUrl}
+${o.imageUrl ? `🖼️ Reference Image URL: ${resolvedImageUrl}\n` : ''}📅 Order Date: ${orderDate}
 ⏰ Order Time: ${orderTime}
 
 Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
 
 🌐 Track your order anytime by visiting our website:
-https://www.ldinteriors.in/
+https://www.ldinteriors.in/orders
 
 If you have any questions or need assistance, feel free to contact us anytime.
 
@@ -53,102 +63,64 @@ Warm Regards,
 
 🏠 LD Interiors Team
 📞 +91 93463 25291
-
-"Designing Beautiful Spaces, Creating Happy Homes." ✨
-
----------------------------------------------------------
-
-🏠 LD Interiors కి స్వాగతం!
-
-నమస్కారం ${o.name} గారికి, 🙏
-
-LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
-
-🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
-
-📦 మీ ఆర్డర్ వివరాలు
-🪑 ఉత్పత్తి పేరు: ${o.product}
-📂 విభాగం: ${o.category || 'Furniture Design'}
-💰 ధర: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-🖼️ చిత్రం లింక్: ${resolvedImageUrl}
-📅 తేదీ: ${orderDate}
-⏰ సమయం: ${orderTime}
-
-మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
-
-📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
-
-🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://www.ldinteriors.in/
-
-🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
-
-✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
-
-మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
-
-ధన్యవాదాలతో,
-
-🏠 LD Interiors బృందం
-📞 +91 93463 25291
 🌐 https://www.ldinteriors.in/
 
-"మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
+"Designing Beautiful Spaces, Creating Happy Homes." ✨`;
 };
 
 const getStatusUpdateGreetingText = (o, status) => {
   const statusNotesEn = {
     'Pending': 'We have received your order request and are currently conducting initial custom requirement reviews.',
-    'Processing': 'Final size and pricing check is in progress—coordinating raw materials & custom wood selections.',
+    'Processing': 'Final size and pricing check is in progressâ€”coordinating raw materials & custom wood selections.',
     'In Progress': 'Modern carpentry wood carvings & framing has started at our workshop. Master craftsmen are building your custom designs.',
     'Completed': 'Order completed and delivered successfully. Direct home installation setup is finished.',
     'Cancelled': 'This order has been cancelled or modified. Please contact us for further details.'
   };
 
   const statusNotesTe = {
-    'Pending': 'మీ ఆర్డర్ అభ్యర్థన విజయవంతంగా చేరింది. మేము ప్రస్తుతం ప్రాథమిక సమీక్ష జరుపుతున్నాము.',
-    'Processing': 'మీ ఆర్డర్ ప్రాసెస్ చేయబడుతోంది. చివరి పరిమాణం, ధర మరియు కలప ఎంపికల సమన్వయం జరుగుతోంది.',
-    'In Progress': 'మా వర్క్‌షాప్‌లో మీ ఆర్డర్ తయారీ ప్రక్రియ ప్రారంభమైంది. మా నిపుణులైన వడ్రంగులు మీ డిజైన్‌ను రూపొందిస్తున్నారు.',
-    'Completed': 'మీ ఆర్డర్ విజయవంతంగా పూర్తయింది మరియు డెలివరీ చేయబడింది. గృహంలో ఇన్‌స్టాలేషన్ కూడా పూర్తయింది.',
-    'Cancelled': 'ఈ ఆర్డర్ రద్దు చేయబడింది లేదా సవరించబడింది. దయచేసి వివరాల కోసం మమ్మల్ని సంప్రదించండి.'
+    'Pending': 'à°®à±€ à°†à°°à±�à°¡à°°à±� à°…à°­à±�à°¯à°°à±�à°¥à°¨ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°šà±‡à°°à°¿à°‚à°¦à°¿. à°®à±‡à°®à±� à°ªà±�à°°à°¸à±�à°¤à±�à°¤à°‚ à°ªà±�à°°à°¾à°¥à°®à°¿à°• à°¸à°®à±€à°•à±�à°· à°œà°°à±�à°ªà±�à°¤à±�à°¨à±�à°¨à°¾à°®à±�.',
+    'Processing': 'à°®à±€ à°†à°°à±�à°¡à°°à±� à°ªà±�à°°à°¾à°¸à±†à°¸à±� à°šà±‡à°¯à°¬à°¡à±�à°¤à±‹à°‚à°¦à°¿. à°šà°¿à°µà°°à°¿ à°ªà°°à°¿à°®à°¾à°£à°‚, à°§à°° à°®à°°à°¿à°¯à±� à°•à°²à°ª à°Žà°‚à°ªà°¿à°•à°² à°¸à°®à°¨à±�à°µà°¯à°‚ à°œà°°à±�à°—à±�à°¤à±‹à°‚à°¦à°¿.',
+    'In Progress': 'à°®à°¾ à°µà°°à±�à°•à±�â€Œà°·à°¾à°ªà±�â€Œà°²à±‹ à°®à±€ à°†à°°à±�à°¡à°°à±� à°¤à°¯à°¾à°°à±€ à°ªà±�à°°à°•à±�à°°à°¿à°¯ à°ªà±�à°°à°¾à°°à°‚à°­à°®à±ˆà°‚à°¦à°¿. à°®à°¾ à°¨à°¿à°ªà±�à°£à±�à°²à±ˆà°¨ à°µà°¡à±�à°°à°‚à°—à±�à°²à±� à°®à±€ à°¡à°¿à°œà±ˆà°¨à±�â€Œà°¨à±� à°°à±‚à°ªà±Šà°‚à°¦à°¿à°¸à±�à°¤à±�à°¨à±�à°¨à°¾à°°à±�.',
+    'Completed': 'à°®à±€ à°†à°°à±�à°¡à°°à±� à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°ªà±‚à°°à±�à°¤à°¯à°¿à°‚à°¦à°¿ à°®à°°à°¿à°¯à±� à°¡à±†à°²à°¿à°µà°°à±€ à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿. à°—à±ƒà°¹à°‚à°²à±‹ à°‡à°¨à±�â€Œà°¸à±�à°Ÿà°¾à°²à±‡à°·à°¨à±� à°•à±‚à°¡à°¾ à°ªà±‚à°°à±�à°¤à°¯à°¿à°‚à°¦à°¿.',
+    'Cancelled': 'à°ˆ à°†à°°à±�à°¡à°°à±� à°°à°¦à±�à°¦à±� à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿ à°²à±‡à°¦à°¾ à°¸à°µà°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿. à°¦à°¯à°šà±‡à°¸à°¿ à°µà°¿à°µà°°à°¾à°² à°•à±‹à°¸à°‚ à°®à°®à±�à°®à°²à±�à°¨à°¿ à°¸à°‚à°ªà±�à°°à°¦à°¿à°‚à°šà°‚à°¡à°¿.'
   };
 
   const noteEn = statusNotesEn[status] || 'Your order status has been updated.';
-  const noteTe = statusNotesTe[status] || 'మీ ఆర్డర్ స్థితి నవీకరించబడింది.';
+  const noteTe = statusNotesTe[status] || 'à°®à±€ à°†à°°à±�à°¡à°°à±� à°¸à±�à°¥à°¿à°¤à°¿ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
-  return `🔔 LD Interiors Order Update / ఆర్డర్ స్థితి అప్‌డేట్
+  return `ðŸ”” LD Interiors Order Update / à°†à°°à±�à°¡à°°à±� à°¸à±�à°¥à°¿à°¤à°¿ à°…à°ªà±�â€Œà°¡à±‡à°Ÿà±�
 
-Hello Mr./Ms. ${o.name}, 👋
+Hello Mr./Ms. ${o.name}, ðŸ‘‹
 
 We have updated the progress timeline for your order of "${o.product}":
 
-🔨 Current Status: ${status}
-📝 Status Note: ${noteEn}
+ðŸ”¨ Current Status: ${status}
+ðŸ“� Status Note: ${noteEn}
 
-🌐 Track your live progress anytime on our website:
+ðŸŒ� Track your live progress anytime on our website:
 https://www.ldinteriors.in/orders
 
-Thank you for choosing LD Interiors! ❤️
+Thank you for choosing LD Interiors! â�¤ï¸�
 
 ---------------------------------------------------------
 
-నమస్కారం ${o.name} గారికి, 🙏
+à°¨à°®à°¸à±�à°•à°¾à°°à°‚ ${o.name} à°—à°¾à°°à°¿à°•à°¿, ðŸ™�
 
-మీరు ఆర్డర్ చేసిన "${o.product}" యొక్క స్థితి అప్‌డేట్ చేయబడింది:
+à°®à±€à°°à±� à°†à°°à±�à°¡à°°à±� à°šà±‡à°¸à°¿à°¨ "${o.product}" à°¯à±Šà°•à±�à°• à°¸à±�à°¥à°¿à°¤à°¿ à°…à°ªà±�â€Œà°¡à±‡à°Ÿà±� à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿:
 
-🔨 ప్రస్తుత స్థితి: ${status === 'Pending' ? 'Pending (పెండింగ్)' : 
-                   status === 'Processing' ? 'Processing (ప్రాసెస్ అవుతోంది)' : 
-                   status === 'In Progress' ? 'In Progress (తయారీలో ఉంది)' : 
-                   status === 'Completed' ? 'Completed (పూర్తయింది)' : 'Cancelled (రద్దు చేయబడింది)'}
-📝 వివరణ: ${noteTe}
+ðŸ”¨ à°ªà±�à°°à°¸à±�à°¤à±�à°¤ à°¸à±�à°¥à°¿à°¤à°¿: ${status === 'Pending' ? 'Pending (à°ªà±†à°‚à°¡à°¿à°‚à°—à±�)' : 
+                   status === 'Processing' ? 'Processing (à°ªà±�à°°à°¾à°¸à±†à°¸à±� à°…à°µà±�à°¤à±‹à°‚à°¦à°¿)' : 
+                   status === 'In Progress' ? 'In Progress (à°¤à°¯à°¾à°°à±€à°²à±‹ à°‰à°‚à°¦à°¿)' : 
+                   status === 'Completed' ? 'Completed (à°ªà±‚à°°à±�à°¤à°¯à°¿à°‚à°¦à°¿)' : 'Cancelled (à°°à°¦à±�à°¦à±� à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿)'}
+ðŸ“� à°µà°¿à°µà°°à°£: ${noteTe}
 
-🌐 మీ ఆర్డర్ ప్రగతిని ఎప్పుడైనా మా వెబ్సైట్‌లో ట్రాక్ చేయవచ్చు:
+ðŸŒ� à°®à±€ à°†à°°à±�à°¡à°°à±� à°ªà±�à°°à°—à°¤à°¿à°¨à°¿ à°Žà°ªà±�à°ªà±�à°¡à±ˆà°¨à°¾ à°®à°¾ à°µà±†à°¬à±�à°¸à±ˆà°Ÿà±�â€Œà°²à±‹ à°Ÿà±�à°°à°¾à°•à±� à°šà±‡à°¯à°µà°šà±�à°šà±�:
 https://www.ldinteriors.in/orders
 
-LD Interiors ను ఎంపిక చేసుకున్నందుకు ధన్యవాదాలు! ❤️
+LD Interiors à°¨à±� à°Žà°‚à°ªà°¿à°• à°šà±‡à°¸à±�à°•à±�à°¨à±�à°¨à°‚à°¦à±�à°•à±� à°§à°¨à±�à°¯à°µà°¾à°¦à°¾à°²à±�! â�¤ï¸�
 
-🏠 LD Interiors Team
-📞 +91 93463 25291`;
+ðŸ�  LD Interiors Team
+ðŸ“ž +91 93463 25291`;
 };
 
 export default function AdminDashboardComponent() {
@@ -406,7 +378,7 @@ export default function AdminDashboardComponent() {
         const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(statusUpdateMsg)}`;
         window.open(waUrl, '_blank');
         
-        const subject = `🔨 Order Progress: ${order.product} is ${newStatus}`;
+        const subject = `ðŸ”¨ Order Progress: ${order.product} is ${newStatus}`;
         const mailtoUrl = `mailto:${order.email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(statusUpdateMsg)}`;
         window.open(mailtoUrl, '_blank');
       }
@@ -654,7 +626,7 @@ export default function AdminDashboardComponent() {
 
       const response = await api.post('/products/bulk', formData);
 
-      setFormSuccess(`🎉 ${response.data?.message || 'Bulk batch upload completed!'}`);
+      setFormSuccess(`ðŸŽ‰ ${response.data?.message || 'Bulk batch upload completed!'}`);
       setBulkFiles([]);
       setBulkPreviews([]);
       fetchProducts();
@@ -662,7 +634,7 @@ export default function AdminDashboardComponent() {
       console.error('Error during bulk catalog upload:', err);
       let errMsg = err.response?.data?.message || err.response?.data?.error || err.message;
       if (errMsg === 'API route not found' || err.message?.includes('404')) {
-        errMsg = '⚡ Backend API deployment in progress on Render. Please wait 30 seconds and click Upload again!';
+        errMsg = 'âš¡ Backend API deployment in progress on Render. Please wait 30 seconds and click Upload again!';
       } else if (!errMsg) {
         errMsg = 'Upload request error: ' + (err.toString ? err.toString() : 'Network error');
       }
@@ -821,22 +793,22 @@ export default function AdminDashboardComponent() {
       const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
       
       const advance = Math.round(priceVal / 2);
-      const priceMsg = `🏠 LD Interiors: Sizing & Pricing Finalized! / ఆర్డర్ ధర ఖరారు చేయబడింది
+      const priceMsg = `ðŸ�  LD Interiors: Sizing & Pricing Finalized! / à°†à°°à±�à°¡à°°à±� à°§à°° à°–à°°à°¾à°°à±� à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿
 
-Dear Mr./Ms. ${activePricingOrder.name} గారికి, 🙏
+Dear Mr./Ms. ${activePricingOrder.name} à°—à°¾à°°à°¿à°•à°¿, ðŸ™�
 
 Nagaraju here. We have finalized the sizing and contract price for your custom design order of "${activePricingOrder.product}":
 
-💵 Final Agreed Price: ₹${priceVal.toLocaleString('en-IN')}
-💰 50% Booking Advance: ₹${advance.toLocaleString('en-IN')}
+ðŸ’µ Final Agreed Price: â‚¹${priceVal.toLocaleString('en-IN')}
+ðŸ’° 50% Booking Advance: â‚¹${advance.toLocaleString('en-IN')}
 
 To begin crafting your custom design at our Alamuru workshop, please pay the 50% advance or full price:
-👉 Pay here: https://www.ldinteriors.in/orders
+ðŸ‘‰ Pay here: https://www.ldinteriors.in/orders
 
 Warm regards,
 Nagaraju (Owner)
 LD Interiors & Furnitures
-📞 +91 93463 25291`;
+ðŸ“ž +91 93463 25291`;
 
       const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(priceMsg)}`;
       window.open(waUrl, '_blank');
@@ -903,22 +875,22 @@ LD Interiors & Furnitures
       ? new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
       : 'tomorrow';
       
-    const deliveryMsg = `🚚 LD Interiors: Delivery Schedule & Balance Statement / డెలివరీ సమాచారం
+    const deliveryMsg = `ðŸšš LD Interiors: Delivery Schedule & Balance Statement / à°¡à±†à°²à°¿à°µà°°à±€ à°¸à°®à°¾à°šà°¾à°°à°‚
 
-Dear Mr./Ms. ${o.name} గారికి, 🙏
+Dear Mr./Ms. ${o.name} à°—à°¾à°°à°¿à°•à°¿, ðŸ™�
 
 Nagaraju here. Your custom furniture "${o.product}" is scheduled for delivery on ${dateStr}!
 
-⚖️ Outstanding Balance: ₹${o.remainingBalance.toLocaleString('en-IN')}
-📦 Carrier tracking ID (${o.carrier || 'Xpressbees'}): ${o.trackingNumber || 'Self-Transport'}
+âš–ï¸� Outstanding Balance: â‚¹${o.remainingBalance.toLocaleString('en-IN')}
+ðŸ“¦ Carrier tracking ID (${o.carrier || 'Xpressbees'}): ${o.trackingNumber || 'Self-Transport'}
 
 You can pay the remaining balance online before delivery, or pay cash/UPI directly during installation:
-👉 Pay online: https://www.ldinteriors.in/orders
+ðŸ‘‰ Pay online: https://www.ldinteriors.in/orders
 
-We are excited to deliver your premium furniture! ❤️
+We are excited to deliver your premium furniture! â�¤ï¸�
 
 LD Interiors & Furnitures
-📞 +91 93463 25291`;
+ðŸ“ž +91 93463 25291`;
 
     window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(deliveryMsg)}`, '_blank');
   };
@@ -979,7 +951,7 @@ LD Interiors & Furnitures
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
@@ -993,7 +965,7 @@ LD Interiors & Furnitures
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
@@ -1143,7 +1115,7 @@ LD Interiors & Furnitures
                       : 'bg-sky-50 text-[#008DDA] border-sky-200 hover:bg-sky-100'
                   }`}
                 >
-                  {isBulkMode ? 'Single Mode' : '📦 Bulk Mode'}
+                  {isBulkMode ? 'Single Mode' : 'ðŸ“¦ Bulk Mode'}
                 </button>
               )}
             </div>
@@ -1160,7 +1132,7 @@ LD Interiors & Furnitures
                     className="w-full rounded-xl border border-[#008DDA] bg-sky-50/50 px-4 py-2.5 text-sm focus:border-[#008DDA] focus:outline-none transition-colors text-slate-900 cursor-pointer font-bold"
                   >
                     <option value="AI_AUTO_DETECT" className="font-bold text-[#008DDA]">
-                      🧠 AI Auto-Detect (Auto-Sort Mixed Categories)
+                      ðŸ§  AI Auto-Detect (Auto-Sort Mixed Categories)
                     </option>
                     {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
                       <option key={cat} value={cat}>
@@ -1185,7 +1157,7 @@ LD Interiors & Furnitures
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-1.5">
-                    Default Price (₹ INR) - Optional
+                    Default Price (â‚¹ INR) - Optional
                   </label>
                   <input
                     type="number"
@@ -1212,8 +1184,8 @@ LD Interiors & Furnitures
                     <Upload className="h-9 w-9 text-[#008DDA] mb-2 group-hover:scale-110 transition-transform" />
                     <p className="text-xs font-black text-slate-900">
                       {bulkFiles.length > 0
-                        ? `✅ ${bulkFiles.length} Photos Selected`
-                        : '📁 Click anywhere here to choose batch photos'}
+                        ? `âœ… ${bulkFiles.length} Photos Selected`
+                        : 'ðŸ“� Click anywhere here to choose batch photos'}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-1">
                       {bulkFiles.length > 0
@@ -1275,7 +1247,7 @@ LD Interiors & Furnitures
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      <span>🚀 Upload {bulkFiles.length || 'Batch'} Designs in 1-Click</span>
+                      <span>ðŸš€ Upload {bulkFiles.length || 'Batch'} Designs in 1-Click</span>
                     </>
                   )}
                 </button>
@@ -1324,7 +1296,7 @@ LD Interiors & Furnitures
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                    Price (₹ INR) - Optional
+                    Price (â‚¹ INR) - Optional
                   </label>
                   <input
                     type="number"
@@ -1344,11 +1316,11 @@ LD Interiors & Furnitures
                     onChange={(e) => setRating(e.target.value)}
                     className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-sm focus:border-wood-accent focus:outline-none transition-colors text-wood-dark cursor-pointer"
                   >
-                    <option value="5">★★★★★ 5 Stars (Excellent)</option>
-                    <option value="4">★★★★☆ 4 Stars (Very Good)</option>
-                    <option value="3">★★★☆☆ 3 Stars (Good)</option>
-                    <option value="2">★★☆☆☆ 2 Stars (Average)</option>
-                    <option value="1">★☆☆☆☆ 1 Star (Poor)</option>
+                    <option value="5">â˜…â˜…â˜…â˜…â˜… 5 Stars (Excellent)</option>
+                    <option value="4">â˜…â˜…â˜…â˜…â˜† 4 Stars (Very Good)</option>
+                    <option value="3">â˜…â˜…â˜…â˜†â˜† 3 Stars (Good)</option>
+                    <option value="2">â˜…â˜…â˜†â˜†â˜† 2 Stars (Average)</option>
+                    <option value="1">â˜…â˜†â˜†â˜†â˜† 1 Star (Poor)</option>
                   </select>
                 </div>
 
@@ -1616,7 +1588,7 @@ LD Interiors & Furnitures
                           </span>
                         </td>
                         <td className="py-4 px-6 text-wood-dark font-semibold text-xs">
-                          {p.price && p.price > 0 ? `₹${p.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+                          {p.price && p.price > 0 ? `â‚¹${p.price.toLocaleString('en-IN')}` : 'Contact for Price'}
                         </td>
                         <td className="py-4 px-6 text-wood-light font-light text-xs">
                           {new Date(p.createdAt).toLocaleDateString('en-US', {
@@ -1684,7 +1656,7 @@ LD Interiors & Furnitures
                   }}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm rounded-xl"
                 >
-                  ⚡ Send WhatsApp & Email
+                  âš¡ Send WhatsApp & Email
                 </button>
               </div>
             </div>
@@ -1765,18 +1737,18 @@ LD Interiors & Furnitures
                           <div className="flex flex-col gap-1 text-xs">
                             {o.totalPrice && o.totalPrice > 0 ? (
                               <div className="space-y-0.5 text-left font-semibold text-[11px]">
-                                <p className="text-wood-dark">Cost: ₹{o.totalPrice.toLocaleString('en-IN')}</p>
-                                <p className="text-emerald-700">Paid: ₹{o.paidAmount.toLocaleString('en-IN')}</p>
-                                <p className="text-red-650">Bal: ₹{o.remainingBalance.toLocaleString('en-IN')}</p>
+                                <p className="text-wood-dark">Cost: â‚¹{o.totalPrice.toLocaleString('en-IN')}</p>
+                                <p className="text-emerald-700">Paid: â‚¹{o.paidAmount.toLocaleString('en-IN')}</p>
+                                <p className="text-red-650">Bal: â‚¹{o.remainingBalance.toLocaleString('en-IN')}</p>
                                 
                                 {o.payments && o.payments.length > 0 && (
                                   <div className="mt-1 pt-1 border-t border-slate-200 text-[9px] font-mono text-slate-600 space-y-0.5">
                                     <p className="font-bold text-slate-800 uppercase tracking-widest text-[8px]">Latest Payment Txn:</p>
                                     {o.payments.slice(-1).map((p, pIdx) => (
                                       <div key={pIdx} className="bg-slate-50 p-1 rounded border border-slate-200">
-                                        <p>₹{p.amount?.toLocaleString('en-IN')} via {p.paymentMethod || 'UPI'}</p>
+                                        <p>â‚¹{p.amount?.toLocaleString('en-IN')} via {p.paymentMethod || 'UPI'}</p>
                                         <p className="text-slate-400 font-sans text-[8px]">
-                                          📅 {new Date(p.createdAt || Date.now()).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                                          ðŸ“… {new Date(p.createdAt || Date.now()).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
                                         </p>
                                         {p.utr && <p className="truncate text-red-600">UTR: {p.utr}</p>}
                                       </div>
@@ -1808,14 +1780,14 @@ LD Interiors & Furnitures
                                   const cleanPhone = o.phone.replace(/\D/g, '');
                                   const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
                                   const payUrl = `https://www.ldinteriors.in/orders?payOrderId=${o._id}`;
-                                  const msg = `Hello ${o.name} garu,\nYour custom quote for "${o.product}" is ₹${o.totalPrice.toLocaleString('en-IN')}.\n\nYou can select 50% Advance (₹${Math.round(o.totalPrice * 0.5).toLocaleString('en-IN')}) or 100% Full Payment & complete your booking online here:\n👉 ${payUrl}\n\nThank you,\nLD Interiors & Furnitures`;
+                                  const msg = `Hello ${o.name} garu,\nYour custom quote for "${o.product}" is â‚¹${o.totalPrice.toLocaleString('en-IN')}.\n\nYou can select 50% Advance (â‚¹${Math.round(o.totalPrice * 0.5).toLocaleString('en-IN')}) or 100% Full Payment & complete your booking online here:\nðŸ‘‰ ${payUrl}\n\nThank you,\nLD Interiors & Furnitures`;
                                   navigator.clipboard.writeText(payUrl);
                                   window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
                                   alert(`Payment Link generated and copied!\nOpening WhatsApp for ${o.name}...`);
                                 }}
                                 className="inline-flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-emerald-500/20 active:scale-95 w-full text-center mt-1"
                               >
-                                <span>🔗 Send Payment Link</span>
+                                <span>ðŸ”— Send Payment Link</span>
                               </button>
                             )}
                           </div>
@@ -1828,7 +1800,7 @@ LD Interiors & Furnitures
                                 <p><strong>Carrier:</strong> {o.carrier || 'Xpressbees'}</p>
                                 <p className="truncate"><strong>Waybill:</strong> {o.trackingNumber}</p>
                                 {o.deliveryDate && (
-                                  <p className="font-bold text-emerald-800">📅 {new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                                  <p className="font-bold text-emerald-800">ðŸ“… {new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
                                 )}
                               </div>
                             ) : (
@@ -1855,7 +1827,7 @@ LD Interiors & Furnitures
                                 onClick={() => handleSendBalanceReminder(o)}
                                 className="inline-flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-emerald-500/20 w-full text-center mt-1 active:scale-95"
                               >
-                                🔔 Remind Balance
+                                ðŸ”” Remind Balance
                               </button>
                             )}
                           </div>
@@ -1930,7 +1902,7 @@ LD Interiors & Furnitures
               <div className="p-4 mx-6 my-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800 animate-fadeIn">
               <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <strong>⚠️ IMPORTANT VERIFICATION NOTICE FOR NAGARAJU / PAVANSAI:</strong> Please verify the transaction details inside your PhonePe / GPay app statement <strong>before</strong> clicking <strong>Approve</strong>.
+                <strong>âš ï¸� IMPORTANT VERIFICATION NOTICE FOR NAGARAJU / PAVANSAI:</strong> Please verify the transaction details inside your PhonePe / GPay app statement <strong>before</strong> clicking <strong>Approve</strong>.
               </div>
             </div>
 
@@ -1942,7 +1914,7 @@ LD Interiors & Furnitures
                     <th className="py-4 px-6">Product</th>
                     <th className="py-4 px-6">Log Type</th>
                     <th className="py-4 px-6">Claimed Amount</th>
-                    <th className="py-4 px-6">Actual Recd (₹)</th>
+                    <th className="py-4 px-6">Actual Recd (â‚¹)</th>
                     <th className="py-4 px-6">UPI Gateway</th>
                     <th className="py-4 px-6">Date</th>
                     <th className="py-4 px-6 text-right">Verification Action</th>
@@ -1972,7 +1944,7 @@ LD Interiors & Furnitures
                           </span>
                         </td>
                         <td className="py-4 px-6 font-bold text-neutral-600 text-xs">
-                          ₹{p.amount.toLocaleString('en-IN')}
+                          â‚¹{p.amount.toLocaleString('en-IN')}
                         </td>
                         <td className="py-4 px-6">
                           <input
@@ -2165,7 +2137,7 @@ LD Interiors & Furnitures
 
               <div>
                 <label className="block text-[9.5px] font-bold uppercase tracking-wider text-wood-accent mb-1.5">
-                  Final Agreed Deal Price (₹)
+                  Final Agreed Deal Price (â‚¹)
                 </label>
                 <input
                   type="number"
