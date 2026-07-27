@@ -108,7 +108,30 @@ Thank you,
     } catch (e) {
       console.warn('Cache read error:', e);
     }
+  }, []);
 
+  // Helper: Smart Fuzzy Category Synonym Match
+  const isCategoryMatch = (productCat, selectedCat) => {
+    if (!selectedCat || selectedCat === "All") return true;
+    if (!productCat) return false;
+
+    const pCat = productCat.toString().trim().toLowerCase();
+    const sCat = selectedCat.toString().trim().toLowerCase();
+
+    if (pCat === sCat) return true;
+    if (pCat.includes(sCat) || sCat.includes(pCat)) return true;
+
+    // Synonyms & Teakwood Category Mappings
+    if ((sCat === 'gummalu' || sCat === 'doors') && (pCat === 'gummalu' || pCat === 'doors' || pCat.includes('door'))) return true;
+    if ((sCat.includes('mandir') || sCat.includes('puja')) && (pCat.includes('mandir') || pCat.includes('puja') || pCat.includes('temple'))) return true;
+    if ((sCat.includes('bed') || sCat.includes('bedroom')) && (pCat.includes('bed') || pCat.includes('cot') || pCat.includes('mattress'))) return true;
+    if ((sCat.includes('sofa') || sCat.includes('living')) && (pCat.includes('sofa') || pCat.includes('living') || pCat.includes('couch'))) return true;
+    if ((sCat.includes('table') || sCat.includes('dining')) && (pCat.includes('table') || pCat.includes('dining') || pCat.includes('chair'))) return true;
+
+    return false;
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const [prodRes, catRes] = await Promise.allSettled([
@@ -117,33 +140,26 @@ Thank you,
         ]);
 
         let fetchedProducts = [];
-        if (prodRes.status === 'fulfilled') {
+        if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data)) {
           fetchedProducts = prodRes.value.data;
           setProducts(fetchedProducts);
-          try {
-            sessionStorage.setItem('ld_cached_products', JSON.stringify(fetchedProducts));
-          } catch (e) {}
-        } else if (initialProducts.length === 0) {
-          setError('Could not connect to the API. Please make sure the backend is running.');
+        } else {
+          setError('Could not fetch products. Please try again.');
         }
 
         let catList = DEFAULT_CATEGORIES;
         if (catRes.status === 'fulfilled' && Array.isArray(catRes.value.data)) {
           catList = catRes.value.data.map(c => c.name);
-          try {
-            sessionStorage.setItem('ld_cached_categories', JSON.stringify(catList));
-          } catch (e) {}
         }
 
         const fullCatList = ["All", ...new Set([...catList])];
         setCategories(fullCatList);
 
-        // Read category and search query parameters from URL
+        // Read URL params
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('category') || 'All';
         const searchParam = params.get('search') || '';
         
-        // Find match in categories list (case-insensitive)
         const matchedCategory = fullCatList.find(
           c => c.toLowerCase() === catParam.toLowerCase()
         ) || 'All';
@@ -152,20 +168,6 @@ Thank you,
         if (searchParam) {
           setSearchQuery(searchParam);
         }
-
-        let filtered = fetchedProducts;
-        if (matchedCategory !== "All") {
-          filtered = filtered.filter(
-            p => p.category && p.category.toLowerCase() === matchedCategory.toLowerCase()
-          );
-        }
-        if (searchParam.trim() !== "") {
-          filtered = filtered.filter(
-            p => p.title?.toLowerCase().includes(searchParam.toLowerCase()) ||
-                 p.category?.toLowerCase().includes(searchParam.toLowerCase())
-          );
-        }
-        setFilteredProducts(filtered);
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -176,26 +178,23 @@ Thank you,
     fetchData();
   }, []);
 
-  const filterProducts = (category, search) => {
-    let filtered = products;
+  // Reactive auto-filtering effect when products, selectedCategory, or searchQuery updates
+  useEffect(() => {
+    let filtered = products.filter(p => isCategoryMatch(p.category, selectedCategory));
 
-    if (category !== "All") {
-      filtered = filtered.filter(p => p.category.toLowerCase() === category.toLowerCase());
-    }
-
-    if (search.trim() !== "") {
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
-        p.title.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase())
+        p.title?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q)
       );
     }
 
     setFilteredProducts(filtered);
-  };
+  }, [products, selectedCategory, searchQuery]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    filterProducts(category, searchQuery);
 
     // Update URL query parameters dynamically without forcing page reload
     if (typeof window !== 'undefined') {
@@ -210,9 +209,7 @@ Thank you,
   };
 
   const handleSearchChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    filterProducts(selectedCategory, query);
+    setSearchQuery(e.target.value);
   };
 
   const handleCopyLink = () => {

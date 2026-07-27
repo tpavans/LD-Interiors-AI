@@ -42,14 +42,57 @@ export default function ReelsPage() {
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0`;
   };
 
+  const DEFAULT_WORKSHOP_REELS = [
+    {
+      _id: "reel_door_1",
+      title: "Hand-Carved Burma Teak Main Door Crafting",
+      category: "Gummalu / Doors",
+      image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+      video: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      price: 45000,
+    },
+    {
+      _id: "reel_mandir_1",
+      title: "Teak Wood Royal Temple Hand Carving Showcase",
+      category: "Puja Mandiralu",
+      image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
+      video: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      price: 38000,
+    },
+    {
+      _id: "reel_bed_1",
+      title: "Luxury King Size Teakwood Bed Polish Process",
+      category: "Wooden Beds",
+      image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
+      video: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      price: 52000,
+    },
+    {
+      _id: "reel_sofa_1",
+      title: "Chesterfield Teak Sofa Set Workshop Finish",
+      category: "Living Room",
+      image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+      video: "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      price: 65000,
+    }
+  ];
+
   useEffect(() => {
     const fetchReels = async () => {
       try {
         const response = await api.get('/products');
-        const videoProducts = response.data.filter(p => p.video);
-        setProducts(videoProducts);
+        let videoProducts = [];
+        if (Array.isArray(response.data)) {
+          videoProducts = response.data.filter(p => p.video && p.video.trim() !== '');
+        }
+        if (videoProducts.length === 0) {
+          setProducts(DEFAULT_WORKSHOP_REELS);
+        } else {
+          setProducts(videoProducts);
+        }
       } catch (err) {
         console.error('Error fetching reels:', err);
+        setProducts(DEFAULT_WORKSHOP_REELS);
       } finally {
         setLoading(false);
       }
