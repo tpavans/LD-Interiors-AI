@@ -2108,14 +2108,6 @@ LD Interiors & Furnitures
                               <span>Waybill Slip</span>
                             </button>
 
-                            <button
-                              onClick={() => setActiveInvoiceOrder(o)}
-                              className="inline-flex items-center justify-center gap-1 rounded bg-slate-900 hover:bg-slate-800 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-slate-700 w-full text-center mt-1"
-                            >
-                              <Printer className="h-3 w-3 text-amber-400" />
-                              <span>GST Invoice</span>
-                            </button>
-
                             {o.remainingBalance > 0 && o.trackingNumber && (
                               <button
                                 onClick={() => handleSendBalanceReminder(o)}

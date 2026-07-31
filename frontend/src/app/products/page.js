@@ -306,14 +306,6 @@ export default function ProductsPage() {
           </button>
 
           <button
-            onClick={() => setShowPackagesPlanner(prev => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
-          >
-            <Home className="h-3.5 w-3.5 text-amber-400" />
-            <span>🏡 Whole-Home Teak Packages</span>
-          </button>
-
-          <button
             onClick={() => setShowWorkshopBooking(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
           >
@@ -337,13 +329,6 @@ export default function ProductsPage() {
       {showBuildStudio && (
         <div className="mb-12">
           <CustomBuildStudio onClose={() => setShowBuildStudio(false)} />
-        </div>
-      )}
-
-      {/* Conditionally Render Home Packages Planner Inline Section */}
-      {showPackagesPlanner && (
-        <div className="mb-12">
-          <HomePackagesPlanner onClose={() => setShowPackagesPlanner(false)} />
         </div>
       )}
 
