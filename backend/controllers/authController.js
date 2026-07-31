@@ -3,30 +3,81 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const twilio = require('twilio');
 
-// Helper function to generate JWT
+// Brute-force protection memory store: 5 failed attempts = 15 minute lockout
+const failedLoginTracker = new Map();
+
+const getClientIp = (req) => {
+  const xForwardedFor = req.headers['x-forwarded-for'];
+  if (xForwardedFor) {
+    return xForwardedFor.split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || '127.0.0.1';
+};
+
+const checkBruteForceLockout = (clientIp) => {
+  const record = failedLoginTracker.get(clientIp);
+  if (!record) return { locked: false };
+
+  const now = Date.now();
+  if (now > record.lockoutExpires) {
+    failedLoginTracker.delete(clientIp);
+    return { locked: false };
+  }
+
+  if (record.attempts >= 5) {
+    const remainingMins = Math.ceil((record.lockoutExpires - now) / (60 * 1000));
+    return { locked: true, remainingMins };
+  }
+
+  return { locked: false };
+};
+
+const recordFailedAttempt = (clientIp) => {
+  const now = Date.now();
+  const record = failedLoginTracker.get(clientIp) || { attempts: 0, lockoutExpires: now + 15 * 60 * 1000 };
+  record.attempts += 1;
+  record.lockoutExpires = now + 15 * 60 * 1000;
+  failedLoginTracker.set(clientIp, record);
+  return record.attempts;
+};
+
+const clearFailedAttempts = (clientIp) => {
+  failedLoginTracker.delete(clientIp);
+};
+
+// Helper function to generate short-lived secure JWT (12 hours)
 const generateToken = (id) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error('JWT_SECRET is missing from environmental variables.');
   }
-  return jwt.sign({ id }, secret, { expiresIn: '30d' });
+  return jwt.sign({ id }, secret, { expiresIn: '12h' });
 };
 
 /**
- * @desc    Authenticate admin and retrieve token
+ * @desc    Authenticate admin and retrieve token (with Brute-Force Rate Limiting & Audit Logging)
  * @route   POST /api/auth/login
  * @access  Public
  */
 const loginUser = async (req, res) => {
-  console.log('--- ADMIN LOGIN ATTEMPT ---');
-  console.log('Received login request for email:', req.body?.email);
+  const clientIp = getClientIp(req);
+  console.log(`[SECURITY AUDIT] Login attempt from IP: ${clientIp} for account: ${req.body?.email || 'N/A'}`);
+
+  // 0. Check Brute-Force Lockout State
+  const lockoutStatus = checkBruteForceLockout(clientIp);
+  if (lockoutStatus.locked) {
+    console.warn(`[SECURITY ALERT] IP ${clientIp} blocked due to brute-force lockout. Remaining: ${lockoutStatus.remainingMins} mins.`);
+    return res.status(429).json({
+      message: `🔒 Security Lockout: Too many failed login attempts from this IP. Account access is temporarily locked for ${lockoutStatus.remainingMins} minutes to prevent unauthorized access.`
+    });
+  }
 
   try {
     const { email, password } = req.body;
 
     // 1. Validate input presence
     if (!email || !password) {
-      console.warn('LOGIN VALIDATION WARNING: Missing email or password parameter.');
+      console.warn(`[SECURITY WARNING] Missing email or password parameter from IP: ${clientIp}`);
       return res.status(400).json({
         message: 'Please provide email and password'
       });
@@ -34,7 +85,7 @@ const loginUser = async (req, res) => {
 
     // 2. Verify JWT_SECRET is loaded
     if (!process.env.JWT_SECRET) {
-      console.error('LOGIN CONFIG ERROR: JWT_SECRET environment variable is missing.');
+      console.error('[SECURITY ERROR] JWT_SECRET environment variable is missing.');
       return res.status(500).json({
         message: 'Server configuration error: JWT_SECRET is not defined.'
       });
@@ -42,19 +93,20 @@ const loginUser = async (req, res) => {
 
     // 3. Verify Database Connection State
     if (mongoose.connection.readyState !== 1) {
-      console.error(`LOGIN CONNECTION ERROR: Database is not connected (readyState = ${mongoose.connection.readyState}).`);
+      console.error(`[SECURITY ERROR] Database is not connected (readyState = ${mongoose.connection.readyState}).`);
       return res.status(500).json({
-        message: 'Database connection is offline. One common reason is that your local IP address is not whitelisted on MongoDB Atlas. Please update your cluster security settings or start local MongoDB.'
+        message: 'Database connection is offline. Please verify database availability.'
       });
     }
 
-    // 4. Query user collection (Real MongoDB flow)
+    // 4. Query user collection
     const user = await User.findOne({ email });
 
     if (!user) {
-      console.warn(`LOGIN AUTHENTICATION FAILED: User "${email}" was not found.`);
-      return res.status(404).json({
-        message: 'User not found'
+      const attempts = recordFailedAttempt(clientIp);
+      console.warn(`[SECURITY FAIL] User not found for email "${email}" from IP: ${clientIp}. Failed attempts: ${attempts}/5`);
+      return res.status(401).json({
+        message: 'Invalid email or password'
       });
     }
 
@@ -63,35 +115,37 @@ const loginUser = async (req, res) => {
     try {
       isMatch = await user.matchPassword(password);
     } catch (bcryptErr) {
-      console.error('LOGIN BCRYPT ERROR: Password matching failed with exception:', bcryptErr);
+      console.error('[SECURITY ERROR] Password matching failed with exception:', bcryptErr);
       return res.status(500).json({
         message: 'Error verifying credentials: password comparison failed.',
-        error: bcryptErr.message,
-        stack: bcryptErr.stack
+        error: bcryptErr.message
       });
     }
 
     if (!isMatch) {
-      console.warn(`LOGIN AUTHENTICATION FAILED: Password mismatch for user "${email}".`);
+      const attempts = recordFailedAttempt(clientIp);
+      console.warn(`[SECURITY FAIL] Password mismatch for user "${email}" from IP: ${clientIp}. Failed attempts: ${attempts}/5`);
       return res.status(401).json({
         message: 'Invalid email or password'
       });
     }
+
+    // Clear failed attempts counter on successful password match
+    clearFailedAttempts(clientIp);
 
     // 6. Sign and return token
     let token;
     try {
       token = generateToken(user._id);
     } catch (jwtErr) {
-      console.error('LOGIN JWT ERROR: Token generation failed:', jwtErr);
+      console.error('[SECURITY ERROR] Token generation failed:', jwtErr);
       return res.status(500).json({
         message: 'Server token signing failed.',
-        error: jwtErr.message,
-        stack: jwtErr.stack
+        error: jwtErr.message
       });
     }
 
-    console.log(`LOGIN SUCCESS: Session authorized for admin "${email}".`);
+    console.log(`[SECURITY SUCCESS] Session authorized for admin "${email}" from IP: ${clientIp}`);
     return res.status(200).json({
       _id: user._id,
       name: user.name,
@@ -101,12 +155,10 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('LOGIN UNEXPECTED EXCEPTION:', error);
-    console.error(error.stack);
+    console.error('[SECURITY ERROR] Login exception:', error);
     return res.status(500).json({
       message: 'An unexpected internal server error occurred.',
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
   }
 };
