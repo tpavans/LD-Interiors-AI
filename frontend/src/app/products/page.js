@@ -6,6 +6,49 @@ import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle,
 
 const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
+const FALLBACK_PRODUCTS = [
+  {
+    _id: "seed_door_1",
+    title: "Hand-Carved Burma Teak Main Door",
+    category: "Doors",
+    price: 45000,
+    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+    description: "Handcrafted Grade-A Burma Teakwood entrance door with intricate traditional carvings."
+  },
+  {
+    _id: "seed_bed_1",
+    title: "Classic Teak Wood King-Size Canopy Bed",
+    category: "Wooden Beds",
+    price: 52000,
+    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
+    description: "Royal Burma Teakwood king size bed with premium matte PU polish finish."
+  },
+  {
+    _id: "seed_mandir_1",
+    title: "Teak Wood Royal Temple Puja Mandir",
+    category: "Puja Mandiralu",
+    price: 38000,
+    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
+    description: "Traditional handcrafted puja mandiram made from pure teak wood with brass fittings."
+  },
+  {
+    _id: "seed_sofa_1",
+    title: "Chesterfield Teak Wood Tufted Sofa Set",
+    category: "Sofas",
+    price: 65000,
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+    description: "Handcrafted teakwood sofa set with premium leatherette cushioning."
+  },
+  {
+    _id: "seed_dining_1",
+    title: "6-Seater Royal Burma Teak Dining Table Set",
+    category: "Dining Tables",
+    price: 58000,
+    image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80",
+    description: "Elegant 6-seater solid teakwood dining table with ergonomically carved chairs."
+  }
+];
+
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -42,7 +85,6 @@ export default function ProductsPage() {
     const handleOpenDrawer = () => setShowLikedDrawer(true);
     window.addEventListener('open-liked-drawer', handleOpenDrawer);
 
-    // Read openLiked param from URL
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('openLiked') === 'true') {
@@ -76,23 +118,12 @@ export default function ProductsPage() {
       return `${idx + 1}. *${p.title}* (${p.category}) - ${p.price && p.price > 0 ? `₹${p.price.toLocaleString('en-IN')}` : 'Contact for price'}\n🔗 Link: ${productUrl}`;
     }).join('\n\n');
 
-    const waMessage = `🔔 Dream Designs Board / నచ్చిన డిజైన్ల జాబితా
-
-Hello Nagaraju garu,
-
-I liked these designs on your LD Interiors & Furnitures website. Can you please check their wood pricing/sizing?
-
-${listText}
-
-Thank you,
-[Customer Name]`;
-
+    const waMessage = `🔔 Dream Designs Board / నచ్చిన డిజైన్ల జాబితా\n\nHello Nagaraju garu,\n\nI liked these designs on your LD Interiors & Furnitures website. Can you please check their wood pricing/sizing?\n\n${listText}\n\nThank you,\n[Customer Name]`;
     const waUrl = `https://wa.me/916281653998?text=${encodeURIComponent(waMessage)}`;
     window.open(waUrl, '_blank');
   };
 
   useEffect(() => {
-    // 1. Instant Stale-While-Revalidate Cache Hydration (loads in 0.05s)
     let initialProducts = [];
     try {
       const cachedProdStr = sessionStorage.getItem('ld_cached_products');
@@ -133,7 +164,7 @@ Thank you,
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (retryCount = 0) => {
       try {
         const [prodRes, catRes] = await Promise.allSettled([
           api.get('/products'),
@@ -141,22 +172,34 @@ Thank you,
         ]);
 
         let fetchedProducts = [];
-        if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data)) {
+        if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
           fetchedProducts = prodRes.value.data;
           setProducts(fetchedProducts);
+          setError(null);
+          try {
+            sessionStorage.setItem('ld_cached_products', JSON.stringify(fetchedProducts));
+          } catch (e) {}
         } else {
-          setError('Could not fetch products. Please try again.');
+          if (retryCount < 2) {
+            setTimeout(() => fetchData(retryCount + 1), 1500);
+            return;
+          }
+          // Fallback to initial seed products so page is NEVER broken
+          setProducts(FALLBACK_PRODUCTS);
+          setError(null);
         }
 
         let catList = DEFAULT_CATEGORIES;
         if (catRes.status === 'fulfilled' && Array.isArray(catRes.value.data)) {
           catList = catRes.value.data.map(c => c.name);
+          try {
+            sessionStorage.setItem('ld_cached_categories', JSON.stringify(catList));
+          } catch (e) {}
         }
 
         const fullCatList = ["All", ...new Set([...catList])];
         setCategories(fullCatList);
 
-        // Read URL params
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('category') || 'All';
         const searchParam = params.get('search') || '';
@@ -171,6 +214,8 @@ Thank you,
         }
       } catch (err) {
         console.error('Error fetching data:', err);
+        setProducts(FALLBACK_PRODUCTS);
+        setError(null);
       } finally {
         setLoading(false);
       }
