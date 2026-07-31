@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const phonepeRoutes = require('./routes/phonepeRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Global exception and rejection loggers
 process.on('uncaughtException', (err) => {
@@ -23,30 +24,24 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Helper to check and terminate processes occupying the specified port
-const killPortProcess = (port) => {
+const freePort = (port) => {
   try {
-    console.log(`Scanning for processes occupying port ${port}...`);
-    if (process.platform === 'win32') {
-      // Find PID occupying the port on Windows
+    const isWindows = process.platform === 'win32';
+    if (isWindows) {
+      // Find and kill PID on Windows
       const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
-      const lines = stdout.split('\n');
-      const pids = new Set();
+      const lines = stdout.split('\n').filter(Boolean);
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
-        if (parts.length >= 5) {
-          const pid = parts[parts.length - 1];
-          if (pid && pid !== '0' && !isNaN(pid)) {
-            pids.add(pid);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== '0') {
+          console.log(`Force killing conflicting process with PID ${pid} occupying port ${port}...`);
+          try {
+            execSync(`taskkill /F /PID ${pid}`);
+            console.log(`Successfully terminated process ${pid}.`);
+          } catch (e) {
+            console.error(`Failed to terminate process ${pid}:`, e.message);
           }
-        }
-      }
-      for (const pid of pids) {
-        console.log(`Force killing conflicting process with PID ${pid} occupying port ${port}...`);
-        try {
-          execSync(`taskkill /F /PID ${pid}`);
-          console.log(`Successfully terminated process ${pid}.`);
-        } catch (e) {
-          console.error(`Failed to terminate process ${pid}:`, e.message);
         }
       }
     } else {
@@ -118,6 +113,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/phonepe', phonepeRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Fallback path for undefined routes
 app.use((req, res, next) => {
