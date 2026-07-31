@@ -793,22 +793,22 @@ export default function AdminDashboardComponent() {
       const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
       
       const advance = Math.round(priceVal / 2);
-      const priceMsg = `ðŸ�  LD Interiors: Sizing & Pricing Finalized! / à°†à°°à±�à°¡à°°à±� à°§à°° à°–à°°à°¾à°°à±� à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿
+      const priceMsg = `🏠 LD Interiors: Sizing & Pricing Finalized! / ఆర్డర్ ధర ఖరారు చేయబడింది
 
-Dear Mr./Ms. ${activePricingOrder.name} à°—à°¾à°°à°¿à°•à°¿, ðŸ™�
+Dear Mr./Ms. ${activePricingOrder.name} గారికి, 🙏
 
 Nagaraju here. We have finalized the sizing and contract price for your custom design order of "${activePricingOrder.product}":
 
-ðŸ’µ Final Agreed Price: â‚¹${priceVal.toLocaleString('en-IN')}
-ðŸ’° 50% Booking Advance: â‚¹${advance.toLocaleString('en-IN')}
+💵 Final Agreed Price: ₹${priceVal.toLocaleString('en-IN')}
+💰 50% Booking Advance: ₹${advance.toLocaleString('en-IN')}
 
 To begin crafting your custom design at our Alamuru workshop, please pay the 50% advance or full price:
-ðŸ‘‰ Pay here: https://www.ldinteriors.in/orders
+👉 Pay here: https://www.ldinteriors.in/orders
 
 Warm regards,
 Nagaraju (Owner)
 LD Interiors & Furnitures
-ðŸ“ž +91 93463 25291`;
+📞 +91 93463 25291`;
 
       const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(priceMsg)}`;
       window.open(waUrl, '_blank');
@@ -875,9 +875,9 @@ LD Interiors & Furnitures
       ? new Date(o.deliveryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
       : 'tomorrow';
       
-    const deliveryMsg = `ðŸšš LD Interiors: Delivery Schedule & Balance Statement / à°¡à±†à°²à°¿à°µà°°à±€ à°¸à°®à°¾à°šà°¾à°°à°‚
+    const deliveryMsg = `🚚 LD Interiors: Delivery Schedule & Balance Statement / డెలివరీ సమాచారం
 
-Dear Mr./Ms. ${o.name} à°—à°¾à°°à°¿à°•à°¿, ðŸ™�
+Dear Mr./Ms. ${o.name} గారికి, 🙏
 
 Nagaraju here. Your custom furniture "${o.product}" is scheduled for delivery on ${dateStr}!
 
@@ -1115,7 +1115,7 @@ LD Interiors & Furnitures
                       : 'bg-sky-50 text-[#008DDA] border-sky-200 hover:bg-sky-100'
                   }`}
                 >
-                  {isBulkMode ? 'Single Mode' : 'ðŸ“¦ Bulk Mode'}
+                  {isBulkMode ? 'Single Mode' : '📦 Bulk Mode'}
                 </button>
               )}
             </div>
@@ -1132,7 +1132,7 @@ LD Interiors & Furnitures
                     className="w-full rounded-xl border border-[#008DDA] bg-sky-50/50 px-4 py-2.5 text-sm focus:border-[#008DDA] focus:outline-none transition-colors text-slate-900 cursor-pointer font-bold"
                   >
                     <option value="AI_AUTO_DETECT" className="font-bold text-[#008DDA]">
-                      ðŸ§  AI Auto-Detect (Auto-Sort Mixed Categories)
+                      🧠 AI Auto-Detect (Auto-Sort Mixed Categories)
                     </option>
                     {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
                       <option key={cat} value={cat}>
@@ -1157,7 +1157,7 @@ LD Interiors & Furnitures
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-1.5">
-                    Default Price (â‚¹ INR) - Optional
+                    Default Price (₹ INR) - Optional
                   </label>
                   <input
                     type="number"
@@ -1184,8 +1184,8 @@ LD Interiors & Furnitures
                     <Upload className="h-9 w-9 text-[#008DDA] mb-2 group-hover:scale-110 transition-transform" />
                     <p className="text-xs font-black text-slate-900">
                       {bulkFiles.length > 0
-                        ? `âœ… ${bulkFiles.length} Photos Selected`
-                        : 'ðŸ“� Click anywhere here to choose batch photos'}
+                        ? `✅ ${bulkFiles.length} Photos Selected`
+                        : '📍 Click anywhere here to choose batch photos'}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-1">
                       {bulkFiles.length > 0
@@ -1247,7 +1247,7 @@ LD Interiors & Furnitures
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      <span>ðŸš€ Upload {bulkFiles.length || 'Batch'} Designs in 1-Click</span>
+                      <span>🚀 Upload {bulkFiles.length || 'Batch'} Designs in 1-Click</span>
                     </>
                   )}
                 </button>
@@ -1296,7 +1296,7 @@ LD Interiors & Furnitures
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                    Price (â‚¹ INR) - Optional
+                    Price (₹ INR) - Optional
                   </label>
                   <input
                     type="number"
