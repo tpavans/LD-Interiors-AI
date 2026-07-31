@@ -7,6 +7,8 @@ import CustomBuildStudio from '@/components/CustomBuildStudio';
 import HomePackagesPlanner from '@/components/HomePackagesPlanner';
 import WorkshopTourBookingModal from '@/components/WorkshopTourBookingModal';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
+import VoiceSearchButton from '@/components/VoiceSearchButton';
+import CustomerInstallationsGallery from '@/components/CustomerInstallationsGallery';
 
 const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
@@ -355,9 +357,9 @@ export default function ProductsPage() {
         <ARRoomViewerModal product={arProduct} onClose={() => setArProduct(null)} />
       )}
 
-      {/* Search Bar with Amazon/Flipkart Live Autocomplete Dropdown */}
+      {/* Search Bar with Voice Microphone & Live Autocomplete Dropdown */}
       <div className="max-w-md mx-auto mb-10">
-        <div className="relative">
+        <div className="relative flex items-center">
           <Search className="absolute left-4 top-3.5 h-4.5 w-4.5 text-wood-light/60 pointer-events-none" />
           <input
             type="text"
@@ -366,19 +368,31 @@ export default function ProductsPage() {
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
             placeholder="Search designs (e.g. bed, dining, doors...)"
-            className="w-full rounded-full border border-wood-border/60 bg-white/90 backdrop-blur-md pl-11 pr-10 py-3 text-sm focus:border-[#008DDA] focus:ring-4 focus:ring-[#008DDA]/15 focus:outline-none transition-all text-wood-dark placeholder-wood-light/70 shadow-md font-medium"
+            className="w-full rounded-full border border-wood-border/60 bg-white/90 backdrop-blur-md pl-11 pr-20 py-3 text-sm focus:border-[#008DDA] focus:ring-4 focus:ring-[#008DDA]/15 focus:outline-none transition-all text-wood-dark placeholder-wood-light/70 shadow-md font-medium"
           />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                filterProducts(selectedCategory, "");
+
+          <div className="absolute right-3 top-2 flex items-center gap-1.5">
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  filterProducts(selectedCategory, "");
+                }}
+                className="text-wood-light hover:text-wood-dark transition-colors cursor-pointer flex items-center justify-center p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+
+            {/* Telugu / English Voice Search Microphone Button */}
+            <VoiceSearchButton
+              language="te-IN"
+              onSpeechResult={(spokenText) => {
+                setSearchQuery(spokenText);
+                filterProducts(selectedCategory, spokenText);
               }}
-              className="absolute right-4 top-3.5 text-wood-light hover:text-wood-dark transition-colors cursor-pointer flex items-center justify-center"
-            >
-              <X className="h-4.5 w-4.5" />
-            </button>
-          )}
+            />
+          </div>
 
           {/* Amazon / Flipkart Style Live Search Dropdown */}
           {isSearchFocused && searchQuery.trim() !== "" && (
@@ -474,6 +488,9 @@ export default function ProductsPage() {
           ))}
         </div>
       )}
+
+      {/* Verified Customer Home Installations Showcase */}
+      <CustomerInstallationsGallery />
 
       {/* Share Category Modal */}
       {showShareModal && (
