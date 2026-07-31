@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
+import ARRoomViewerModal from '@/components/ARRoomViewerModal';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -15,6 +16,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showARModal, setShowARModal] = useState(false);
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
@@ -530,6 +532,15 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               </button>
             </div>
 
+            {/* See Design in Room (AR & 3D Simulator) Button */}
+            <button
+              onClick={() => setShowARModal(true)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#008DDA] hover:bg-[#0077B6] text-white px-4 py-3.5 text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>{isTelugu ? "గదిలో డిజైన్ పెట్టి చూడండి (AR 3D)" : "See Design in Your Room (AR 3D)"}</span>
+            </button>
+
             {/* Share Design Button */}
             <button
               onClick={() => setShowShareModal(true)}
@@ -538,6 +549,11 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               <Share2 className="h-4 w-4" />
               <span>{isTelugu ? "డిజైన్ షేర్ చేయండి" : "Share Design"}</span>
             </button>
+
+            {/* Render AR Room Viewer Modal */}
+            {showARModal && (
+              <ARRoomViewerModal product={product} onClose={() => setShowARModal(false)} />
+            )}
 
             <Link
               href="/products"

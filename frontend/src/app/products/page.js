@@ -2,7 +2,11 @@
 import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle, Heart, Trash2, Sparkles, ChevronRight } from 'lucide-react';
+import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle, Heart, Trash2, Sparkles, ChevronRight, Sliders, Home, Calendar, Video, Eye } from 'lucide-react';
+import CustomBuildStudio from '@/components/CustomBuildStudio';
+import HomePackagesPlanner from '@/components/HomePackagesPlanner';
+import WorkshopTourBookingModal from '@/components/WorkshopTourBookingModal';
+import ARRoomViewerModal from '@/components/ARRoomViewerModal';
 
 const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
@@ -58,6 +62,12 @@ export default function ProductsPage() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Interactive Studio & Booking Modal States
+  const [showBuildStudio, setShowBuildStudio] = useState(false);
+  const [showPackagesPlanner, setShowPackagesPlanner] = useState(false);
+  const [showWorkshopBooking, setShowWorkshopBooking] = useState(false);
+  const [arProduct, setArProduct] = useState(null);
 
   // Sharing Modal State
   const [showShareModal, setShowShareModal] = useState(false);
@@ -283,9 +293,33 @@ export default function ProductsPage() {
           Filter our architectural and interior design showcases by room style. Discover modern craftsmanship and luxury aesthetics.
         </p>
 
-        {/* Share Category Button */}
-        {selectedCategory !== "All" && (
-          <div className="mt-4 flex items-center justify-center gap-2 animate-fadeIn">
+        {/* High-Tech Interactive Feature Buttons */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 animate-fadeIn">
+          <button
+            onClick={() => setShowBuildStudio(prev => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#008DDA] hover:bg-[#0077B6] text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            <span>🛠️ Custom Wood Build Studio & Cft Calculator</span>
+          </button>
+
+          <button
+            onClick={() => setShowPackagesPlanner(prev => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
+          >
+            <Home className="h-3.5 w-3.5 text-amber-400" />
+            <span>🏡 Whole-Home Teak Packages</span>
+          </button>
+
+          <button
+            onClick={() => setShowWorkshopBooking(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            <span>📹 Book Live Workshop Tour</span>
+          </button>
+
+          {selectedCategory !== "All" && (
             <button
               onClick={() => setShowShareModal(true)}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/80 hover:bg-wood-beige border border-wood-border/60 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-wood-accent shadow-sm transition-all duration-300 cursor-pointer"
@@ -293,9 +327,33 @@ export default function ProductsPage() {
               <Share2 className="h-3.5 w-3.5 text-wood-accent" />
               <span>Share {selectedCategory} Category</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Conditionally Render Build Studio Inline Section */}
+      {showBuildStudio && (
+        <div className="mb-12">
+          <CustomBuildStudio onClose={() => setShowBuildStudio(false)} />
+        </div>
+      )}
+
+      {/* Conditionally Render Home Packages Planner Inline Section */}
+      {showPackagesPlanner && (
+        <div className="mb-12">
+          <HomePackagesPlanner onClose={() => setShowPackagesPlanner(false)} />
+        </div>
+      )}
+
+      {/* Workshop Booking Modal */}
+      {showWorkshopBooking && (
+        <WorkshopTourBookingModal onClose={() => setShowWorkshopBooking(false)} />
+      )}
+
+      {/* AR & 3D Room Viewer Modal */}
+      {arProduct && (
+        <ARRoomViewerModal product={arProduct} onClose={() => setArProduct(null)} />
+      )}
 
       {/* Search Bar with Amazon/Flipkart Live Autocomplete Dropdown */}
       <div className="max-w-md mx-auto mb-10">

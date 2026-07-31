@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
 import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
+import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
 
 const CATEGORIES = ["Doors", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
@@ -216,9 +217,10 @@ export default function AdminDashboardComponent() {
   const [pricingSuccess, setPricingSuccess] = useState('');
   const [pricingLoading, setPricingLoading] = useState(false);
 
-  // Delivery Tracking & Shipping Slip Modal State
+  // Delivery Tracking & Shipping Slip & GST Invoice Modal State
   const [activeDeliveryOrder, setActiveDeliveryOrder] = useState(null);
   const [activeShippingSlipOrder, setActiveShippingSlipOrder] = useState(null);
+  const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
   const [deliveryDateInput, setDeliveryDateInput] = useState('');
   const [carrierInput, setCarrierInput] = useState('Xpressbees');
   const [trackingNumberInput, setTrackingNumberInput] = useState('');
@@ -2098,12 +2100,28 @@ LD Interiors & Furnitures
                               <span>Update Carrier</span>
                             </button>
 
+                            <button
+                              onClick={() => setActiveShippingSlipOrder(o)}
+                              className="inline-flex items-center justify-center gap-1 rounded bg-[#008DDA] hover:bg-[#0077B6] text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-sky-400/20 w-full text-center mt-1"
+                            >
+                              <Printer className="h-3 w-3" />
+                              <span>Waybill Slip</span>
+                            </button>
+
+                            <button
+                              onClick={() => setActiveInvoiceOrder(o)}
+                              className="inline-flex items-center justify-center gap-1 rounded bg-slate-900 hover:bg-slate-800 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-slate-700 w-full text-center mt-1"
+                            >
+                              <Printer className="h-3 w-3 text-amber-400" />
+                              <span>GST Invoice</span>
+                            </button>
+
                             {o.remainingBalance > 0 && o.trackingNumber && (
                               <button
                                 onClick={() => handleSendBalanceReminder(o)}
                                 className="inline-flex items-center justify-center gap-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-1 transition-colors cursor-pointer shadow-xs border border-emerald-500/20 w-full text-center mt-1 active:scale-95"
                               >
-                                ðŸ”” Remind Balance
+                                🔔 Remind Balance
                               </button>
                             )}
                           </div>
@@ -2568,6 +2586,13 @@ LD Interiors & Furnitures
             address: activeShippingSlipOrder.address
           }}
           onClose={() => setActiveShippingSlipOrder(null)}
+        />
+      )}
+
+      {activeInvoiceOrder && (
+        <GSTInvoiceModal
+          order={activeInvoiceOrder}
+          onClose={() => setActiveInvoiceOrder(null)}
         />
       )}
     </div>
