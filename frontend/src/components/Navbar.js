@@ -336,26 +336,47 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Live Autocomplete Dropdown */}
-            {isSearchFocused && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-2 divide-y divide-slate-100">
-                  {searchSuggestions.map((item) => (
-                    <Link
-                      key={item._id}
-                      href={`/products/${item._id}`}
-                      onClick={() => setIsSearchFocused(false)}
-                      className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <img src={item.image} alt={item.title} className="h-9 w-9 rounded-lg object-cover border border-slate-200" />
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-xs font-bold text-slate-900 truncate">{item.title}</p>
-                        <p className="text-[9px] text-[#008DDA] uppercase font-semibold">{item.category}</p>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                    </Link>
-                  ))}
+            {/* Live Amazon/Flipkart Style Autocomplete Dropdown */}
+            {isSearchFocused && searchQuery.trim() !== "" && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-sky-500" />
+                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
                 </div>
+
+                {searchSuggestions.length > 0 ? (
+                  <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                    {searchSuggestions.map((item) => (
+                      <div
+                        key={item._id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setIsSearchFocused(false);
+                          router.push(`/products/${item._id}`);
+                        }}
+                        className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
+                      >
+                        <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
+                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-5 text-center">
+                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
+                  </div>
+                )}
               </div>
             )}
           </form>
