@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2, Volume2 } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
