@@ -456,82 +456,63 @@ How can I help you today?`
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
 
   const speakMessage = (text, isTelugu = true) => {
-    if (!isChatOpen || isVoiceMuted) return;
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      try {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.resume(); // Ensure audio context is active
-        
-        // Clean markdown, links, emojis, and format terms for natural Telugu speech
-        let cleanText = text
-          .replace(/\*\*?/g, '')
-          .replace(/https?:\/\/\S+/g, '')
-          .replace(/[👉👉📲📞★☆👉👤|📦🚪🛕🛏️<ctrl42>call:default_api:replace_file_content🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-          .replace(/₹/g, ' రూపాయలు ')
-          .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
-          .replace(/PU/g, ' పి.యు. ')
-          .replace(/\s+/g, ' ')
-          .trim();
+    if (!isChatOpen || isVoiceMuted || typeof window === 'undefined') return;
 
-        // Speak up to first 2 clear sentences for smooth flow
-        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-        if (sentences.length > 0) {
-          cleanText = sentences.slice(0, 2).join(' ');
-        }
+    try {
+      // 1. Clean markdown, emojis, links, and format terms for Telugu speech
+      let cleanText = text
+        .replace(/\*\*?/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+        .replace(/₹/g, ' రూపాయలు ')
+        .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
+        .replace(/PU/g, ' పి.యు. ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Get all installed browser voices
-        let voices = window.speechSynthesis.getVoices();
-        if (voices.length === 0) {
-          window.speechSynthesis.onvoiceschanged = () => {
-            voices = window.speechSynthesis.getVoices();
-          };
-        }
-
-        // Priority Telugu Female Voice Matching (Microsoft Swara, Google Telugu, etc.)
-        const findTeluguVoice = () => {
-          // 1. Native Telugu voice (e.g. Microsoft Swara Online Natural Telugu or Google Telugu)
-          const teluguVoice = voices.find(v => {
-            const n = v.name.toLowerCase();
-            return v.lang.startsWith('te') || v.lang.includes('te-IN') || n.includes('telugu') || n.includes('swara');
-          });
-          if (teluguVoice) return teluguVoice;
-
-          // 2. Indian Female Voice fallback (reads Tanglish/Telugu phonetically)
-          const indianFemale = voices.find(v => {
-            const n = v.name.toLowerCase();
-            return (v.lang.includes('IN') || n.includes('india') || n.includes('indian')) &&
-                   (n.includes('female') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('priya'));
-          });
-          if (indianFemale) return indianFemale;
-
-          // 3. Global Female Voice
-          const globalFemale = voices.find(v => {
-            const n = v.name.toLowerCase();
-            return n.includes('female') || n.includes('zira') || n.includes('samantha') || n.includes('karen') || n.includes('hazel') || n.includes('victoria');
-          });
-          if (globalFemale) return globalFemale;
-
-          return voices.find(v => v.lang.startsWith('en')) || voices[0];
-        };
-
-        const selectedVoice = findTeluguVoice();
-        if (selectedVoice) {
-          utterance.voice = selectedVoice;
-          utterance.lang = selectedVoice.lang && selectedVoice.lang.startsWith('te') ? 'te-IN' : 'en-IN';
-        } else {
-          utterance.lang = 'te-IN';
-        }
-
-        // Natural Human Voice Parameters: Warm female pitch & fluent Telugu speaking rate
-        utterance.pitch = 1.1;  // Warm natural female pitch
-        utterance.rate = 0.95;  // Fluent Telugu speaking rate without robotic breaks
-
-        window.speechSynthesis.speak(utterance);
-      } catch (err) {
-        console.error('Speech synthesis error:', err);
+      const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+      if (sentences.length > 0) {
+        cleanText = sentences.slice(0, 2).join(' ');
       }
+
+      if (!cleanText) return;
+      const speechSnippet = cleanText.slice(0, 160);
+
+      // WebSpeech Fallback helper
+      const fallbackWebSpeech = () => {
+        if (!window.speechSynthesis) return;
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+          const utterance = new SpeechSynthesisUtterance(speechSnippet);
+          let voices = window.speechSynthesis.getVoices();
+          const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
+          if (teluguVoice) {
+            utterance.voice = teluguVoice;
+            utterance.lang = 'te-IN';
+          } else {
+            utterance.lang = 'en-IN';
+          }
+          utterance.pitch = 1.1;
+          utterance.rate = 0.95;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.warn('WebSpeech fallback error:', e);
+        }
+      };
+
+      // 2. Play using HTML5 Native Audio Stream (Google TTS Telugu Engine)
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(speechSnippet)}`;
+      const audio = new Audio(ttsUrl);
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          fallbackWebSpeech();
+        });
+      }
+    } catch (err) {
+      console.warn('Permanent audio play exception:', err);
     }
   };
 
