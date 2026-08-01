@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2 } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
@@ -452,67 +452,90 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
-  // Voice Mute State for Chatbot Assistant
-  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+  const speakMessage = (text, isTelugu = false) => {
+    if (!isChatOpen) return;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+        
+        // Clean markdown, links, emojis, and special chars for speech
+        let cleanText = text
+          .replace(/\*\*?/g, '') // remove markdown bold asterisks
+          .replace(/https?:\/\/\S+/g, '') // remove URLs
+          .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
+          .replace(/\s+/g, ' ')
+          .trim();
 
-  const speakMessage = (text, isTelugu = true) => {
-    if (!isChatOpen || isVoiceMuted || typeof window === 'undefined') return;
-
-    try {
-      // 1. Clean markdown, emojis, links, and format terms for Telugu speech
-      let cleanText = text
-        .replace(/\*\*?/g, '')
-        .replace(/https?:\/\/\S+/g, '')
-        .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-        .replace(/₹/g, ' రూపాయలు ')
-        .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
-        .replace(/PU/g, ' పి.యు. ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 0) {
-        cleanText = sentences.slice(0, 2).join(' ');
-      }
-
-      if (!cleanText) return;
-      const speechSnippet = cleanText.slice(0, 160);
-
-      // WebSpeech Fallback helper
-      const fallbackWebSpeech = () => {
-        if (!window.speechSynthesis) return;
-        try {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-          const utterance = new SpeechSynthesisUtterance(speechSnippet);
-          let voices = window.speechSynthesis.getVoices();
-          const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
-          if (teluguVoice) {
-            utterance.voice = teluguVoice;
-            utterance.lang = 'te-IN';
-          } else {
-            utterance.lang = 'en-IN';
-          }
-          utterance.pitch = 1.1;
-          utterance.rate = 0.95;
-          window.speechSynthesis.speak(utterance);
-        } catch (e) {
-          console.warn('WebSpeech fallback error:', e);
+        // Showroom receptionist behavior: never speak long paragraphs.
+        // Speak only the first sentence or first line so it sounds like a real assistant.
+        const sentences = cleanText.split(/[.!?\n]/).filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          // Speak up to first 2 sentences
+          cleanText = sentences.slice(0, 2).join('. ') + '.';
         }
-      };
 
-      // 2. Play using HTML5 Native Audio Stream (Google TTS Telugu Engine)
-      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(speechSnippet)}`;
-      const audio = new Audio(ttsUrl);
-      
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          fallbackWebSpeech();
-        });
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Get browser voices
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = null;
+
+        // Function to detect female voices by name
+        const isFemaleVoice = (v) => {
+          const name = v.name.toLowerCase();
+          return name.includes('female') || 
+                 name.includes('zira') || 
+                 name.includes('samantha') || 
+                 name.includes('google us english') || 
+                 name.includes('hazel') || 
+                 name.includes('susan') || 
+                 name.includes('heera') || 
+                 name.includes('haruka') || 
+                 name.includes('karen') || 
+                 name.includes('moira') || 
+                 name.includes('tessa') || 
+                 name.includes('veena') ||
+                 name.includes('priya') ||
+                 name.includes('swara') ||
+                 name.includes('neerja');
+        };
+        
+        if (isTelugu) {
+          // Look for Telugu voice first
+          selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemaleVoice(v)) || voices.find(v => v.lang.startsWith('te'));
+          if (selectedVoice) {
+            utterance.lang = 'te-IN';
+            utterance.voice = selectedVoice;
+          } else {
+            // Fall back to Indian English voice which reads Tanglish words phonetically better (prefer female)
+            selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                         || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
+            if (selectedVoice) {
+              utterance.lang = 'en-IN';
+              utterance.voice = selectedVoice;
+            } else {
+              utterance.lang = 'en-US';
+            }
+          }
+        } else {
+          // Standard English or Indian English (prefer female)
+          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                       || voices.find(v => v.lang.startsWith('en') && isFemaleVoice(v))
+                       || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'))
+                       || voices.find(v => v.lang.startsWith('en'));
+          if (selectedVoice) {
+            utterance.lang = selectedVoice.lang;
+            utterance.voice = selectedVoice;
+          } else {
+            utterance.lang = 'en-US';
+          }
+        }
+        
+        utterance.rate = 0.85; // Calm, pleasant, slow showroom receptionist pace
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('Speech synthesis error:', err);
       }
-    } catch (err) {
-      console.warn('Permanent audio play exception:', err);
     }
   };
 
@@ -520,10 +543,10 @@ How can I help you today?`
     if (isChatOpen) {
       const welcomed = sessionStorage.getItem('ld_welcomed_speak');
       if (!welcomed) {
-        speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మీకు ఏ డిజైన్ లేదా టేకువుడ్ వివరాలు కావాలి?", true);
+        speakMessage("Welcome to LD Interiors and Furniture! We are delighted to have you here. How can I help you today?", false);
         sessionStorage.setItem('ld_welcomed_speak', 'true');
       } else {
-        speakMessage("నమస్కారం! తిరిగొచ్చినందుకు సంతోషం. ఈరోజు మీకు ఏ సమాచారం కావాలి?", true);
+        speakMessage("Welcome back! What would you like to explore today?", false);
       }
     } else {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -1757,23 +1780,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Voice Audio Mute/Unmute Toggle Button */}
-                    <button
-                      onClick={() => {
-                        const nextState = !isVoiceMuted;
-                        setIsVoiceMuted(nextState);
-                        if (nextState && typeof window !== 'undefined' && window.speechSynthesis) {
-                          window.speechSynthesis.cancel();
-                        }
-                      }}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                        isVoiceMuted ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white/80 hover:text-white'
-                      }`}
-                      title={isVoiceMuted ? "Unmute Assistant Voice Audio" : "Mute Assistant Voice Audio"}
-                    >
-                      {isVoiceMuted ? <VolumeX className="h-4.5 w-4.5 text-red-300" /> : <Volume2 className="h-4.5 w-4.5 text-emerald-400" />}
-                    </button>
-
                     {/* Maximize / Minimize Fullscreen Toggle Button */}
                     <button
                       onClick={() => setIsMaximized(prev => !prev)}
@@ -1785,9 +1791,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
                     <button
                       onClick={() => {
-                        if (typeof window !== 'undefined' && window.speechSynthesis) {
-                          window.speechSynthesis.cancel();
-                        }
                         setIsChatOpen(false);
                         setIsMaximized(false);
                       }}
@@ -1842,24 +1845,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                         className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line transition-all duration-300 animate-slideIn relative ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line transition-all duration-300 animate-slideIn ${
                             msg.sender === 'user'
                               ? 'bg-[#423525] text-white rounded-tr-none border border-wood-dark/20'
                               : 'bg-[#faf6f0] border border-[#ebdcc5] text-[#423525] rounded-tl-none font-medium'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="flex-1">{msg.text}</span>
-                            {msg.sender === 'bot' && (
-                              <button
-                                onClick={() => speakMessage(msg.text, true)}
-                                className="p-1 rounded-full hover:bg-amber-100/60 text-amber-700 hover:text-amber-900 transition-colors cursor-pointer shrink-0 mt-0.5"
-                                title="Listen to this message (తెలుగు వాయిస్ అసిస్టెంట్)"
-                              >
-                                <Volume2 className="h-3.5 w-3.5 text-amber-600" />
-                              </button>
-                            )}
-                          </div>
+                          <div>{msg.text}</div>
                           
                           {/* Rich Interactive Templates for e-commerce (Amazon/Flipkart style) */}
                           {msg.sender === 'bot' && msg.type === 'categories' && (
