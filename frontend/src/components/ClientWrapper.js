@@ -451,91 +451,48 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
-  // Global Audio Context Unlock on First User Screen Touch
-  useEffect(() => {
-    const unlockAudioOnFirstTouch = () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const dummyAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-          dummyAudio.play().catch(() => {});
-          if (window.speechSynthesis) {
-            window.speechSynthesis.resume();
-          }
-        } catch (e) {}
-      }
-    };
-    window.addEventListener('pointerdown', unlockAudioOnFirstTouch, { once: true });
-    window.addEventListener('touchstart', unlockAudioOnFirstTouch, { once: true });
-  }, []);
-
-  // Universal Multi-Engine Speech Audio Player
+  // Universal Safe Speech Audio Player
   const speakMessage = (text, isTelugu = true, forcePlay = false) => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isVoiceMuted) return;
 
     try {
-      // Clean markdown, links, emojis, and special chars for speech
-      let cleanText = text
-        .replace(/\*\*?/g, '')
-        .replace(/https?:\/\/\S+/g, '')
-        .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-        .replace(/₹/g, ' రూపాయలు ')
-        .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
-        .replace(/PU/g, ' పి.యు. ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
 
-      const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 0) {
-        cleanText = sentences.slice(0, 2).join(' ');
-      }
-      if (!cleanText) return;
+        // Clean markdown, links, emojis, and special chars for speech
+        let cleanText = text
+          .replace(/\*\*?/g, '')
+          .replace(/https?:\/\/\S+/g, '')
+          .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+          .replace(/₹/g, ' రూపాయలు ')
+          .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
+          .replace(/PU/g, ' పి.యు. ')
+          .replace(/\s+/g, ' ')
+          .trim();
 
-      const snippet = cleanText.slice(0, 160);
-
-      // WebSpeech Fallback helper
-      const runWebSpeech = () => {
-        if (!window.speechSynthesis) return;
-        try {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-          const utterance = new SpeechSynthesisUtterance(snippet);
-          let voices = window.speechSynthesis.getVoices();
-          const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
-          if (teluguVoice) {
-            utterance.voice = teluguVoice;
-            utterance.lang = 'te-IN';
-          } else {
-            utterance.lang = 'en-IN';
-          }
-          utterance.pitch = 1.1;
-          utterance.rate = 0.95;
-          window.speechSynthesis.speak(utterance);
-        } catch (e) {
-          console.warn('WebSpeech fallback error:', e);
+        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          cleanText = sentences.slice(0, 2).join(' ');
         }
-      };
+        if (!cleanText) return;
 
-      // 1. Try HTML5 Native Audio Stream (Google Cloud TTS Telugu)
-      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(snippet)}`;
-      
-      let audioEl = document.getElementById('ld-assistant-audio-player');
-      if (!audioEl) {
-        audioEl = document.createElement('audio');
-        audioEl.id = 'ld-assistant-audio-player';
-        document.body.appendChild(audioEl);
-      }
-      
-      audioEl.src = ttsUrl;
-      const playPromise = audioEl.play();
-
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn('HTML5 Audio autoplay restricted. Fallback to WebSpeech:', err);
-          runWebSpeech();
-        });
+        const snippet = cleanText.slice(0, 160);
+        const utterance = new SpeechSynthesisUtterance(snippet);
+        let voices = window.speechSynthesis.getVoices();
+        const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
+        if (teluguVoice) {
+          utterance.voice = teluguVoice;
+          utterance.lang = 'te-IN';
+        } else {
+          utterance.lang = 'en-IN';
+        }
+        utterance.pitch = 1.1;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
       }
     } catch (err) {
-      console.error('Audio play error:', err);
+      console.warn('Speech synthesis safe catch:', err);
     }
   };
 
