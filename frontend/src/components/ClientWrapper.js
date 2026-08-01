@@ -345,20 +345,19 @@ export default function ClientWrapper() {
     let welcomeText = '';
     
     if (!welcomed) {
-      welcomeText = `👋 Welcome to LD Interiors & Furniture!
+      welcomeText = `👋 **నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం!**
 
-I am your AI Assistant (LD Assistant). Here is how I can guide you:
+నేను మీ ఎఐ అసిస్టెంట్ (LD Assistant). మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు:
 
-1. 🔍 **Search Designs**: Type any furniture (e.g., "Pooja Mandir", "Sofa", "Beds") to explore categories and see pricing.
-2. 📦 **WhatsApp Checkout**: Go to the **Order Now** tab or tell me what design you want to place a custom inquiry via WhatsApp.
-3. 📍 **Live Status Track**: Go to the **Track** tab or enter your 10-digit mobile number to track carpentry progress from our workshop.
-4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a room picture for design suggestions.
-5. 🗣️ **Local Speech Support**: I speak and reply in English, Telugu, and Tanglish! Keep your device unmuted.
+1. 🔍 **డిజైన్లు & ధరలు**: పూజ మందిరాలు, మంచాలు, సోఫా సెట్లు, లేదా టేకు బాక్స్ వివరాలు మరియు ధరలు తెలియజేస్తాను.
+2. 📦 **ఆర్డర్ చేయండి**: **Order Now** ట్యాబ్ ద్వారా మిస్టర్ నాగరాజు గారి వాట్సాప్‌కి నేరుగా ఆర్డర్ పంపవచ్చు.
+3. 📍 **ఆర్డర్ ట్రాకింగ్**: **Track** ట్యాబ్ నొక్కి మీ 10 అంకెల ఫోన్ నంబర్ తో మీ ఆర్డర్ వర్క్‌షాప్ స్టేటస్ చూడవచ్చు.
+4. 📞 **సంప్రదింపుల కోసం**: మేనేజర్ నాగరాజు గారిని (+916281653998) నేరుగా సంప్రదించవచ్చు.
 
-How can I help you today?`;
+చెప్పండి, మీకు ఏ డిజైన్ లేదా ధర వివరాలు కావాలి? 😊`;
       sessionStorage.setItem('ld_welcomed', 'true');
     } else {
-      welcomeText = `Welcome back! What would you like to explore today? (Type "guide" or click "📖 How to Use" below for instructions.)`;
+      welcomeText = `నమస్కారం! తిరిగొచ్చినందుకు సంతోషం. ఈరోజు మీకు ఏ డిజైన్ లేదా ధర వివరాలు కావాలి? (క్రింద ఉన్న బటన్‌లను క్లిక్ చేయండి లేదా "గాయిడ్" అని టైప్ చేయండి.)`;
     }
 
     setMessages([
@@ -543,10 +542,10 @@ How can I help you today?`
     if (isChatOpen) {
       const welcomed = sessionStorage.getItem('ld_welcomed_speak');
       if (!welcomed) {
-        speakMessage("Welcome to LD Interiors and Furniture! We are delighted to have you here. How can I help you today?", false);
+        speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true);
         sessionStorage.setItem('ld_welcomed_speak', 'true');
       } else {
-        speakMessage("Welcome back! What would you like to explore today?", false);
+        speakMessage("నమస్కారం! తిరిగొచ్చినందుకు సంతోషం. ఈరోజు మీకు ఏ డిజైన్ లేదా ధర వివరాలు కావాలి?", true);
       }
     } else {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -1095,12 +1094,13 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
         tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'television', 'tv console', 'tv cabinets', 'entertainment'],
         wardrobe: ['wardrobe', 'wardrobes', 'almirah', 'బీరువా', 'cupboard', 'cupboards'],
         kitchen: ['kitchen', 'modular kitchen', 'వంటగది', 'kitchen cabinets'],
-        bedroom: ['bedroom', 'bed', 'wooden bed', 'మంచం', 'మంచాలు', 'bunk bed', 'double bed', 'canopy bed'],
+        bedroom: ['bedroom', 'bed', 'wooden bed', 'మంచం', 'మంచాలు', 'bunk bed', 'double bed', 'canopy bed', 'కోట్', 'కాట్'],
         office: ['office', 'desk', 'writing table', 'ఆఫీస్', 'office furniture', 'office desk'],
         mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'పూజ మందిరం'],
         gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం'],
         dressing: ['dressing', 'mirror', 'makeup', 'డ్రెస్సింగ్', 'dressing table'],
-        swing: ['swing', 'uyyala', 'baby swing', 'ఉయ్యాల']
+        swing: ['swing', 'uyyala', 'baby swing', 'ఉయ్యాల'],
+        teakbox: ['box', 'teak box', 'money box', 'cash box', 'బాక్స్', 'పెట్టె', 'టేకు బాక్స్', 'నగదు పెట్టె', 'క్యాష్ బాక్స్', 'మనీ బాక్స్']
       };
 
       let matchedCat = null;
@@ -1117,86 +1117,49 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
         let similarRec = '';
         if (matchedCat === 'tv') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
-          similarRec = langStyle === 'en' 
-            ? "We also recommend styling it with: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend similar products: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage.";
+          similarRec = "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'wardrobe') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('bedroom') && p.title.toLowerCase().includes('wardrobe'));
           if (items.length === 0) {
             items = dbProducts.filter(p => p.title.toLowerCase().includes('wardrobe'));
           }
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk.";
+          similarRec = "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'kitchen') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit.";
+          similarRec = "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'bedroom') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: వార్డ్‌రోబ్‌లు, బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్‌లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers.";
+          similarRec = "మా వద్ద 100% అసలైన టేకు మంచాలు అందుబాటులో ఉన్నవి. ధరల కొటేషన్ కోసం మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
         } else if (matchedCat === 'office') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office') || p.title.toLowerCase().includes('desk'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Executive Chair, Bookshelf, side cabinet storage."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Executive Chair, Bookshelf, side cabinet storage.";
+          similarRec = "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'mandiralu') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Pooja stools, brass bells, customized drawers."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: పూజా పీటలు, ఇత్తడి గంటలు, అనుకూల డ్రాయర్లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend similar items: Pooja stools, brass bells, customized drawers.";
+          similarRec = "మా వద్ద పూజా మందిరాలు 100% టేకుతో హ్యాండ్ కార్వింగ్ తో చేయబడును. కొటేషన్ కోసం నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
         } else if (matchedCat === 'gummalu') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Traditional carved threshold (Gadapa), matching main door."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Traditional carved threshold (Gadapa), matching main door.";
+          similarRec = "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'dressing') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('mirror'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Hairdryer holder, accessory organizers, side stool."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Hairdryer holder, accessory organizers, side stool.";
+          similarRec = "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము.";
         } else if (matchedCat === 'swing') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala') || p.title.toLowerCase().includes('swing') || p.title.toLowerCase().includes('uyyala'));
-          similarRec = langStyle === 'en'
-            ? "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks."
-            : langStyle === 'te'
-            ? "మేము వీటికి అదనంగా: ఇత్తడి గొలుసులు, రక్షణ కుషన్ ప్యాడ్లను సిఫార్సు చేస్తున్నాము."
-            : "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks.";
+          similarRec = "మేము వీటికి అదనంగా: ఇత్తడి గొలుసులు, రక్షణ కుషన్ ప్యాడ్లను సిఫార్సు చేస్తున్నాము.";
+        } else if (matchedCat === 'teakbox') {
+          items = dbProducts.filter(p => p.category.toLowerCase().includes('box') || p.title.toLowerCase().includes('box') || p.title.toLowerCase().includes('పెట్టె'));
+          similarRec = "మా వద్ద 100% అసలైన బర్మా టేకుతో నగదు పెట్టెలు, మనీ బాక్స్‌లు తయారు చేయబడును. సైజులు మరియు ధర వివరాల కోసం మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
         }
 
         if (items.length > 0) {
           let listStr = '';
           const images = items.map(it => it.image);
           items.forEach(it => {
-            listStr += `${formatProductDetails(it, langStyle)}\n\n`;
+            listStr += `${formatProductDetails(it, 'te')}\n\n`;
           });
           listStr += `${similarRec}`;
           return { text: listStr, images };
         } else {
-          const noProductText = langStyle === 'en'
-            ? `We customize premium *${matchedCat.toUpperCase()}* designs at our workshop. Contact Nagaraju at +916281653998 for custom catalogs!`
-            : langStyle === 'te'
-            ? `మా వద్ద కస్టమ్ *${matchedCat.toUpperCase()}* డిజైన్‌లు అందుబాటులో ఉన్నాయి. వివరాల కోసం నాగరాజు గారిని (+916281653998) సంప్రదించండి.`
-            : `Maa workshop lo custom *${matchedCat.toUpperCase()}* designs build chestham andi. Details kosam contact Nagaraju (+916281653998).`;
+          const noProductText = `మా వద్ద 100% అసలైన టేకు కలపతో కస్టమ్ *${matchedCat.toUpperCase()}* డిజైన్‌లు తయారు చేయబడును.\n\nధరలు మరియు కస్టమ్ కొలతల వివరాల కోసం దయచేసి మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.`;
           return { text: noProductText, images: [] };
         }
       }
