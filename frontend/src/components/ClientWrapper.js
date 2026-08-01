@@ -455,24 +455,24 @@ How can I help you today?`
   // Voice Mute State for Chatbot Assistant
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
 
-  const speakMessage = (text, isTelugu = false) => {
+  const speakMessage = (text, isTelugu = true) => {
     if (!isChatOpen || isVoiceMuted) return;
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
         
-        // Clean markdown, links, emojis, and format terms for natural human pronunciation
+        // Clean markdown, links, emojis, and format terms for natural Telugu speech
         let cleanText = text
           .replace(/\*\*?/g, '')
           .replace(/https?:\/\/\S+/g, '')
           .replace(/[👉👉📲📞★☆👉👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-          .replace(/₹/g, ' Rupees ')
-          .replace(/Cft/g, ' Cubic feet ')
-          .replace(/PU/g, ' P. U. ')
+          .replace(/₹/g, ' రూపాయలు ')
+          .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
+          .replace(/PU/g, ' పి.యు. ')
           .replace(/\s+/g, ' ')
           .trim();
 
-        // Speak up to first 2 clear sentences for smooth human flow
+        // Speak up to first 2 clear sentences for smooth flow
         const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
         if (sentences.length > 0) {
           cleanText = sentences.slice(0, 2).join(' ');
@@ -488,25 +488,23 @@ How can I help you today?`
           };
         }
 
-        // Priority Female Voice Matching (Neural & Natural voices first)
-        const findNaturalFemaleVoice = () => {
-          // 1. Search for Neural / Natural Indian & Telugu Female Voices (Microsoft Swara, Neerja, Heera, Google)
-          const neuralFemale = voices.find(v => {
+        // Priority Telugu Female Voice Matching (Microsoft Swara, Google Telugu, etc.)
+        const findTeluguVoice = () => {
+          // 1. Native Telugu voice (e.g. Microsoft Swara Online Natural Telugu or Google Telugu)
+          const teluguVoice = voices.find(v => {
             const n = v.name.toLowerCase();
-            return (n.includes('natural') || n.includes('neural') || n.includes('google')) && 
-                   (n.includes('female') || n.includes('swara') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('zira') || n.includes('telugu'));
+            return v.lang.startsWith('te') || v.lang.includes('te-IN') || n.includes('telugu') || n.includes('swara');
           });
-          if (neuralFemale) return neuralFemale;
+          if (teluguVoice) return teluguVoice;
 
-          // 2. Search for any Indian Female Voice
+          // 2. Indian Female Voice fallback (reads Tanglish/Telugu phonetically)
           const indianFemale = voices.find(v => {
             const n = v.name.toLowerCase();
             return (v.lang.includes('IN') || n.includes('india') || n.includes('indian')) &&
-                   (n.includes('female') || n.includes('swara') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('priya'));
+                   (n.includes('female') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('priya'));
           });
           if (indianFemale) return indianFemale;
 
-          // 3. Search for any Female Voice (Samantha, Zira, Karen, Victoria)
           const globalFemale = voices.find(v => {
             const n = v.name.toLowerCase();
             return n.includes('female') || n.includes('zira') || n.includes('samantha') || n.includes('karen') || n.includes('hazel') || n.includes('victoria');
