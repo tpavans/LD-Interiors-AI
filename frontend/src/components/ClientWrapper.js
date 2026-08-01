@@ -45,7 +45,7 @@ export default function ClientWrapper() {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Namaste! Welcome to LD Interiors & Furnitures. How can I help you today? Wood work options, price estimations, and design details adagandi!'
+      text: 'నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?'
     }
   ]);
 
@@ -493,17 +493,7 @@ How can I help you today?`;
     setMessages([
       {
         sender: 'bot',
-        text: `👋 Welcome to LD Interiors & Furniture!
-
-I am your AI Assistant (LD Assistant). Here is how I can guide you:
-
-1. 🔍 **Search Designs**: Type any furniture (e.g., "Pooja Mandir", "Sofa", "Beds") to explore categories and see pricing.
-2. 📦 **WhatsApp Checkout**: Go to the **Order Now** tab or tell me what design you want to place a custom inquiry via WhatsApp.
-3. 📍 **Live Status Track**: Go to the **Track** tab or enter your 10-digit mobile number to track carpentry progress from our workshop.
-4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a room picture for design suggestions.
-5. 🗣️ **Local Speech Support**: I speak and reply in English, Telugu, and Tanglish! Keep your device unmuted.
-
-How can I help you today?`
+        text: `నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?`
       }
     ]);
     sessionStorage.setItem('ld_welcomed', 'true');
@@ -1804,20 +1794,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 </div>
               </div>
 
-              {/* Telugu Voice Assistant Banner Bar */}
-              <div className="bg-[#ebdcc5]/40 border-b border-[#ebdcc5] px-3 py-1.5 flex items-center justify-between text-[10px] font-bold text-wood-dark shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <Volume2 className="h-3.5 w-3.5 text-emerald-700 animate-pulse" />
-                  <span>తెలుగు వాయిస్ వినడానికి 🔊 విను నొక్కండి (Tap 🔊 to Listen)</span>
-                </div>
-                <button
-                  onClick={() => speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true)}
-                  className="bg-[#423525] text-white px-2.5 py-0.5 rounded-full text-[9px] hover:bg-wood-medium transition-all cursor-pointer font-sans active:scale-95"
-                >
-                  🔊 ప్లే (Play)
-                </button>
-              </div>
-
               {/* Chat Tab Body */}
               {activeTab === 'chat' && (
                 <>
@@ -1836,17 +1812,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                           }`}
                         >
                           <div>{msg.text}</div>
-
-                          {/* 🔊 Play Voice Pill Button for Bot Messages */}
-                          {msg.sender === 'bot' && (
-                            <button
-                              onClick={() => speakMessage(msg.text, true)}
-                              className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-extrabold bg-[#ebdcc5]/60 hover:bg-[#ebdcc5] text-[#423525] rounded-full border border-[#ebdcc5] transition-all cursor-pointer shadow-xs active:scale-95"
-                            >
-                              <Volume2 className="h-3 w-3 text-wood-dark" />
-                              <span>🔊 విను (Play Voice)</span>
-                            </button>
-                          )}
                           
                           {/* Rich Interactive Templates for e-commerce (Amazon/Flipkart style) */}
                           {msg.sender === 'bot' && msg.type === 'categories' && (
