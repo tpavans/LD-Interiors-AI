@@ -451,90 +451,74 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
-  const speakMessage = (text, isTelugu = false) => {
-    if (!isChatOpen) return;
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      try {
-        window.speechSynthesis.cancel();
-        
-        // Clean markdown, links, emojis, and special chars for speech
-        let cleanText = text
-          .replace(/\*\*?/g, '') // remove markdown bold asterisks
-          .replace(/https?:\/\/\S+/g, '') // remove URLs
-          .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
-          .replace(/\s+/g, ' ')
-          .trim();
+  // Universal Multi-Engine Speech Audio Player
+  const speakMessage = (text, isTelugu = true) => {
+    if (!isChatOpen || typeof window === 'undefined') return;
 
-        // Showroom receptionist behavior: never speak long paragraphs.
-        // Speak only the first sentence or first line so it sounds like a real assistant.
-        const sentences = cleanText.split(/[.!?\n]/).filter(s => s.trim().length > 0);
-        if (sentences.length > 0) {
-          // Speak up to first 2 sentences
-          cleanText = sentences.slice(0, 2).join('. ') + '.';
-        }
+    try {
+      // Clean markdown, links, emojis, and special chars for speech
+      let cleanText = text
+        .replace(/\*\*?/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+        .replace(/₹/g, ' రూపాయలు ')
+        .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
+        .replace(/PU/g, ' పి.యు. ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Get browser voices
-        const voices = window.speechSynthesis.getVoices();
-        let selectedVoice = null;
-
-        // Function to detect female voices by name
-        const isFemaleVoice = (v) => {
-          const name = v.name.toLowerCase();
-          return name.includes('female') || 
-                 name.includes('zira') || 
-                 name.includes('samantha') || 
-                 name.includes('google us english') || 
-                 name.includes('hazel') || 
-                 name.includes('susan') || 
-                 name.includes('heera') || 
-                 name.includes('haruka') || 
-                 name.includes('karen') || 
-                 name.includes('moira') || 
-                 name.includes('tessa') || 
-                 name.includes('veena') ||
-                 name.includes('priya') ||
-                 name.includes('swara') ||
-                 name.includes('neerja');
-        };
-        
-        if (isTelugu) {
-          // Look for Telugu voice first
-          selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemaleVoice(v)) || voices.find(v => v.lang.startsWith('te'));
-          if (selectedVoice) {
-            utterance.lang = 'te-IN';
-            utterance.voice = selectedVoice;
-          } else {
-            // Fall back to Indian English voice which reads Tanglish words phonetically better (prefer female)
-            selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
-                         || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
-            if (selectedVoice) {
-              utterance.lang = 'en-IN';
-              utterance.voice = selectedVoice;
-            } else {
-              utterance.lang = 'en-US';
-            }
-          }
-        } else {
-          // Standard English or Indian English (prefer female)
-          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
-                       || voices.find(v => v.lang.startsWith('en') && isFemaleVoice(v))
-                       || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'))
-                       || voices.find(v => v.lang.startsWith('en'));
-          if (selectedVoice) {
-            utterance.lang = selectedVoice.lang;
-            utterance.voice = selectedVoice;
-          } else {
-            utterance.lang = 'en-US';
-          }
-        }
-        
-        utterance.rate = 0.85; // Calm, pleasant, slow showroom receptionist pace
-        window.speechSynthesis.speak(utterance);
-      } catch (err) {
-        console.error('Speech synthesis error:', err);
+      const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+      if (sentences.length > 0) {
+        cleanText = sentences.slice(0, 2).join(' ');
       }
+      if (!cleanText) return;
+
+      const snippet = cleanText.slice(0, 160);
+
+      // WebSpeech Fallback helper
+      const runWebSpeech = () => {
+        if (!window.speechSynthesis) return;
+        try {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+          const utterance = new SpeechSynthesisUtterance(snippet);
+          let voices = window.speechSynthesis.getVoices();
+          const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
+          if (teluguVoice) {
+            utterance.voice = teluguVoice;
+            utterance.lang = 'te-IN';
+          } else {
+            utterance.lang = 'en-IN';
+          }
+          utterance.pitch = 1.1;
+          utterance.rate = 0.95;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.warn('WebSpeech fallback error:', e);
+        }
+      };
+
+      // 1. Try HTML5 Native Audio Stream (Google Cloud TTS Telugu)
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(snippet)}`;
+      
+      let audioEl = document.getElementById('ld-assistant-audio-player');
+      if (!audioEl) {
+        audioEl = document.createElement('audio');
+        audioEl.id = 'ld-assistant-audio-player';
+        document.body.appendChild(audioEl);
+      }
+      
+      audioEl.src = ttsUrl;
+      const playPromise = audioEl.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('HTML5 Audio autoplay restricted. Fallback to WebSpeech:', err);
+          runWebSpeech();
+        });
+      }
+    } catch (err) {
+      console.error('Audio play error:', err);
     }
   };
 
