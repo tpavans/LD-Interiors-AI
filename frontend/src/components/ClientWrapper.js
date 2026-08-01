@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2 } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2, Volume2, VolumeX } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
@@ -452,86 +452,83 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
+  // Voice Mute State for Chatbot Assistant
+  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+
   const speakMessage = (text, isTelugu = false) => {
-    if (!isChatOpen) return;
+    if (!isChatOpen || isVoiceMuted) return;
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
         
-        // Clean markdown, links, emojis, and special chars for speech
+        // Clean markdown, links, emojis, and format terms for natural human pronunciation
         let cleanText = text
-          .replace(/\*\*?/g, '') // remove markdown bold asterisks
-          .replace(/https?:\/\/\S+/g, '') // remove URLs
-          .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
+          .replace(/\*\*?/g, '')
+          .replace(/https?:\/\/\S+/g, '')
+          .replace(/[👉👉📲📞★☆👉👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+          .replace(/₹/g, ' Rupees ')
+          .replace(/Cft/g, ' Cubic feet ')
+          .replace(/PU/g, ' P. U. ')
           .replace(/\s+/g, ' ')
           .trim();
 
-        // Showroom receptionist behavior: never speak long paragraphs.
-        // Speak only the first sentence or first line so it sounds like a real assistant.
-        const sentences = cleanText.split(/[.!?\n]/).filter(s => s.trim().length > 0);
+        // Speak up to first 2 clear sentences for smooth human flow
+        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
         if (sentences.length > 0) {
-          // Speak up to first 2 sentences
-          cleanText = sentences.slice(0, 2).join('. ') + '.';
+          cleanText = sentences.slice(0, 2).join(' ');
         }
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Get browser voices
-        const voices = window.speechSynthesis.getVoices();
-        let selectedVoice = null;
-
-        // Function to detect female voices by name
-        const isFemaleVoice = (v) => {
-          const name = v.name.toLowerCase();
-          return name.includes('female') || 
-                 name.includes('zira') || 
-                 name.includes('samantha') || 
-                 name.includes('google us english') || 
-                 name.includes('hazel') || 
-                 name.includes('susan') || 
-                 name.includes('heera') || 
-                 name.includes('haruka') || 
-                 name.includes('karen') || 
-                 name.includes('moira') || 
-                 name.includes('tessa') || 
-                 name.includes('veena') ||
-                 name.includes('priya') ||
-                 name.includes('swara') ||
-                 name.includes('neerja');
-        };
-        
-        if (isTelugu) {
-          // Look for Telugu voice first
-          selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemaleVoice(v)) || voices.find(v => v.lang.startsWith('te'));
-          if (selectedVoice) {
-            utterance.lang = 'te-IN';
-            utterance.voice = selectedVoice;
-          } else {
-            // Fall back to Indian English voice which reads Tanglish words phonetically better (prefer female)
-            selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
-                         || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
-            if (selectedVoice) {
-              utterance.lang = 'en-IN';
-              utterance.voice = selectedVoice;
-            } else {
-              utterance.lang = 'en-US';
-            }
-          }
-        } else {
-          // Standard English or Indian English (prefer female)
-          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
-                       || voices.find(v => v.lang.startsWith('en') && isFemaleVoice(v))
-                       || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'))
-                       || voices.find(v => v.lang.startsWith('en'));
-          if (selectedVoice) {
-            utterance.lang = selectedVoice.lang;
-            utterance.voice = selectedVoice;
-          } else {
-            utterance.lang = 'en-US';
-          }
+        // Get all installed browser voices
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) {
+          window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+          };
         }
-        
-        utterance.rate = 0.85; // Calm, pleasant, slow showroom receptionist pace
+
+        // Priority Female Voice Matching (Neural & Natural voices first)
+        const findNaturalFemaleVoice = () => {
+          // 1. Search for Neural / Natural Indian & Telugu Female Voices (Microsoft Swara, Neerja, Heera, Google)
+          const neuralFemale = voices.find(v => {
+            const n = v.name.toLowerCase();
+            return (n.includes('natural') || n.includes('neural') || n.includes('google')) && 
+                   (n.includes('female') || n.includes('swara') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('zira') || n.includes('telugu'));
+          });
+          if (neuralFemale) return neuralFemale;
+
+          // 2. Search for any Indian Female Voice
+          const indianFemale = voices.find(v => {
+            const n = v.name.toLowerCase();
+            return (v.lang.includes('IN') || n.includes('india') || n.includes('indian')) &&
+                   (n.includes('female') || n.includes('swara') || n.includes('neerja') || n.includes('heera') || n.includes('veena') || n.includes('priya'));
+          });
+          if (indianFemale) return indianFemale;
+
+          // 3. Search for any Female Voice (Samantha, Zira, Karen, Victoria)
+          const globalFemale = voices.find(v => {
+            const n = v.name.toLowerCase();
+            return n.includes('female') || n.includes('zira') || n.includes('samantha') || n.includes('karen') || n.includes('hazel') || n.includes('victoria');
+          });
+          if (globalFemale) return globalFemale;
+
+          // 4. Default fallback
+          return voices.find(v => v.lang.startsWith('en')) || voices[0];
+        };
+
+        const selectedVoice = findNaturalFemaleVoice();
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+          utterance.lang = selectedVoice.lang || 'en-IN';
+        } else {
+          utterance.lang = 'en-IN';
+        }
+
+        // Natural Human Voice Parameters: Warm female pitch & fluent natural speed
+        utterance.pitch = 1.12; // Natural warm female pitch
+        utterance.rate = 0.98;  // Fluent human speed without robotic breaks
+
         window.speechSynthesis.speak(utterance);
       } catch (err) {
         console.error('Speech synthesis error:', err);
@@ -1780,6 +1777,23 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* Voice Audio Mute/Unmute Toggle Button */}
+                    <button
+                      onClick={() => {
+                        const nextState = !isVoiceMuted;
+                        setIsVoiceMuted(nextState);
+                        if (nextState && typeof window !== 'undefined' && window.speechSynthesis) {
+                          window.speechSynthesis.cancel();
+                        }
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                        isVoiceMuted ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white/80 hover:text-white'
+                      }`}
+                      title={isVoiceMuted ? "Unmute Assistant Voice Audio" : "Mute Assistant Voice Audio"}
+                    >
+                      {isVoiceMuted ? <VolumeX className="h-4.5 w-4.5 text-red-300" /> : <Volume2 className="h-4.5 w-4.5 text-emerald-400" />}
+                    </button>
+
                     {/* Maximize / Minimize Fullscreen Toggle Button */}
                     <button
                       onClick={() => setIsMaximized(prev => !prev)}
@@ -1791,6 +1805,9 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
                     <button
                       onClick={() => {
+                        if (typeof window !== 'undefined' && window.speechSynthesis) {
+                          window.speechSynthesis.cancel();
+                        }
                         setIsChatOpen(false);
                         setIsMaximized(false);
                       }}
