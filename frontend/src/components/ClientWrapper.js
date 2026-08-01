@@ -345,19 +345,20 @@ export default function ClientWrapper() {
     let welcomeText = '';
     
     if (!welcomed) {
-      welcomeText = `👋 **నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం!**
+      welcomeText = `👋 Welcome to LD Interiors & Furniture!
 
-నేను మీ ఎఐ అసిస్టెంట్ (LD Assistant). మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు:
+I am your AI Assistant (LD Assistant). Here is how I can guide you:
 
-1. 🔍 **డిజైన్లు & ధరలు**: పూజ మందిరాలు, మంచాలు, సోఫా సెట్లు, లేదా టేకు బాక్స్ వివరాలు మరియు ధరలు తెలియజేస్తాను.
-2. 📦 **ఆర్డర్ చేయండి**: **Order Now** ట్యాబ్ ద్వారా మిస్టర్ నాగరాజు గారి వాట్సాప్‌కి నేరుగా ఆర్డర్ పంపవచ్చు.
-3. 📍 **ఆర్డర్ ట్రాకింగ్**: **Track** ట్యాబ్ నొక్కి మీ 10 అంకెల ఫోన్ నంబర్ తో మీ ఆర్డర్ వర్క్‌షాప్ స్టేటస్ చూడవచ్చు.
-4. 📞 **సంప్రదింపుల కోసం**: మేనేజర్ నాగరాజు గారిని (+916281653998) నేరుగా సంప్రదించవచ్చు.
+1. 🔍 **Search Designs**: Type any furniture (e.g., "Pooja Mandir", "Sofa", "Beds") to explore categories and see pricing.
+2. 📦 **WhatsApp Checkout**: Go to the **Order Now** tab or tell me what design you want to place a custom inquiry via WhatsApp.
+3. 📍 **Live Status Track**: Go to the **Track** tab or enter your 10-digit mobile number to track carpentry progress from our workshop.
+4. 📷 **Room Photo Recommendations**: Click the camera icon at the bottom left to upload a room picture for design suggestions.
+5. 🗣️ **Local Speech Support**: I speak and reply in English, Telugu, and Tanglish! Keep your device unmuted.
 
-చెప్పండి, మీకు ఏ డిజైన్ లేదా ధర వివరాలు కావాలి? 😊`;
+How can I help you today?`;
       sessionStorage.setItem('ld_welcomed', 'true');
     } else {
-      welcomeText = `నమస్కారం! తిరిగొచ్చినందుకు సంతోషం. ఈరోజు మీకు ఏ డిజైన్ లేదా ధర వివరాలు కావాలి? (క్రింద ఉన్న బటన్‌లను క్లిక్ చేయండి లేదా "గాయిడ్" అని టైప్ చేయండి.)`;
+      welcomeText = `Welcome back! What would you like to explore today? (Type "guide" or click "📖 How to Use" below for instructions.)`;
     }
 
     setMessages([
@@ -451,48 +452,90 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
-  // Universal Safe Speech Audio Player
-  const speakMessage = (text, isTelugu = true, forcePlay = false) => {
-    if (typeof window === 'undefined' || isVoiceMuted) return;
-
-    try {
-      if (window.speechSynthesis) {
+  const speakMessage = (text, isTelugu = false) => {
+    if (!isChatOpen) return;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
         window.speechSynthesis.cancel();
-        window.speechSynthesis.resume();
-
+        
         // Clean markdown, links, emojis, and special chars for speech
         let cleanText = text
-          .replace(/\*\*?/g, '')
-          .replace(/https?:\/\/\S+/g, '')
-          .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-          .replace(/₹/g, ' రూపాయలు ')
-          .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
-          .replace(/PU/g, ' పి.యు. ')
+          .replace(/\*\*?/g, '') // remove markdown bold asterisks
+          .replace(/https?:\/\/\S+/g, '') // remove URLs
+          .replace(/[👉👉📲📞★☆👉👤|]/g, '') // remove emojis/symbols
           .replace(/\s+/g, ' ')
           .trim();
 
-        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+        // Showroom receptionist behavior: never speak long paragraphs.
+        // Speak only the first sentence or first line so it sounds like a real assistant.
+        const sentences = cleanText.split(/[.!?\n]/).filter(s => s.trim().length > 0);
         if (sentences.length > 0) {
-          cleanText = sentences.slice(0, 2).join(' ');
+          // Speak up to first 2 sentences
+          cleanText = sentences.slice(0, 2).join('. ') + '.';
         }
-        if (!cleanText) return;
 
-        const snippet = cleanText.slice(0, 160);
-        const utterance = new SpeechSynthesisUtterance(snippet);
-        let voices = window.speechSynthesis.getVoices();
-        const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
-        if (teluguVoice) {
-          utterance.voice = teluguVoice;
-          utterance.lang = 'te-IN';
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Get browser voices
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = null;
+
+        // Function to detect female voices by name
+        const isFemaleVoice = (v) => {
+          const name = v.name.toLowerCase();
+          return name.includes('female') || 
+                 name.includes('zira') || 
+                 name.includes('samantha') || 
+                 name.includes('google us english') || 
+                 name.includes('hazel') || 
+                 name.includes('susan') || 
+                 name.includes('heera') || 
+                 name.includes('haruka') || 
+                 name.includes('karen') || 
+                 name.includes('moira') || 
+                 name.includes('tessa') || 
+                 name.includes('veena') ||
+                 name.includes('priya') ||
+                 name.includes('swara') ||
+                 name.includes('neerja');
+        };
+        
+        if (isTelugu) {
+          // Look for Telugu voice first
+          selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemaleVoice(v)) || voices.find(v => v.lang.startsWith('te'));
+          if (selectedVoice) {
+            utterance.lang = 'te-IN';
+            utterance.voice = selectedVoice;
+          } else {
+            // Fall back to Indian English voice which reads Tanglish words phonetically better (prefer female)
+            selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                         || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'));
+            if (selectedVoice) {
+              utterance.lang = 'en-IN';
+              utterance.voice = selectedVoice;
+            } else {
+              utterance.lang = 'en-US';
+            }
+          }
         } else {
-          utterance.lang = 'en-IN';
+          // Standard English or Indian English (prefer female)
+          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian')) && isFemaleVoice(v))
+                       || voices.find(v => v.lang.startsWith('en') && isFemaleVoice(v))
+                       || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Indian'))
+                       || voices.find(v => v.lang.startsWith('en'));
+          if (selectedVoice) {
+            utterance.lang = selectedVoice.lang;
+            utterance.voice = selectedVoice;
+          } else {
+            utterance.lang = 'en-US';
+          }
         }
-        utterance.pitch = 1.1;
-        utterance.rate = 0.95;
+        
+        utterance.rate = 0.85; // Calm, pleasant, slow showroom receptionist pace
         window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('Speech synthesis error:', err);
       }
-    } catch (err) {
-      console.warn('Speech synthesis safe catch:', err);
     }
   };
 
@@ -1004,69 +1047,47 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
 
       // 5. PRICING & ESTIMATION / QUOTATIONS
       if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
-        return `తాజా ధరలు, కస్టమ్ కొలతల ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, మేము మీ ఆర్డర్‌తో ముందుకుసాగుతాము.`;
+        return langStyle === 'en'
+          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, we'll proceed with your order.`
+          : langStyle === 'te'
+          ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
+          : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`;
       }
 
-      // 6. TEAK WOOD QUALITY, TERMITES & DURABILITY
-      const isWoodQuality = query.includes('wood') || query.includes('teak') || query.includes('quality') || query.includes('termite') || query.includes('కలప') || query.includes('కర్ర') || query.includes('టేకు') || query.includes('చెదలు') || query.includes('మన్నిక') || query.includes('క్వాలిటీ');
-      if (isWoodQuality) {
-        return `🌲 **టేకు కలప నాణ్యత & మన్నిక (Teak Wood Quality & Guarantee)**:
-- **100% ప్యూర్ బర్మా టేకు**: మా వద్ద కేవలం 100% వయసైన బర్మా టేకు కలప (Aged Burma Teak Wood) మాత్రమే ఉపయోగిస్తాము.
-- **చెదలు పట్టవు**: నాచురల్ టేకు నూనెలు ఉండడం వల్ల చెదలు (Termites) పట్టుకునే అవకాశమే లేదు.
-- **నీటి నిరోధకత (Water Resistant)**: తేమ లేదా నీటికి చెక్క వంగడం గానీ, ఉబ్బడం గానీ జరగదు.
-- **జీవితాంతం మన్నిక**: తర తరాలుగా 50+ ఏళ్లు మన్నికగా ఉండేలా పటిష్టమైన వడరంగి పనితనంతో తయారుచేస్తాము!`;
-      }
-
-      // 7. POLISH & FINISHING OPTIONS
-      const isPolishInfo = query.includes('polish') || query.includes('finish') || query.includes('pu') || query.includes('melamine') || query.includes('color') || query.includes('పాలిష్') || query.includes('రంగు') || query.includes('మ్యాట్') || query.includes('గ్లోసీ');
-      if (isPolishInfo) {
-        return `✨ **పాలిష్ రకాలు & ఫినిషింగ్ వివరాలు (Teak Wood Polish Options)**:
-- **Italian Asian Paints PU Polish**: అల్ట్రా లగ్జరీ హై-గ్లోసీ మరియు మ్యాట్ ఫినిషింగ్ (UV Resistance & Anti-Scratch).
-- **Melamine Polish**: నాచురల్ టేకువుడ్ గ్రెయిన్స్ ప్రముఖంగా కనిపించే మ్యాట్/గ్లోసీ ఫినిషింగ్.
-- **రంగుల ఎంపిక**: Natural Teak (స్వాభావిక టేకు షేడ్), Dark Walnut (డార్క్ వాల్‌నట్), Rosewood Finish, & Golden Oak.`;
-      }
-
-      // 8. CUSTOM CARVINGS & HANDICRAFT
-      const isCarvingInfo = query.includes('carving') || query.includes('design') || query.includes('cnc') || query.includes('craft') || query.includes('చెక్కడాలు') || query.includes('డిజైన్') || query.includes('హ్యాండ్');
-      if (isCarvingInfo) {
-        return `🪵 **కస్టమ్ చెక్కడాలు & 3D డిజైన్లు (Hand Carving & CNC Designs)**:
-- **కోనసీమ చేతి పనితనం**: 25+ ఏళ్ల అనుభవం ఉన్న మూలస్థానం వడ్రంగి కాపు కళాకారులతో సాంప్రదాయ హ్యాండ్ కార్వింగ్ చెక్కడాలు.
-- **3D CNC అడ్వాన్స్‌డ్ డిజైన్లు**: కస్టమర్ కోరిన ఏ బొమ్మ లేదా క్లిష్టమైన డిజైన్ అయినా CNC మెషిన్ ద్వారా కచ్చితమైన కొలతలతో చెక్కబడును.
-- **కస్టమ్ సైజులు**: మీ ఇంటి డోర్/మందిరం/మంచం సైజులకు తగ్గట్టుగా నచ్చిన డిజైన్ చేసి ఇస్తాము.`;
-      }
-
-      // 9. CLEANING & MAINTENANCE
-      const isMaintenance = query.includes('clean') || query.includes('care') || query.includes('maintain') || query.includes('మెయింటెనెన్స్') || query.includes('శుభ్రం') || query.includes('తడవకుండా');
-      if (isMaintenance) {
-        return `🧼 **ఫర్నిచర్ క్లీనింగ్ & మెయింటెనెన్స్ సూచనలు**:
-1. వారానికి ఒకసారి పొడి మైక్రోఫైబర్ లేదా కాటన్ గుడ్డతో దుమ్ము తుడిస్తే చాలు.
-2. చెక్కపై డైరెక్ట్ వేడి లేదా తీవ్రమైన రసాయనాలు (Strong Acid Cleaners) వాడకూడదు.
-3. ప్రతి 2-3 ఏళ్లకు ఒకసారి నాచురల్ వాక్స్ పాలిష్ తుడిస్తే డిజైన్ కొత్తదానిలా మెరుస్తుంది.`;
-      }
-
-      // 10. DELIVERY & WORKSHOP TOUR
-      const isDeliveryTour = query.includes('delivery') || query.includes('tour') || query.includes('workshop') || query.includes('డెలివరీ') || query.includes('వర్క్‌షాప్');
-      if (isDeliveryTour) {
-        return `🚛 **వర్క్‌షాప్ విజిట్ & డెలివరీ వివరాలు**:
-- **ఉచిత డెలివరీ**: కోనసీమ, విజయవాడ, విశాఖపట్నం, గుంటూరు మరియు ఆంధ్రప్రదేశ్/తెలంగాణ అంతటా సేఫ్ డెలివరీ.
-- **వర్క్‌షాప్ దర్శనం**: మూలస్థానం (ఆలమూరు మండలం) లోని మా వర్క్‌షాప్‌కి నేరుగా వచ్చి మీరు కలప లాగ్‌లను, తయారీ పనిని ప్రత్యక్షంగా చూడవచ్చు!
-- **సంప్రదించండి**: యజమాని మిస్టర్ నాగరాజు (+916281653998).`;
-      }
-
-      // 11. ADDRESS & LOCATION
+      // 6. ADDRESS & LOCATION
       if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
-        return `మా ఆఫీస్ మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233. డెలివరీ కోసం నాగరాజు (+916281653998) గారిని సంప్రదించండి.`;
+        return langStyle === 'en'
+          ? `Our office and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
+          : langStyle === 'te'
+          ? `మా ఆఫీస్ మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233.`
+          : `Maa office workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
       }
 
-      // 12. EXPERIENCE & TRUST
+      // 7. EXPERIENCE & TRUST
       if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
-        return `LD Interiors & Furnitures కి కోనసీమ ప్రాంతంలో 25+ ఏళ్ల అనుభవం మరియు విశ్వసనీయత కలదు. మా వద్ద 100% ప్యూర్ టేకువుడ్ ఉత్పత్తులు మాత్రమే లభించును.`;
+        return langStyle === 'en'
+          ? `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`
+          : `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
       }
 
-      // 13. THANK YOU RESPONSES
+      // 8. TEAK WOOD QUALITY INQUIRIES
+      const isWoodQuality = query.includes('teak') || query.includes('wood') || query.includes('karra') || query.includes('quality') || query.includes('కలప') || query.includes('కర్ర') || query.includes('టేక్');
+      if (isWoodQuality) {
+        return langStyle === 'en'
+          ? `We construct our furniture using 100% pure genuine quality Teak wood (టేక్ కరప) to ensure high density, moisture protection, and lifetime durability. No synthetic mix or low-grade materials are allowed in our workshop! 🪵✨`
+          : langStyle === 'te'
+          ? `మేము మా ఫర్నిచర్‌ను కేవలం 100% నిజమైన మరియు అత్యుత్తమ టేక్ కలపతోనే తయారు చేస్తాము. ఇది వర్షానికి లేదా వేడికి చెడిపోదు, జీవితాంతం మన్నికగా ఉంటుంది! 🪵✨`
+          : `Maa workshop lo exclusively 100% pure Teak wood selection mathramey chestaru Nagaraju garu. Heavy density, double-cote Manchams verification parameters chala strict ga maintain chesi lifetime safety assurance istham andi! 🪵✨`;
+      }
+
+      // 9. THANK YOU / CUTE RESPONSES
       const isThankYou = query.includes('thank') || query.includes('thanks') || query.includes('dhanyavadalu') || query.includes('nice') || query.includes('good') || query.includes('super') || query.includes('happy') || query.includes('ధన్యవాదాలు');
       if (isThankYou) {
-        return `ధన్యవాదాలు అండీ! 😊 మీకు సహాయపడటం నాకు చాలా సంతోషంగా ఉంది. మీకు ఏవైనా డిజైన్ మార్పులు లేదా ఇతర సమాచారం కావాలంటే అడగండి. మీకు మంచి రోజు అవ్వాలని కోరుకుంటున్నాను! 🌸`;
+        return langStyle === 'en'
+          ? `Aww, thank you so much! 😊 It is my absolute pleasure to guide you. If you need any more customization designs or help, please let me know. Have a wonderful day! 🌸`
+          : langStyle === 'te'
+          ? `ధన్యవాదాలు అండీ! 😊 మీకు సహాయపడటం నాకు చాలా సంతోషంగా ఉంది. మీకు ఏవైనా డిజైన్ మార్పులు లేదా ఇతర సమాచారం కావాలంటే అడగండి. మీకు మంచి రోజు అవ్వాలని కోరుకుంటున్నాను! 🌸`
+          : `Chala chala thank you andi! 😊 Mimmalni assist cheyyadam naku chala happy ga undandi. Custom orders configuration modifications updates emaina chusthara andi? Please tell me! 🌸`;
       }
 
       // 7. CATEGORY RAG DATABASE SEARCH
@@ -1074,13 +1095,12 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
         tv: ['tv unit', 'tv', 't.v', 'టీవీ', 'television', 'tv console', 'tv cabinets', 'entertainment'],
         wardrobe: ['wardrobe', 'wardrobes', 'almirah', 'బీరువా', 'cupboard', 'cupboards'],
         kitchen: ['kitchen', 'modular kitchen', 'వంటగది', 'kitchen cabinets'],
-        bedroom: ['bedroom', 'bed', 'wooden bed', 'మంచం', 'మంచాలు', 'bunk bed', 'double bed', 'canopy bed', 'కోట్', 'కాట్'],
+        bedroom: ['bedroom', 'bed', 'wooden bed', 'మంచం', 'మంచాలు', 'bunk bed', 'double bed', 'canopy bed'],
         office: ['office', 'desk', 'writing table', 'ఆఫీస్', 'office furniture', 'office desk'],
         mandiralu: ['mandiram', 'mandiralu', 'temple', 'pooja', 'devudi', 'మండపం', 'పూజ మందిరం'],
         gummalu: ['gummalu', 'gummam', 'frame', 'frames', 'గుమ్మాలు', 'గుమ్మం'],
         dressing: ['dressing', 'mirror', 'makeup', 'డ్రెస్సింగ్', 'dressing table'],
-        swing: ['swing', 'uyyala', 'baby swing', 'ఉయ్యాల'],
-        teakbox: ['box', 'teak box', 'money box', 'cash box', 'బాక్స్', 'పెట్టె', 'టేకు బాక్స్', 'నగదు పెట్టె', 'క్యాష్ బాక్స్', 'మనీ బాక్స్']
+        swing: ['swing', 'uyyala', 'baby swing', 'ఉయ్యాల']
       };
 
       let matchedCat = null;
@@ -1097,49 +1117,86 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
         let similarRec = '';
         if (matchedCat === 'tv') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
-          similarRec = "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en' 
+            ? "We also recommend styling it with: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend similar products: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage.";
         } else if (matchedCat === 'wardrobe') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('bedroom') && p.title.toLowerCase().includes('wardrobe'));
           if (items.length === 0) {
             items = dbProducts.filter(p => p.title.toLowerCase().includes('wardrobe'));
           }
-          similarRec = "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk.";
         } else if (matchedCat === 'kitchen') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
-          similarRec = "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit.";
         } else if (matchedCat === 'bedroom') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
-          similarRec = "మా వద్ద 100% అసలైన టేకు మంచాలు అందుబాటులో ఉన్నవి. ధరల కొటేషన్ కోసం మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: వార్డ్‌రోబ్‌లు, బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers.";
         } else if (matchedCat === 'office') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office') || p.title.toLowerCase().includes('desk'));
-          similarRec = "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Executive Chair, Bookshelf, side cabinet storage."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Executive Chair, Bookshelf, side cabinet storage.";
         } else if (matchedCat === 'mandiralu') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
-          similarRec = "మా వద్ద పూజా మందిరాలు 100% టేకుతో హ్యాండ్ కార్వింగ్ తో చేయబడును. కొటేషన్ కోసం నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Pooja stools, brass bells, customized drawers."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: పూజా పీటలు, ఇత్తడి గంటలు, అనుకూల డ్రాయర్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend similar items: Pooja stools, brass bells, customized drawers.";
         } else if (matchedCat === 'gummalu') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
-          similarRec = "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Traditional carved threshold (Gadapa), matching main door."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Traditional carved threshold (Gadapa), matching main door.";
         } else if (matchedCat === 'dressing') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('mirror'));
-          similarRec = "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Hairdryer holder, accessory organizers, side stool."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Hairdryer holder, accessory organizers, side stool.";
         } else if (matchedCat === 'swing') {
           items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala') || p.title.toLowerCase().includes('swing') || p.title.toLowerCase().includes('uyyala'));
-          similarRec = "మేము వీటికి అదనంగా: ఇత్తడి గొలుసులు, రక్షణ కుషన్ ప్యాడ్లను సిఫార్సు చేస్తున్నాము.";
-        } else if (matchedCat === 'teakbox') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('box') || p.title.toLowerCase().includes('box') || p.title.toLowerCase().includes('పెట్టె'));
-          similarRec = "మా వద్ద 100% అసలైన బర్మా టేకుతో నగదు పెట్టెలు, మనీ బాక్స్‌లు తయారు చేయబడును. సైజులు మరియు ధర వివరాల కోసం మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.";
+          similarRec = langStyle === 'en'
+            ? "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks."
+            : langStyle === 'te'
+            ? "మేము వీటికి అదనంగా: ఇత్తడి గొలుసులు, రక్షణ కుషన్ ప్యాడ్లను సిఫార్సు చేస్తున్నాము."
+            : "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks.";
         }
 
         if (items.length > 0) {
           let listStr = '';
           const images = items.map(it => it.image);
           items.forEach(it => {
-            listStr += `${formatProductDetails(it, 'te')}\n\n`;
+            listStr += `${formatProductDetails(it, langStyle)}\n\n`;
           });
           listStr += `${similarRec}`;
           return { text: listStr, images };
         } else {
-          const noProductText = `మా వద్ద 100% అసలైన టేకు కలపతో కస్టమ్ *${matchedCat.toUpperCase()}* డిజైన్‌లు తయారు చేయబడును.\n\nధరలు మరియు కస్టమ్ కొలతల వివరాల కోసం దయచేసి మిస్టర్ నాగరాజు గారిని (+916281653998) సంప్రదించండి.`;
+          const noProductText = langStyle === 'en'
+            ? `We customize premium *${matchedCat.toUpperCase()}* designs at our workshop. Contact Nagaraju at +916281653998 for custom catalogs!`
+            : langStyle === 'te'
+            ? `మా వద్ద కస్టమ్ *${matchedCat.toUpperCase()}* డిజైన్‌లు అందుబాటులో ఉన్నాయి. వివరాల కోసం నాగరాజు గారిని (+916281653998) సంప్రదించండి.`
+            : `Maa workshop lo custom *${matchedCat.toUpperCase()}* designs build chestham andi. Details kosam contact Nagaraju (+916281653998).`;
           return { text: noProductText, images: [] };
         }
       }
@@ -1777,15 +1834,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 </div>
               </div>
 
-              {/* Glowing 1-Click Audio Enable Notification Bar */}
-              <button
-                onClick={() => speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true, true)}
-                className="w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-wood-dark px-3 py-1.5 text-[10px] font-extrabold flex items-center justify-center gap-1.5 shadow-sm hover:brightness-105 transition-all cursor-pointer border-b border-amber-600/30 shrink-0"
-              >
-                <Volume2 className="h-3.5 w-3.5 animate-bounce text-wood-dark shrink-0" />
-                <span>🔊 తెలుగు వాయిస్ వినడానికి ఇక్కడ క్లిక్ చేయండి (Play Audio)</span>
-              </button>
-
               {/* Chat Tab Body */}
               {activeTab === 'chat' && (
                 <>
@@ -2388,18 +2436,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
-            onClick={() => {
-              const nextState = !isChatOpen;
-              setIsChatOpen(nextState);
-              if (nextState) {
-                // Direct user gesture audio unlock for mobile browsers
-                speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true, true);
-              } else {
-                if (typeof window !== 'undefined' && window.speechSynthesis) {
-                  window.speechSynthesis.cancel();
-                }
-              }
-            }}
+            onClick={() => setIsChatOpen(!isChatOpen)}
             className="flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
             {isChatOpen ? (
