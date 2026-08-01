@@ -460,12 +460,13 @@ How can I help you today?`
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
+        window.speechSynthesis.resume(); // Ensure audio context is active
         
         // Clean markdown, links, emojis, and format terms for natural Telugu speech
         let cleanText = text
           .replace(/\*\*?/g, '')
           .replace(/https?:\/\/\S+/g, '')
-          .replace(/[👉👉📲📞★☆👉👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+          .replace(/[👉👉📲📞★☆👉👤|📦🚪🛕🛏️<ctrl42>call:default_api:replace_file_content🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
           .replace(/₹/g, ' రూపాయలు ')
           .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
           .replace(/PU/g, ' పి.యు. ')
@@ -505,27 +506,27 @@ How can I help you today?`
           });
           if (indianFemale) return indianFemale;
 
+          // 3. Global Female Voice
           const globalFemale = voices.find(v => {
             const n = v.name.toLowerCase();
             return n.includes('female') || n.includes('zira') || n.includes('samantha') || n.includes('karen') || n.includes('hazel') || n.includes('victoria');
           });
           if (globalFemale) return globalFemale;
 
-          // 4. Default fallback
           return voices.find(v => v.lang.startsWith('en')) || voices[0];
         };
 
-        const selectedVoice = findNaturalFemaleVoice();
+        const selectedVoice = findTeluguVoice();
         if (selectedVoice) {
           utterance.voice = selectedVoice;
-          utterance.lang = selectedVoice.lang || 'en-IN';
+          utterance.lang = selectedVoice.lang && selectedVoice.lang.startsWith('te') ? 'te-IN' : 'en-IN';
         } else {
-          utterance.lang = 'en-IN';
+          utterance.lang = 'te-IN';
         }
 
-        // Natural Human Voice Parameters: Warm female pitch & fluent natural speed
-        utterance.pitch = 1.12; // Natural warm female pitch
-        utterance.rate = 0.98;  // Fluent human speed without robotic breaks
+        // Natural Human Voice Parameters: Warm female pitch & fluent Telugu speaking rate
+        utterance.pitch = 1.1;  // Warm natural female pitch
+        utterance.rate = 0.95;  // Fluent Telugu speaking rate without robotic breaks
 
         window.speechSynthesis.speak(utterance);
       } catch (err) {
@@ -538,10 +539,10 @@ How can I help you today?`
     if (isChatOpen) {
       const welcomed = sessionStorage.getItem('ld_welcomed_speak');
       if (!welcomed) {
-        speakMessage("Welcome to LD Interiors and Furniture! We are delighted to have you here. How can I help you today?", false);
+        speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మీకు ఏ డిజైన్ లేదా టేకువుడ్ వివరాలు కావాలి?", true);
         sessionStorage.setItem('ld_welcomed_speak', 'true');
       } else {
-        speakMessage("Welcome back! What would you like to explore today?", false);
+        speakMessage("నమస్కారం! తిరిగొచ్చినందుకు సంతోషం. ఈరోజు మీకు ఏ సమాచారం కావాలి?", true);
       }
     } else {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -1860,13 +1861,24 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                         className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line transition-all duration-300 animate-slideIn ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm whitespace-pre-line transition-all duration-300 animate-slideIn relative ${
                             msg.sender === 'user'
                               ? 'bg-[#423525] text-white rounded-tr-none border border-wood-dark/20'
                               : 'bg-[#faf6f0] border border-[#ebdcc5] text-[#423525] rounded-tl-none font-medium'
                           }`}
                         >
-                          <div>{msg.text}</div>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="flex-1">{msg.text}</span>
+                            {msg.sender === 'bot' && (
+                              <button
+                                onClick={() => speakMessage(msg.text, true)}
+                                className="p-1 rounded-full hover:bg-amber-100/60 text-amber-700 hover:text-amber-900 transition-colors cursor-pointer shrink-0 mt-0.5"
+                                title="Listen to this message (తెలుగు వాయిస్ అసిస్టెంట్)"
+                              >
+                                <Volume2 className="h-3.5 w-3.5 text-amber-600" />
+                              </button>
+                            )}
+                          </div>
                           
                           {/* Rich Interactive Templates for e-commerce (Amazon/Flipkart style) */}
                           {msg.sender === 'bot' && msg.type === 'categories' && (
