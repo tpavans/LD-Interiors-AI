@@ -452,60 +452,64 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
-  // Stream Pure Female Telugu Speech Audio
+  // Fluent Female Telugu Receptionist Speech Engine
   const speakMessage = (text, isTelugu = true) => {
     if (typeof window === 'undefined') return;
 
     try {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
-      }
+        window.speechSynthesis.resume();
 
-      // Clean text for speech
-      let cleanText = text
-        .replace(/\*\*?/g, '')
-        .replace(/https?:\/\/\S+/g, '')
-        .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
-        .replace(/₹/g, ' రూపాయలు ')
-        .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
-        .replace(/PU/g, ' పి.యు. ')
-        .replace(/\s+/g, ' ')
-        .trim();
+        // Clean markdown, links, emojis, and special chars for speech
+        let cleanText = text
+          .replace(/\*\*?/g, '')
+          .replace(/https?:\/\/\S+/g, '')
+          .replace(/[👉📲📞★☆👤|📦🚪🛕🛏️🛋️🪑🛠️📐🌸✨🔍🎤😊🙏❤️]/g, '')
+          .replace(/₹/g, ' రూపాయలు ')
+          .replace(/Cft/g, ' క్యూబిక్ ఫీట్ ')
+          .replace(/PU/g, ' పి.యు. ')
+          .replace(/\s+/g, ' ')
+          .trim();
 
-      const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 0) {
-        cleanText = sentences.slice(0, 2).join(' ');
-      }
-      if (!cleanText) return;
+        const sentences = cleanText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          cleanText = sentences.slice(0, 2).join(' ');
+        }
+        if (!cleanText) return;
 
-      const snippet = cleanText.slice(0, 160);
+        const snippet = cleanText.slice(0, 160);
+        const utterance = new SpeechSynthesisUtterance(snippet);
+        const voices = window.speechSynthesis.getVoices();
 
-      // Play pure Telugu voice stream
-      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(snippet)}`;
-      const audio = new Audio(ttsUrl);
-      const playPromise = audio.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // WebSpeech fallback if browser audio policy blocks autoplay
-          if (window.speechSynthesis) {
-            const utterance = new SpeechSynthesisUtterance(snippet);
-            let voices = window.speechSynthesis.getVoices();
-            const teluguVoice = voices.find(v => v.lang.startsWith('te') || v.name.toLowerCase().includes('telugu') || v.name.toLowerCase().includes('swara'));
-            if (teluguVoice) {
-              utterance.voice = teluguVoice;
-              utterance.lang = 'te-IN';
-            } else {
-              utterance.lang = 'te-IN';
-            }
-            utterance.pitch = 1.1;
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
+        const isFemale = (v) => {
+          const n = v.name.toLowerCase();
+          return n.includes('female') || n.includes('swara') || n.includes('zira') || n.includes('samantha') || n.includes('priya') || n.includes('google us english') || n.includes('hazel') || n.includes('neerja') || n.includes('heera');
+        };
+
+        // Prefer Female Telugu voice
+        let selectedVoice = voices.find(v => v.lang.startsWith('te') && isFemale(v)) || voices.find(v => v.lang.startsWith('te'));
+        
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+          utterance.lang = 'te-IN';
+        } else {
+          // Indian Female Voice
+          selectedVoice = voices.find(v => (v.lang.includes('en-IN') || v.name.includes('India')) && isFemale(v)) || voices.find(v => v.lang.includes('en-IN') || v.name.includes('India'));
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            utterance.lang = 'en-IN';
+          } else {
+            utterance.lang = 'te-IN';
           }
-        });
+        }
+
+        utterance.pitch = 1.15; // Natural Telugu Girl Pitch
+        utterance.rate = 0.92;  // Fluent Receptionist Pace
+        window.speechSynthesis.speak(utterance);
       }
     } catch (err) {
-      console.warn('Speech engine safe catch:', err);
+      console.warn('Speech synthesis safe catch:', err);
     }
   };
 
