@@ -451,9 +451,26 @@ How can I help you today?`
     sessionStorage.setItem('ld_welcomed', 'true');
   };
 
+  // Global Audio Context Unlock on First User Screen Touch
+  useEffect(() => {
+    const unlockAudioOnFirstTouch = () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const dummyAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+          dummyAudio.play().catch(() => {});
+          if (window.speechSynthesis) {
+            window.speechSynthesis.resume();
+          }
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('pointerdown', unlockAudioOnFirstTouch, { once: true });
+    window.addEventListener('touchstart', unlockAudioOnFirstTouch, { once: true });
+  }, []);
+
   // Universal Multi-Engine Speech Audio Player
-  const speakMessage = (text, isTelugu = true) => {
-    if (!isChatOpen || typeof window === 'undefined') return;
+  const speakMessage = (text, isTelugu = true, forcePlay = false) => {
+    if (typeof window === 'undefined') return;
 
     try {
       // Clean markdown, links, emojis, and special chars for speech
@@ -1803,6 +1820,15 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 </div>
               </div>
 
+              {/* Glowing 1-Click Audio Enable Notification Bar */}
+              <button
+                onClick={() => speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true, true)}
+                className="w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-wood-dark px-3 py-1.5 text-[10px] font-extrabold flex items-center justify-center gap-1.5 shadow-sm hover:brightness-105 transition-all cursor-pointer border-b border-amber-600/30 shrink-0"
+              >
+                <Volume2 className="h-3.5 w-3.5 animate-bounce text-wood-dark shrink-0" />
+                <span>🔊 తెలుగు వాయిస్ వినడానికి ఇక్కడ క్లిక్ చేయండి (Play Audio)</span>
+              </button>
+
               {/* Chat Tab Body */}
               {activeTab === 'chat' && (
                 <>
@@ -2410,7 +2436,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               setIsChatOpen(nextState);
               if (nextState) {
                 // Direct user gesture audio unlock for mobile browsers
-                speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true);
+                speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true, true);
               } else {
                 if (typeof window !== 'undefined' && window.speechSynthesis) {
                   window.speechSynthesis.cancel();
