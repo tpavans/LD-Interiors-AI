@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart } from 'lucide-react';
+import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2 } from 'lucide-react';
 import api from '@/utils/api';
 
 export default function ClientWrapper() {
@@ -39,6 +39,7 @@ export default function ClientWrapper() {
 
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'order'
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState([
@@ -1739,42 +1740,66 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
       {/* 2. FLOATING ASSISTANT WIDGET */}
       {isRegistered && (
-        <div className="fixed bottom-[4.5rem] md:bottom-6 right-4 md:right-6 z-50 flex flex-col items-end">
+        <div className={`fixed z-50 flex flex-col items-end transition-all duration-300 ${
+          isMaximized
+            ? 'inset-2 sm:inset-6 bottom-4'
+            : 'bottom-4 sm:bottom-6 right-2 sm:right-6 left-2 sm:left-auto'
+        }`}>
           {/* Chat Panel */}
           {isChatOpen && (
-            <div className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] h-[500px] max-h-[70vh] landscape:h-[260px] sm:h-[520px] sm:max-h-[80vh] bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/20 rounded-3xl shadow-2xl flex flex-col mb-4 overflow-hidden animate-slideUp">
+            <div className={`bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/30 rounded-3xl shadow-2xl flex flex-col mb-2 overflow-hidden transition-all duration-300 ${
+              isMaximized
+                ? 'w-full h-full'
+                : 'w-full sm:w-[480px] lg:w-[540px] max-w-full h-[85vh] sm:h-[620px] max-h-[90vh]'
+            }`}>
               {/* Header */}
-              <div className="bg-gradient-to-r from-[#423525] to-[#6d553b] px-5 py-4 text-white border-b border-wood-border/40">
+              <div className="bg-gradient-to-r from-[#423525] to-[#6d553b] px-5 py-4 text-white border-b border-wood-border/40 shrink-0">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div className="relative">
-                      <div className="h-9 w-9 rounded-full bg-[#ebdcc5] flex items-center justify-center text-wood-dark border border-wood-accent/30 shadow-inner">
-                        <svg className="h-5 w-5 text-wood-accent fill-current" viewBox="0 0 24 24">
+                      <div className="h-10 w-10 rounded-full bg-[#ebdcc5] flex items-center justify-center text-wood-dark border border-wood-accent/30 shadow-inner">
+                        <svg className="h-6 w-6 text-wood-accent fill-current" viewBox="0 0 24 24">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.5h-2v-2h-2v-2h6v2h-2v2zm-3.5-7.5c-.83 0-1.5-.67-1.5-1.5S8.67 7 9.5 7s1.5.67 1.5 1.5S10.33 10 9.5 10zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5S15.33 10 14.5 10z"/>
                         </svg>
                       </div>
                       <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-wood-dark animate-pulse"></span>
                     </div>
                     <div>
-                      <h3 className="font-serif font-bold text-sm leading-none">LD Assistant</h3>
+                      <h3 className="font-serif font-bold text-base leading-none">LD Assistant</h3>
                       {userName ? (
-                        <p className="text-[7.5px] text-wood-accent font-semibold tracking-wide mt-1">
+                        <p className="text-[8.5px] text-wood-accent font-semibold tracking-wide mt-1">
                           👤 Logged in as: {userName}
                         </p>
                       ) : (
-                        <span className="text-[9px] text-amber-200/90 font-medium tracking-wide inline-flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-amber-200/90 font-medium tracking-wide inline-flex items-center gap-1 mt-0.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
                           Natural Assistant • Online
                         </span>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => setIsChatOpen(false)}
-                    className="p-1 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {/* Maximize / Minimize Fullscreen Toggle Button */}
+                    <button
+                      onClick={() => setIsMaximized(prev => !prev)}
+                      className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
+                      title={isMaximized ? "Restore small view" : "Maximize Fullscreen View"}
+                    >
+                      {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsChatOpen(false);
+                        setIsMaximized(false);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
+                      title="Close Assistant"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Tabs */}
