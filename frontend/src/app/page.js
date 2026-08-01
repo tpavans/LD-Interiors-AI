@@ -3,114 +3,157 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame, Play } from 'lucide-react';
+import { ArrowRight, Loader2, Compass, Sparkles, Image as ImageIcon, Award, ShieldCheck, Flame, Play, Truck, Package, Shield, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
 const HOMEPAGE_CATEGORIES = ["All", "Gummalu", "Puja Mandiralu", "TV Units", "Sofas"];
 
-const BRAND_LOGOS = [
-  { name: "CenturyPly", type: "Premium Plywood" },
-  { name: "Greenply", type: "Plywood Panels" },
-  { name: "Fevicol Marine", type: "Waterproof Glue" },
-  { name: "Asian Paints", type: "PU Wood Polish" },
-  { name: "Hettich", type: "Drawer Channels" },
-  { name: "Ebco", type: "Telescopic Runners" },
-  { name: "Sheenlac", type: "Wood Sealers" },
-  { name: "Godrej", type: "Premium Hardware" },
-  { name: "Hafele", type: "Luxury Fittings" },
-  { name: "Merino", type: "High-End Laminates" },
-  { name: "Berger", type: "Acrylic Polishes" },
-  { name: "Araldite", type: "Epoxy Adhesives" }
+// Official Logistics & Delivery Partners
+const DELIVERY_PARTNERS = [
+  { name: "Xpressbees", role: "Pan-India Door Delivery Partner", badge: "Express Air & Surface" },
+  { name: "Delhivery", role: "Heavy Furniture Freight Courier", badge: "Live GPS Tracking" },
+  { name: "DTDC Express", role: "Priority Cargo & Parcel Delivery", badge: "Insured Transit" },
+  { name: "Safexpress", role: "Specialized Door & Mandir Logistics", badge: "Safe Crate Packing" },
+  { name: "Blue Dart", role: "Express Document & Hardware Courier", badge: "Air Cargo" },
+  { name: "V-Trans", role: "Heavy Teakwood Trunk Transport", badge: "Direct Workshop Hub" },
+  { name: "VRL Logistics", role: "South India Regional Freight", badge: "Alamuru Dispatch" },
+  { name: "GATI KWE", role: "Surface Express Parcel Cargo", badge: "Zero-Damage Guarantee" }
 ];
 
-const renderBrandLogo = (name) => {
+// Official Raw Materials & Hardware Brands
+const MATERIAL_BRANDS = [
+  { name: "Burma Teak", type: "Grade-A Aged Wood Logs", badge: "100% Genuine Teak" },
+  { name: "Asian Paints PU", type: "Italian Polyurethane Polish", badge: "High-Gloss & Matte" },
+  { name: "Fevicol Marine", type: "Pidilite Waterproof Adhesive", badge: "D3 Marine Grade" },
+  { name: "CenturyPly", type: "Boiling Water Proof Plywood", badge: "710 Grade BWP" },
+  { name: "Godrej Brass", type: "Antique Handles & Locks", badge: "10-Yr Warranty" },
+  { name: "Hafele", type: "German Architectural Fittings", badge: "Soft-Close Hinges" },
+  { name: "Ebco Hardware", type: "Telescopic Drawer Channels", badge: "Heavy Capacity" },
+  { name: "Sheenlac", type: "Wood Sealers & Varnishes", badge: "UV Resistance" }
+];
+
+const renderDeliveryPartnerLogo = (name) => {
   switch (name) {
-    case "CenturyPly":
+    case "Xpressbees":
       return (
-        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="40" rx="6" fill="#0c4da2" />
-          <rect width="10" height="40" fill="#e31e24" />
-          <text x="25" y="26" fill="#ffffff" fontFamily="sans-serif" fontSize="18" fontWeight="bold" letterSpacing="0.5">CenturyPLY</text>
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#E63946" />
+          <text x="12" y="26" fill="#FFFFFF" fontFamily="sans-serif" fontSize="18" fontWeight="900" letterSpacing="0.5">XPRESSBEES</text>
         </svg>
       );
-    case "Greenply":
+    case "Delhivery":
       return (
-        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="26" fill="#007a3d" fontFamily="sans-serif" fontSize="22" fontWeight="bold">greenply</text>
-          <path d="M115 15 C125 10, 135 15, 130 25 C120 30, 110 25, 115 15 Z" fill="#8dc63f" />
-          <path d="M122 17 L126 22" stroke="#007a3d" strokeWidth="1.5" />
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#111827" />
+          <text x="12" y="26" fill="#FFFFFF" fontFamily="sans-serif" fontSize="18" fontWeight="900" letterSpacing="1">DELHIVERY</text>
+          <rect x="135" y="12" width="14" height="16" fill="#EF4444" rx="2" />
+        </svg>
+      );
+    case "DTDC Express":
+      return (
+        <svg viewBox="0 0 140 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="140" height="40" rx="6" fill="#003366" />
+          <text x="14" y="26" fill="#FFCC00" fontFamily="sans-serif" fontSize="20" fontWeight="900" letterSpacing="1">DTDC</text>
+        </svg>
+      );
+    case "Safexpress":
+      return (
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#005A9C" />
+          <text x="12" y="26" fill="#F4A261" fontFamily="sans-serif" fontSize="17" fontWeight="900" letterSpacing="0.5">SAFEXPRESS</text>
+        </svg>
+      );
+    case "Blue Dart":
+      return (
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#FFCC00" />
+          <text x="12" y="26" fill="#D90429" fontFamily="sans-serif" fontSize="19" fontWeight="900" fontStyle="italic" letterSpacing="0.5">BLUE DART</text>
+        </svg>
+      );
+    case "V-Trans":
+      return (
+        <svg viewBox="0 0 140 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="140" height="40" rx="6" fill="#1D3557" />
+          <text x="14" y="26" fill="#4EA8DE" fontFamily="sans-serif" fontSize="18" fontWeight="900">V-TRANS</text>
+        </svg>
+      );
+    case "VRL Logistics":
+      return (
+        <svg viewBox="0 0 150 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="150" height="40" rx="6" fill="#008000" />
+          <text x="14" y="26" fill="#FFFFFF" fontFamily="sans-serif" fontSize="20" fontWeight="900">VRL LOGISTICS</text>
+        </svg>
+      );
+    case "GATI KWE":
+      return (
+        <svg viewBox="0 0 140 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="140" height="40" rx="6" fill="#D62828" />
+          <text x="16" y="26" fill="#F8961E" fontFamily="sans-serif" fontSize="20" fontWeight="900">GATI</text>
+          <text x="75" y="26" fill="#FFFFFF" fontFamily="sans-serif" fontSize="14" fontWeight="bold">KWE</text>
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
+
+const renderMaterialBrandLogo = (name) => {
+  switch (name) {
+    case "Burma Teak":
+      return (
+        <svg viewBox="0 0 170 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="170" height="40" rx="6" fill="#3D2314" />
+          <text x="12" y="25" fill="#D4A373" fontFamily="serif" fontSize="16" fontWeight="bold">BURMA TEAK</text>
+        </svg>
+      );
+    case "Asian Paints PU":
+      return (
+        <svg viewBox="0 0 170 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#d2232a" fontFamily="sans-serif" fontSize="19" fontWeight="bold">asianpaints</text>
+          <path d="M130 25 C140 10, 155 10, 165 25" stroke="#fdb813" strokeWidth="4" fill="none" strokeLinecap="round" />
         </svg>
       );
     case "Fevicol Marine":
       return (
-        <svg viewBox="0 0 180 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="50" y="26" fill="#0f2c59" fontFamily="sans-serif" fontSize="18" fontWeight="900" letterSpacing="1">FEVICOL</text>
-          <circle cx="20" cy="20" r="10" fill="#005ea6" />
-          <circle cx="160" cy="20" r="10" fill="#005ea6" />
-          <rect x="20" y="18" width="140" height="4" fill="#f8a51b" />
-          <circle cx="90" cy="20" r="8" fill="#f8a51b" />
+        <svg viewBox="0 0 170 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="45" y="26" fill="#0f2c59" fontFamily="sans-serif" fontSize="17" fontWeight="900" letterSpacing="1">FEVICOL</text>
+          <circle cx="18" cy="20" r="10" fill="#005ea6" />
+          <rect x="18" y="18" width="135" height="4" fill="#f8a51b" />
         </svg>
       );
-    case "Asian Paints":
+    case "CenturyPly":
       return (
-        <svg viewBox="0 0 180 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="26" fill="#d2232a" fontFamily="sans-serif" fontSize="20" fontWeight="bold">asianpaints</text>
-          <path d="M135 25 C145 10, 165 10, 175 25" stroke="#fdb813" strokeWidth="4" fill="none" strokeLinecap="round" />
-          <path d="M130 28 C140 13, 160 13, 170 28" stroke="#d2232a" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="160" height="40" rx="6" fill="#0c4da2" />
+          <rect width="10" height="40" fill="#e31e24" />
+          <text x="25" y="26" fill="#ffffff" fontFamily="sans-serif" fontSize="17" fontWeight="bold">CenturyPLY</text>
         </svg>
       );
-    case "Hettich":
+    case "Godrej Brass":
       return (
-        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="28" fill="#00519e" fontFamily="sans-serif" fontSize="26" fontWeight="bold" fontStyle="italic" letterSpacing="-0.5">Hettich</text>
-        </svg>
-      );
-    case "Ebco":
-      return (
-        <svg viewBox="0 0 120 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="120" height="40" rx="6" fill="#e31b23" />
-          <text x="25" y="27" fill="#ffffff" fontFamily="sans-serif" fontSize="24" fontWeight="bold" letterSpacing="0.5">ebco</text>
-        </svg>
-      );
-    case "Sheenlac":
-      return (
-        <svg viewBox="0 0 160 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="26" fill="#0f75bc" fontFamily="sans-serif" fontSize="22" fontWeight="bold">SHEENLAC</text>
-          <circle cx="140" cy="20" r="8" fill="#d2232a" />
-          <circle cx="140" cy="20" r="4" fill="#ffcb05" />
-        </svg>
-      );
-    case "Godrej":
-      return (
-        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="28" fill="#8b0000" fontFamily="'Georgia', serif" fontSize="24" fontWeight="bold" fontStyle="italic" letterSpacing="-0.5">Godrej</text>
+        <svg viewBox="0 0 140 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#8b0000" fontFamily="'Georgia', serif" fontSize="24" fontWeight="bold" fontStyle="italic">Godrej</text>
         </svg>
       );
     case "Hafele":
       return (
-        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="28" fill="#e31b23" fontFamily="sans-serif" fontSize="24" fontWeight="bold" letterSpacing="-0.5">HÄFELE</text>
+        <svg viewBox="0 0 140 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="28" fill="#e31b23" fontFamily="sans-serif" fontSize="24" fontWeight="bold">HÄFELE</text>
         </svg>
       );
-    case "Merino":
+    case "Ebco Hardware":
       return (
-        <svg viewBox="0 0 150 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="26" fill="#005ea6" fontFamily="sans-serif" fontSize="22" fontWeight="bold">merino</text>
-          <path d="M110 20 L130 20" stroke="#f8a51b" strokeWidth="4" />
+        <svg viewBox="0 0 120 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="40" rx="6" fill="#e31b23" />
+          <text x="25" y="27" fill="#ffffff" fontFamily="sans-serif" fontSize="24" fontWeight="bold">ebco</text>
         </svg>
       );
-    case "Berger":
+    case "Sheenlac":
       return (
-        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="10" y="28" fill="#0072bc" fontFamily="sans-serif" fontSize="26" fontWeight="bold" letterSpacing="0.5">BERGER</text>
-        </svg>
-      );
-    case "Araldite":
-      return (
-        <svg viewBox="0 0 140 40" className="h-6 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="140" height="40" rx="6" fill="#002b66" />
-          <text x="15" y="27" fill="#ffffff" fontFamily="sans-serif" fontSize="20" fontWeight="bold" fontStyle="italic">Araldite</text>
+        <svg viewBox="0 0 160 40" className="h-7 w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="26" fill="#0f75bc" fontFamily="sans-serif" fontSize="22" fontWeight="bold">SHEENLAC</text>
+          <circle cx="140" cy="20" r="7" fill="#d2232a" />
         </svg>
       );
     default:
@@ -133,7 +176,6 @@ export default function Home() {
       try {
         const response = await api.get('/products');
         setProducts(response.data);
-        // Default to latest 6 items
         setFilteredShowcase(response.data.slice(0, 6));
       } catch (err) {
         console.error('Error fetching products for homepage:', err);
@@ -157,7 +199,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-24 pb-20">
+    <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
       <section className="-mt-20 relative overflow-hidden border-b border-wood-border/30 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(44, 26, 15, 0.4), rgba(26, 15, 8, 0.75)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="mx-auto max-w-4xl text-center">
@@ -198,8 +240,8 @@ export default function Home() {
               <Flame className="h-6 w-6 animate-pulse" />
             </div>
             <div>
-              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "ప్యూర్ టేకు కలప" : "Premium Teak Wood"}</h4>
-              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "ఫారెస్ట్ డిపో గ్రేడ్ నాణ్యమైన కలప హామీ." : "Highest grade seasoned timber guarantee."}</p>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "100% అసలైన బర్మా టేకు" : "100% Genuine Burma Teak"}</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "ఉత్తమ క్వాలిటీ కలప మాత్రమే ఉపయోగిస్తాము." : "Pure seasoned teak for generations."}</p>
             </div>
           </div>
           <div className="glass-panel border border-wood-border/40 rounded-2xl p-6 flex items-center gap-4 hover:border-wood-accent/45 transition-colors duration-300">
@@ -207,262 +249,114 @@ export default function Home() {
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
-              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "మన్నికైన వారంటీ" : "Structural Warranty"}</h4>
-              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "చెదలు నిరోధకత, బలమైన ఇంటర్‌లాకింగ్ జాయింట్లు." : "Termite-resistant, sturdy joint engineering."}</p>
+              <h4 className="font-serif font-bold text-sm sm:text-base text-wood-dark">{isTelugu ? "నేరుగా ఆలమూరు వర్క్‌షాప్ ధరలు" : "Direct Alamuru Workshop Rates"}</h4>
+              <p className="text-xs text-wood-light font-light mt-0.5">{isTelugu ? "మధ్యవర్తులు లేకుండా ప్రత్యక్ష క్రాఫ్ట్‌స్మెన్ ధరలు." : "Factory direct prices with no middleman margins."}</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* About & Wooden Furniture Themes Section */}
-      <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        {/* Left Col: About Office */}
-        <div className="lg:col-span-7">
-          <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-            Our Heritage
+      {/* 1. OFFICIAL LOGISTICS & DELIVERY PARTNERS MARQUEE TICKER (NEW) */}
+      <section className="py-10 bg-slate-900 border-y border-slate-800 text-white overflow-hidden shadow-2xl">
+        <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 text-center mb-6">
+          <span className="text-[10px] font-black tracking-widest text-sky-400 uppercase bg-sky-950 px-3 py-1 rounded-full border border-sky-800">
+            Pan-India Safe Express Freight
           </span>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-wood-dark mt-2 mb-6">
-            About LD Interiors & Furnitures
-          </h2>
-          <p className="text-sm sm:text-base text-wood-medium font-light leading-relaxed mb-6">
-            For over <strong className="font-bold text-wood-dark">25+ years</strong>, LD Interiors & Furnitures has been a trusted pioneer in transforming blueprints into breathtaking living realities. Led by our head constructor and pricing specialist, <strong className="font-bold text-wood-dark">Nagaraju</strong>, we craft design experiences combining traditional durability with modern luxury aesthetics.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <div className="flex gap-3">
-              <span className="text-wood-accent font-serif text-lg font-bold">✓</span>
-              <div>
-                <h4 className="font-serif font-bold text-sm text-wood-dark">Traditional Carving</h4>
-                <p className="text-xs text-wood-light font-light mt-1">Custom door and mandir layout carvings in teak wood.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-wood-accent font-serif text-lg font-bold">✓</span>
-              <div>
-                <h4 className="font-serif font-bold text-sm text-wood-dark">Premium Lumber Selection</h4>
-                <p className="text-xs text-wood-light font-light mt-1">High-quality Teak, Rosewood, and Cedar materials.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-wood-accent font-serif text-lg font-bold">✓</span>
-              <div>
-                <h4 className="font-serif font-bold text-sm text-wood-dark">End-to-End Handover</h4>
-                <p className="text-xs text-wood-light font-light mt-1">Complete structural builds, partitionings, and installations.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-wood-accent font-serif text-lg font-bold">✓</span>
-              <div>
-                <h4 className="font-serif font-bold text-sm text-wood-dark">Konaseema Woodwork</h4>
-                <p className="text-xs text-wood-light font-light mt-1">Generations of families served in Alamuru region.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Col: Wooden Theme Highlights */}
-        <div className="lg:col-span-5 bg-white/70 backdrop-blur-xl border border-wood-border/40 rounded-3xl p-6 sm:p-8 shadow-lg relative overflow-hidden">
-          <div className="absolute -right-24 -bottom-24 w-48 h-48 bg-wood-accent/5 rounded-full blur-3xl pointer-events-none" />
-          <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-            Signature Design Tones
-          </span>
-          <h3 className="font-serif text-xl font-bold text-wood-dark mt-1 mb-6">
-            Bespoke Wooden Furniture
+          <h3 className="font-serif text-xl sm:text-2xl font-extrabold text-white mt-2 flex items-center justify-center gap-2">
+            <Truck className="h-6 w-6 text-[#008DDA]" />
+            Official Delivery & Logistics Partners
           </h3>
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
-              <h4 className="font-serif font-bold text-sm text-wood-dark">Teak Wood Main Doors</h4>
-              <p className="text-xs text-wood-light font-light mt-1">Robust entryways featuring traditional temple carving and brass fittings.</p>
-            </div>
-            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
-              <h4 className="font-serif font-bold text-sm text-wood-dark">Walnut & Beech Dining Sets</h4>
-              <p className="text-xs text-wood-light font-light mt-1">Hand-finished joint alignments with scratch-resistant wood polish.</p>
-            </div>
-            <div className="p-4 rounded-xl bg-wood-beige/20 border border-wood-border/30 hover:border-wood-accent/35 transition-colors duration-300">
-              <h4 className="font-serif font-bold text-sm text-wood-dark">Rosewood Modular Cabinets</h4>
-              <p className="text-xs text-wood-light font-light mt-1">Space-saving wardrobes and drawers built from seasoned rosewood.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Showcase Section */}
-      <section className="mx-auto w-full max-w-7xl px-6 sm:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-wood-border/30 pb-6 gap-4">
-          <div>
-            <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-              {t.gallerySub}
-            </span>
-            <h2 className="font-serif text-3xl font-bold tracking-tight text-wood-dark mt-1">
-              {t.galleryTitle}
-            </h2>
-          </div>
-          <Link
-            href="/products"
-            className="group inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-wood-dark hover:text-wood-accent transition-colors"
-          >
-            {t.viewAll}
-            <ArrowRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-
-        {/* Real-time Category Filtering Tabs */}
-        {!loading && !error && products.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-10 pb-2 overflow-x-auto select-none no-scrollbar">
-            {HOMEPAGE_CATEGORIES.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabChange(tab)}
-                className={`px-4.5 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 cursor-pointer ${
-                  activeTab === tab
-                    ? 'bg-wood-dark text-white shadow-md'
-                    : 'bg-white/60 text-wood-light border border-wood-border/40 hover:bg-wood-beige hover:text-wood-dark'
-                }`}
-              >
-                {isTelugu 
-                  ? (tab === "Gummalu" ? "గుమ్మాలు" : tab === "Puja Mandiralu" ? "పూజ మందిరాలు" : tab === "TV Units" ? "టీవీ యూనిట్లు" : tab === "Sofas" ? "సోఫాలు" : tab === "All" ? "అన్నీ" : tab)
-                  : (tab === "Gummalu" ? "Main Doors" : tab === "Puja Mandiralu" ? "Puja Mandirs" : tab)
-                }
-              </button>
-            ))}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex h-60 w-full items-center justify-center">
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-wood-light" />
-              <p className="text-sm text-wood-light font-light animate-pulse">{t.loadingShowcase}</p>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="rounded-2xl border border-wood-border/60 bg-wood-cream/90 backdrop-blur-md p-12 text-center">
-            <Compass className="mx-auto h-12 w-12 text-wood-light stroke-1 mb-4 animate-bounce" />
-            <h3 className="text-lg font-serif font-bold text-wood-dark">{t.offlineTitle}</h3>
-            <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">{error}</p>
-          </div>
-        ) : filteredShowcase.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-wood-border p-12 text-center">
-            <ImageIcon className="mx-auto h-12 w-12 text-wood-light mb-4" />
-            <h3 className="text-lg font-serif font-bold text-wood-dark">{t.noDesigns}</h3>
-            <p className="mt-2 text-sm text-wood-light font-light max-w-md mx-auto">
-              {t.preparingCatalog} "{activeTab}". {t.clickAll}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredShowcase.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Workshop Reels Section */}
-      {products.filter(p => p.video).length > 0 && (
-        <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 mt-12 sm:mt-16">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
-            <div className="text-left">
-              <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-                {isTelugu ? "లైవ్ వర్క్‌షాప్ రీల్స్" : "Live Workshop Videos"}
-              </span>
-              <h3 className="font-serif text-3xl font-bold text-wood-dark mt-1">
-                {isTelugu ? "వర్క్‌షాప్ డిజైన్ రీల్స్" : "Showcase Video Reels"}
-              </h3>
-              <p className="text-xs text-wood-light font-light mt-2 max-w-lg leading-relaxed">
-                {isTelugu 
-                  ? "మా వర్క్‌షాప్‌లో తయారవుతున్న మేలిరకం టేకు కలప చెక్కడాలు, ఫినిషింగ్ పనులు మరియు లైవ్ ఫర్నిచర్ వీడియోలను ఇక్కడ చూడండి."
-                  : "Watch live carpentry showcase, raw teak carvings, and finished luxury woodwork video reels directly from our workshop floor."}
-              </p>
-            </div>
-            <Link
-              href="/reels"
-              className="flex items-center gap-1 text-xs font-bold text-wood-accent hover:text-amber-500 uppercase tracking-widest transition-colors"
-            >
-              <span>{isTelugu ? "అన్ని రీల్స్ చూడండి" : "Watch All Reels"}</span>
-              <ArrowRight className="h-4.5 w-4.5" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {products.filter(p => p.video).slice(0, 4).map((prod) => (
-              <Link 
-                key={prod._id}
-                href="/reels"
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-wood-border/40 shadow-md hover:shadow-lg bg-neutral-900 cursor-pointer"
-              >
-                {/* Background Image */}
-                <img 
-                  src={prod.image} 
-                  alt={prod.title}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
-                />
-                
-                {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
-                
-                {/* Play Button Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-11 w-11 rounded-full bg-white/95 text-wood-dark flex items-center justify-center shadow-lg border border-wood-border/30 transform transition-all duration-300 group-hover:scale-110 group-hover:bg-wood-accent group-hover:text-wood-dark">
-                    <Play className="h-5 w-5 fill-current ml-0.5" />
-                  </div>
-                </div>
-
-                {/* Info Text */}
-                <div className="absolute bottom-4 left-4 right-4 text-left">
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-wood-accent text-wood-dark text-[7.5px] font-extrabold uppercase tracking-wider mb-1.5">
-                    {prod.category}
-                  </span>
-                  <h4 className="font-serif text-xs sm:text-sm font-bold text-white leading-tight truncate">
-                    {prod.title}
-                  </h4>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Premium Material Brands Scroll Section */}
-      <section className="py-16 border-t border-wood-border/30 bg-wood-cream/25 mt-16 overflow-hidden">
-        <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 text-center mb-8">
-          <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
-            {t.qualitySubtitle}
-          </span>
-          <h3 className="font-serif text-2xl font-bold text-wood-dark mt-1">
-            {t.qualityTitle}
-          </h3>
-          <p className="text-xs text-wood-light font-light mt-2 max-w-md mx-auto">
-            {t.qualityDesc}
+          <p className="text-xs text-slate-400 font-medium mt-1">
+            Doorstep crate delivery & live GPS tracking for your heavy Burma teak furniture via India's top courier networks.
           </p>
         </div>
 
-        {/* CSS-Animation Marquee Slider */}
-        <div className="logo-marquee-container relative py-6 bg-white/45 backdrop-blur-sm border-t border-b border-wood-border/20">
-          <div className="logo-marquee-content gap-16 items-center flex">
+        {/* Infinite Horizontal Rolling Marquee Ticker for Logistics */}
+        <div className="logo-marquee-container relative py-4 bg-slate-950/80 backdrop-blur-md border-y border-slate-800/80">
+          <div className="logo-marquee-content gap-8 items-center flex">
             {/* Set 1 */}
-            {BRAND_LOGOS.map((brand, index) => (
-              <div key={index} className="flex items-center gap-2.5 px-5 py-2 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+            {DELIVERY_PARTNERS.map((partner, index) => (
+              <div key={index} className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md shrink-0 select-none hover:border-sky-500 transition-colors">
                 <div className="flex items-center justify-center shrink-0">
-                  {renderBrandLogo(brand.name)}
+                  {renderDeliveryPartnerLogo(partner.name)}
                 </div>
-                <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
+                <div className="h-7 w-px bg-slate-700 mx-1"></div>
                 <div className="text-left">
-                  <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
-                  <p className="text-[7.5px] font-light text-wood-light leading-none mt-0.5">{brand.type}</p>
+                  <p className="text-[10px] font-black text-white uppercase leading-none tracking-wider">{partner.name}</p>
+                  <p className="text-[8px] font-bold text-sky-400 leading-none mt-1">{partner.role}</p>
+                  <span className="inline-block mt-1 text-[7.5px] font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
+                    {partner.badge}
+                  </span>
                 </div>
               </div>
             ))}
-            {/* Set 2 (Duplicate for infinite seamless scroll) */}
-            {BRAND_LOGOS.map((brand, index) => (
-              <div key={`dup-${index}`} className="flex items-center gap-2.5 px-5 py-2 rounded-2xl bg-wood-cream/80 border border-wood-border/40 shadow-sm shrink-0 select-none hover:border-wood-accent/50 transition-colors">
+            {/* Set 2 (Duplicate for smooth infinite scroll) */}
+            {DELIVERY_PARTNERS.map((partner, index) => (
+              <div key={`deliv-dup-${index}`} className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md shrink-0 select-none hover:border-sky-500 transition-colors">
                 <div className="flex items-center justify-center shrink-0">
-                  {renderBrandLogo(brand.name)}
+                  {renderDeliveryPartnerLogo(partner.name)}
                 </div>
-                <div className="h-6 w-px bg-wood-border/60 mx-1"></div>
+                <div className="h-7 w-px bg-slate-700 mx-1"></div>
                 <div className="text-left">
-                  <p className="text-[9px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
-                  <p className="text-[7.5px] font-light text-wood-light leading-none mt-0.5">{brand.type}</p>
+                  <p className="text-[10px] font-black text-white uppercase leading-none tracking-wider">{partner.name}</p>
+                  <p className="text-[8px] font-bold text-sky-400 leading-none mt-1">{partner.role}</p>
+                  <span className="inline-block mt-1 text-[7.5px] font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
+                    {partner.badge}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 2. OFFICIAL RAW MATERIALS & HARDWARE MARQUEE TICKER (UPGRADED) */}
+      <section className="py-10 border-b border-wood-border/30 bg-wood-cream/25 overflow-hidden">
+        <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 text-center mb-6">
+          <span className="text-[10px] font-extrabold tracking-widest text-wood-accent uppercase">
+            Certified Quality Guarantee
+          </span>
+          <h3 className="font-serif text-xl sm:text-2xl font-extrabold text-wood-dark mt-1 flex items-center justify-center gap-2">
+            <Package className="h-6 w-6 text-amber-600" />
+            Original Material & Hardware Brands
+          </h3>
+          <p className="text-xs text-wood-light font-light mt-1 max-w-md mx-auto">
+            We use only 100% genuine Grade-A Burma Teak, Italian PU polishes, and marine adhesives.
+          </p>
+        </div>
+
+        {/* Infinite Horizontal Rolling Marquee Ticker for Materials */}
+        <div className="logo-marquee-container relative py-4 bg-white/60 backdrop-blur-sm border-y border-wood-border/30">
+          <div className="logo-marquee-content gap-8 items-center flex">
+            {/* Set 1 */}
+            {MATERIAL_BRANDS.map((brand, index) => (
+              <div key={index} className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-wood-cream/90 border border-wood-border/50 shadow-sm shrink-0 select-none hover:border-wood-accent transition-colors">
+                <div className="flex items-center justify-center shrink-0">
+                  {renderMaterialBrandLogo(brand.name)}
+                </div>
+                <div className="h-7 w-px bg-wood-border/60 mx-1"></div>
+                <div className="text-left">
+                  <p className="text-[10px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
+                  <p className="text-[8px] font-semibold text-wood-medium leading-none mt-1">{brand.type}</p>
+                  <span className="inline-block mt-1 text-[7.5px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                    {brand.badge}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {/* Set 2 (Duplicate for smooth infinite scroll) */}
+            {MATERIAL_BRANDS.map((brand, index) => (
+              <div key={`mat-dup-${index}`} className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-wood-cream/90 border border-wood-border/50 shadow-sm shrink-0 select-none hover:border-wood-accent transition-colors">
+                <div className="flex items-center justify-center shrink-0">
+                  {renderMaterialBrandLogo(brand.name)}
+                </div>
+                <div className="h-7 w-px bg-wood-border/60 mx-1"></div>
+                <div className="text-left">
+                  <p className="text-[10px] font-extrabold text-wood-dark uppercase leading-none tracking-wider">{brand.name}</p>
+                  <p className="text-[8px] font-semibold text-wood-medium leading-none mt-1">{brand.type}</p>
+                  <span className="inline-block mt-1 text-[7.5px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                    {brand.badge}
+                  </span>
                 </div>
               </div>
             ))}
