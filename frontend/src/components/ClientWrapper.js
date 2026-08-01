@@ -1046,47 +1046,69 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
 
       // 5. PRICING & ESTIMATION / QUOTATIONS
       if (query.includes('price') || query.includes('cost') || query.includes('estimation') || query.includes('budget') || query.includes('ధర') || query.includes('ఖర్చు') || query.includes('rate') || query.includes('quotation') || query.includes('quote') || query.includes('negotiation') || query.includes('payment')) {
-        return langStyle === 'en'
-          ? `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, we'll proceed with your order.`
-          : langStyle === 'te'
-          ? `తాజా ధరలు, మెటీరియల్ ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, నేను మీ ఆర్డర్‌తో ముందుకుసాగుతాను.`
-          : `For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998) or Tech Admin Pavan Sai (+919346325291). Once the quotation is confirmed, I'll proceed with your order.`;
+        return `తాజా ధరలు, కస్టమ్ కొలతల ఎంపిక మరియు తుది కొటేషన్ కోసం, దయచేసి మిస్టర్ నాగరాజు (+916281653998) లేదా వెబ్ అడ్మిన్ పవన్ సాయి (+919346325291) గారితో మాట్లాడండి. కొటేషన్ ధృవీకరించబడిన తర్వాత, మేము మీ ఆర్డర్‌తో ముందుకుసాగుతాము.`;
       }
 
-      // 6. ADDRESS & LOCATION
-      if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
-        return langStyle === 'en'
-          ? `Our office and carpentry workshop is located at Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. We offer free delivery and setup in the surrounding areas!`
-          : langStyle === 'te'
-          ? `మా ఆఫీస్ మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233.`
-          : `Maa office workshop details: Door No. 6-132, Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh, PIN: 533233. Konaseema surroundings lo delivery coordinate chestham andi.`;
-      }
-
-      // 7. EXPERIENCE & TRUST
-      if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
-        return langStyle === 'en'
-          ? `LD Interiors & Furnitures has over 25 years of local carpentry trust and design legacy in the Konaseema region. We maintain the highest standards of Teak durability.`
-          : `LD Interiors & Furnitures ki Konaseema area surroundings lo total 25+ years experience and solid quality wood carpentry trust records undi andi. Strong teak wood carvings designs durability criteria checks is standard high level!`;
-      }
-
-      // 8. TEAK WOOD QUALITY INQUIRIES
-      const isWoodQuality = query.includes('teak') || query.includes('wood') || query.includes('karra') || query.includes('quality') || query.includes('కలప') || query.includes('కర్ర') || query.includes('టేక్');
+      // 6. TEAK WOOD QUALITY, TERMITES & DURABILITY
+      const isWoodQuality = query.includes('wood') || query.includes('teak') || query.includes('quality') || query.includes('termite') || query.includes('కలప') || query.includes('కర్ర') || query.includes('టేకు') || query.includes('చెదలు') || query.includes('మన్నిక') || query.includes('క్వాలిటీ');
       if (isWoodQuality) {
-        return langStyle === 'en'
-          ? `We construct our furniture using 100% pure genuine quality Teak wood (టేక్ కరప) to ensure high density, moisture protection, and lifetime durability. No synthetic mix or low-grade materials are allowed in our workshop! 🪵✨`
-          : langStyle === 'te'
-          ? `మేము మా ఫర్నిచర్‌ను కేవలం 100% నిజమైన మరియు అత్యుత్తమ టేక్ కలపతోనే తయారు చేస్తాము. ఇది వర్షానికి లేదా వేడికి చెడిపోదు, జీవితాంతం మన్నికగా ఉంటుంది! 🪵✨`
-          : `Maa workshop lo exclusively 100% pure Teak wood selection mathramey chestaru Nagaraju garu. Heavy density, double-cote Manchams verification parameters chala strict ga maintain chesi lifetime safety assurance istham andi! 🪵✨`;
+        return `🌲 **టేకు కలప నాణ్యత & మన్నిక (Teak Wood Quality & Guarantee)**:
+- **100% ప్యూర్ బర్మా టేకు**: మా వద్ద కేవలం 100% వయసైన బర్మా టేకు కలప (Aged Burma Teak Wood) మాత్రమే ఉపయోగిస్తాము.
+- **చెదలు పట్టవు**: నాచురల్ టేకు నూనెలు ఉండడం వల్ల చెదలు (Termites) పట్టుకునే అవకాశమే లేదు.
+- **నీటి నిరోధకత (Water Resistant)**: తేమ లేదా నీటికి చెక్క వంగడం గానీ, ఉబ్బడం గానీ జరగదు.
+- **జీవితాంతం మన్నిక**: తర తరాలుగా 50+ ఏళ్లు మన్నికగా ఉండేలా పటిష్టమైన వడరంగి పనితనంతో తయారుచేస్తాము!`;
       }
 
-      // 9. THANK YOU / CUTE RESPONSES
+      // 7. POLISH & FINISHING OPTIONS
+      const isPolishInfo = query.includes('polish') || query.includes('finish') || query.includes('pu') || query.includes('melamine') || query.includes('color') || query.includes('పాలిష్') || query.includes('రంగు') || query.includes('మ్యాట్') || query.includes('గ్లోసీ');
+      if (isPolishInfo) {
+        return `✨ **పాలిష్ రకాలు & ఫినిషింగ్ వివరాలు (Teak Wood Polish Options)**:
+- **Italian Asian Paints PU Polish**: అల్ట్రా లగ్జరీ హై-గ్లోసీ మరియు మ్యాట్ ఫినిషింగ్ (UV Resistance & Anti-Scratch).
+- **Melamine Polish**: నాచురల్ టేకువుడ్ గ్రెయిన్స్ ప్రముఖంగా కనిపించే మ్యాట్/గ్లోసీ ఫినిషింగ్.
+- **రంగుల ఎంపిక**: Natural Teak (స్వాభావిక టేకు షేడ్), Dark Walnut (డార్క్ వాల్‌నట్), Rosewood Finish, & Golden Oak.`;
+      }
+
+      // 8. CUSTOM CARVINGS & HANDICRAFT
+      const isCarvingInfo = query.includes('carving') || query.includes('design') || query.includes('cnc') || query.includes('craft') || query.includes('చెక్కడాలు') || query.includes('డిజైన్') || query.includes('హ్యాండ్');
+      if (isCarvingInfo) {
+        return `🪵 **కస్టమ్ చెక్కడాలు & 3D డిజైన్లు (Hand Carving & CNC Designs)**:
+- **కోనసీమ చేతి పనితనం**: 25+ ఏళ్ల అనుభవం ఉన్న మూలస్థానం వడ్రంగి కాపు కళాకారులతో సాంప్రదాయ హ్యాండ్ కార్వింగ్ చెక్కడాలు.
+- **3D CNC అడ్వాన్స్‌డ్ డిజైన్లు**: కస్టమర్ కోరిన ఏ బొమ్మ లేదా క్లిష్టమైన డిజైన్ అయినా CNC మెషిన్ ద్వారా కచ్చితమైన కొలతలతో చెక్కబడును.
+- **కస్టమ్ సైజులు**: మీ ఇంటి డోర్/మందిరం/మంచం సైజులకు తగ్గట్టుగా నచ్చిన డిజైన్ చేసి ఇస్తాము.`;
+      }
+
+      // 9. CLEANING & MAINTENANCE
+      const isMaintenance = query.includes('clean') || query.includes('care') || query.includes('maintain') || query.includes('మెయింటెనెన్స్') || query.includes('శుభ్రం') || query.includes('తడవకుండా');
+      if (isMaintenance) {
+        return `🧼 **ఫర్నిచర్ క్లీనింగ్ & మెయింటెనెన్స్ సూచనలు**:
+1. వారానికి ఒకసారి పొడి మైక్రోఫైబర్ లేదా కాటన్ గుడ్డతో దుమ్ము తుడిస్తే చాలు.
+2. చెక్కపై డైరెక్ట్ వేడి లేదా తీవ్రమైన రసాయనాలు (Strong Acid Cleaners) వాడకూడదు.
+3. ప్రతి 2-3 ఏళ్లకు ఒకసారి నాచురల్ వాక్స్ పాలిష్ తుడిస్తే డిజైన్ కొత్తదానిలా మెరుస్తుంది.`;
+      }
+
+      // 10. DELIVERY & WORKSHOP TOUR
+      const isDeliveryTour = query.includes('delivery') || query.includes('tour') || query.includes('workshop') || query.includes('డెలివరీ') || query.includes('వర్క్‌షాప్');
+      if (isDeliveryTour) {
+        return `🚛 **వర్క్‌షాప్ విజిట్ & డెలివరీ వివరాలు**:
+- **ఉచిత డెలివరీ**: కోనసీమ, విజయవాడ, విశాఖపట్నం, గుంటూరు మరియు ఆంధ్రప్రదేశ్/తెలంగాణ అంతటా సేఫ్ డెలివరీ.
+- **వర్క్‌షాప్ దర్శనం**: మూలస్థానం (ఆలమూరు మండలం) లోని మా వర్క్‌షాప్‌కి నేరుగా వచ్చి మీరు కలప లాగ్‌లను, తయారీ పనిని ప్రత్యక్షంగా చూడవచ్చు!
+- **సంప్రదించండి**: యజమాని మిస్టర్ నాగరాజు (+916281653998).`;
+      }
+
+      // 11. ADDRESS & LOCATION
+      if (query.includes('address') || query.includes('location') || query.includes('where') || query.includes('office') || query.includes('place') || query.includes('ఎక్కడ')) {
+        return `మా ఆఫీస్ మరియు వర్క్‌షాప్ చిరునామా: డోర్ నెం. 6-132, మూలస్థానం, ఆలమూరు మండలం, కోనసీమ జిల్లా, ఆంధ్రప్రదేశ్, పిన్: 533233. డెలివరీ కోసం నాగరాజు (+916281653998) గారిని సంప్రదించండి.`;
+      }
+
+      // 12. EXPERIENCE & TRUST
+      if (query.includes('experience') || query.includes('years') || query.includes('trust') || query.includes('అనుభవం')) {
+        return `LD Interiors & Furnitures కి కోనసీమ ప్రాంతంలో 25+ ఏళ్ల అనుభవం మరియు విశ్వసనీయత కలదు. మా వద్ద 100% ప్యూర్ టేకువుడ్ ఉత్పత్తులు మాత్రమే లభించును.`;
+      }
+
+      // 13. THANK YOU RESPONSES
       const isThankYou = query.includes('thank') || query.includes('thanks') || query.includes('dhanyavadalu') || query.includes('nice') || query.includes('good') || query.includes('super') || query.includes('happy') || query.includes('ధన్యవాదాలు');
       if (isThankYou) {
-        return langStyle === 'en'
-          ? `Aww, thank you so much! 😊 It is my absolute pleasure to guide you. If you need any more customization designs or help, please let me know. Have a wonderful day! 🌸`
-          : langStyle === 'te'
-          ? `ధన్యవాదాలు అండీ! 😊 మీకు సహాయపడటం నాకు చాలా సంతోషంగా ఉంది. మీకు ఏవైనా డిజైన్ మార్పులు లేదా ఇతర సమాచారం కావాలంటే అడగండి. మీకు మంచి రోజు అవ్వాలని కోరుకుంటున్నాను! 🌸`
-          : `Chala chala thank you andi! 😊 Mimmalni assist cheyyadam naku chala happy ga undandi. Custom orders configuration modifications updates emaina chusthara andi? Please tell me! 🌸`;
+        return `ధన్యవాదాలు అండీ! 😊 మీకు సహాయపడటం నాకు చాలా సంతోషంగా ఉంది. మీకు ఏవైనా డిజైన్ మార్పులు లేదా ఇతర సమాచారం కావాలంటే అడగండి. మీకు మంచి రోజు అవ్వాలని కోరుకుంటున్నాను! 🌸`;
       }
 
       // 7. CATEGORY RAG DATABASE SEARCH
@@ -2399,7 +2421,18 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
+            onClick={() => {
+              const nextState = !isChatOpen;
+              setIsChatOpen(nextState);
+              if (nextState) {
+                // Direct user gesture audio unlock for mobile browsers
+                speakMessage("నమస్కారం! ఎల్ డి ఇంటీరియర్స్ అండ్ ఫర్నిచర్స్ కి స్వాగతం! మా వద్ద 100% అసలైన టేకువుడ్ డిజైన్లు కలవు. మీకు ఏ వివరాలు కావాలి?", true);
+              } else {
+                if (typeof window !== 'undefined' && window.speechSynthesis) {
+                  window.speechSynthesis.cancel();
+                }
+              }
+            }}
             className="flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
             {isChatOpen ? (
