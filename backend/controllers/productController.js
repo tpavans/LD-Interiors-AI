@@ -290,6 +290,65 @@ const createProduct = async (req, res) => {
 };
 
 /**
+ * Helper: AI Smart Title Generator based on file keywords & category
+ */
+const generateSmartProductTitle = (file, category, customPrefix = '') => {
+  if (customPrefix && customPrefix.trim() !== '') {
+    return customPrefix.trim();
+  }
+
+  const name = `${file?.filename || ''} ${file?.originalname || ''}`.toLowerCase();
+
+  if (name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner')) {
+    return 'Handcrafted Teakwood Vegetable & Potato Smasher';
+  }
+  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('cutlery')) {
+    return 'Grade-A Burma Teak Kitchen Spoon & Spatula Set';
+  }
+  if (name.includes('rolling') || name.includes('belan')) {
+    return 'Solid Teakwood Ergonomic Rolling Pin (Belan)';
+  }
+  if (name.includes('spice') || name.includes('anjal')) {
+    return 'Traditional Teakwood Multi-Compartment Spice Box';
+  }
+  if (name.includes('bat') || name.includes('cricket')) {
+    return 'Solid Burma Teak Premium Wooden Cricket Bat';
+  }
+  if (name.includes('bar') || name.includes('wine') || name.includes('liquor')) {
+    return 'Royal Teakwood Luxury Bar Cabinet & Wine Storage';
+  }
+  if (name.includes('mandir') || name.includes('pooja') || name.includes('temple') || name.includes('puja')) {
+    return 'Handcarved Teakwood Temple Puja Mandiram';
+  }
+  if (name.includes('door') || name.includes('gummalu') || name.includes('entrance')) {
+    return 'Carved Burma Teakwood Grand Entrance Main Door';
+  }
+  if (name.includes('dining') || name.includes('table')) {
+    return 'Maharaj Model Teakwood Dining Table Set';
+  }
+  if (name.includes('bed') || name.includes('cot') || name.includes('bedroom')) {
+    return 'Royal Burma Teak King Size Bedroom Cot';
+  }
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand')) {
+    return 'Modern Teakwood Tiered Indoor Plant Stand';
+  }
+
+  const categoryTitleMap = {
+    'Kitchen': 'Handcrafted Grade-A Teakwood Kitchen Utensil',
+    'Sports': 'Burma Teak Handcrafted Sports Equipment',
+    'Doors': 'Handcarved Teakwood Architectural Entrance Door',
+    'Wooden Beds': 'Luxury Burma Teakwood Bedroom Furniture Cot',
+    'Puja Mandiralu': 'Traditional Handcarved Teak Puja Mandiram',
+    'Dining Tables': 'Teakwood Luxury Dining Room Furniture Set',
+    'Living Room': 'Royal Burma Teakwood Living Room Showcase',
+    'Garden & Decor': 'Teakwood Handcrafted Home & Garden Decor',
+    'Carvings & Handicrafts': 'Artisanal Teakwood Sculpted Handicraft'
+  };
+
+  return categoryTitleMap[category] || `Premium Handcrafted Burma Teakwood ${category} Design`;
+};
+
+/**
  * Helper: AI Category Classifier for image filenames / visual keywords
  */
 const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
@@ -403,10 +462,10 @@ const createBulkProducts = async (req, res) => {
         // Group ALL photos of this category into 1 single Product catalog item (e.g. Maharaj Table Set or Smasher 3-pack)
         const imageUrls = catResults.map(r => r.url);
         const imagePublicIds = catResults.map(r => r.publicId);
-        const baseTitle = titlePrefix?.trim() || `${catName} Teak Design`;
+        const smartTitle = generateSmartProductTitle(catResults[0]?.fileRef, catName, titlePrefix);
 
         productsToCreate.push({
-          title: `${baseTitle} #${Date.now().toString().slice(-4)}`,
+          title: `${smartTitle} #${Date.now().toString().slice(-4)}`,
           category: catName,
           image: imageUrls[0],
           imageUrl: imageUrls[0],
@@ -430,10 +489,10 @@ const createBulkProducts = async (req, res) => {
           const imagePublicIds = chunk.map(r => r.publicId);
           categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
 
-          const baseTitle = titlePrefix?.trim() || `${catName} Teak Design`;
+          const smartTitle = generateSmartProductTitle(chunk[0]?.fileRef, catName, titlePrefix);
 
           productsToCreate.push({
-            title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[catName]}`,
+            title: `${smartTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[catName]}`,
             category: catName,
             image: imageUrls[0],
             imageUrl: imageUrls[0],
