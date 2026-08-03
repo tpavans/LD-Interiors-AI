@@ -292,16 +292,13 @@ const createProduct = async (req, res) => {
 /**
  * Helper: AI Category Classifier for image filenames / visual keywords
  */
-/**
- * Helper: AI Category Classifier for image filenames / visual keywords
- */
 const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
   const name = `${file?.filename || ''} ${file?.originalname || ''}`.toLowerCase();
   
   if (name.includes('bat') || name.includes('cricket') || name.includes('ball') || name.includes('sport') || name.includes('racket') || name.includes('game')) {
     return 'Sports';
   }
-  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('rolling') || name.includes('spice') || name.includes('kitchen') || name.includes('utensil') || name.includes('bowl') || name.includes('plate') || name.includes('tray') || name.includes('chop') || name.includes('fork') || name.includes('cutlery')) {
+  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('rolling') || name.includes('spice') || name.includes('kitchen') || name.includes('utensil') || name.includes('bowl') || name.includes('plate') || name.includes('tray') || name.includes('chop') || name.includes('fork') || name.includes('cutlery') || name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner') || name.includes('mathani') || name.includes('pestle') || name.includes('mortar')) {
     return 'Kitchen';
   }
   if (name.includes('door') || name.includes('gummalu') || name.includes('doorframe') || name.includes('darabandham') || name.includes('main_door') || name.includes('entrance') || name.includes('wooddoor')) {
@@ -326,11 +323,11 @@ const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
     return 'Carvings & Handicrafts';
   }
 
-  return primaryBatchCategory || 'Living Room';
+  return primaryBatchCategory || 'Kitchen';
 };
 
 /**
- * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection, Auto Category Creation & Grouping)
+ * @desc    Bulk upload design catalog items (with AI Category Detection & Automatic Single Product Catalog Grouping)
  * @route   POST /api/products/bulk
  * @access  Private (Admin only)
  */
@@ -342,7 +339,7 @@ const createBulkProducts = async (req, res) => {
     const { category, price, titlePrefix, aiAutoDetect, groupAsOneProduct } = req.body;
     const isAiAutoDetect = aiAutoDetect === 'true' || aiAutoDetect === true || category === 'AI_AUTO_DETECT';
     const isGroupAsOne = groupAsOneProduct === 'true' || groupAsOneProduct === true;
-    const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Living Room');
+    const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Kitchen');
     const defaultPrice = price ? Number(price) : 0;
 
     const files = Array.isArray(req.files)
@@ -353,7 +350,7 @@ const createBulkProducts = async (req, res) => {
       return res.status(400).json({ message: 'Please select image files for bulk upload.' });
     }
 
-    console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Detect: ${isAiAutoDetect}, Group As Single Product: ${isGroupAsOne})...`);
+    console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Detect: ${isAiAutoDetect}, Force Single Product: ${isGroupAsOne})...`);
 
     // Upload files to Cloudinary gracefully
     const uploadPromises = files.map(async (file, idx) => {
@@ -371,103 +368,96 @@ const createBulkProducts = async (req, res) => {
     const uploadResults = rawResults.filter(Boolean);
 
     if (uploadResults.length === 0) {
-      return res.status(400).json({ message: 'Could not process or upload selected images to Cloudinary. Please try selecting different photos.' });
+      return res.status(400).json({ message: 'Could not process or upload selected images to Cloudinary.' });
     }
 
-    // Determine batch primary category
-    let batchCategory = selectedCategory;
-    if (isAiAutoDetect) {
-      for (const resItem of uploadResults) {
-        const det = detectCategoryFromImage(resItem.fileRef, null);
-        if (det && det !== 'Living Room') {
-          batchCategory = det;
-          break;
-        }
+    // Group uploadResults by AI-detected category
+    const itemsByCategory = {};
+    uploadResults.forEach((result) => {
+      const file = result.fileRef || {};
+      const cat = isAiAutoDetect ? detectCategoryFromImage(file, selectedCategory) : selectedCategory;
+      if (!itemsByCategory[cat]) {
+        itemsByCategory[cat] = [];
       }
-      if (!batchCategory || batchCategory === 'AI_AUTO_DETECT') {
-        batchCategory = detectCategoryFromImage(uploadResults[0]?.fileRef, 'Living Room');
-      }
-    }
-
-    // Auto-create Category document in DB if it doesn't exist yet!
-    try {
-      const Category = require('../models/Category');
-      const existingCat = await Category.findOne({ name: { $regex: new RegExp(`^${batchCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
-      if (!existingCat) {
-        await Category.create({ name: batchCategory });
-        console.log(`[Bulk Upload] Auto-created new Category in MongoDB: ${batchCategory}`);
-      }
-    } catch (e) {
-      console.error('[Bulk Upload] Category auto-creation check error:', e.message);
-    }
+      itemsByCategory[cat].push(result);
+    });
 
     const productsToCreate = [];
     const categoryCounts = {};
 
-    if (isGroupAsOne) {
-      // Create 1 single Product containing all uploaded multi-angle images
-      const imageUrls = uploadResults.map(r => r.url);
-      const imagePublicIds = uploadResults.map(r => r.publicId);
-      const baseTitle = titlePrefix?.trim() || `${batchCategory} Teak Design`;
+    // Process each category group
+    for (const [catName, catResults] of Object.entries(itemsByCategory)) {
+      // Auto-create Category document in MongoDB if it doesn't exist yet!
+      try {
+        const Category = require('../models/Category');
+        const existingCat = await Category.findOne({ name: { $regex: new RegExp(`^${catName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        if (!existingCat) {
+          await Category.create({ name: catName });
+          console.log(`[Bulk Upload] Auto-created new Category in MongoDB: ${catName}`);
+        }
+      } catch (e) {
+        console.error('[Bulk Upload] Category auto-creation check error:', e.message);
+      }
 
-      productsToCreate.push({
-        title: `${baseTitle} #${Date.now().toString().slice(-4)}`,
-        category: batchCategory,
-        image: imageUrls[0],
-        imageUrl: imageUrls[0],
-        imagePublicId: imagePublicIds[0],
-        images: imageUrls,
-        imagesPublicIds: imagePublicIds,
-        price: defaultPrice,
-        description: `Handcrafted Grade-A Burma Teakwood design for ${batchCategory}. Contains ${imageUrls.length} multi-angle showcase photos.`,
-        rating: 4.9,
-        ratingsCount: 1,
-        ratingsSum: 4.9,
-        createdAt: new Date()
-      });
-      categoryCounts[batchCategory] = 1;
-    } else {
-      // Create individual products, assigning each image to the detected category
-      uploadResults.forEach((result) => {
-        const file = result.fileRef || {};
-        let assignedCategory = isAiAutoDetect ? detectCategoryFromImage(file, batchCategory) : batchCategory;
-
-        categoryCounts[assignedCategory] = (categoryCounts[assignedCategory] || 0) + 1;
-
-        // Auto-create category in DB if needed
-        try {
-          const Category = require('../models/Category');
-          Category.findOne({ name: { $regex: new RegExp(`^${assignedCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } })
-            .then(existing => { if (!existing) Category.create({ name: assignedCategory }).catch(() => {}); });
-        } catch (e) {}
-
-        const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
+      if (isGroupAsOne) {
+        // Group ALL photos of this category into 1 single Product catalog item (e.g. Maharaj Table Set or Smasher 3-pack)
+        const imageUrls = catResults.map(r => r.url);
+        const imagePublicIds = catResults.map(r => r.publicId);
+        const baseTitle = titlePrefix?.trim() || `${catName} Teak Design`;
 
         productsToCreate.push({
-          title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[assignedCategory]}`,
-          category: assignedCategory,
-          image: result.url,
-          imageUrl: result.url,
-          imagePublicId: result.publicId,
-          images: [result.url],
-          imagesPublicIds: [result.publicId],
+          title: `${baseTitle} #${Date.now().toString().slice(-4)}`,
+          category: catName,
+          image: imageUrls[0],
+          imageUrl: imageUrls[0],
+          imagePublicId: imagePublicIds[0],
+          images: imageUrls,
+          imagesPublicIds: imagePublicIds,
           price: defaultPrice,
-          description: `Handcrafted Grade-A Burma Teakwood design for ${assignedCategory}.`,
+          description: `Handcrafted Grade-A Burma Teakwood design for ${catName}. Contains ${imageUrls.length} showcase photos.`,
           rating: 4.9,
           ratingsCount: 1,
           ratingsSum: 4.9,
           createdAt: new Date()
         });
-      });
+        categoryCounts[catName] = 1;
+      } else {
+        // Automatically group up to 5 gallery images per product catalog entry!
+        const CHUNK_SIZE = 5;
+        for (let i = 0; i < catResults.length; i += CHUNK_SIZE) {
+          const chunk = catResults.slice(i, i + CHUNK_SIZE);
+          const imageUrls = chunk.map(r => r.url);
+          const imagePublicIds = chunk.map(r => r.publicId);
+          categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
+
+          const baseTitle = titlePrefix?.trim() || `${catName} Teak Design`;
+
+          productsToCreate.push({
+            title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[catName]}`,
+            category: catName,
+            image: imageUrls[0],
+            imageUrl: imageUrls[0],
+            imagePublicId: imagePublicIds[0],
+            images: imageUrls,
+            imagesPublicIds: imagePublicIds,
+            price: defaultPrice,
+            description: `Handcrafted Grade-A Burma Teakwood design for ${catName}. Contains ${imageUrls.length} showcase gallery photo(s).`,
+            rating: 4.9,
+            ratingsCount: 1,
+            ratingsSum: 4.9,
+            createdAt: new Date()
+          });
+        }
+      }
     }
 
     const insertedProducts = await Product.insertMany(productsToCreate);
-    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} item(s)!`);
+    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} catalog item(s)!`);
 
-    const summaryParts = Object.entries(categoryCounts).map(([cat, count]) => `${count} in ${cat}`);
+    const summaryParts = Object.entries(categoryCounts).map(([cat, count]) => `${count} product(s) in ${cat}`);
 
     res.status(201).json({
-      message: `🎉 Successfully uploaded ${insertedProducts.length} item(s) under category "${batchCategory}": ${summaryParts.join(', ')}!`,
+      message: `🎉 Successfully created ${insertedProducts.length} catalog item(s): ${summaryParts.join(', ')}!`,
       count: insertedProducts.length,
       categoryCounts,
       products: insertedProducts
