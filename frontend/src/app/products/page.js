@@ -298,14 +298,6 @@ export default function ProductsPage() {
         {/* High-Tech Interactive Feature Buttons */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 animate-fadeIn">
           <button
-            onClick={() => setShowBuildStudio(prev => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#008DDA] hover:bg-[#0077B6] text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
-          >
-            <Sliders className="h-3.5 w-3.5" />
-            <span>🛠️ Custom Wood Build Studio & Cft Calculator</span>
-          </button>
-
-          <button
             onClick={() => setShowWorkshopBooking(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider shadow-md transition-all duration-300 cursor-pointer"
           >
@@ -325,13 +317,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Conditionally Render Build Studio Inline Section */}
-      {showBuildStudio && (
-        <div className="mb-12">
-          <CustomBuildStudio onClose={() => setShowBuildStudio(false)} />
-        </div>
-      )}
-
       {/* Workshop Booking Modal */}
       {showWorkshopBooking && (
         <WorkshopTourBookingModal onClose={() => setShowWorkshopBooking(false)} />
@@ -341,89 +326,6 @@ export default function ProductsPage() {
       {arProduct && (
         <ARRoomViewerModal product={arProduct} onClose={() => setArProduct(null)} />
       )}
-
-      {/* Search Bar with Voice Microphone & Live Autocomplete Dropdown */}
-      <div className="max-w-md mx-auto mb-10">
-        <div className="relative flex items-center">
-          <Search className="absolute left-4 top-3.5 h-4.5 w-4.5 text-wood-light/60 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            placeholder="Search designs (e.g. bed, dining, doors...)"
-            className="w-full rounded-full border border-wood-border/60 bg-white/90 backdrop-blur-md pl-11 pr-20 py-3 text-sm focus:border-[#008DDA] focus:ring-4 focus:ring-[#008DDA]/15 focus:outline-none transition-all text-wood-dark placeholder-wood-light/70 shadow-md font-medium"
-          />
-
-          <div className="absolute right-3 top-2 flex items-center gap-1.5">
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  filterProducts(selectedCategory, "");
-                }}
-                className="text-wood-light hover:text-wood-dark transition-colors cursor-pointer flex items-center justify-center p-1"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-
-            {/* Telugu / English Voice Search Microphone Button */}
-            <VoiceSearchButton
-              language="te-IN"
-              onSpeechResult={(spokenText) => {
-                setSearchQuery(spokenText);
-                filterProducts(selectedCategory, spokenText);
-              }}
-            />
-          </div>
-
-          {/* Amazon / Flipkart Style Live Search Dropdown */}
-          {isSearchFocused && searchQuery.trim() !== "" && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-              <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-sky-500" />
-                  Matching Products ({products.filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.category?.toLowerCase().includes(searchQuery.toLowerCase())).length})
-                </span>
-                <span className="text-[9px] text-slate-500 font-medium">Click to view design</span>
-              </div>
-
-              {products.filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.category?.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
-                <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                  {products.filter(p => p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.category?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 6).map((item) => (
-                    <div
-                      key={item._id}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setIsSearchFocused(false);
-                        window.location.href = `/products/${item._id}`;
-                      }}
-                      className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
-                    >
-                      <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
-                          <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-5 text-center">
-                  <p className="text-xs text-slate-600 font-medium">No matching designs found for "{searchQuery}"</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Try searching for Doors, Beds, Puja Mandirams...</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Aligned Category Filter Pills */}
       <div className="w-full overflow-x-auto scrollbar-none mb-8 pb-4 border-b border-slate-200">
