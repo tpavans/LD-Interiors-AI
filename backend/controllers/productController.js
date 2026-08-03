@@ -305,14 +305,15 @@ const getDesignGroupKey = (file, category) => {
   if (name.includes('door') || name.includes('gummalu') || name.includes('entrance')) return 'main_door';
   if (name.includes('dining') || name.includes('table')) return 'dining_table';
   if (name.includes('bed') || name.includes('cot') || name.includes('bedroom')) return 'bedroom_bed';
-  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand')) return 'plant_stand';
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand') || name.includes('flower') || name.includes('garden') || name.includes('balcony')) return 'plant_stand';
   if (name.includes('easel') || name.includes('canvas') || name.includes('painting')) return 'easel_stand';
   
   // If filename has numeric prefix like IMG_2385-1, group by IMG_2385
   const prefixMatch = name.match(/^([a-z0-9_-]+?)[-_][0-9]+/);
   if (prefixMatch && prefixMatch[1]) return prefixMatch[1];
 
-  return (category || 'general').toLowerCase().replace(/\s+/g, '_');
+  // Unique group key for unclassified photos so they are uploaded separately!
+  return `${(category || 'general').toLowerCase().replace(/\s+/g, '_')}_${file?.originalname || file?.filename || Math.random().toString(36).substring(7)}`;
 };
 
 /**
@@ -356,7 +357,7 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
   if (name.includes('bed') || name.includes('cot') || name.includes('bedroom')) {
     return 'Royal Burma Teak King Size Bedroom Cot';
   }
-  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand')) {
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand') || name.includes('flower') || name.includes('garden') || name.includes('balcony')) {
     return 'Modern Teakwood Tiered Indoor Plant Stand';
   }
   if (name.includes('easel') || name.includes('canvas') || name.includes('painting')) {
@@ -375,7 +376,7 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
     'Carvings & Handicrafts': 'Artisanal Teakwood Sculpted Handicraft'
   };
 
-  const cleanCategory = (category && category !== 'AI_AUTO_DETECT') ? category : 'Furniture';
+  const cleanCategory = (category && category !== 'AI_AUTO_DETECT') ? category : 'Living Room';
   return categoryTitleMap[cleanCategory] || `Premium Handcrafted Burma Teakwood ${cleanCategory} Design`;
 };
 
@@ -388,6 +389,9 @@ const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
   
   if (name.includes('bat') || name.includes('cricket') || name.includes('ball') || name.includes('sport') || name.includes('racket') || name.includes('game')) {
     return 'Sports';
+  }
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('garden') || name.includes('flower') || name.includes('stand') || name.includes('balcony')) {
+    return 'Garden & Decor';
   }
   if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('rolling') || name.includes('spice') || name.includes('kitchen') || name.includes('utensil') || name.includes('bowl') || name.includes('plate') || name.includes('tray') || name.includes('chop') || name.includes('fork') || name.includes('cutlery') || name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner') || name.includes('mathani') || name.includes('pestle') || name.includes('mortar')) {
     return 'Kitchen';
@@ -410,9 +414,6 @@ const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
   if (name.includes('sofa') || name.includes('couch') || name.includes('living') || name.includes('hall') || name.includes('tv') || name.includes('seating') || name.includes('bench') || name.includes('bar') || name.includes('cabinet') || name.includes('wine')) {
     return 'Living Room';
   }
-  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('garden') || name.includes('flower') || name.includes('stand')) {
-    return 'Garden & Decor';
-  }
 
   const cleanFallback = (primaryBatchCategory && primaryBatchCategory !== 'AI_AUTO_DETECT') ? primaryBatchCategory : 'Living Room';
   return cleanFallback;
@@ -433,7 +434,7 @@ const createBulkProducts = async (req, res) => {
     const isGroupAsOne = groupAsOneProduct === 'true' || groupAsOneProduct === true;
     const selectedCategory = (category?.trim() && category?.trim() !== 'AI_AUTO_DETECT' && category?.trim() !== 'Gummalu') 
       ? category.trim() 
-      : (category?.trim() === 'Gummalu' ? 'Doors' : 'Kitchen');
+      : (category?.trim() === 'Gummalu' ? 'Doors' : 'Living Room');
     const defaultPrice = price ? Number(price) : 0;
 
     const files = Array.isArray(req.files)
