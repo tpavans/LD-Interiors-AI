@@ -1700,14 +1700,16 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
       {/* 2. FLOATING ASSISTANT WIDGET */}
       {isRegistered && (
-        <div className={`fixed z-50 flex flex-col items-end transition-all duration-300 ${
+        <div className={`fixed z-50 transition-all duration-300 ${
           isMaximized
-            ? 'inset-2 sm:inset-6 bottom-4'
-            : 'bottom-[4.5rem] sm:bottom-6 right-20 sm:right-6'
+            ? 'inset-0 bg-black/60 backdrop-blur-sm p-2 sm:p-6 flex items-center justify-center'
+            : isChatOpen
+              ? 'inset-0 bg-black/60 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center'
+              : 'bottom-[4.5rem] sm:bottom-6 right-20 sm:right-6 flex flex-col items-end pointer-events-none'
         }`}>
           {/* Chat Panel */}
           {isChatOpen && (
-            <div className={`bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/30 rounded-3xl shadow-2xl flex flex-col mb-2 overflow-hidden transition-all duration-300 ${
+            <div className={`pointer-events-auto bg-gradient-to-b from-[#FAF6F0] to-[#FDFBF7] border-2 border-wood-accent/30 rounded-3xl shadow-2xl flex flex-col mb-2 overflow-hidden transition-all duration-300 ${
               isMaximized
                 ? 'w-full h-full'
                 : 'w-full sm:w-[480px] lg:w-[540px] max-w-full h-[85vh] sm:h-[620px] max-h-[90vh]'
@@ -2397,7 +2399,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
           <button
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className="flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
+            className="pointer-events-auto flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
           >
             {isChatOpen ? (
               <svg className="h-6 w-6 text-[#ebdcc5] transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
