@@ -130,107 +130,135 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-[#0B192C] border-b border-sky-500/30 shadow-2xl transition-all duration-300">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
-        {/* Brand Logo */}
-        <Link href="/" className="group flex items-center gap-2.5 select-none shrink-0">
+      <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
+        {/* Brand Logo & Title (Amazon Left Section) */}
+        <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
           <img 
             src="/logo.png" 
             alt="LD Interiors Logo" 
-            className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
           />
           <div className="flex flex-col">
-            <span className="font-serif text-sm font-extrabold tracking-wider text-white hover:text-sky-300 transition-all sm:text-base md:text-lg hidden xs:inline uppercase leading-tight">
-              LD INTERIORS & FURNITURES
-            </span>
-            <span className="font-serif text-sm font-extrabold tracking-wider text-white hover:text-sky-300 transition-all xs:hidden uppercase leading-tight">
+            <span className="font-serif text-xs sm:text-sm md:text-base font-extrabold tracking-wider text-white hover:text-sky-300 transition-all uppercase leading-tight">
               LD INTERIORS
             </span>
-            <span className="text-[8.5px] tracking-widest text-sky-300/80 uppercase font-semibold hidden sm:inline">
+            <span className="text-[8px] tracking-widest text-sky-300/80 uppercase font-semibold hidden lg:inline">
               Designing Spaces. Defining Lifestyles.
             </span>
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-xs font-bold uppercase tracking-widest">
-          <Link
-            href="/"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-              pathname === '/' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
-            }`}
-          >
-            {t.home}
-          </Link>
+        {/* Center: Amazon-Style Main Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-1 sm:mx-3">
+          <div className="relative w-full flex items-center">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              placeholder={isTelugu ? "500+ టేకువుడ్ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, మంచాలు, పూజ మందిరాలు...)" : "Search 500+ teakwood designs (Doors, Mandir, Beds)..."}
+              className="w-full rounded-l-lg border-y border-l border-sky-300/40 bg-white pl-3.5 pr-8 py-2 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all shadow-md"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
+                className="absolute right-12 text-slate-400 hover:text-slate-700 text-xs p-1"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button
+              type="submit"
+              className="px-3.5 sm:px-5 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-r-lg transition-all shadow-md flex items-center justify-center shrink-0 cursor-pointer border-y border-r border-amber-500"
+              title="Search"
+            >
+              <Search className="h-4 w-4 text-slate-950 stroke-[3]" />
+            </button>
+          </div>
+
+          {/* Live Amazon/Flipkart Style Autocomplete Dropdown */}
+          {isSearchFocused && searchQuery.trim() !== "" && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+              <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-sky-500" />
+                  {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                </span>
+                <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
+              </div>
+
+              {searchSuggestions.length > 0 ? (
+                <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                  {searchSuggestions.map((item) => (
+                    <div
+                      key={item._id}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setIsSearchFocused(false);
+                        router.push(`/products/${item._id}`);
+                      }}
+                      className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
+                    >
+                      <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
+                          <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-5 text-center">
+                  <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </form>
+
+        {/* Right Side Desktop Amazon Navigation Links & Controls */}
+        <nav className="hidden md:flex items-center gap-3 lg:gap-5 text-xs font-bold uppercase tracking-wider shrink-0">
           <Link
             href="/products"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/products' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-              pathname === '/products' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+            className={`transition-colors py-1 ${
+              pathname === '/products' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
             }`}
           >
             {t.designs}
           </Link>
 
           <Link
-            href="/reels"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/reels' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-              pathname === '/reels' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
-            }`}
-          >
-            {t.reels}
-          </Link>
-          <Link
             href="/orders"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/orders' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-              pathname === '/orders' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+            className={`transition-colors py-1 ${
+              pathname === '/orders' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
             }`}
           >
             {t.orders}
           </Link>
-          <Link
-            href="/contact"
-            className={`relative pb-1 transition-colors duration-300 ${
-              pathname === '/contact' ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-            } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-              pathname === '/contact' ? 'after:w-full' : 'after:w-0 hover:after:w-full'
-            }`}
-          >
-            {t.contact}
-          </Link>
+
           {isLoggedIn && (
             <Link
               href="/admin"
-              className={`relative pb-1 flex items-center gap-1 transition-colors duration-300 ${
-                pathname.startsWith('/admin') ? 'text-sky-300' : 'text-slate-200 hover:text-white'
-              } after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:bg-sky-400 after:transition-all after:duration-300 ${
-                pathname.startsWith('/admin') ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+              className={`flex items-center gap-1 transition-colors py-1 ${
+                pathname.startsWith('/admin') ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
               }`}
             >
               <LayoutDashboard className="h-3.5 w-3.5" />
               <span>{t.dashboard}</span>
             </Link>
           )}
-          {isLoggedIn && (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 cursor-pointer"
-            >
-              <LogOut className="h-3 w-3" />
-              <span>{t.logout}</span>
-            </button>
-          )}
 
           {/* Desktop Language Toggle */}
           <button
             onClick={() => toggleLanguage()}
-            className="flex items-center justify-center rounded-full border border-sky-400/40 bg-white/10 px-2.5 py-1 text-[10px] font-extrabold text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer ml-1 select-none whitespace-nowrap"
+            className="flex items-center justify-center rounded-md border border-sky-400/40 bg-white/10 px-2 py-1 text-[10px] font-extrabold text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer select-none"
             title="Switch Language / భాషను మార్చండి"
           >
             <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
@@ -239,7 +267,7 @@ export default function Navbar() {
           {/* Dedicated Wishlist Love Icon Button */}
           <Link
             href="/wishlist"
-            className="relative flex items-center justify-center p-1.5 rounded-full border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer ml-1.5 group"
+            className="relative flex items-center justify-center p-2 rounded-md border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all cursor-pointer group"
             title="My Dream Designs Wishlist"
           >
             <Heart className="h-4 w-4 fill-pink-500 text-pink-400 group-hover:fill-white group-hover:text-white" />
@@ -250,172 +278,48 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* User Profile Button */}
+          {/* User Profile Account Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center justify-center p-1.5 rounded-full border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer ml-1.5"
+            className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer"
             title="User Profile Account"
           >
             <User className="h-4 w-4" />
+            <span className="text-[10px] font-extrabold">{isUserLoggedIn ? 'Account' : 'Account'}</span>
             {isUserLoggedIn && (
-              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-400 ring-1 ring-slate-900 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             )}
           </button>
         </nav>
 
-        {/* Mobile controls bar (Clean layout for mobile screens) */}
-        <div className="flex md:hidden items-center gap-1.5 shrink-0">
-
-          {/* Mobile Wishlist Love Icon Link */}
+        {/* Mobile Right Controls */}
+        <div className="flex md:hidden items-center gap-1 shrink-0">
           <Link
             href="/wishlist"
-            className="relative flex items-center justify-center p-2 rounded-full border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer"
-            title="My Dream Designs Wishlist"
+            className="relative p-1.5 text-pink-400 cursor-pointer"
+            title="Wishlist"
           >
             <Heart className="h-4 w-4 fill-pink-500 text-pink-400" />
             {likedCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-slate-900">
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center">
                 {likedCount}
               </span>
             )}
           </Link>
-
-          {/* Mobile User Profile Account Button */}
           <button
             onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center justify-center p-2 rounded-full border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all duration-300 cursor-pointer"
-            title="User Profile Account"
+            className="p-1.5 text-sky-300 cursor-pointer"
+            title="Account"
           >
             <User className="h-4 w-4" />
-            {isUserLoggedIn && (
-              <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-emerald-400 ring-1 ring-slate-900 animate-pulse" />
-            )}
           </button>
-
-          {/* Hamburger Menu Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ml-1"
+            className="p-1.5 text-sky-300 cursor-pointer"
             title="Open Menu"
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6 text-sky-300" /> : <Menu className="h-6 w-6 text-sky-300" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-        </div>
-      </div>
-
-      {/* Pure White Background Sub-Navbar Search Bar */}
-      <div className="w-full bg-white border-t border-b border-slate-200 py-3 px-4 sm:px-8">
-        <div className="mx-auto max-w-7xl relative flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Main Pure White Search Input Form */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-2xl flex items-center">
-            <div className="relative w-full flex items-center">
-              <Search className="absolute left-4 h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                placeholder={isTelugu ? "500+ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, పూజ మందిరాలు, బెడ్స్, డైనింగ్...)" : "Search 500+ designs (Teak doors, Puja mandirams, Beds, Kitchens...)"}
-                className="w-full rounded-full border-2 border-sky-300 bg-white pl-11 pr-26 py-2.5 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/20 transition-all shadow-md"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
-                  className="absolute right-22 text-slate-400 hover:text-slate-700 text-xs p-1"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#008DDA] hover:bg-[#0077B6] text-white font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center gap-1 cursor-pointer select-none"
-              >
-                <span>{isTelugu ? "వెతుకు" : "Search"}</span>
-              </button>
-            </div>
-
-            {/* Live Amazon/Flipkart Style Autocomplete Dropdown */}
-            {isSearchFocused && searchQuery.trim() !== "" && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-sky-500" />
-                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
-                </div>
-
-                {searchSuggestions.length > 0 ? (
-                  <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                    {searchSuggestions.map((item) => (
-                      <div
-                        key={item._id}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setIsSearchFocused(false);
-                          router.push(`/products/${item._id}`);
-                        }}
-                        className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
-                      >
-                        <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
-                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-5 text-center">
-                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </form>
-
-          {/* Neatly Aligned Quick Trending Tags Bar */}
-          <div className="w-full md:w-auto flex items-center justify-start md:justify-end gap-2 overflow-x-auto scrollbar-none py-0.5 text-xs font-bold text-slate-900 whitespace-nowrap">
-            <span className="text-slate-600 text-[10px] uppercase tracking-widest shrink-0 flex items-center gap-1 font-extrabold">
-              <Sparkles className="h-3.5 w-3.5 text-sky-500" />
-              {isTelugu ? "ట్రెండింగ్:" : "Trending:"}
-            </span>
-            <button
-              type="button"
-              onClick={() => router.push('/products?category=Gummalu')}
-              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
-            >
-              🚪 {isTelugu ? "గుమ్మాలు" : "Gummalu"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/products?category=Puja%20Mandiralu')}
-              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
-            >
-              🪵 {isTelugu ? "పూజ మందిరాలు" : "Puja Mandirams"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/products?category=Wooden%20Beds')}
-              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
-            >
-              🛏️ {isTelugu ? "బెడ్స్" : "Teak Beds"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/products?category=Kitchen')}
-              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all cursor-pointer text-[11px]"
-            >
-              🍳 {isTelugu ? "కిచెన్స్" : "Kitchens"}
-            </button>
-          </div>
         </div>
       </div>
 
