@@ -1703,7 +1703,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
         <div className={`fixed z-50 flex flex-col items-end transition-all duration-300 ${
           isMaximized
             ? 'inset-2 sm:inset-6 bottom-4'
-            : 'bottom-4 sm:bottom-6 right-2 sm:right-6 left-2 sm:left-auto'
+            : 'bottom-[4.5rem] sm:bottom-6 right-20 sm:right-6'
         }`}>
           {/* Chat Panel */}
           {isChatOpen && (

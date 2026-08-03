@@ -112,7 +112,9 @@ export default function MobileBottomNav() {
             <Link
               key={item.id}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-300 ${
+              prefetch={true}
+              onTouchStart={() => router.prefetch(item.href)}
+              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-150 active:scale-90 cursor-pointer ${
                 isActive
                   ? 'text-sky-300 font-extrabold bg-sky-500/25 border border-sky-400/50 shadow-inner scale-105'
                   : 'text-slate-200/80 hover:text-white hover:bg-white/5'
