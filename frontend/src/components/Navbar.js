@@ -130,208 +130,290 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] w-full bg-[#0B192C] border-b border-sky-500/30 shadow-2xl transition-all duration-300">
-      <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
-        {/* Brand Logo & Title (Amazon Left Section) */}
-        <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
-          <img 
-            src="/logo.png" 
-            alt="LD Interiors Logo" 
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
-          />
-          <div className="flex flex-col">
-            <span className="font-serif text-xs sm:text-sm md:text-base font-extrabold tracking-wider text-white hover:text-sky-300 transition-all uppercase leading-tight">
-              LD INTERIORS
-            </span>
-            <span className="text-[8px] tracking-widest text-sky-300/80 uppercase font-semibold hidden lg:inline">
-              Designing Spaces. Defining Lifestyles.
-            </span>
-          </div>
-        </Link>
-
-        {/* Center: Amazon-Style Main Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-1 sm:mx-3">
-          <div className="relative w-full flex items-center">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              placeholder={isTelugu ? "500+ టేకువుడ్ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, మంచాలు, పూజ మందిరాలు...)" : "Search 500+ teakwood designs (Doors, Mandir, Beds)..."}
-              className="w-full rounded-l-lg border-y border-l border-sky-300/40 bg-white pl-3.5 pr-8 py-2 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all shadow-md"
+      <div className="mx-auto max-w-7xl px-3 sm:px-6">
+        
+        {/* Top Header Row (Logo on Left, Controls on Right) */}
+        <div className="flex h-14 sm:h-16 md:h-20 items-center justify-between gap-2 sm:gap-4">
+          {/* Brand Logo & Title (Amazon Left Section) */}
+          <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="LD Interiors Logo" 
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
-                className="absolute right-12 text-slate-400 hover:text-slate-700 text-xs p-1"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-            <button
-              type="submit"
-              className="px-3.5 sm:px-5 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-r-lg transition-all shadow-md flex items-center justify-center shrink-0 cursor-pointer border-y border-r border-amber-500"
-              title="Search"
-            >
-              <Search className="h-4 w-4 text-slate-950 stroke-[3]" />
-            </button>
-          </div>
-
-          {/* Live Amazon/Flipkart Style Autocomplete Dropdown */}
-          {isSearchFocused && searchQuery.trim() !== "" && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-              <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-sky-500" />
-                  {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
-                </span>
-                <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
-              </div>
-
-              {searchSuggestions.length > 0 ? (
-                <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                  {searchSuggestions.map((item) => (
-                    <div
-                      key={item._id}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setIsSearchFocused(false);
-                        router.push(`/products/${item._id}`);
-                      }}
-                      className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
-                    >
-                      <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
-                          <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-5 text-center">
-                  <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
-                </div>
-              )}
+            <div className="flex flex-col">
+              <span className="font-serif text-xs sm:text-sm md:text-base font-extrabold tracking-wider text-white hover:text-sky-300 transition-all uppercase leading-tight">
+                LD INTERIORS
+              </span>
+              <span className="text-[8px] tracking-widest text-sky-300/80 uppercase font-semibold hidden lg:inline">
+                Designing Spaces. Defining Lifestyles.
+              </span>
             </div>
-          )}
-        </form>
-
-        {/* Right Side Desktop Amazon Navigation Links & Controls */}
-        <nav className="hidden md:flex items-center gap-3 lg:gap-5 text-xs font-bold uppercase tracking-wider shrink-0">
-          <Link
-            href="/products"
-            className={`transition-colors py-1 ${
-              pathname === '/products' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
-            }`}
-          >
-            {t.designs}
           </Link>
 
-          <Link
-            href="/orders"
-            className={`transition-colors py-1 ${
-              pathname === '/orders' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
-            }`}
-          >
-            {t.orders}
-          </Link>
+          {/* Desktop Search Bar (Hidden on Mobile, Visible on md:block) */}
+          <form onSubmit={handleSearchSubmit} className="hidden md:block relative flex-1 max-w-xl lg:max-w-2xl mx-3">
+            <div className="relative w-full flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                placeholder={isTelugu ? "500+ టేకువుడ్ డిజైన్ల కోసం వెతకండి (గుమ్మాలు, మంచాలు, పూజ మందిరాలు...)" : "Search 500+ teakwood designs (Doors, Mandir, Beds)..."}
+                className="w-full rounded-l-lg border-y border-l border-sky-300/40 bg-white pl-3.5 pr-8 py-2 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all shadow-md"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
+                  className="absolute right-12 text-slate-400 hover:text-slate-700 text-xs p-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-4 lg:px-5 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-r-lg transition-all shadow-md flex items-center justify-center shrink-0 cursor-pointer border-y border-r border-amber-500"
+                title="Search"
+              >
+                <Search className="h-4 w-4 text-slate-950 stroke-[3]" />
+              </button>
+            </div>
 
-          {/* Admin-only Dashboard & Logout Links */}
-          {isLoggedIn && (
+            {/* Desktop Autocomplete Dropdown */}
+            {isSearchFocused && searchQuery.trim() !== "" && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-sky-500" />
+                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
+                </div>
+
+                {searchSuggestions.length > 0 ? (
+                  <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                    {searchSuggestions.map((item) => (
+                      <div
+                        key={item._id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setIsSearchFocused(false);
+                          router.push(`/products/${item._id}`);
+                        }}
+                        className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
+                      >
+                        <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
+                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-5 text-center">
+                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
+
+          {/* Right Side Desktop Amazon Navigation Links & Controls */}
+          <nav className="hidden md:flex items-center gap-3 lg:gap-5 text-xs font-bold uppercase tracking-wider shrink-0">
             <Link
-              href="/admin"
-              className={`flex items-center gap-1 transition-colors py-1 ${
-                pathname.startsWith('/admin') ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
+              href="/products"
+              className={`transition-colors py-1 ${
+                pathname === '/products' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
               }`}
             >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              <span>{t.dashboard}</span>
+              {t.designs}
             </Link>
-          )}
-          {isLoggedIn && (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1 rounded-md border border-red-500/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all cursor-pointer"
-              title="Logout Admin"
+
+            <Link
+              href="/orders"
+              className={`transition-colors py-1 ${
+                pathname === '/orders' ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
+              }`}
             >
-              <LogOut className="h-3 w-3" />
-              <span>{t.logout}</span>
+              {t.orders}
+            </Link>
+
+            {/* Admin-only Dashboard & Logout Links */}
+            {isLoggedIn && (
+              <Link
+                href="/admin"
+                className={`flex items-center gap-1 transition-colors py-1 ${
+                  pathname.startsWith('/admin') ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
+                }`}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span>{t.dashboard}</span>
+              </Link>
+            )}
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 rounded-md border border-red-500/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all cursor-pointer"
+                title="Logout Admin"
+              >
+                <LogOut className="h-3 w-3" />
+                <span>{t.logout}</span>
+              </button>
+            )}
+
+            {/* Desktop Language Toggle */}
+            <button
+              onClick={() => toggleLanguage()}
+              className="flex items-center justify-center rounded-md border border-sky-400/40 bg-white/10 px-2 py-1 text-[10px] font-extrabold text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer select-none"
+              title="Switch Language / భాషను మార్చండి"
+            >
+              <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
             </button>
-          )}
 
-          {/* Desktop Language Toggle */}
-          <button
-            onClick={() => toggleLanguage()}
-            className="flex items-center justify-center rounded-md border border-sky-400/40 bg-white/10 px-2 py-1 text-[10px] font-extrabold text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer select-none"
-            title="Switch Language / భాషను మార్చండి"
-          >
-            <span>{language === 'EN' ? 'తెలుగు' : 'English'}</span>
-          </button>
+            {/* Dedicated Wishlist Love Icon Button */}
+            <Link
+              href="/wishlist"
+              className="relative flex items-center justify-center p-2 rounded-md border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all cursor-pointer group"
+              title="My Dream Designs Wishlist"
+            >
+              <Heart className="h-4 w-4 fill-pink-500 text-pink-400 group-hover:fill-white group-hover:text-white" />
+              {likedCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-slate-900">
+                  {likedCount}
+                </span>
+              )}
+            </Link>
 
-          {/* Dedicated Wishlist Love Icon Button */}
-          <Link
-            href="/wishlist"
-            className="relative flex items-center justify-center p-2 rounded-md border border-pink-400/40 bg-white/10 text-pink-400 hover:bg-pink-500 hover:text-white transition-all cursor-pointer group"
-            title="My Dream Designs Wishlist"
-          >
-            <Heart className="h-4 w-4 fill-pink-500 text-pink-400 group-hover:fill-white group-hover:text-white" />
-            {likedCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-slate-900">
-                {likedCount}
-              </span>
-            )}
-          </Link>
+            {/* User Profile Account Button */}
+            <button
+              onClick={() => setIsProfileDrawerOpen(true)}
+              className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer"
+              title="User Profile Account"
+            >
+              <User className="h-4 w-4" />
+              <span className="text-[10px] font-extrabold">{isUserLoggedIn ? 'Account' : 'Account'}</span>
+              {isUserLoggedIn && (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              )}
+            </button>
+          </nav>
 
-          {/* User Profile Account Button */}
-          <button
-            onClick={() => setIsProfileDrawerOpen(true)}
-            className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-900 transition-all cursor-pointer"
-            title="User Profile Account"
-          >
-            <User className="h-4 w-4" />
-            <span className="text-[10px] font-extrabold">{isUserLoggedIn ? 'Account' : 'Account'}</span>
-            {isUserLoggedIn && (
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            )}
-          </button>
-        </nav>
-
-        {/* Mobile Right Controls */}
-        <div className="flex md:hidden items-center gap-1 shrink-0">
-          <Link
-            href="/wishlist"
-            className="relative p-1.5 text-pink-400 cursor-pointer"
-            title="Wishlist"
-          >
-            <Heart className="h-4 w-4 fill-pink-500 text-pink-400" />
-            {likedCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center">
-                {likedCount}
-              </span>
-            )}
-          </Link>
-          <button
-            onClick={() => setIsProfileDrawerOpen(true)}
-            className="p-1.5 text-sky-300 cursor-pointer"
-            title="Account"
-          >
-            <User className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1.5 text-sky-300 cursor-pointer"
-            title="Open Menu"
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Mobile Right Controls */}
+          <div className="flex md:hidden items-center gap-1.5 shrink-0">
+            <Link
+              href="/wishlist"
+              className="relative p-1.5 text-pink-400 cursor-pointer"
+              title="Wishlist"
+            >
+              <Heart className="h-4.5 w-4.5 fill-pink-500 text-pink-400" />
+              {likedCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[8.5px] font-black flex items-center justify-center">
+                  {likedCount}
+                </span>
+              )}
+            </Link>
+            <button
+              onClick={() => setIsProfileDrawerOpen(true)}
+              className="p-1.5 text-sky-300 cursor-pointer"
+              title="Account"
+            >
+              <User className="h-4.5 w-4.5" />
+            </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-1.5 text-sky-300 cursor-pointer"
+              title="Open Menu"
+            >
+              {isMobileMenuOpen ? <X className="h-5.5 w-5.5" /> : <Menu className="h-5.5 w-5.5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Dedicated Full-Width Mobile Search Bar Row (Visible on Mobile <768px) */}
+        <div className="block md:hidden pb-2.5 pt-0.5">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <div className="relative w-full flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                placeholder={isTelugu ? "500+ టేకువుడ్ డిజైన్ల కోసం వెతకండి..." : "Search 500+ teakwood designs..."}
+                className="w-full rounded-l-lg border-y border-l border-sky-300/40 bg-white pl-3.5 pr-8 py-2 text-xs text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-md"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setSearchSuggestions([]); }}
+                  className="absolute right-11 text-slate-400 hover:text-slate-700 text-xs p-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-3.5 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-r-lg shadow-md flex items-center justify-center shrink-0 cursor-pointer border-y border-r border-amber-500"
+                title="Search"
+              >
+                <Search className="h-4 w-4 text-slate-950 stroke-[3]" />
+              </button>
+            </div>
+
+            {/* Mobile Full-Width Autocomplete Dropdown */}
+            {isSearchFocused && searchQuery.trim() !== "" && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3 py-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-sky-500" />
+                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ నొక్కండి" : "Tap to view"}</span>
+                </div>
+
+                {searchSuggestions.length > 0 ? (
+                  <div className="p-1.5 divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                    {searchSuggestions.map((item) => (
+                      <div
+                        key={item._id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setIsSearchFocused(false);
+                          router.push(`/products/${item._id}`);
+                        }}
+                        className="flex items-center gap-3 p-2 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer group text-left"
+                      >
+                        <img src={item.image} alt={item.title} className="h-10 w-10 rounded-md object-cover border border-slate-200 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-extrabold text-slate-900 truncate">{item.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[8.5px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-1.5 py-0.5 rounded">{item.category}</span>
+                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center">
+                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
+
       </div>
 
       {/* Mobile Menu Dropdown Drawer */}

@@ -92,7 +92,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans pb-16 md:pb-0">
         <LanguageProvider>
           <Navbar />
-          <main className="flex-grow wood-plank-bg pt-20 sm:pt-24">
+          <main className="flex-grow wood-plank-bg pt-[104px] md:pt-24">
             {children}
           </main>
           <Footer />
