@@ -767,6 +767,65 @@ const rateProduct = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Bulk delete multiple products and their Cloudinary images
+ * @route   POST /api/products/bulk-delete
+ * @access  Private (Admin protected)
+ */
+const bulkDeleteProducts = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Please provide an array of product IDs to delete.' });
+    }
+
+    console.log(`[Bulk Delete] Admin requested deletion of ${ids.length} product(s)...`);
+
+    // Find products to delete Cloudinary images
+    const productsToDelete = await Product.find({ _id: { $in: ids } });
+
+    // Clean up Cloudinary images concurrently
+    const cloudinaryPromises = [];
+    productsToDelete.forEach(product => {
+      // Main image
+      if (product.imagePublicId) {
+        cloudinaryPromises.push(deleteFromCloudinary(product.imagePublicId).catch(() => {}));
+      }
+      // Gallery images
+      if (Array.isArray(product.imagesPublicIds)) {
+        product.imagesPublicIds.forEach(pid => {
+          if (pid) cloudinaryPromises.push(deleteFromCloudinary(pid).catch(() => {}));
+        });
+      }
+      // Video
+      if (product.videoPublicId) {
+        cloudinaryPromises.push(deleteFromCloudinary(product.videoPublicId, 'video').catch(() => {}));
+      }
+    });
+
+    await Promise.all(cloudinaryPromises);
+
+    // Delete documents from MongoDB
+    const result = await Product.deleteMany({ _id: { $in: ids } });
+
+    console.log(`[Bulk Delete] Successfully deleted ${result.deletedCount} product(s) from MongoDB!`);
+
+    res.json({
+      message: `🎉 Successfully deleted ${result.deletedCount} selected product(s)!`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error in bulk delete products:', error);
+    res.status(500).json({
+      message: 'Server error during bulk deletion: ' + error.message,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -774,5 +833,6 @@ module.exports = {
   createBulkProducts,
   updateProduct,
   deleteProduct,
+  bulkDeleteProducts,
   rateProduct,
 };

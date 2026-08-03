@@ -168,6 +168,9 @@ export default function AdminDashboardComponent() {
   const [groupAsOneProduct, setGroupAsOneProduct] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // Multi-Select Products for Bulk Delete State
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
@@ -799,12 +802,56 @@ export default function AdminDashboardComponent() {
     try {
       await api.delete(`/products/${id}`);
       setProducts(products.filter((p) => p._id !== id));
+      setSelectedProductIds(selectedProductIds.filter(item => item !== id));
       if (isEditing && editId === id) {
         resetForm();
       }
     } catch (err) {
       console.error('Deletion error:', err);
       alert('Failed to delete the design. Please try again.');
+    }
+  };
+
+  // Multi-Select Product Handlers for Admin
+  const handleSelectProduct = (id) => {
+    if (selectedProductIds.includes(id)) {
+      setSelectedProductIds(selectedProductIds.filter(item => item !== id));
+    } else {
+      setSelectedProductIds([...selectedProductIds, id]);
+    }
+  };
+
+  const handleSelectAllProducts = (targetProductsList) => {
+    const targetIds = targetProductsList.map(p => p._id);
+    const isAllSelected = targetIds.length > 0 && targetIds.every(id => selectedProductIds.includes(id));
+
+    if (isAllSelected) {
+      setSelectedProductIds(selectedProductIds.filter(id => !targetIds.includes(id)));
+    } else {
+      const newSelection = Array.from(new Set([...selectedProductIds, ...targetIds]));
+      setSelectedProductIds(newSelection);
+    }
+  };
+
+  const handleBulkDeleteSelected = async () => {
+    if (selectedProductIds.length === 0) return;
+
+    if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete ${selectedProductIds.length} selected design(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setBulkLoading(true);
+      const response = await api.post('/products/bulk-delete', { ids: selectedProductIds });
+      alert(response.data?.message || `Successfully deleted ${selectedProductIds.length} items!`);
+      
+      setProducts(products.filter(p => !selectedProductIds.includes(p._id)));
+      setSelectedProductIds([]);
+    } catch (err) {
+      console.error('Bulk deletion error:', err);
+      alert('Failed to delete selected items. Please try again.');
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -1818,7 +1865,7 @@ LD Interiors & Furnitures
                   className="rounded-lg border border-wood-border bg-white text-xs font-bold text-wood-dark px-2.5 py-1 focus:outline-none cursor-pointer"
                 >
                   <option value="All">All Categories ({products.length})</option>
-                  {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
+                  {(categoriesList.length > 0 ? categoriesList.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT').map(c => c.name) : CATEGORIES).map((cat) => (
                     <option key={cat} value={cat}>
                       {cat} ({products.filter(p => p.category === cat).length})
                     </option>
@@ -1826,6 +1873,34 @@ LD Interiors & Furnitures
                 </select>
               </div>
             </div>
+            {selectedProductIds.length > 0 && (
+              <div className="mx-6 my-3 p-3.5 bg-red-50 border-2 border-red-300 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-md animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full bg-red-600 animate-ping"></span>
+                  <span className="text-xs font-black text-red-900 uppercase tracking-wide">
+                    📌 {selectedProductIds.length} Product(s) Selected for Bulk Action
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductIds([])}
+                    className="px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white rounded-xl border border-slate-300 shadow-xs cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDeleteSelected}
+                    disabled={bulkLoading}
+                    className="px-4 py-1.5 text-xs font-black text-white bg-gradient-to-r from-red-600 to-rose-700 hover:brightness-110 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete Selected ({selectedProductIds.length} Items)</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {productsLoading ? (
               <div className="flex h-72 items-center justify-center">
@@ -1837,81 +1912,107 @@ LD Interiors & Furnitures
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-wood-border/40 bg-wood-beige/10 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
-                      <th className="py-4 px-6">Image</th>
-                      <th className="py-4 px-6">Title</th>
-                      <th className="py-4 px-6">Category</th>
-                      <th className="py-4 px-6">Price</th>
-                      <th className="py-4 px-6">Uploaded</th>
-                      <th className="py-4 px-6 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-wood-border/30">
-                    {[...products]
-                      .sort((a, b) => {
-                        if (category !== 'All') {
-                          if (a.category === category && b.category !== category) return -1;
-                          if (a.category !== category && b.category === category) return 1;
-                        }
-                        return new Date(b.createdAt) - new Date(a.createdAt);
-                      })
-                      .map((p) => (
-                        <tr key={p._id} className={`hover:bg-wood-beige/10 transition-colors ${p.category === category && category !== 'All' ? 'bg-sky-50/50' : ''}`}>
-                        <td className="py-4 px-6">
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 relative">
-                            <img
-                              src={p.image}
-                              alt=""
-                              className="h-full w-full object-cover"
+                {(() => {
+                  const displayedProducts = [...products].sort((a, b) => {
+                    if (category !== 'All') {
+                      if (a.category === category && b.category !== category) return -1;
+                      if (a.category !== category && b.category === category) return 1;
+                    }
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                  });
+
+                  const isAllDisplayedSelected = displayedProducts.length > 0 && displayedProducts.every(p => selectedProductIds.includes(p._id));
+
+                  return (
+                    <table className="w-full border-collapse text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-wood-border/40 bg-wood-beige/10 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
+                          <th className="py-4 px-3 w-10 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isAllDisplayedSelected}
+                              onChange={() => handleSelectAllProducts(displayedProducts)}
+                              className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                              title="Select / Deselect All Filtered Items"
                             />
-                            {p.video && (
-                              <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
-                                <Play className="h-3.5 w-3.5 text-white fill-current" />
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 font-serif font-bold text-wood-dark max-w-[180px] truncate">
-                          {p.title}
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className="inline-flex rounded-full bg-wood-beige/20 border border-wood-border/40 px-2.5 py-0.5 text-[10px] font-semibold text-wood-accent uppercase tracking-wider">
-                            {p.category}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-wood-dark font-semibold text-xs">
-                          {p.price && p.price > 0 ? `â‚¹${p.price.toLocaleString('en-IN')}` : 'Contact for Price'}
-                        </td>
-                        <td className="py-4 px-6 text-wood-light font-light text-xs">
-                          {new Date(p.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          }) }
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => startEditProduct(p)}
-                              title="Edit Product"
-                              className="p-2 rounded-lg text-wood-light hover:text-wood-dark hover:bg-wood-beige/20 transition-colors cursor-pointer"
-                            >
-                              <Edit className="h-4.5 w-4.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(p._id, p.title)}
-                              title="Delete Product"
-                              className="p-2 rounded-lg text-wood-light hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="h-4.5 w-4.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </th>
+                          <th className="py-4 px-4">Image</th>
+                          <th className="py-4 px-6">Title</th>
+                          <th className="py-4 px-6">Category</th>
+                          <th className="py-4 px-6">Price</th>
+                          <th className="py-4 px-6">Uploaded</th>
+                          <th className="py-4 px-6 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-wood-border/30">
+                        {displayedProducts.map((p) => {
+                          const isSelected = selectedProductIds.includes(p._id);
+                          return (
+                            <tr key={p._id} className={`hover:bg-wood-beige/10 transition-colors ${isSelected ? 'bg-red-50/80 border-l-4 border-l-red-500' : (p.category === category && category !== 'All' ? 'bg-sky-50/50' : '')}`}>
+                              <td className="py-4 px-3 w-10 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleSelectProduct(p._id)}
+                                  className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                                />
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 relative">
+                                  <img
+                                    src={p.image}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                  {p.video && (
+                                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                                      <Play className="h-3.5 w-3.5 text-white fill-current" />
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-4 px-6 font-serif font-bold text-wood-dark max-w-[180px] truncate">
+                                {p.title}
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className="inline-flex rounded-full bg-wood-beige/20 border border-wood-border/40 px-2.5 py-0.5 text-[10px] font-semibold text-wood-accent uppercase tracking-wider">
+                                  {p.category}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-wood-dark font-semibold text-xs">
+                                {p.price && p.price > 0 ? `₹${p.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+                              </td>
+                              <td className="py-4 px-6 text-wood-light font-light text-xs">
+                                {new Date(p.createdAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => startEditProduct(p)}
+                                    title="Edit Product"
+                                    className="p-2 rounded-lg text-wood-light hover:text-wood-dark hover:bg-wood-beige/20 transition-colors cursor-pointer"
+                                  >
+                                    <Edit className="h-4.5 w-4.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteProduct(p._id, p.title)}
+                                    title="Delete Product"
+                                    className="p-2 rounded-lg text-wood-light hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="h-4.5 w-4.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             )}
           </div>

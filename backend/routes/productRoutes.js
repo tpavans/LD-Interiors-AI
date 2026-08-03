@@ -7,6 +7,7 @@ const {
   createBulkProducts,
   updateProduct,
   deleteProduct,
+  bulkDeleteProducts,
   rateProduct,
 } = require('../controllers/productController');
 const { protect } = require('../middleware/authMiddleware');
@@ -15,6 +16,10 @@ const upload = require('../middleware/uploadMiddleware');
 // 1. Bulk upload multiple design catalog images at once (MUST BE AT TOP)
 router.post('/bulk', protect, upload.any(), createBulkProducts);
 router.post('/products/bulk', protect, upload.any(), createBulkProducts);
+
+// Bulk delete multiple products at once
+router.post('/bulk-delete', protect, bulkDeleteProducts);
+router.delete('/bulk-delete', protect, bulkDeleteProducts);
 
 // 2. Get all products, or upload a new one
 router.route('/')
