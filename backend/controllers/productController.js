@@ -297,12 +297,13 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
     return customPrefix.trim();
   }
 
-  const name = `${file?.filename || ''} ${file?.originalname || ''}`.toLowerCase();
+  const origName = (file?.originalname || file?.filename || file?.name || '').toLowerCase();
+  const name = origName;
 
-  if (name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner')) {
+  if (name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner') || name.includes('mathani') || name.includes('pestle') || name.includes('mortar')) {
     return 'Handcrafted Teakwood Vegetable & Potato Smasher';
   }
-  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('cutlery')) {
+  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('cutlery') || name.includes('fork') || name.includes('utensil')) {
     return 'Grade-A Burma Teak Kitchen Spoon & Spatula Set';
   }
   if (name.includes('rolling') || name.includes('belan')) {
@@ -352,7 +353,8 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
  * Helper: AI Category Classifier for image filenames / visual keywords
  */
 const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
-  const name = `${file?.filename || ''} ${file?.originalname || ''}`.toLowerCase();
+  const origName = (file?.originalname || file?.filename || file?.name || '').toLowerCase();
+  const name = origName;
   
   if (name.includes('bat') || name.includes('cricket') || name.includes('ball') || name.includes('sport') || name.includes('racket') || name.includes('game')) {
     return 'Sports';
@@ -382,7 +384,8 @@ const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
     return 'Carvings & Handicrafts';
   }
 
-  return primaryBatchCategory || 'Kitchen';
+  const cleanFallback = (primaryBatchCategory && primaryBatchCategory !== 'AI_AUTO_DETECT') ? primaryBatchCategory : 'Kitchen';
+  return cleanFallback;
 };
 
 /**
@@ -398,7 +401,9 @@ const createBulkProducts = async (req, res) => {
     const { category, price, titlePrefix, aiAutoDetect, groupAsOneProduct } = req.body;
     const isAiAutoDetect = aiAutoDetect === 'true' || aiAutoDetect === true || category === 'AI_AUTO_DETECT';
     const isGroupAsOne = groupAsOneProduct === 'true' || groupAsOneProduct === true;
-    const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Kitchen');
+    const selectedCategory = (category?.trim() && category?.trim() !== 'AI_AUTO_DETECT' && category?.trim() !== 'Gummalu') 
+      ? category.trim() 
+      : (category?.trim() === 'Gummalu' ? 'Doors' : 'Kitchen');
     const defaultPrice = price ? Number(price) : 0;
 
     const files = Array.isArray(req.files)
