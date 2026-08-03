@@ -1412,9 +1412,9 @@ LD Interiors & Furnitures
                     className="w-full rounded-xl border border-[#008DDA] bg-sky-50/50 px-4 py-2.5 text-sm focus:border-[#008DDA] focus:outline-none transition-colors text-slate-900 cursor-pointer font-bold"
                   >
                     <option value="AI_AUTO_DETECT" className="font-bold text-[#008DDA]">
-                      🧠 AI Auto-Detect (Auto-Sort Mixed Categories)
+                      🧠 AI Auto-Detect (Auto-Analyze Photos & Assign Category)
                     </option>
-                    {(categoriesList.length > 0 ? categoriesList.map(c => c.name) : CATEGORIES).map((cat) => (
+                    {(categoriesList.length > 0 ? categoriesList.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT').map(c => c.name) : CATEGORIES).map((cat) => (
                       <option key={cat} value={cat}>
                         {cat}
                       </option>

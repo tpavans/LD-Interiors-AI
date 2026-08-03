@@ -16,14 +16,17 @@ const DEFAULT_CATEGORIES = [
  */
 const getCategories = async (req, res) => {
   try {
-    let categories = await Category.find({}).sort({ name: 1 });
+    // Purge AI_AUTO_DETECT from Category collection
+    await Category.deleteMany({ name: { $regex: /ai_auto_detect/i } }).catch(() => {});
+
+    let categories = await Category.find({ name: { $ne: 'AI_AUTO_DETECT' } }).sort({ name: 1 });
 
     // Auto-seed default categories if empty
     if (categories.length === 0) {
       console.log('Seeding initial categories into MongoDB...');
       const seedDocs = DEFAULT_CATEGORIES.map(name => ({ name }));
       await Category.insertMany(seedDocs, { ordered: false }).catch(() => {});
-      categories = await Category.find({}).sort({ name: 1 });
+      categories = await Category.find({ name: { $ne: 'AI_AUTO_DETECT' } }).sort({ name: 1 });
     }
 
     // Include categories from existing products if any were missed
@@ -32,7 +35,7 @@ const getCategories = async (req, res) => {
     
     const missingDocs = [];
     for (const catName of productCategories) {
-      if (catName && !existingNames.has(catName.trim().toLowerCase())) {
+      if (catName && catName !== 'AI_AUTO_DETECT' && !existingNames.has(catName.trim().toLowerCase())) {
         missingDocs.push({ name: catName.trim() });
         existingNames.add(catName.trim().toLowerCase());
       }
@@ -40,8 +43,10 @@ const getCategories = async (req, res) => {
 
     if (missingDocs.length > 0) {
       await Category.insertMany(missingDocs, { ordered: false }).catch(() => {});
-      categories = await Category.find({}).sort({ name: 1 });
+      categories = await Category.find({ name: { $ne: 'AI_AUTO_DETECT' } }).sort({ name: 1 });
     }
+
+    categories = categories.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT');
 
     res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=1800, stale-while-revalidate=3600');
     return res.status(200).json(categories);

@@ -290,10 +290,36 @@ const createProduct = async (req, res) => {
 };
 
 /**
+ * Helper to get specific design group key from filename or item features
+ */
+const getDesignGroupKey = (file, category) => {
+  const name = (file?.originalname || file?.filename || file?.name || '').toLowerCase();
+  
+  if (name.includes('smasher') || name.includes('masher') || name.includes('mudgar') || name.includes('churner') || name.includes('mathani') || name.includes('pestle') || name.includes('mortar')) return 'smasher';
+  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('cutlery') || name.includes('fork') || name.includes('utensil')) return 'spatula_spoon';
+  if (name.includes('rolling') || name.includes('belan')) return 'rolling_pin';
+  if (name.includes('spice') || name.includes('anjal')) return 'spice_box';
+  if (name.includes('bat') || name.includes('cricket')) return 'cricket_bat';
+  if (name.includes('bar') || name.includes('wine') || name.includes('liquor')) return 'bar_cabinet';
+  if (name.includes('mandir') || name.includes('pooja') || name.includes('temple') || name.includes('puja')) return 'puja_mandir';
+  if (name.includes('door') || name.includes('gummalu') || name.includes('entrance')) return 'main_door';
+  if (name.includes('dining') || name.includes('table')) return 'dining_table';
+  if (name.includes('bed') || name.includes('cot') || name.includes('bedroom')) return 'bedroom_bed';
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand')) return 'plant_stand';
+  if (name.includes('easel') || name.includes('canvas') || name.includes('painting')) return 'easel_stand';
+  
+  // If filename has numeric prefix like IMG_2385-1, group by IMG_2385
+  const prefixMatch = name.match(/^([a-z0-9_-]+?)[-_][0-9]+/);
+  if (prefixMatch && prefixMatch[1]) return prefixMatch[1];
+
+  return (category || 'general').toLowerCase().replace(/\s+/g, '_');
+};
+
+/**
  * Helper: AI Smart Title Generator based on file keywords & category
  */
 const generateSmartProductTitle = (file, category, customPrefix = '') => {
-  if (customPrefix && customPrefix.trim() !== '') {
+  if (customPrefix && customPrefix.trim() !== '' && customPrefix.trim() !== 'AI_AUTO_DETECT') {
     return customPrefix.trim();
   }
 
@@ -333,6 +359,9 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
   if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('stand')) {
     return 'Modern Teakwood Tiered Indoor Plant Stand';
   }
+  if (name.includes('easel') || name.includes('canvas') || name.includes('painting')) {
+    return 'Burma Teakwood Artist Painting Easel Stand';
+  }
 
   const categoryTitleMap = {
     'Kitchen': 'Handcrafted Grade-A Teakwood Kitchen Utensil',
@@ -346,7 +375,8 @@ const generateSmartProductTitle = (file, category, customPrefix = '') => {
     'Carvings & Handicrafts': 'Artisanal Teakwood Sculpted Handicraft'
   };
 
-  return categoryTitleMap[category] || `Premium Handcrafted Burma Teakwood ${category} Design`;
+  const cleanCategory = (category && category !== 'AI_AUTO_DETECT') ? category : 'Furniture';
+  return categoryTitleMap[cleanCategory] || `Premium Handcrafted Burma Teakwood ${cleanCategory} Design`;
 };
 
 /**
@@ -374,17 +404,17 @@ const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
   if (name.includes('dining') || name.includes('table') || name.includes('chair') || name.includes('dinning') || name.includes('eat')) {
     return 'Dining Tables';
   }
+  if (name.includes('easel') || name.includes('canvas') || name.includes('painting') || name.includes('sculpture') || name.includes('artifact') || name.includes('carving') || name.includes('craft') || name.includes('horse') || name.includes('elephant')) {
+    return 'Carvings & Handicrafts';
+  }
   if (name.includes('sofa') || name.includes('couch') || name.includes('living') || name.includes('hall') || name.includes('tv') || name.includes('seating') || name.includes('bench') || name.includes('bar') || name.includes('cabinet') || name.includes('wine')) {
     return 'Living Room';
   }
   if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('garden') || name.includes('flower') || name.includes('stand')) {
     return 'Garden & Decor';
   }
-  if (name.includes('toy') || name.includes('craft') || name.includes('sculpture') || name.includes('artifact') || name.includes('carving') || name.includes('horse') || name.includes('elephant')) {
-    return 'Carvings & Handicrafts';
-  }
 
-  const cleanFallback = (primaryBatchCategory && primaryBatchCategory !== 'AI_AUTO_DETECT') ? primaryBatchCategory : 'Kitchen';
+  const cleanFallback = (primaryBatchCategory && primaryBatchCategory !== 'AI_AUTO_DETECT') ? primaryBatchCategory : 'Living Room';
   return cleanFallback;
 };
 
@@ -435,42 +465,56 @@ const createBulkProducts = async (req, res) => {
       return res.status(400).json({ message: 'Could not process or upload selected images to Cloudinary.' });
     }
 
-    // Group uploadResults by AI-detected category
-    const itemsByCategory = {};
+    // Group uploadResults by SPECIFIC ITEM DESIGN KEYWORD
+    const itemsByDesignGroup = {};
     uploadResults.forEach((result) => {
       const file = result.fileRef || {};
       const cat = isAiAutoDetect ? detectCategoryFromImage(file, selectedCategory) : selectedCategory;
-      if (!itemsByCategory[cat]) {
-        itemsByCategory[cat] = [];
+      const groupKey = getDesignGroupKey(file, cat);
+
+      if (!itemsByDesignGroup[groupKey]) {
+        itemsByDesignGroup[groupKey] = {
+          category: cat,
+          items: []
+        };
       }
-      itemsByCategory[cat].push(result);
+      itemsByDesignGroup[groupKey].items.push(result);
     });
 
     const productsToCreate = [];
     const categoryCounts = {};
 
-    // Process each category group
-    for (const [catName, catResults] of Object.entries(itemsByCategory)) {
+    for (const [groupKey, groupData] of Object.entries(itemsByDesignGroup)) {
+      const catName = groupData.category && groupData.category !== 'AI_AUTO_DETECT' ? groupData.category : 'Kitchen';
+      const catResults = groupData.items;
+
       // Auto-create Category document in MongoDB if it doesn't exist yet!
       try {
         const Category = require('../models/Category');
-        const existingCat = await Category.findOne({ name: { $regex: new RegExp(`^${catName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
-        if (!existingCat) {
-          await Category.create({ name: catName });
-          console.log(`[Bulk Upload] Auto-created new Category in MongoDB: ${catName}`);
+        if (catName && catName !== 'AI_AUTO_DETECT') {
+          const existingCat = await Category.findOne({ name: { $regex: new RegExp(`^${catName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+          if (!existingCat) {
+            await Category.create({ name: catName });
+            console.log(`[Bulk Upload] Auto-created new Category in MongoDB: ${catName}`);
+          }
         }
       } catch (e) {
         console.error('[Bulk Upload] Category auto-creation check error:', e.message);
       }
 
-      if (isGroupAsOne) {
-        // Group ALL photos of this category into 1 single Product catalog item (e.g. Maharaj Table Set or Smasher 3-pack)
-        const imageUrls = catResults.map(r => r.url);
-        const imagePublicIds = catResults.map(r => r.publicId);
-        const smartTitle = generateSmartProductTitle(catResults[0]?.fileRef, catName, titlePrefix);
+      // Chunk items of this specific design group into products of max 5 images each!
+      const CHUNK_SIZE = isGroupAsOne ? Math.min(catResults.length, 5) : 5;
+      
+      for (let i = 0; i < catResults.length; i += CHUNK_SIZE) {
+        const chunk = catResults.slice(i, i + CHUNK_SIZE);
+        const imageUrls = chunk.map(r => r.url);
+        const imagePublicIds = chunk.map(r => r.publicId);
+        categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
+
+        const smartTitle = generateSmartProductTitle(chunk[0]?.fileRef, catName, titlePrefix);
 
         productsToCreate.push({
-          title: `${smartTitle} #${Date.now().toString().slice(-4)}`,
+          title: `${smartTitle} #${Date.now().toString().slice(-4)}${chunk.length > 1 ? '' : '-' + categoryCounts[catName]}`,
           category: catName,
           image: imageUrls[0],
           imageUrl: imageUrls[0],
@@ -478,40 +522,12 @@ const createBulkProducts = async (req, res) => {
           images: imageUrls,
           imagesPublicIds: imagePublicIds,
           price: defaultPrice,
-          description: `Handcrafted Grade-A Burma Teakwood design for ${catName}. Contains ${imageUrls.length} showcase photos.`,
+          description: `Handcrafted Grade-A Burma Teakwood design for ${catName}. Contains ${imageUrls.length} showcase photo(s).`,
           rating: 4.9,
           ratingsCount: 1,
           ratingsSum: 4.9,
           createdAt: new Date()
         });
-        categoryCounts[catName] = 1;
-      } else {
-        // Automatically group up to 5 gallery images per product catalog entry!
-        const CHUNK_SIZE = 5;
-        for (let i = 0; i < catResults.length; i += CHUNK_SIZE) {
-          const chunk = catResults.slice(i, i + CHUNK_SIZE);
-          const imageUrls = chunk.map(r => r.url);
-          const imagePublicIds = chunk.map(r => r.publicId);
-          categoryCounts[catName] = (categoryCounts[catName] || 0) + 1;
-
-          const smartTitle = generateSmartProductTitle(chunk[0]?.fileRef, catName, titlePrefix);
-
-          productsToCreate.push({
-            title: `${smartTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[catName]}`,
-            category: catName,
-            image: imageUrls[0],
-            imageUrl: imageUrls[0],
-            imagePublicId: imagePublicIds[0],
-            images: imageUrls,
-            imagesPublicIds: imagePublicIds,
-            price: defaultPrice,
-            description: `Handcrafted Grade-A Burma Teakwood design for ${catName}. Contains ${imageUrls.length} showcase gallery photo(s).`,
-            rating: 4.9,
-            ratingsCount: 1,
-            ratingsSum: 4.9,
-            createdAt: new Date()
-          });
-        }
       }
     }
 
