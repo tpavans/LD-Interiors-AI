@@ -215,34 +215,34 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       <div className="card-3d block">
         <div 
           onClick={handleCardClick}
-          className="card-3d-inner group overflow-hidden rounded-3xl bg-white/85 backdrop-blur-md border border-wood-border/40 transition-all duration-500 ease-out shadow-lg hover:shadow-xl hover:border-wood-accent/30 glow-on-hover cursor-pointer"
+          className="card-3d-inner group overflow-hidden rounded-2xl bg-white backdrop-blur-md border border-slate-200 transition-all duration-300 ease-out shadow-md hover:shadow-xl hover:border-sky-400/50 cursor-pointer"
         >
           <div 
             onClick={handleCardClick}
-            className="block relative overflow-hidden aspect-[4/5] bg-wood-beige/10 cursor-pointer group"
+            className="block relative overflow-hidden aspect-square bg-slate-100 cursor-pointer group"
           >
             <img
               src={formatImageUrl(image)}
               alt={title}
               loading="lazy"
-              className="h-full w-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
+              className="h-full w-full object-cover object-center transform transition-transform duration-500 ease-out group-hover:scale-105"
             />
             {/* Play Button Overlay for Videos */}
             {product.video && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/15 group-hover:bg-black/30 transition-colors duration-300">
-                <div className="bg-white/95 backdrop-blur-sm p-3.5 rounded-full text-wood-dark shadow-xl border border-wood-border/30 transform transition-transform group-hover:scale-110 duration-350">
-                  <Play className="h-6 w-6 fill-current text-wood-dark ml-0.5" />
+                <div className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full text-slate-900 shadow-xl border border-slate-200 transform transition-transform group-hover:scale-110 duration-300">
+                  <Play className="h-5 w-5 fill-current text-slate-900 ml-0.5" />
                 </div>
               </div>
             )}
             {/* Category Overlay */}
-            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-wood-accent shadow-sm border border-wood-border/30">
+            <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-widest text-[#008DDA] shadow-xs border border-slate-200">
               {category}
             </div>
             {/* New Arrival Badge */}
             {isNew && (
-              <div className="absolute top-12 left-4 bg-amber-500 text-wood-dark px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-widest shadow-sm border border-amber-600/20 z-10 animate-pulse">
-                New Arrival
+              <div className="absolute top-9 left-2.5 bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full text-[7.5px] font-extrabold uppercase tracking-widest shadow-xs border border-amber-600/20 z-10 animate-pulse">
+                New
               </div>
             )}
             {/* Share Overlay Button */}
@@ -252,80 +252,73 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                 e.stopPropagation();
                 setShowShareModal(true);
               }}
-              className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full text-wood-dark hover:bg-wood-accent hover:text-white transition-colors duration-300 shadow-sm border border-wood-border/30 cursor-pointer z-10"
+              className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-md p-1.5 rounded-full text-slate-700 hover:bg-[#008DDA] hover:text-white transition-colors duration-200 shadow-xs border border-slate-200 cursor-pointer z-10"
               title="Share Design"
             >
-              <Share2 className="h-3.5 w-3.5" />
+              <Share2 className="h-3 w-3" />
             </button>
             {/* Like Overlay Button */}
             <button
               onClick={handleToggleLike}
-              className="absolute top-14 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full text-neutral-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-300 shadow-sm border border-wood-border/30 cursor-pointer z-10"
+              className="absolute top-10 right-2.5 bg-white/90 backdrop-blur-md p-1.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 shadow-xs border border-slate-200 cursor-pointer z-10"
               title={isLiked ? "Remove from Liked Designs" : "Add to Liked Designs"}
             >
-              <Heart className={`h-3.5 w-3.5 transition-transform duration-300 hover:scale-110 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              <Heart className={`h-3 w-3 transition-transform duration-200 hover:scale-110 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
             </button>
           </div>
-          <div className="p-4 sm:p-5 flex flex-col gap-3 sm:gap-4">
+          <div className="p-3 sm:p-3.5 flex flex-col justify-between gap-2.5">
             <div>
-              <span className="text-[9px] font-extrabold tracking-widest text-wood-accent uppercase">
+              <span className="text-[8.5px] font-extrabold tracking-widest text-[#008DDA] uppercase">
                 {category}
               </span>
-              <Link href={`/products/${_id}`} className="block mt-0.5 sm:mt-1">
-                <h3 className="font-serif text-sm sm:text-base font-bold text-wood-dark hover:text-wood-accent transition-colors line-clamp-1">
+              <Link href={`/products/${_id}`} className="block mt-0.5">
+                <h3 className="font-sans text-xs sm:text-sm font-extrabold text-slate-900 hover:text-[#008DDA] transition-colors line-clamp-2 leading-snug">
                   {title}
                 </h3>
               </Link>
-              <div className="mt-1 flex flex-col gap-1">
-                <span className="text-[10px] sm:text-xs font-semibold text-wood-accent leading-snug">
+              <div className="mt-1 flex flex-col gap-0.5">
+                <div className="text-xs sm:text-sm font-bold text-slate-900">
                   {price && price > 0 ? (
-                    <span>
-                      {isTelugu ? "ధర" : "Price"}: <span className="font-extrabold text-wood-dark">₹{price.toLocaleString('en-IN')}</span>
-                    </span>
+                    <span className="font-black text-slate-950 font-mono text-sm sm:text-base">₹{price.toLocaleString('en-IN')}</span>
                   ) : (
-                    <span className="font-semibold text-wood-accent">{isTelugu ? "ధర కొరకు సంప్రదించండి" : "Contact Nagaraju for pricing"}</span>
+                    <span className="font-extrabold text-[#008DDA] text-[11px] sm:text-xs">{isTelugu ? "ధర కొరకు సంప్రదించండి" : "Contact Nagaraju for price"}</span>
                   )}
-                </span>
-                <span className="text-[10px] text-amber-400 font-bold tracking-wider filter drop-shadow-sm">
+                </div>
+                <div className="text-[9px] text-amber-500 font-extrabold tracking-wider">
                   {'★'.repeat(rating || 5)}{'☆'.repeat(5 - (rating || 5))}
-                </span>
+                </div>
               </div>
             </div>
             
             {/* Actions Grid */}
-            <div className="flex flex-col gap-2.5">
-              {/* Call for Pricing Note */}
-              <div className="text-[8px] sm:text-[9px] text-wood-light text-center font-medium italic leading-none">
-                {isTelugu ? "ధర మరియు సైజు వివరాల కోసం:" : "Get pricing & custom sizing info:"}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-1.5 md:gap-2">
+            <div className="flex flex-col gap-1.5 mt-1">
+              <div className="flex gap-1.5">
                 {/* Call Nagaraju */}
                 <a
                   href="tel:+916281653998"
                   title="Call Nagaraju (Owner)"
-                  className="w-full sm:flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
+                  className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:border-[#008DDA] hover:text-[#008DDA] py-1.5 text-[8.5px] sm:text-[9.5px] font-extrabold tracking-wider uppercase transition-all duration-200 cursor-pointer text-slate-800 bg-slate-50 hover:bg-sky-50"
                 >
-                  <Phone className="h-3 w-3 text-wood-accent shrink-0" />
-                  <span>{isTelugu ? "నాగరాజు (యజమాని)" : "Nagaraju (Owner)"}</span>
+                  <Phone className="h-2.5 w-2.5 text-[#008DDA] shrink-0" />
+                  <span>{isTelugu ? "నాగరాజు" : "Nagaraju"}</span>
                 </a>
                 {/* Call Pavan Sai */}
                 <a
                   href="tel:+919346325291"
                   title="Call Pavan Sai (Tech Admin)"
-                  className="w-full sm:flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-wood-border/60 hover:border-wood-accent hover:text-wood-accent py-2 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer text-wood-dark"
+                  className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-slate-200 hover:border-[#008DDA] hover:text-[#008DDA] py-1.5 text-[8.5px] sm:text-[9.5px] font-extrabold tracking-wider uppercase transition-all duration-200 cursor-pointer text-slate-800 bg-slate-50 hover:bg-sky-50"
                 >
-                  <Phone className="h-3 w-3 text-wood-accent/80 shrink-0" />
-                  <span>{isTelugu ? "సపోర్ట్ కాల్" : "Call Admin"}</span>
+                  <Phone className="h-2.5 w-2.5 text-[#008DDA]/80 shrink-0" />
+                  <span>{isTelugu ? "సపోర్ట్" : "Support"}</span>
                 </a>
               </div>
 
               {/* Order / WhatsApp Details Button */}
               <button
                 onClick={() => setShowOrderModal(true)}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white py-2.5 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase transition-all duration-350 shadow-sm hover:shadow-wood-dark/20 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1 rounded-lg bg-[#0B192C] hover:bg-[#008DDA] text-white py-2 text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase transition-all duration-200 shadow-sm cursor-pointer"
               >
-                <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <ShoppingBag className="h-3 w-3" />
                 <span>{t.orderBtn}</span>
               </button>
             </div>
