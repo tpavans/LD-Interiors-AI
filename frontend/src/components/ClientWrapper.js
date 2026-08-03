@@ -40,6 +40,10 @@ export default function ClientWrapper() {
   // Chatbot State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('ld-chatbot-state', { detail: { isOpen: isChatOpen } }));
+  }, [isChatOpen]);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'order'
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState([
@@ -2397,15 +2401,12 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           )}
 
           {/* Chat Floating Button with Cute Animated Girl Mascot */}
-          <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
-            className="pointer-events-auto flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
-          >
-            {isChatOpen ? (
-              <svg className="h-6 w-6 text-[#ebdcc5] transition-transform duration-300 group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
+          {!isChatOpen && (
+            <button
+              onClick={() => setIsChatOpen(true)}
+              className="pointer-events-auto flex items-center justify-center h-14 w-14 landscape:h-11 landscape:w-11 rounded-full bg-gradient-to-tr from-[#423525] to-[#6d553b] text-white hover:scale-105 shadow-2xl transition-all duration-300 cursor-pointer relative border-2 border-[#ebdcc5] overflow-hidden group"
+              title="Open LD AI Assistant"
+            >
               <div className="relative w-full h-full flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="h-12 w-12 landscape:h-9 landscape:w-9 drop-shadow-md">
                   <style>{`
@@ -2449,8 +2450,8 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                   </span>
                 </span>
               </div>
-            )}
-          </button>
+            </button>
+          )}
         </div>
       )}
     </>

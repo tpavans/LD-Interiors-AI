@@ -292,32 +292,45 @@ const createProduct = async (req, res) => {
 /**
  * Helper: AI Category Classifier for image filenames / visual keywords
  */
-const detectCategoryFromImage = (file, idx, totalFiles) => {
-  const name = `${file.filename || ''} ${file.originalname || ''}`.toLowerCase();
+/**
+ * Helper: AI Category Classifier for image filenames / visual keywords
+ */
+const detectCategoryFromImage = (file, primaryBatchCategory = null) => {
+  const name = `${file?.filename || ''} ${file?.originalname || ''}`.toLowerCase();
   
+  if (name.includes('bat') || name.includes('cricket') || name.includes('ball') || name.includes('sport') || name.includes('racket') || name.includes('game')) {
+    return 'Sports';
+  }
+  if (name.includes('spoon') || name.includes('ladle') || name.includes('spatula') || name.includes('rolling') || name.includes('spice') || name.includes('kitchen') || name.includes('utensil') || name.includes('bowl') || name.includes('plate') || name.includes('tray') || name.includes('chop') || name.includes('fork') || name.includes('cutlery')) {
+    return 'Kitchen';
+  }
   if (name.includes('door') || name.includes('gummalu') || name.includes('doorframe') || name.includes('darabandham') || name.includes('main_door') || name.includes('entrance') || name.includes('wooddoor')) {
     return 'Doors';
   }
-  if (name.includes('bed') || name.includes('cot') || name.includes('bedroom') || name.includes('mattress') || name.includes('king') || name.includes('queen')) {
+  if (name.includes('bed') || name.includes('cot') || name.includes('bedroom') || name.includes('mattress') || name.includes('king') || name.includes('queen') || name.includes('wardrobe') || name.includes('almirah') || name.includes('closet')) {
     return 'Wooden Beds';
   }
-  if (name.includes('mandir') || name.includes('pooja') || name.includes('temple') || name.includes('puja') || name.includes('god') || name.includes('devudu')) {
+  if (name.includes('mandir') || name.includes('pooja') || name.includes('temple') || name.includes('puja') || name.includes('god') || name.includes('devudu') || name.includes('idol') || name.includes('statue')) {
     return 'Puja Mandiralu';
   }
   if (name.includes('dining') || name.includes('table') || name.includes('chair') || name.includes('dinning') || name.includes('eat')) {
     return 'Dining Tables';
   }
-  if (name.includes('sofa') || name.includes('couch') || name.includes('living') || name.includes('hall') || name.includes('tv') || name.includes('seating')) {
+  if (name.includes('sofa') || name.includes('couch') || name.includes('living') || name.includes('hall') || name.includes('tv') || name.includes('seating') || name.includes('bench') || name.includes('bar') || name.includes('cabinet') || name.includes('wine')) {
     return 'Living Room';
   }
+  if (name.includes('plant') || name.includes('planter') || name.includes('pot') || name.includes('garden') || name.includes('flower') || name.includes('stand')) {
+    return 'Garden & Decor';
+  }
+  if (name.includes('toy') || name.includes('craft') || name.includes('sculpture') || name.includes('artifact') || name.includes('carving') || name.includes('horse') || name.includes('elephant')) {
+    return 'Carvings & Handicrafts';
+  }
 
-  // Smart fallback distribution across categories if filenames are numeric (e.g. IMG_001.jpg, photo2.jpg)
-  const defaultCategories = ['Doors', 'Wooden Beds', 'Puja Mandiralu', 'Dining Tables', 'Living Room'];
-  return defaultCategories[idx % defaultCategories.length];
+  return primaryBatchCategory || 'Living Room';
 };
 
 /**
- * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection & Max 5 per category cap)
+ * @desc    Bulk upload design catalog items (with AI Multi-Category Auto Detection, Auto Category Creation & Grouping)
  * @route   POST /api/products/bulk
  * @access  Private (Admin only)
  */
@@ -326,8 +339,9 @@ const createBulkProducts = async (req, res) => {
     return res.status(503).json({ message: 'Database connection is offline.' });
   }
   try {
-    const { category, price, titlePrefix, aiAutoDetect } = req.body;
+    const { category, price, titlePrefix, aiAutoDetect, groupAsOneProduct } = req.body;
     const isAiAutoDetect = aiAutoDetect === 'true' || aiAutoDetect === true || category === 'AI_AUTO_DETECT';
+    const isGroupAsOne = groupAsOneProduct === 'true' || groupAsOneProduct === true;
     const selectedCategory = category?.trim() === 'Gummalu' ? 'Doors' : (category?.trim() || 'Living Room');
     const defaultPrice = price ? Number(price) : 0;
 
@@ -339,16 +353,16 @@ const createBulkProducts = async (req, res) => {
       return res.status(400).json({ message: 'Please select image files for bulk upload.' });
     }
 
-    console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Categorize: ${isAiAutoDetect})...`);
+    console.log(`[Bulk Upload] Processing ${files.length} images (AI Auto-Detect: ${isAiAutoDetect}, Group As Single Product: ${isGroupAsOne})...`);
 
-    // Upload files to Cloudinary gracefully, handling individual image errors without failing the entire batch
+    // Upload files to Cloudinary gracefully
     const uploadPromises = files.map(async (file, idx) => {
       try {
         if (!file || !file.path) return null;
         const res = await uploadToCloudinary(file.path);
         return { ...res, fileRef: file, fileIdx: idx };
       } catch (err) {
-        console.error(`[Bulk Upload Error] File #${idx} (${file?.originalname || 'image'}) upload failed:`, err.message);
+        console.error(`[Bulk Upload Error] File #${idx} failed:`, err.message);
         return null;
       }
     });
@@ -360,62 +374,100 @@ const createBulkProducts = async (req, res) => {
       return res.status(400).json({ message: 'Could not process or upload selected images to Cloudinary. Please try selecting different photos.' });
     }
 
-    // Track category distribution counts for max 5 per category cap
-    const categoryCounts = {};
-    const productsToCreate = [];
-
-    uploadResults.forEach((result) => {
-      const file = result.fileRef || {};
-      const idx = result.fileIdx || 0;
-      let assignedCategory = selectedCategory;
-
-      if (isAiAutoDetect) {
-        let detected = detectCategoryFromImage(file, idx, files.length);
-
-        // Strict Rule: Once a category reaches 5 images, LEAVE IT / DISCARD remaining images for that category (NO spillover)
-        if ((categoryCounts[detected] || 0) >= 5) {
-          return; // Skip/Leave remaining images for this category
-        }
-        assignedCategory = detected;
-      } else {
-        // Single category mode: limit to max 5 images total for that category per batch
-        if ((categoryCounts[assignedCategory] || 0) >= 5) {
-          return; // Cap at max 5
+    // Determine batch primary category
+    let batchCategory = selectedCategory;
+    if (isAiAutoDetect) {
+      for (const resItem of uploadResults) {
+        const det = detectCategoryFromImage(resItem.fileRef, null);
+        if (det && det !== 'Living Room') {
+          batchCategory = det;
+          break;
         }
       }
+      if (!batchCategory || batchCategory === 'AI_AUTO_DETECT') {
+        batchCategory = detectCategoryFromImage(uploadResults[0]?.fileRef, 'Living Room');
+      }
+    }
 
-      categoryCounts[assignedCategory] = (categoryCounts[assignedCategory] || 0) + 1;
+    // Auto-create Category document in DB if it doesn't exist yet!
+    try {
+      const Category = require('../models/Category');
+      const existingCat = await Category.findOne({ name: { $regex: new RegExp(`^${batchCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+      if (!existingCat) {
+        await Category.create({ name: batchCategory });
+        console.log(`[Bulk Upload] Auto-created new Category in MongoDB: ${batchCategory}`);
+      }
+    } catch (e) {
+      console.error('[Bulk Upload] Category auto-creation check error:', e.message);
+    }
 
-      const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
+    const productsToCreate = [];
+    const categoryCounts = {};
+
+    if (isGroupAsOne) {
+      // Create 1 single Product containing all uploaded multi-angle images
+      const imageUrls = uploadResults.map(r => r.url);
+      const imagePublicIds = uploadResults.map(r => r.publicId);
+      const baseTitle = titlePrefix?.trim() || `${batchCategory} Teak Design`;
 
       productsToCreate.push({
-        title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[assignedCategory]}`,
-        category: assignedCategory,
-        image: result.url,
-        imageUrl: result.url,
-        imagePublicId: result.publicId,
-        images: [result.url],
-        imagesPublicIds: [result.publicId],
+        title: `${baseTitle} #${Date.now().toString().slice(-4)}`,
+        category: batchCategory,
+        image: imageUrls[0],
+        imageUrl: imageUrls[0],
+        imagePublicId: imagePublicIds[0],
+        images: imageUrls,
+        imagesPublicIds: imagePublicIds,
         price: defaultPrice,
-        description: `Handcrafted Grade-A Burma Teakwood design for ${assignedCategory}.`,
+        description: `Handcrafted Grade-A Burma Teakwood design for ${batchCategory}. Contains ${imageUrls.length} multi-angle showcase photos.`,
         rating: 4.9,
         ratingsCount: 1,
         ratingsSum: 4.9,
         createdAt: new Date()
       });
-    });
+      categoryCounts[batchCategory] = 1;
+    } else {
+      // Create individual products, assigning each image to the detected category
+      uploadResults.forEach((result) => {
+        const file = result.fileRef || {};
+        let assignedCategory = isAiAutoDetect ? detectCategoryFromImage(file, batchCategory) : batchCategory;
 
-    if (productsToCreate.length === 0) {
-      return res.status(400).json({ message: 'All selected images exceed the limit of 5 per category. Please select a specific category or different photos.' });
+        categoryCounts[assignedCategory] = (categoryCounts[assignedCategory] || 0) + 1;
+
+        // Auto-create category in DB if needed
+        try {
+          const Category = require('../models/Category');
+          Category.findOne({ name: { $regex: new RegExp(`^${assignedCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } })
+            .then(existing => { if (!existing) Category.create({ name: assignedCategory }).catch(() => {}); });
+        } catch (e) {}
+
+        const baseTitle = titlePrefix?.trim() || `${assignedCategory} Teak Design`;
+
+        productsToCreate.push({
+          title: `${baseTitle} #${Date.now().toString().slice(-4)}-${categoryCounts[assignedCategory]}`,
+          category: assignedCategory,
+          image: result.url,
+          imageUrl: result.url,
+          imagePublicId: result.publicId,
+          images: [result.url],
+          imagesPublicIds: [result.publicId],
+          price: defaultPrice,
+          description: `Handcrafted Grade-A Burma Teakwood design for ${assignedCategory}.`,
+          rating: 4.9,
+          ratingsCount: 1,
+          ratingsSum: 4.9,
+          createdAt: new Date()
+        });
+      });
     }
 
     const insertedProducts = await Product.insertMany(productsToCreate);
-    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} items (capped at max 5 per category)!`);
+    console.log(`[Bulk Upload] Successfully inserted ${insertedProducts.length} item(s)!`);
 
     const summaryParts = Object.entries(categoryCounts).map(([cat, count]) => `${count} in ${cat}`);
 
     res.status(201).json({
-      message: `🎉 Successfully uploaded ${insertedProducts.length} images (Max 5 per category): ${summaryParts.join(', ')}!`,
+      message: `🎉 Successfully uploaded ${insertedProducts.length} item(s) under category "${batchCategory}": ${summaryParts.join(', ')}!`,
       count: insertedProducts.length,
       categoryCounts,
       products: insertedProducts

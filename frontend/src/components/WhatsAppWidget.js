@@ -5,9 +5,20 @@ import { MessageSquare, X, ShieldCheck, Phone } from 'lucide-react';
 
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isChatbotActive, setIsChatbotActive] = useState(false);
   const { language } = useLanguage();
 
   const isTelugu = language === 'TE';
+
+  React.useEffect(() => {
+    const handleChatState = (e) => {
+      setIsChatbotActive(!!e.detail?.isOpen);
+    };
+    window.addEventListener('ld-chatbot-state', handleChatState);
+    return () => window.removeEventListener('ld-chatbot-state', handleChatState);
+  }, []);
+
+  if (isChatbotActive) return null;
 
   const contacts = [
     {

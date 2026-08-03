@@ -165,6 +165,7 @@ export default function AdminDashboardComponent() {
   const [bulkCategory, setBulkCategory] = useState(CATEGORIES[0]);
   const [bulkPrice, setBulkPrice] = useState('');
   const [bulkTitlePrefix, setBulkTitlePrefix] = useState('');
+  const [groupAsOneProduct, setGroupAsOneProduct] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
   // Status/Error States
@@ -682,6 +683,7 @@ export default function AdminDashboardComponent() {
 
       const formData = new FormData();
       formData.append('category', bulkCategory);
+      formData.append('groupAsOneProduct', groupAsOneProduct ? 'true' : 'false');
       if (bulkCategory === 'AI_AUTO_DETECT') {
         formData.append('aiAutoDetect', 'true');
       }
@@ -1444,6 +1446,20 @@ LD Interiors & Furnitures
                     placeholder="e.g., 35000"
                     className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-xs text-wood-dark font-mono"
                   />
+                </div>
+
+                {/* Group as 1 Single Product Toggle */}
+                <div className="flex items-center gap-3 p-3.5 bg-sky-50/90 border border-sky-300 rounded-xl shadow-xs">
+                  <input
+                    type="checkbox"
+                    id="groupAsOne"
+                    checked={groupAsOneProduct}
+                    onChange={(e) => setGroupAsOneProduct(e.target.checked)}
+                    className="h-4.5 w-4.5 text-[#008DDA] rounded border-slate-300 focus:ring-[#008DDA] cursor-pointer shrink-0"
+                  />
+                  <label htmlFor="groupAsOne" className="text-xs font-bold text-slate-800 cursor-pointer">
+                    🖼️ Group all selected photos into 1 Single Product (Multi-angle photos of 1 design)
+                  </label>
                 </div>
 
                 <div>
