@@ -243,6 +243,7 @@ export default function Navbar() {
             {t.orders}
           </Link>
 
+          {/* Admin-only Dashboard & Logout Links */}
           {isLoggedIn && (
             <Link
               href="/admin"
@@ -253,6 +254,16 @@ export default function Navbar() {
               <LayoutDashboard className="h-3.5 w-3.5" />
               <span>{t.dashboard}</span>
             </Link>
+          )}
+          {isLoggedIn && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1 rounded-md border border-red-500/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-red-350 hover:bg-red-950/40 hover:text-red-400 hover:border-red-500/50 transition-all cursor-pointer"
+              title="Logout Admin"
+            >
+              <LogOut className="h-3 w-3" />
+              <span>{t.logout}</span>
+            </button>
           )}
 
           {/* Desktop Language Toggle */}
