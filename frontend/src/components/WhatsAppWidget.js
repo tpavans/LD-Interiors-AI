@@ -25,7 +25,7 @@ export default function WhatsAppWidget() {
       name: isTelugu ? "శ్రీ నాగరాజు గారు" : "Mr. Nagaraju",
       role: isTelugu ? "చీఫ్ కార్పెంటర్ & ఆర్డర్స్" : "Chief Carpenter & Orders",
       desc: isTelugu ? "టేకు చెక్కడాల నిపుణుడు" : "Teak Carvings Specialist",
-      phone: "916301290966",
+      phone: "916281653998",
       avatar: "N"
     },
     {

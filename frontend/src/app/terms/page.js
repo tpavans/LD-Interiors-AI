@@ -1,174 +1,256 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
-import { ShieldCheck, FileText, Lock, RefreshCw, Truck, Hammer, PhoneCall, ChevronRight } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  FileText, 
+  Lock, 
+  RefreshCw, 
+  Truck, 
+  Hammer, 
+  PhoneCall, 
+  ChevronRight, 
+  CheckCircle2, 
+  Building2, 
+  Scale, 
+  HelpCircle,
+  Clock,
+  Sparkles
+} from 'lucide-react';
 
 export default function TermsPage() {
   const { language } = useLanguage();
   const isTelugu = language === 'TE';
+  const [activeSection, setActiveSection] = useState('all');
+
+  const sections = [
+    { id: 'sec-1', title: isTelugu ? '1. ఒప్పంద పరిధి & సంస్థ వివరాలు' : '1. Scope of Agreement & Business Identity' },
+    { id: 'sec-2', title: isTelugu ? '2. కస్టమ్ టేకువుడ్ ఆర్డర్లు & ప్రామాణికాలు' : '2. Custom Teakwood Orders & Craft Standards' },
+    { id: 'sec-3', title: isTelugu ? '3. ధరలు & పేమెంట్ నిబంధనలు' : '3. Pricing, Deposits & Payment Terms' },
+    { id: 'sec-4', title: isTelugu ? '4. రవాణా, డెలివరీ & ఇన్‌స్టాలేషన్' : '4. Transit, Delivery & Installation' },
+    { id: 'sec-5', title: isTelugu ? '5. వారంటీ & నాణ్యత హామీ' : '5. Wood Warranty & Termite Guarantee' },
+    { id: 'sec-6', title: isTelugu ? '6. కాపీరైట్స్ & మేధో సంపత్తి' : '6. Intellectual Property & Designs' },
+    { id: 'sec-7', title: isTelugu ? '7. బాధ్యత పరిమితి & వివాద పరిష్కారం' : '7. Liability Limitation & Jurisdiction' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF6F0] text-wood-dark font-sans flex flex-col">
       <Navbar />
 
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-[#423525] via-[#5A4732] to-[#6D553B] text-white py-12 px-6 sm:px-12 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10">
+      <div className="bg-gradient-to-r from-[#3B2F21] via-[#52412E] to-[#6A543D] text-white py-14 px-6 sm:px-12 relative overflow-hidden border-b border-wood-border/30">
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex items-center gap-2 text-xs text-[#EBDCC5]/80 mb-3 font-medium">
             <Link href="/" className="hover:underline">Home</Link>
             <ChevronRight className="h-3 w-3" />
-            <span>Legal</span>
+            <span>Legal Portal</span>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-[#EBDCC5]">Terms & Conditions</span>
+            <span className="text-[#EBDCC5] font-bold">Terms of Service & Sales Agreement</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-white flex items-center gap-3">
-            <FileText className="h-8 w-8 text-[#EBDCC5]" />
-            {isTelugu ? "నిబంధనలు & షరతులు (Terms & Conditions)" : "Terms & Conditions"}
-          </h1>
-          <p className="mt-2 text-sm text-[#EBDCC5]/90 max-w-2xl font-light">
-            {isTelugu 
-              ? "ఎల్ డి ఇంటీరియర్స్ & ఫర్నిచర్స్ సేవలు, కస్టమ్ ఆర్డర్లు, నాణ్యత హామీ మరియు కొనుగోలు నిబంధనలు."
-              : "Official Agreement governing the use of LD Interiors website, custom woodwork orders, warranty, and craftsmanship terms."}
-          </p>
-          <p className="mt-1 text-[11px] text-[#EBDCC5]/60 font-mono">
-            Last Updated: August 2026 | Effective for LD Interiors & Furnitures (ldinteriors.in)
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBDCC5]/20 text-[#EBDCC5] text-[11px] font-bold uppercase tracking-wider mb-2 border border-[#EBDCC5]/30">
+                <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Official Enterprise Agreement
+              </span>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                <FileText className="h-9 w-9 text-[#EBDCC5] shrink-0" />
+                {isTelugu ? "నిబంధనలు & సర్వీస్ ఒప్పందం" : "Terms of Service & Conditions"}
+              </h1>
+              <p className="mt-2 text-sm text-[#EBDCC5]/90 max-w-2xl font-light leading-relaxed">
+                {isTelugu 
+                  ? "ఎల్ డి ఇంటీరియర్స్ & ఫర్నిచర్స్ ఈ-కామర్స్ పోర్టల్ మరియు కస్టమ్ టేకువుడ్ ఫర్నిచర్ ఆర్డర్ల అధికారిక నిబంధనలు."
+                  : "Governing Agreement for custom teakwood furniture sales, architectural woodwork, structural warranties, order milestones, and client rights."}
+              </p>
+            </div>
+            <div className="bg-[#2A2117]/80 p-4 rounded-2xl border border-[#EBDCC5]/20 shrink-0 text-left md:text-right">
+              <div className="text-xs text-[#EBDCC5]/70">Effective Date: <strong className="text-white font-mono">August 2026</strong></div>
+              <div className="text-xs text-[#EBDCC5]/70 mt-1">Entity: <strong className="text-white">LD Interiors & Furnitures</strong></div>
+              <div className="text-[11px] text-[#EBDCC5]/60 font-mono mt-1">Reg: Mulasthanam, AP - 533233</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 sm:px-12 py-10 flex-1">
-        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-wood-border/30 space-y-8">
+      {/* Main Content Area */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 py-10 flex-1 w-full">
+        
+        {/* Top Trust Badges */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="p-4 bg-white rounded-2xl border border-wood-border/40 shadow-xs flex items-center gap-3">
+            <ShieldCheck className="h-7 w-7 text-emerald-600 shrink-0" />
+            <div className="text-left">
+              <h4 className="font-bold text-xs text-wood-dark">100% Burma Teak</h4>
+              <p className="text-[10px] text-wood-light">Genuine Grade-A Hardwood</p>
+            </div>
+          </div>
+          <div className="p-4 bg-white rounded-2xl border border-wood-border/40 shadow-xs flex items-center gap-3">
+            <Lock className="h-7 w-7 text-sky-600 shrink-0" />
+            <div className="text-left">
+              <h4 className="font-bold text-xs text-wood-dark">Secure Advance</h4>
+              <p className="text-[10px] text-wood-light">Milestone Payment Safety</p>
+            </div>
+          </div>
+          <div className="p-4 bg-white rounded-2xl border border-wood-border/40 shadow-xs flex items-center gap-3">
+            <Truck className="h-7 w-7 text-amber-600 shrink-0" />
+            <div className="text-left">
+              <h4 className="font-bold text-xs text-wood-dark">Safe All-India Freight</h4>
+              <p className="text-[10px] text-wood-light">Insured Transit Options</p>
+            </div>
+          </div>
+          <div className="p-4 bg-white rounded-2xl border border-wood-border/40 shadow-xs flex items-center gap-3">
+            <Hammer className="h-7 w-7 text-wood-accent shrink-0" />
+            <div className="text-left">
+              <h4 className="font-bold text-xs text-wood-dark">Handcrafted Quality</h4>
+              <p className="text-[10px] text-wood-light">Master Artisan Carving</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-6 sm:p-12 shadow-xl border border-wood-border/30 text-left space-y-10">
           
-          {/* Quick Notice Banner */}
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-3">
-            <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          {/* Quick Notice */}
+          <div className="p-5 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-950 text-xs flex items-start gap-3.5 leading-relaxed">
+            <ShieldCheck className="h-6 w-6 text-amber-700 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Welcome to LD Interiors & Furnitures!</span> By browsing our website, booking workshop tours, or placing custom furniture orders with our master craftsmen (Nagaraju & Team), you agree to these Terms and Conditions.
+              <span className="font-bold text-sm block mb-1 text-amber-900">Legal Notice & Sales Agreement</span>
+              Welcome to <strong>LD Interiors & Furnitures</strong>. By accessing our platform (ldinteriors.in), requesting quotations, or confirming custom woodwork orders with our master artisans, you enter into a binding agreement subject to the terms detailed below.
             </div>
           </div>
 
-          {/* Section 1: Business Identification */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">1</span>
-              {isTelugu ? "1. సంస్థ వివరాలు (Company Information)" : "1. About LD Interiors & Business Scope"}
+          {/* Section 1 */}
+          <section id="sec-1" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">1</span>
+              {isTelugu ? "సంస్థ పరిధి & వివరాలు" : "Scope of Agreement & Business Identity"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              <strong>LD Interiors & Furnitures</strong> (&quot;Company&quot;, &quot;We&quot;, &quot;Us&quot;, &quot;Our&quot;) is a premier handcrafted woodwork enterprise headquartered in <strong>Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh (PIN: 533233)</strong>. We specialize in 100% Grade-A Burma Teakwood furniture, custom doors, puja mandirams, dining sets, living room cabinets, and full home interior carpentry services.
+              <strong>LD Interiors & Furnitures</strong> (&quot;Company&quot;, &quot;We&quot;, &quot;Us&quot;, &quot;Our&quot;) operates as a registered custom furniture manufacture and interior design firm with registered workshop premises located at:
             </p>
-            <ul className="list-disc list-inside text-xs text-slate-600 space-y-1 pl-2">
-              <li><strong>Official Website:</strong> <a href="https://www.ldinteriors.in" className="text-wood-accent underline">https://www.ldinteriors.in</a></li>
-              <li><strong>Founder & Master Craftsman:</strong> Mr. Nagaraju (+91 63012 90966)</li>
-              <li><strong>Technical & Orders Lead:</strong> Pavan Sai (+91 93463 25291)</li>
-            </ul>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-1 font-mono">
+              <p>📍 <strong>Workshop Address:</strong> Mulasthanam, Alamuru Mandal, Konaseema District, Andhra Pradesh - 533233, India</p>
+              <p>📞 <strong>Chief Carpenter & Manager (Nagaraju):</strong> +91 62816 53998</p>
+              <p>💻 <strong>Technical Lead (Pavan Sai):</strong> +91 93463 25291</p>
+              <p>🌐 <strong>Official Website:</strong> <a href="https://www.ldinteriors.in" className="text-wood-accent underline">https://www.ldinteriors.in</a></p>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              These terms govern all transactions, site visits, catalog requests, custom joinery, delivery, and warranty services performed by our team.
+            </p>
           </section>
 
-          {/* Section 2: Custom Teakwood Orders & Craftsmanship */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">2</span>
-              {isTelugu ? "2. కస్టమ్ ఆర్డర్లు & టేకువుడ్ నాణ్యత (Custom Orders & Natural Teak Characteristics)" : "2. Custom Woodwork & Material Specifications"}
+          {/* Section 2 */}
+          <section id="sec-2" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">2</span>
+              {isTelugu ? "కస్టమ్ టేకువుడ్ ఆర్డర్లు & సహజ లక్షణాలు" : "Custom Teakwood Orders & Natural Material Standards"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              All furniture and architectural wood products listed on LD Interiors are handcrafted using <strong>100% genuine Grade-A Burma / Seasoned Teakwood</strong>.
+              All furniture, architectural entrance doors (Gummalu), puja mandirams, and luxury items are manufactured using <strong>100% genuine Grade-A Burma or Seasoned Teakwood</strong>.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-sky-50/60 rounded-2xl border border-sky-200">
-                <h3 className="font-bold text-xs text-sky-900 flex items-center gap-1.5 mb-1">
-                  <Hammer className="h-4 w-4 text-sky-600" /> Natural Wood Grains & Colors
+                <h3 className="font-bold text-xs text-sky-950 flex items-center gap-2 mb-1.5">
+                  <Hammer className="h-4 w-4 text-sky-600" /> Natural Grains & Color Variations
                 </h3>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Natural teakwood features unique grain patterns, natural knots, and subtle color variations. These are inherent characteristics of real wood and confirm authentic craftsmanship.
+                  Real teakwood displays unique golden-brown grain patterns, natural oil veins, and subtle color shade shifts. These variations verify 100% natural solid wood and are not flaws.
                 </p>
               </div>
               <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200">
-                <h3 className="font-bold text-xs text-emerald-900 flex items-center gap-1.5 mb-1">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" /> Precision & Custom Measurements
+                <h3 className="font-bold text-xs text-emerald-950 flex items-center gap-2 mb-1.5">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" /> Custom Dimensions & Tolerances
                 </h3>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  For custom doors (Gummalu), beds, and puja mandirs, final dimensions are confirmed prior to carving. Slight millimeter tolerances (+/- 2mm) exist in hand-planed joinery.
+                  For custom door frames and built-in wardrobes, final site measurements are verified. Hand-planed joinery maintains standard industry tolerances of +/- 2mm.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Section 3: Pricing, Deposit & Payment Terms */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">3</span>
-              {isTelugu ? "3. ధరలు, అడ్వాన్స్ డిపాజిట్ & పేమెంట్ నిబంధనలు" : "3. Pricing, Order Advance & Payment Milestones"}
+          {/* Section 3 */}
+          <section id="sec-3" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">3</span>
+              {isTelugu ? "ధరలు & పేమెంట్ నిబంధనలు" : "Pricing, Order Advance & Payment Terms"}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              We maintain transparent pricing for all custom wood creations. Prices may vary depending on wood grade, carving complexity, custom dimensions, and polish finishes.
-            </p>
-            <div className="space-y-2 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <p><strong>• Advance Deposit:</strong> Custom furniture orders require an initial advance deposit (typically 30% - 50%) to initiate timber selection and hand-carving.</p>
-              <p><strong>• Milestone Updates:</strong> Progress photos and workshop video logs are shared with customers via WhatsApp during wood cutting, carving, and polish phases.</p>
-              <p><strong>• Final Balance:</strong> Remaining balance payment is due prior to final dispatch or installation at the customer site.</p>
-              <p><strong>• GST Invoices:</strong> Official GST tax invoices can be generated upon request for business and residential projects.</p>
+            <div className="space-y-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200">
+              <p>• <strong>Transparent Quotes:</strong> Prices quoted reflect timber volume, wood grade, carving detail, and polish selection.</p>
+              <p>• <strong>Advance Deposit:</strong> A minimum advance deposit (30% to 50%) is required to initiate timber selection and hand-carving.</p>
+              <p>• <strong>Progress Logs:</strong> Clients receive video and photo updates via WhatsApp during wood cutting, joinery, and polish stages.</p>
+              <p>• <strong>Final Settlement:</strong> Remaining balance must be cleared prior to dispatch or final installation at site.</p>
+              <p>• <strong>Tax Invoices:</strong> Official GST invoices are generated for residential & commercial interior contracts upon request.</p>
             </div>
           </section>
 
-          {/* Section 4: Shipping, Delivery & Installation */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">4</span>
-              {isTelugu ? "4. డెలివరీ, షిప్పింగ్ & ఇన్‌స్టాలేషన్" : "4. Shipping, Delivery & On-Site Installation"}
+          {/* Section 4 */}
+          <section id="sec-4" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">4</span>
+              {isTelugu ? "రవాణా, డెలివరీ & ఇన్‌స్టాలేషన్" : "Shipping, Freight & On-Site Installation"}
             </h2>
-            <div className="flex items-start gap-3 p-4 bg-orange-50/50 rounded-2xl border border-orange-200">
-              <Truck className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-slate-700 space-y-1">
-                <p><strong>• Safe Delivery Across India:</strong> Heavy wood items are packed using protective foam corner guards and bubble wraps. Transport is handled via trusted logistics partners.</p>
-                <p><strong>• Transit Insurance:</strong> Major freight items can be insured for safe transit.</p>
-                <p><strong>• On-Site Fitting:</strong> On-site carpentry installation (Doors, Mandirs, Modular Interiors) is available across Andhra Pradesh & Telangana upon agreement.</p>
-              </div>
+            <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 text-xs sm:text-sm text-slate-700 space-y-2">
+              <p className="font-bold text-amber-900 flex items-center gap-2">
+                <Truck className="h-4 w-4 text-amber-600" /> Pan-India Transport & Safety Packaging
+              </p>
+              <p>• Heavy solid wood furniture is packed with multi-layer foam, corrugated guards, and stretch wrap.</p>
+              <p>• Transit insurance coverage is available for long-distance interstate shipments.</p>
+              <p>• On-site installation and fitting services are available across Andhra Pradesh and Telangana.</p>
             </div>
           </section>
 
-          {/* Section 5: Lifetime Warranty & Care Guide */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">5</span>
-              {isTelugu ? "5. వారంటీ & సంరక్షణ మార్గదర్శకాలు" : "5. Teakwood Warranty & Quality Guarantee"}
+          {/* Section 5 */}
+          <section id="sec-5" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">5</span>
+              {isTelugu ? "వారంటీ & నాణ్యత హామీ" : "Teakwood Warranty & Termite Guarantee"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              LD Interiors guarantees 100% solid teakwood against termite infestation and structural wood defects under normal indoor usage conditions.
+              Grade-A Burma Teak contains natural silica and essential oils making it immune to wood borer and termite attacks under indoor usage.
             </p>
             <div className="p-4 bg-[#FAF6F0] rounded-2xl border border-wood-border/40 text-xs text-wood-dark space-y-1.5">
-              <p><strong>✓ Termite & Borer Resistance:</strong> Grade-A Burma Teak contains natural silica and essential oils that resist termites for decades.</p>
-              <p><strong>❌ Exclusions:</strong> Warranty does not cover damages caused by direct water immersion, harsh chemicals, fire accidents, or physical abuse after delivery.</p>
+              <p><strong>✓ Lifetime Structural Guarantee:</strong> Guaranteed against wood decay or termite infestation under normal residential indoor use.</p>
+              <p><strong>❌ Exclusions:</strong> Does not cover physical impact, intentional damage, direct immersion in standing water, or chemical spills.</p>
             </div>
           </section>
 
-          {/* Section 6: Intellectual Property & Media */}
-          <section className="space-y-3">
-            <h2 className="font-serif text-xl font-bold text-wood-dark border-b border-wood-border/20 pb-2 flex items-center gap-2">
-              <span className="bg-[#423525] text-white text-xs px-2.5 py-0.5 rounded-full font-mono">6</span>
-              {isTelugu ? "6. కాపీరైట్ & డిజైన్స్ హక్కులు" : "6. Intellectual Property Rights"}
+          {/* Section 6 */}
+          <section id="sec-6" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">6</span>
+              {isTelugu ? "కాపీరైట్స్ & మేధో సంపత్తి" : "Intellectual Property & Design Copyrights"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-              All photography, 3D design mockups, carving templates, workshop reels, and website content on <strong>ldinteriors.in</strong> are exclusive property of LD Interiors & Furnitures. Unauthorized reproduction or commercial misuse of our original carving designs is strictly prohibited.
+              All 3D interior renders, carving stencils, photography, video reels, and software logic published on <strong>ldinteriors.in</strong> remain exclusive intellectual property of LD Interiors & Furnitures.
             </p>
           </section>
 
-          {/* Section 7: Contact for Legal & Terms Queries */}
-          <section className="space-y-3 bg-[#423525] text-white p-6 rounded-2xl">
-            <h2 className="font-serif text-lg font-bold text-[#EBDCC5] flex items-center gap-2">
-              <PhoneCall className="h-5 w-5 text-[#EBDCC5]" />
-              {isTelugu ? "సంప్రదించండి (Contact & Legal Help)" : "7. Questions & Customer Support"}
+          {/* Section 7 */}
+          <section id="sec-7" className="space-y-4">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-wood-dark border-b border-wood-border/20 pb-2.5 flex items-center gap-3">
+              <span className="bg-[#3B2F21] text-white text-xs px-3 py-1 rounded-full font-mono">7</span>
+              {isTelugu ? "బాధ్యత పరిమితి & వివాద పరిష్కారం" : "Limitation of Liability & Legal Jurisdiction"}
             </h2>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Any legal disputes or claims arising under this agreement shall be governed under the exclusive jurisdiction of the competent courts of <strong>Konaseema District, Andhra Pradesh, India</strong>.
+            </p>
+          </section>
+
+          {/* Contact Support Officer Box */}
+          <section className="bg-gradient-to-br from-[#3B2F21] to-[#52412E] text-white p-6 sm:p-8 rounded-3xl space-y-3">
+            <h3 className="font-serif text-lg font-bold text-[#EBDCC5] flex items-center gap-2">
+              <PhoneCall className="h-5 w-5 text-[#EBDCC5]" />
+              Customer Support & Order Inquiries
+            </h3>
             <p className="text-xs text-[#EBDCC5]/90 leading-relaxed">
-              If you have any questions regarding these Terms & Conditions or wish to discuss a custom order agreement, please reach out directly:
+              For any questions regarding custom orders, terms, or timber inspection visits:
             </p>
             <div className="pt-2 text-xs text-white space-y-1.5 font-mono">
-              <p>📍 <strong>Workshop Address:</strong> LD Interiors, Mulasthanam, Alamuru Mandal, Konaseema District, AP - 533233</p>
-              <p>📞 <strong>Chief Carpenter (Nagaraju):</strong> +91 63012 90966</p>
+              <p>📍 <strong>Workshop:</strong> LD Interiors, Mulasthanam, Alamuru Mandal, Konaseema Dist, AP - 533233</p>
+              <p>📞 <strong>Chief Carpenter (Nagaraju):</strong> +91 62816 53998</p>
               <p>💻 <strong>Technical Lead (Pavan Sai):</strong> +91 93463 25291</p>
-              <p>💬 <strong>WhatsApp Inquiry:</strong> <a href="https://wa.me/916301290966" className="text-[#EBDCC5] underline">Click to chat on WhatsApp</a></p>
+              <p>💬 <strong>WhatsApp Chat:</strong> <a href="https://wa.me/916281653998" className="text-[#EBDCC5] underline">Click here to chat on WhatsApp (+91 62816 53998)</a></p>
             </div>
           </section>
 
@@ -179,7 +261,7 @@ export default function TermsPage() {
               <span>•</span>
               <Link href="/refund-policy" className="hover:text-wood-accent underline font-semibold">Refund & Cancellation Policy</Link>
               <span>•</span>
-              <Link href="/about" className="hover:text-wood-accent underline font-semibold">About Us</Link>
+              <Link href="/contact" className="hover:text-wood-accent underline font-semibold">Contact Us</Link>
             </div>
             <Link href="/" className="text-wood-accent font-bold hover:underline">
               ← Return to Main Store

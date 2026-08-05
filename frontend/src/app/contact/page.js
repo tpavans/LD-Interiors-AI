@@ -15,7 +15,7 @@ export default function ContactPage() {
     role: "Head of LD Interiors & Furnitures",
     desc: "Oversees all interior design projects, on-site executions, structural design finalizations, price estimations, and contracts.",
     phone: "6281653998",
-    whatsappPhone: "6301290966"
+    whatsappPhone: "6281653998"
   };
 
   return (

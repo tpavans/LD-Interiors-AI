@@ -105,7 +105,7 @@ export default function ReelsPage() {
       ? `నమస్తే నాగరాజు గారు! నేను మీ LD ఇంటీరియర్స్ వర్క్‌షాప్ రీల్ ద్వారా *${product.title}* వీడియోను చూశాను. దీని గురించి వివరాలు తెలుసుకోవాలనుకుంటున్నాను.\n\nవీడియో: ${product.video}`
       : `Hello Mr. Nagaraju! I watched your workshop reel for *${product.title}* on your LD Interiors website. I would like to inquire about this design.\n\nVideo: ${product.video}`;
     
-    window.open(`https://wa.me/916301290966?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/916281653998?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   if (loading) {
