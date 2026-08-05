@@ -57,7 +57,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Column 3: Need Help */}
+        {/* Column 3: Need Help & Legal */}
         <div className="space-y-4">
           <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
             {t.helpTitle}
@@ -65,6 +65,9 @@ export default function Footer() {
           <div className="flex flex-col gap-2.5 text-xs font-light">
             <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.myAccount}</Link>
             <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.trackOrder}</Link>
+            <Link href="/terms" className="hover:text-wood-dark transition-colors">{isTelugu ? "నిబంధనలు & షరతులు" : "Terms & Conditions"}</Link>
+            <Link href="/privacy" className="hover:text-wood-dark transition-colors">{isTelugu ? "గోప్యతా విధానం" : "Privacy Policy"}</Link>
+            <Link href="/refund-policy" className="hover:text-wood-dark transition-colors">{isTelugu ? "రీఫండ్ & రద్దు విధానం" : "Refund Policy"}</Link>
             <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "సంప్రదించండి" : "Contact Us"}</Link>
             <Link href="/support" className="hover:text-wood-dark transition-colors">{t.support}</Link>
           </div>
@@ -142,7 +145,13 @@ export default function Footer() {
         <div>
           &copy; {new Date().getFullYear()} LD Interiors & Furnitures. All rights reserved.
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4 text-[11px]">
+          <Link href="/terms" className="hover:text-wood-accent transition-colors">Terms & Conditions</Link>
+          <span>•</span>
+          <Link href="/privacy" className="hover:text-wood-accent transition-colors">Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/refund-policy" className="hover:text-wood-accent transition-colors">Refund Policy</Link>
+          <span>•</span>
           <span>
             {t.developedBy} <Link href="/admin1255121" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
           </span>
