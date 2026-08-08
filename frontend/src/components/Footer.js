@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
-import { LayoutDashboard } from 'lucide-react';
 
 export default function Footer() {
   const { language } = useLanguage();
@@ -10,18 +9,18 @@ export default function Footer() {
   const isTelugu = language === 'TE';
 
   return (
-    <footer className="w-full border-t border-wood-border/40 bg-wood-cream/95 py-14 text-wood-light">
+    <footer className="w-full border-t border-wood-border/60 bg-[#FAF6F0] py-14 text-wood-dark font-sans">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 text-left">
         {/* Column 1: About LD Interiors */}
         <div className="space-y-4">
-          <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
+          <h4 className="font-serif font-black text-wood-dark uppercase tracking-wider text-xs border-b border-wood-border/40 pb-2">
             {t.aboutTitle}
           </h4>
-          <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/about" className="hover:text-wood-dark transition-colors">{isTelugu ? "మా గురించి" : "About Us"}</Link>
+          <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-800">
+            <Link href="/about" className="hover:text-wood-accent transition-colors font-bold text-slate-900">{isTelugu ? "మా గురించి" : "About Us"}</Link>
             <div>
-              <p className="font-semibold text-wood-dark mt-1">{t.locationTitle}:</p>
-              <p className="mt-1 leading-relaxed">
+              <p className="font-black text-wood-dark mt-1 uppercase text-[11px] tracking-wide">{t.locationTitle}:</p>
+              <p className="mt-1 leading-relaxed text-slate-900 font-medium">
                 {isTelugu ? "మూలస్థానం, ఆలమూరు మండలం," : "Mulasthanam, Alamuru Mandal,"}<br />
                 {isTelugu ? "కోనసీమ జిల్లా, ఆంధ్రా - 533233" : "Konaseema District, AP - 533233"}
               </p>
@@ -29,14 +28,14 @@ export default function Footer() {
                 href="https://www.google.com/maps/search/?api=1&query=LD+Interiors+Mulasthanam" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="inline-block mt-2 text-[10px] font-bold text-wood-accent hover:underline uppercase tracking-wider"
+                className="inline-block mt-2 text-[11px] font-black text-wood-accent hover:underline uppercase tracking-wider"
               >
                 {isTelugu ? "📍 LD Interiors మూలస్థానం మ్యాప్స్ చూడండి" : "📍 View LD Interiors Mulasthanam Maps"}
               </a>
             </div>
             <div>
-              <p className="font-semibold text-wood-dark mt-2.5">{t.hoursTitle}:</p>
-              <p className="mt-1 leading-relaxed">
+              <p className="font-black text-wood-dark mt-2.5 uppercase text-[11px] tracking-wide">{t.hoursTitle}:</p>
+              <p className="mt-1 leading-relaxed text-slate-900 font-semibold">
                 {isTelugu ? "ఉదయం 7:00 - రాత్రి 10:00 గంటల వరకు" : "Morning 7:00 AM - 10:00 PM"}<br />
                 {isTelugu ? "వారంలో 7 రోజులూ" : "All 7 Days a week"}
               </p>
@@ -46,39 +45,39 @@ export default function Footer() {
 
         {/* Column 2: Services */}
         <div className="space-y-4">
-          <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
+          <h4 className="font-serif font-black text-wood-dark uppercase tracking-wider text-xs border-b border-wood-border/40 pb-2">
             {t.servicesTitle}
           </h4>
-          <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "• రీ-ఇన్‌స్టాలేషన్ పనులు" : "• Re-installation Works"}</Link>
-            <Link href="/products" className="hover:text-wood-dark transition-colors">{isTelugu ? "• లూజ్ ఫిట్టింగ్స్ కార్పెంటరీ" : "• Loose Fittings carpentry"}</Link>
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "• కంప్లీట్ ఇంటీరియర్ డిజైనింగ్" : "• Complete Interior Design"}</Link>
-            <Link href="/products" className="hover:text-wood-dark transition-colors">{isTelugu ? "• కస్టమ్ డిజైన్స్ & ఫర్నిచర్" : "• Custom Designs & Furniture"}</Link>
+          <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-900">
+            <Link href="/contact" className="hover:text-wood-accent transition-colors">{isTelugu ? "• రీ-ఇన్‌స్టాలేషన్ పనులు" : "• Re-installation Works"}</Link>
+            <Link href="/products" className="hover:text-wood-accent transition-colors">{isTelugu ? "• లూజ్ ఫిట్టింగ్స్ కార్పెంటరీ" : "• Loose Fittings carpentry"}</Link>
+            <Link href="/contact" className="hover:text-wood-accent transition-colors">{isTelugu ? "• కంప్లీట్ ఇంటీరియర్ డిజైనింగ్" : "• Complete Interior Design"}</Link>
+            <Link href="/products" className="hover:text-wood-accent transition-colors">{isTelugu ? "• కస్టమ్ డిజైన్స్ & ఫర్నిచర్" : "• Custom Designs & Furniture"}</Link>
           </div>
         </div>
 
         {/* Column 3: Need Help & Legal */}
         <div className="space-y-4">
-          <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
+          <h4 className="font-serif font-black text-wood-dark uppercase tracking-wider text-xs border-b border-wood-border/40 pb-2">
             {t.helpTitle}
           </h4>
-          <div className="flex flex-col gap-2.5 text-xs font-light">
-            <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.myAccount}</Link>
-            <Link href="/orders" className="hover:text-wood-dark transition-colors">{t.trackOrder}</Link>
-            <Link href="/terms" className="hover:text-wood-dark transition-colors">{isTelugu ? "నిబంధనలు & షరతులు" : "Terms & Conditions"}</Link>
-            <Link href="/privacy" className="hover:text-wood-dark transition-colors">{isTelugu ? "గోప్యతా విధానం" : "Privacy Policy"}</Link>
-            <Link href="/refund-policy" className="hover:text-wood-dark transition-colors">{isTelugu ? "రీఫండ్ & రద్దు విధానం" : "Refund Policy"}</Link>
-            <Link href="/contact" className="hover:text-wood-dark transition-colors">{isTelugu ? "సంప్రదించండి" : "Contact Us"}</Link>
-            <Link href="/support" className="hover:text-wood-dark transition-colors">{t.support}</Link>
+          <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-900">
+            <Link href="/orders" className="hover:text-wood-accent transition-colors">{t.myAccount}</Link>
+            <Link href="/orders" className="hover:text-wood-accent transition-colors">{t.trackOrder}</Link>
+            <Link href="/terms" className="hover:text-wood-accent transition-colors">{isTelugu ? "నిబంధనలు & షరతులు" : "Terms & Conditions"}</Link>
+            <Link href="/privacy" className="hover:text-wood-accent transition-colors">{isTelugu ? "గోప్యతా విధానం" : "Privacy Policy"}</Link>
+            <Link href="/refund-policy" className="hover:text-wood-accent transition-colors">{isTelugu ? "రీఫండ్ & రద్దు విధానం" : "Refund Policy"}</Link>
+            <Link href="/contact" className="hover:text-wood-accent transition-colors">{isTelugu ? "సంప్రదించండి" : "Contact Us"}</Link>
+            <Link href="/support" className="hover:text-wood-accent transition-colors">{t.support}</Link>
           </div>
         </div>
 
         {/* Column 4: Office Connect */}
         <div className="space-y-4">
-          <h4 className="font-serif font-bold text-wood-accent uppercase tracking-wider text-xs border-b border-wood-border/20 pb-2">
+          <h4 className="font-serif font-black text-wood-dark uppercase tracking-wider text-xs border-b border-wood-border/40 pb-2">
             {isTelugu ? "ఆఫీస్ కనెక్ట్" : "Office Connect"}
           </h4>
-          <p className="text-xs font-light leading-relaxed">
+          <p className="text-xs font-semibold text-slate-800 leading-relaxed">
             {isTelugu ? "మా సోషల్ ఛానెల్స్ ద్వారా రోజువారీ వర్క్‌షాప్ పనులను మరియు వీడియోలను ఫాలో అవ్వండి." : "Follow our design daily logs and workshop reels on our social channels."}
           </p>
           {/* Social Media Circular Logo Buttons */}
@@ -88,7 +87,7 @@ export default function Footer() {
               href="https://www.instagram.com/ldinteriors.in?igsh=N2EydGxoZDNzZjF5"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-wood-accent text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-wood-accent text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/40"
               title="Instagram"
             >
               <svg className="h-4.5 w-4.5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -103,7 +102,7 @@ export default function Footer() {
               href="https://youtube.com/@ldinteriors?si=VliCMzVv1TDItidd"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-600 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-600 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/40"
               title="YouTube"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -116,7 +115,7 @@ export default function Footer() {
               href="https://facebook.com/ldinteriors"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-blue-600 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-blue-600 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/40"
               title="Facebook"
             >
               <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
@@ -129,10 +128,9 @@ export default function Footer() {
               href="https://pin.it/3oCqPHjff"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-700 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/30"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-wood-beige hover:bg-red-700 text-wood-dark hover:text-white shadow-sm transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-wood-border/40"
               title="Pinterest"
             >
-              {/* Pinterest SVG logo */}
               <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.4 7.62 11.18-.1-.95-.2-2.4.04-3.43.22-.93 1.4-5.96 1.4-5.96s-.36-.72-.36-1.77c0-1.66.96-2.9 2.17-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.12 0 3.76-2.24 3.76-5.47 0-2.86-2.06-4.86-5-4.86-3.4 0-5.4 2.56-5.4 5.2 0 1.03.4 2.14.9 2.74.1.12.11.23.08.35-.1.39-.31 1.25-.35 1.42-.05.21-.18.25-.41.14-1.53-.7-2.48-2.94-2.48-4.73 0-3.85 2.8-7.39 8.07-7.39 4.24 0 7.53 3.02 7.53 7.05 0 4.2-2.65 7.6-6.33 7.6-1.24 0-2.4-.64-2.8-1.4l-.76 2.9c-.27 1.05-1.02 2.37-1.52 3.19C8.96 23.82 10.45 24 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/>
               </svg>
@@ -141,19 +139,19 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 sm:px-8 mt-10 pt-8 border-t border-wood-border/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-wood-light font-light text-left">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8 mt-10 pt-8 border-t border-wood-border/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-slate-900 text-left">
         <div>
           &copy; {new Date().getFullYear()} LD Interiors & Furnitures. All rights reserved.
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-[11px]">
-          <Link href="/terms" className="hover:text-wood-accent transition-colors">Terms & Conditions</Link>
+        <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-900">
+          <Link href="/terms" className="hover:text-wood-accent transition-colors font-bold">Terms & Conditions</Link>
           <span>•</span>
-          <Link href="/privacy" className="hover:text-wood-accent transition-colors">Privacy Policy</Link>
+          <Link href="/privacy" className="hover:text-wood-accent transition-colors font-bold">Privacy Policy</Link>
           <span>•</span>
-          <Link href="/refund-policy" className="hover:text-wood-accent transition-colors">Refund Policy</Link>
+          <Link href="/refund-policy" className="hover:text-wood-accent transition-colors font-bold">Refund Policy</Link>
           <span>•</span>
           <span>
-            {t.developedBy} <Link href="/admin1255121" className="font-semibold text-wood-light hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
+            {t.developedBy} <Link href="/admin1255121" className="font-black text-slate-900 hover:text-wood-accent transition-colors cursor-pointer">Pavan Sai</Link>
           </span>
         </div>
       </div>
