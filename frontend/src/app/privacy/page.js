@@ -2,7 +2,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { ShieldCheck, Lock, Eye, Database, PhoneCall, ChevronRight, CheckCircle2, Sparkles, UserCheck } from 'lucide-react';
 
@@ -169,8 +168,6 @@ export default function PrivacyPolicyPage() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

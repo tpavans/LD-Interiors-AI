@@ -2,7 +2,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { RefreshCw, RotateCcw, AlertCircle, ShieldCheck, PhoneCall, ChevronRight, Truck, CheckCircle2, Clock } from 'lucide-react';
 
@@ -173,8 +172,6 @@ export default function RefundPolicyPage() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

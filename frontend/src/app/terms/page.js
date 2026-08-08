@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { 
   ShieldCheck, 
@@ -270,8 +269,6 @@ export default function TermsPage() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
