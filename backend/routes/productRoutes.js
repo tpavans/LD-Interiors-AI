@@ -8,6 +8,7 @@ const {
   updateProduct,
   deleteProduct,
   bulkDeleteProducts,
+  exportProductsCSV,
   rateProduct,
 } = require('../controllers/productController');
 const { protect } = require('../middleware/authMiddleware');
@@ -20,6 +21,9 @@ router.post('/products/bulk', protect, upload.any(), createBulkProducts);
 // Bulk delete multiple products at once
 router.post('/bulk-delete', protect, bulkDeleteProducts);
 router.delete('/bulk-delete', protect, bulkDeleteProducts);
+
+// Export all products catalog as CSV for Excel / Social Media Automation
+router.get('/export-csv', exportProductsCSV);
 
 // 2. Get all products, or upload a new one
 router.route('/')

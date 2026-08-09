@@ -826,6 +826,64 @@ const bulkDeleteProducts = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Export all products catalog data as CSV for Excel / Social Media Automation (Pinterest, Instagram, WhatsApp)
+ * @route   GET /api/products/export-csv
+ * @access  Public / Admin
+ */
+const exportProductsCSV = async (req, res) => {
+  try {
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    
+    const headers = [
+      'Product ID',
+      'Title',
+      'Category',
+      'Price (INR)',
+      'Product Website Link',
+      'Main Image URL (Pinterest/IG)',
+      'Gallery Image URLs',
+      'Video Reel URL',
+      'Direct WhatsApp Order Link',
+      'Created Date'
+    ];
+
+    const baseUrl = 'https://www.ldinteriors.in';
+
+    const csvRows = products.map((p) => {
+      const productLink = `${baseUrl}/products/${p._id}`;
+      const priceText = p.price && p.price > 0 ? `INR ${p.price}` : 'Contact for Price';
+      const galleryUrls = Array.isArray(p.images) && p.images.length > 0 ? p.images.join(' ; ') : (p.image || '');
+      
+      const waMsg = `Hello Nagaraju Garu! I want to order/inquire about *${p.title}* (${p.category}) on LD Interiors: ${productLink}`;
+      const waLink = `https://wa.me/916281653998?text=${encodeURIComponent(waMsg)}`;
+      const createdDate = p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '';
+
+      return [
+        `"#${p._id.toString().slice(-6)}"`,
+        `"${(p.title || '').replace(/"/g, '""')}"`,
+        `"${(p.category || '').replace(/"/g, '""')}"`,
+        `"${priceText.replace(/"/g, '""')}"`,
+        `"${productLink}"`,
+        `"${p.image || ''}"`,
+        `"${galleryUrls.replace(/"/g, '""')}"`,
+        `"${p.video || ''}"`,
+        `"${waLink}"`,
+        `"${createdDate}"`
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=LD_Interiors_Catalog_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    return res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Error exporting products CSV:', error);
+    res.status(500).json({ message: 'Server error exporting CSV', error: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -834,5 +892,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   bulkDeleteProducts,
+  exportProductsCSV,
   rateProduct,
 };

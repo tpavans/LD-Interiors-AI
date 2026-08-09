@@ -855,6 +855,66 @@ export default function AdminDashboardComponent() {
     }
   };
 
+  // Export Products Catalog Data to Excel (CSV) for Social Media Automation (Pinterest, IG, WhatsApp)
+  const handleExportProductsCSV = () => {
+    if (!products || products.length === 0) {
+      alert('No products available to export.');
+      return;
+    }
+
+    const headers = [
+      'Product ID',
+      'Title',
+      'Category',
+      'Price (INR)',
+      'Product Website Link',
+      'Main Image URL (Pinterest/IG)',
+      'Gallery Image URLs',
+      'Video Reel URL',
+      'Direct WhatsApp Order Link',
+      'Created Date'
+    ];
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.ldinteriors.in';
+
+    const csvRows = products.map((p) => {
+      const productLink = `${baseUrl}/products/${p._id}`;
+      const priceText = p.price && p.price > 0 ? `₹${p.price}` : 'Contact for Price';
+      const galleryUrls = Array.isArray(p.images) && p.images.length > 0 ? p.images.join(' ; ') : (p.image || '');
+      
+      const waMsg = `Hello Nagaraju Garu! I want to order/inquire about *${p.title}* (${p.category}) on LD Interiors: ${productLink}`;
+      const waLink = `https://wa.me/916281653998?text=${encodeURIComponent(waMsg)}`;
+      const createdDate = p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '';
+
+      return [
+        `"#${p._id.toString().slice(-6)}"`,
+        `"${(p.title || '').replace(/"/g, '""')}"`,
+        `"${(p.category || '').replace(/"/g, '""')}"`,
+        `"${priceText.replace(/"/g, '""')}"`,
+        `"${productLink}"`,
+        `"${p.image || ''}"`,
+        `"${galleryUrls.replace(/"/g, '""')}"`,
+        `"${p.video || ''}"`,
+        `"${waLink}"`,
+        `"${createdDate}"`
+      ].join(',');
+    });
+
+    // Add UTF-8 BOM byte sequence (\uFEFF) so Excel opens it natively with proper Rupee symbols and formatting
+    const csvContent = '\uFEFF' + [headers.join(','), ...csvRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `LD_Interiors_Catalog_Export_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const resetForm = () => {
     setIsEditing(false);
     setEditId('');
@@ -1857,20 +1917,32 @@ LD Interiors & Furnitures
                 <p className="text-[10px] text-wood-light font-medium">Category-relevant images are automatically pinned to the top</p>
               </div>
 
-              <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
-                <span className="text-[10px] uppercase font-bold text-wood-accent shrink-0">Filter:</span>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="rounded-lg border border-wood-border bg-white text-xs font-bold text-wood-dark px-2.5 py-1 focus:outline-none cursor-pointer"
+              <div className="flex flex-wrap items-center gap-2 max-w-full">
+                <button
+                  type="button"
+                  onClick={handleExportProductsCSV}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-emerald-500/30 shrink-0"
+                  title="Export all products to Excel/CSV sheet for Pinterest Pins & Social Media Automation"
                 >
-                  <option value="All">All Categories ({products.length})</option>
-                  {(categoriesList.length > 0 ? categoriesList.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT').map(c => c.name) : CATEGORIES).map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat} ({products.filter(p => p.category === cat).length})
-                    </option>
-                  ))}
-                </select>
+                  <Download className="h-4 w-4" />
+                  <span>📊 Export Excel Sheet (Pinterest/IG)</span>
+                </button>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
+                  <span className="text-[10px] uppercase font-bold text-wood-accent shrink-0">Filter:</span>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="rounded-lg border border-wood-border bg-white text-xs font-bold text-wood-dark px-2.5 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value="All">All Categories ({products.length})</option>
+                    {(categoriesList.length > 0 ? categoriesList.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT').map(c => c.name) : CATEGORIES).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat} ({products.filter(p => p.category === cat).length})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             {selectedProductIds.length > 0 && (
