@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2 } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
@@ -168,8 +168,9 @@ export default function AdminDashboardComponent() {
   const [groupAsOneProduct, setGroupAsOneProduct] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  // Multi-Select Products for Bulk Delete State
+  // Multi-Select Products for Bulk Delete & Fullscreen Modal State
   const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [isFullscreenTableOpen, setIsFullscreenTableOpen] = useState(false);
 
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
@@ -1902,12 +1903,22 @@ LD Interiors & Furnitures
               <div className="flex flex-wrap items-center gap-2 max-w-full">
                 <button
                   type="button"
+                  onClick={() => setIsFullscreenTableOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-wood-border/40 shrink-0"
+                  title="Open Fullscreen Big Screen Catalog Popup View"
+                >
+                  <Maximize2 className="h-3.5 w-3.5 text-amber-300" />
+                  <span>🔍 Big Screen Popup</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleExportProductsCSV}
                   className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-emerald-500/30 shrink-0"
                   title="Export all products to Excel/CSV sheet for Pinterest Pins & Social Media Automation"
                 >
                   <Download className="h-4 w-4" />
-                  <span>📊 Export Excel Sheet (Pinterest/IG)</span>
+                  <span>📊 Export Excel Sheet</span>
                 </button>
 
                 <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
@@ -1965,7 +1976,7 @@ LD Interiors & Furnitures
                 No products found. Use the upload panel to publish your first design!
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-auto max-h-[620px] rounded-b-3xl border-t border-wood-border/40 scrollbar-thin">
                 {(() => {
                   const displayedProducts = [...products].sort((a, b) => {
                     if (category !== 'All') {
@@ -1978,9 +1989,9 @@ LD Interiors & Furnitures
                   const isAllDisplayedSelected = displayedProducts.length > 0 && displayedProducts.every(p => selectedProductIds.includes(p._id));
 
                   return (
-                    <table className="w-full border-collapse text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-wood-border/40 bg-wood-beige/10 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
+                    <table className="w-full border-collapse text-left text-sm relative">
+                      <thead className="sticky top-0 bg-[#FAF6F0] z-20 shadow-xs">
+                        <tr className="border-b border-wood-border/40 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
                           <th className="py-4 px-3 w-10 text-center">
                             <input
                               type="checkbox"
@@ -2757,6 +2768,164 @@ LD Interiors & Furnitures
           order={activeInvoiceOrder}
           onClose={() => setActiveInvoiceOrder(null)}
         />
+      )}
+
+      {/* Fullscreen Big Screen Catalog Modal Popup */}
+      {isFullscreenTableOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn text-left">
+          <div className="bg-white rounded-3xl shadow-2xl border border-wood-border w-full max-w-7xl max-h-[92vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-wood-border/40 bg-[#FAF6F0] flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-wood-dark flex items-center gap-2">
+                  📋 Full Catalog Manager ({products.length} Designs)
+                </h3>
+                <p className="text-xs text-wood-light font-medium">Big Screen Popup view for easy catalog inspection, bulk selection, and Excel export</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleExportProductsCSV}
+                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>📊 Export Excel Sheet</span>
+                </button>
+                <div className="flex items-center gap-1.5 bg-white border border-wood-border rounded-xl px-2.5 py-1">
+                  <span className="text-[10px] uppercase font-bold text-wood-accent">Filter:</span>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="bg-transparent text-xs font-bold text-wood-dark focus:outline-none cursor-pointer"
+                  >
+                    <option value="All">All Categories ({products.length})</option>
+                    {(categoriesList.length > 0 ? categoriesList.filter(c => c && c.name && c.name !== 'AI_AUTO_DETECT').map(c => c.name) : CATEGORIES).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat} ({products.filter(p => p.category === cat).length})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenTableOpen(false)}
+                  className="p-2 rounded-full bg-slate-200/80 hover:bg-red-500 hover:text-white text-slate-700 transition-colors cursor-pointer"
+                  title="Close Modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body Table */}
+            <div className="flex-1 overflow-x-auto overflow-y-auto p-4 max-h-[75vh] scrollbar-thin">
+              {(() => {
+                const displayedProducts = [...products].sort((a, b) => {
+                  if (category !== 'All') {
+                    if (a.category === category && b.category !== category) return -1;
+                    if (a.category !== category && b.category === category) return 1;
+                  }
+                  return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+
+                const isAllDisplayedSelected = displayedProducts.length > 0 && displayedProducts.every(p => selectedProductIds.includes(p._id));
+
+                return (
+                  <table className="w-full border-collapse text-left text-sm relative">
+                    <thead className="sticky top-0 bg-[#FAF6F0] z-20 shadow-xs">
+                      <tr className="border-b border-wood-border/40 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
+                        <th className="py-4 px-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isAllDisplayedSelected}
+                            onChange={() => handleSelectAllProducts(displayedProducts)}
+                            className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                            title="Select / Deselect All Filtered Items"
+                          />
+                        </th>
+                        <th className="py-4 px-4">Image</th>
+                        <th className="py-4 px-6">Title</th>
+                        <th className="py-4 px-6">Category</th>
+                        <th className="py-4 px-6">Price</th>
+                        <th className="py-4 px-6">Uploaded</th>
+                        <th className="py-4 px-6 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-wood-border/30">
+                      {displayedProducts.map((p) => {
+                        const isSelected = selectedProductIds.includes(p._id);
+                        return (
+                          <tr key={p._id} className={`hover:bg-wood-beige/10 transition-colors ${isSelected ? 'bg-red-50/80 border-l-4 border-l-red-500' : (p.category === category && category !== 'All' ? 'bg-sky-50/50' : '')}`}>
+                            <td className="py-4 px-3 w-10 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleSelectProduct(p._id)}
+                                className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                              />
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 relative">
+                                <img
+                                  src={p.image}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                                {p.video && (
+                                  <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                                    <Play className="h-3.5 w-3.5 text-white fill-current" />
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 px-6 font-serif font-bold text-wood-dark max-w-[240px] truncate">
+                              {p.title}
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="inline-flex rounded-full bg-wood-beige/20 border border-wood-border/40 px-2.5 py-0.5 text-[10px] font-semibold text-wood-accent uppercase tracking-wider">
+                                {p.category}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-wood-dark font-semibold text-xs">
+                              {p.price && p.price > 0 ? `₹${p.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+                            </td>
+                            <td className="py-4 px-6 text-wood-light font-light text-xs">
+                              {new Date(p.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </td>
+                            <td className="py-4 px-6 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setIsFullscreenTableOpen(false);
+                                    startEditProduct(p);
+                                  }}
+                                  title="Edit Product"
+                                  className="p-2 rounded-lg text-wood-light hover:text-wood-dark hover:bg-wood-beige/20 transition-colors cursor-pointer"
+                                >
+                                  <Edit className="h-4.5 w-4.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(p._id, p.title)}
+                                  title="Delete Product"
+                                  className="p-2 rounded-lg text-wood-light hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="h-4.5 w-4.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
