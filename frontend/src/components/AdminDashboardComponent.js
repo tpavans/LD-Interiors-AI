@@ -866,32 +866,19 @@ export default function AdminDashboardComponent() {
       'Product ID',
       'Title',
       'Category',
-      'Price (INR)',
-      'Product Link',
-      'Main Image URL (Pinterest/IG)',
-      'Gallery Image URLs',
-      'Video Reel URL',
-      'Created Date'
+      'Product Link'
     ];
 
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.ldinteriors.in';
 
     const csvRows = products.map((p) => {
       const productLink = `${baseUrl}/products/${p._id}`;
-      const priceText = p.price && p.price > 0 ? `₹${p.price}` : 'Contact for Price';
-      const galleryUrls = Array.isArray(p.images) && p.images.length > 0 ? p.images.join(' ; ') : (p.image || '');
-      const createdDate = p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '';
 
       return [
         `"#${p._id.toString().slice(-6)}"`,
         `"${(p.title || '').replace(/"/g, '""')}"`,
         `"${(p.category || '').replace(/"/g, '""')}"`,
-        `"${priceText.replace(/"/g, '""')}"`,
-        `"${productLink}"`,
-        `"${p.image || ''}"`,
-        `"${galleryUrls.replace(/"/g, '""')}"`,
-        `"${p.video || ''}"`,
-        `"${createdDate}"`
+        `"${productLink}"`
       ].join(',');
     });
 
