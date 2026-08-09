@@ -867,11 +867,10 @@ export default function AdminDashboardComponent() {
       'Title',
       'Category',
       'Price (INR)',
-      'Product Website Link',
+      'Product Link',
       'Main Image URL (Pinterest/IG)',
       'Gallery Image URLs',
       'Video Reel URL',
-      'Direct WhatsApp Order Link',
       'Created Date'
     ];
 
@@ -881,9 +880,6 @@ export default function AdminDashboardComponent() {
       const productLink = `${baseUrl}/products/${p._id}`;
       const priceText = p.price && p.price > 0 ? `₹${p.price}` : 'Contact for Price';
       const galleryUrls = Array.isArray(p.images) && p.images.length > 0 ? p.images.join(' ; ') : (p.image || '');
-      
-      const waMsg = `Hello Nagaraju Garu! I want to order/inquire about *${p.title}* (${p.category}) on LD Interiors: ${productLink}`;
-      const waLink = `https://wa.me/916281653998?text=${encodeURIComponent(waMsg)}`;
       const createdDate = p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '';
 
       return [
@@ -895,7 +891,6 @@ export default function AdminDashboardComponent() {
         `"${p.image || ''}"`,
         `"${galleryUrls.replace(/"/g, '""')}"`,
         `"${p.video || ''}"`,
-        `"${waLink}"`,
         `"${createdDate}"`
       ].join(',');
     });
