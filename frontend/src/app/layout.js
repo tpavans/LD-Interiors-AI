@@ -60,6 +60,9 @@ export const metadata = {
     description: 'Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.',
     images: ['https://www.ldinteriors.in/og-image.jpg'],
   },
+  other: {
+    'p:domain_verify': '6994d5bfbe5409b190fcd21a03c84411',
+  },
 };
 
 const jsonLd = {
@@ -68,11 +71,17 @@ const jsonLd = {
   'name': 'LD Interiors & Furnitures',
   'url': 'https://www.ldinteriors.in',
   'logo': 'https://www.ldinteriors.in/logo.png',
-  'description': 'Handcrafted Teak Wood Furniture & Custom Interior Design Showcase, Alamuru.',
+  'contactPoint': {
+    '@type': 'ContactPoint',
+    'telephone': '+916281653998',
+    'contactType': 'customer service',
+    'areaServed': 'IN',
+    'availableLanguage': ['en', 'te']
+  },
   'address': {
     '@type': 'PostalAddress',
-    'streetAddress': 'Vinayaka Temple Street, Mulasthanam',
-    'addressLocality': 'Alamuru Mandal',
+    'streetAddress': 'Mulasthanam, Alamuru Mandal',
+    'addressLocality': 'Konaseema District',
     'addressRegion': 'Andhra Pradesh',
     'postalCode': '533233',
     'addressCountry': 'IN'
@@ -84,6 +93,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
       <head>
+        <meta name="p:domain_verify" content="6994d5bfbe5409b190fcd21a03c84411" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
