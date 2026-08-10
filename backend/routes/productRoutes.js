@@ -9,6 +9,8 @@ const {
   deleteProduct,
   bulkDeleteProducts,
   exportProductsCSV,
+  exportPinterestRSS,
+  exportPinterestCatalogCSV,
   rateProduct,
 } = require('../controllers/productController');
 const { protect } = require('../middleware/authMiddleware');
@@ -24,6 +26,8 @@ router.delete('/bulk-delete', protect, bulkDeleteProducts);
 
 // Export all products catalog as CSV for Excel / Social Media Automation
 router.get('/export-csv', exportProductsCSV);
+router.get('/pinterest-rss.xml', exportPinterestRSS);
+router.get('/pinterest-catalog.csv', exportPinterestCatalogCSV);
 
 // 2. Get all products, or upload a new one
 router.route('/')

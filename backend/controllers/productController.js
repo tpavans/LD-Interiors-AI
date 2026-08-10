@@ -866,6 +866,108 @@ const exportProductsCSV = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Export Pinterest Auto-Publish RSS Feed (XML)
+ * @route   GET /api/products/pinterest-rss.xml
+ * @access  Public
+ */
+const exportPinterestRSS = async (req, res) => {
+  try {
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    const baseUrl = 'https://www.ldinteriors.in';
+
+    const itemsXml = products.map((p) => {
+      const prodLink = `${baseUrl}/products/${p._id}`;
+      const imgUrl = p.image || '';
+      const titleClean = (p.title || 'Teakwood Furniture Design').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const descClean = (p.description || `Handcrafted Burma Teakwood ${p.title || 'Furniture'} by Master Carpenter Nagaraju garu at LD Interiors Alamuru Mandal Mulasthanam AP.`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const pubDate = p.createdAt ? new Date(p.createdAt).toUTCString() : new Date().toUTCString();
+
+      return `
+    <item>
+      <title>${titleClean}</title>
+      <link>${prodLink}</link>
+      <guid isPermaLink="true">${prodLink}</guid>
+      <description>${descClean}</description>
+      <pubDate>${pubDate}</pubDate>
+      <enclosure url="${imgUrl}" type="image/jpeg" />
+      <media:content url="${imgUrl}" medium="image" />
+    </item>`;
+    }).join('\n');
+
+    const rssXml = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>LD Interiors &amp; Furnitures - Teakwood Designs</title>
+    <link>${baseUrl}</link>
+    <description>Handcrafted Teakwood Doors, Beds, Windows, Swings, Dining Tables, and Custom Interiors from Mulasthanam, Andhra Pradesh.</description>
+    <language>en-in</language>
+    ${itemsXml}
+  </channel>
+</rss>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    return res.status(200).send(rssXml);
+  } catch (error) {
+    console.error('Error generating Pinterest RSS:', error);
+    res.status(500).json({ message: 'Error generating RSS feed', error: error.message });
+  }
+};
+
+/**
+ * @desc    Export Pinterest Catalog Spec CSV Feed
+ * @route   GET /api/products/pinterest-catalog.csv
+ * @access  Public
+ */
+const exportPinterestCatalogCSV = async (req, res) => {
+  try {
+    const products = await Product.find({}).sort({ createdAt: -1 });
+    const baseUrl = 'https://www.ldinteriors.in';
+
+    const headers = [
+      'id',
+      'title',
+      'description',
+      'link',
+      'image_link',
+      'price',
+      'availability',
+      'condition',
+      'brand',
+      'google_product_category'
+    ];
+
+    const csvRows = products.map((p) => {
+      const prodLink = `${baseUrl}/products/${p._id}`;
+      const priceText = p.price && p.price > 0 ? `${p.price} INR` : '5000 INR';
+      const titleClean = (p.title || 'Teakwood Design').replace(/"/g, '""');
+      const descClean = (p.description || `Burma Teakwood ${p.title || 'Furniture'} by Master Carpenter Nagaraju Garu at LD Interiors.`).replace(/"/g, '""');
+      const imgLink = p.image || '';
+
+      return [
+        `"${p._id}"`,
+        `"${titleClean}"`,
+        `"${descClean}"`,
+        `"${prodLink}"`,
+        `"${imgLink}"`,
+        `"${priceText}"`,
+        `"in stock"`,
+        `"new"`,
+        `"LD Interiors"`,
+        `"Home &amp; Garden > Furniture"`
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...csvRows].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=pinterest_catalog.csv');
+    return res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Error exporting Pinterest catalog CSV:', error);
+    res.status(500).json({ message: 'Server error exporting catalog', error: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -875,5 +977,7 @@ module.exports = {
   deleteProduct,
   bulkDeleteProducts,
   exportProductsCSV,
+  exportPinterestRSS,
+  exportPinterestCatalogCSV,
   rateProduct,
 };
