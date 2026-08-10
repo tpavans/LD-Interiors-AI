@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2 } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
@@ -168,9 +168,12 @@ export default function AdminDashboardComponent() {
   const [groupAsOneProduct, setGroupAsOneProduct] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  // Multi-Select Products for Bulk Delete & Fullscreen Modal State
+  // Multi-Select Products for Bulk Delete, Fullscreen Modal & Live Excel Viewer State
   const [selectedProductIds, setSelectedProductIds] = useState([]);
   const [isFullscreenTableOpen, setIsFullscreenTableOpen] = useState(false);
+  const [isExcelViewerOpen, setIsExcelViewerOpen] = useState(false);
+  const [excelSearchQuery, setExcelSearchQuery] = useState('');
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
@@ -1903,6 +1906,16 @@ LD Interiors & Furnitures
               <div className="flex flex-wrap items-center gap-2 max-w-full">
                 <button
                   type="button"
+                  onClick={() => setIsExcelViewerOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-emerald-600/40 shrink-0"
+                  title="View Live Interactive Excel Sheet Grid directly on screen"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-200" />
+                  <span>📊 View Live Excel Sheet</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setIsFullscreenTableOpen(true)}
                   className="px-3 py-1.5 rounded-xl bg-wood-dark hover:bg-wood-medium text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-wood-border/40 shrink-0"
                   title="Open Fullscreen Big Screen Catalog Popup View"
@@ -1914,11 +1927,11 @@ LD Interiors & Furnitures
                 <button
                   type="button"
                   onClick={handleExportProductsCSV}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-emerald-500/30 shrink-0"
-                  title="Export all products to Excel/CSV sheet for Pinterest Pins & Social Media Automation"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer border border-slate-700 shrink-0"
+                  title="Download CSV Excel File for Pinterest Pins & Automation"
                 >
                   <Download className="h-4 w-4" />
-                  <span>📊 Export Excel Sheet</span>
+                  <span>📥 Download CSV</span>
                 </button>
 
                 <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
@@ -2923,6 +2936,216 @@ LD Interiors & Furnitures
                   </table>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live Interactive Excel Sheet Grid Viewer Modal */}
+      {isExcelViewerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 animate-fadeIn text-left font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-700 w-full max-w-7xl max-h-[94vh] flex flex-col overflow-hidden">
+            {/* Excel Header Ribbon */}
+            <div className="bg-[#107C41] text-white px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="h-6 w-6 text-emerald-200" />
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base flex items-center gap-2 tracking-wide">
+                    Microsoft Excel Live View &mdash; LD_Interiors_Products_Catalog.xlsx
+                  </h3>
+                  <p className="text-[11px] text-emerald-100 font-medium">Viewing {products.length} Products Catalog Data Grid (4 Clean Columns: ID, Title, Category, Product Link)</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Search Bar inside Ribbon */}
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={excelSearchQuery}
+                    onChange={(e) => setExcelSearchQuery(e.target.value)}
+                    placeholder="Search in Excel sheet..."
+                    className="pl-8 pr-3 py-1.5 rounded-lg bg-white/90 text-slate-900 text-xs font-semibold placeholder:text-slate-500 focus:outline-none focus:bg-white w-48 sm:w-64"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleExportProductsCSV}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-900 hover:bg-emerald-950 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer border border-emerald-600/40"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Download .csv</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsExcelViewerOpen(false)}
+                  className="p-1.5 rounded-full bg-emerald-900/60 hover:bg-red-600 text-white transition-colors cursor-pointer"
+                  title="Close Excel Viewer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Excel Formula/Cell Toolbar */}
+            <div className="bg-[#F3F2F1] border-b border-slate-300 px-4 py-2 flex items-center gap-3 text-xs text-slate-700">
+              <span className="font-mono font-bold text-emerald-800 bg-white border border-slate-300 px-2 py-0.5 rounded text-[11px]">A1:D{products.length + 1}</span>
+              <span className="text-slate-400">|</span>
+              <span className="font-mono text-slate-600 text-[11px] truncate">fx = LD Interiors Official Product Catalog (ID, Title, Category, Product Link)</span>
+            </div>
+
+            {/* Excel Grid Scrollable Table */}
+            <div className="flex-1 overflow-x-auto overflow-y-auto max-h-[75vh] bg-slate-100 p-1 scrollbar-thin">
+              {(() => {
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.ldinteriors.in';
+                const filtered = products.filter(p => {
+                  if (!excelSearchQuery.trim()) return true;
+                  const q = excelSearchQuery.toLowerCase();
+                  return (
+                    p.title?.toLowerCase().includes(q) ||
+                    p.category?.toLowerCase().includes(q) ||
+                    p._id?.toLowerCase().includes(q)
+                  );
+                });
+
+                return (
+                  <table className="w-full border-collapse bg-white text-xs border border-slate-300 font-mono shadow-xs">
+                    {/* Excel Column Letters Header */}
+                    <thead className="bg-[#E1DFDD] text-slate-700 font-bold sticky top-0 z-20 border-b border-slate-400">
+                      <tr>
+                        <th className="border border-slate-300 py-1.5 px-3 w-12 text-center bg-[#D2D0CE] text-[11px]">#</th>
+                        <th className="border border-slate-300 py-1.5 px-4 text-left font-sans text-xs text-slate-900 bg-[#E1DFDD]">
+                          Column A <span className="font-bold text-emerald-800 ml-1">(Product ID)</span>
+                        </th>
+                        <th className="border border-slate-300 py-1.5 px-4 text-left font-sans text-xs text-slate-900 bg-[#E1DFDD]">
+                          Column B <span className="font-bold text-emerald-800 ml-1">(Title)</span>
+                        </th>
+                        <th className="border border-slate-300 py-1.5 px-4 text-left font-sans text-xs text-slate-900 bg-[#E1DFDD]">
+                          Column C <span className="font-bold text-emerald-800 ml-1">(Category)</span>
+                        </th>
+                        <th className="border border-slate-300 py-1.5 px-4 text-left font-sans text-xs text-slate-900 bg-[#E1DFDD]">
+                          Column D <span className="font-bold text-emerald-800 ml-1">(Product Link)</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="py-12 text-center text-slate-500 font-sans font-medium">
+                            No products match your search "{excelSearchQuery}".
+                          </td>
+                        </tr>
+                      ) : (
+                        filtered.map((p, idx) => {
+                          const prodUrl = `${baseUrl}/products/${p._id}`;
+                          const isCopied = copiedIndex === idx;
+
+                          const copySingleLink = (url, index) => {
+                            navigator.clipboard.writeText(url);
+                            setCopiedIndex(index);
+                            setTimeout(() => setCopiedIndex(null), 2000);
+                          };
+
+                          return (
+                            <tr key={p._id} className="hover:bg-emerald-50/60 transition-colors group border-b border-slate-200">
+                              {/* Row Index */}
+                              <td className="border border-slate-300 py-2 px-2 text-center bg-[#F3F2F1] text-slate-600 font-sans text-[11px] font-bold">
+                                {idx + 1}
+                              </td>
+
+                              {/* Column A: ID */}
+                              <td className="border border-slate-300 py-2 px-3 text-slate-800 font-bold text-[11px] bg-white group-hover:bg-emerald-50/40">
+                                #{p._id.toString().slice(-6)}
+                              </td>
+
+                              {/* Column B: Title */}
+                              <td className="border border-slate-300 py-2 px-4 text-slate-900 font-semibold font-sans text-xs bg-white group-hover:bg-emerald-50/40 max-w-[280px] truncate">
+                                {p.title}
+                              </td>
+
+                              {/* Column C: Category */}
+                              <td className="border border-slate-300 py-2 px-4 text-emerald-900 font-bold font-sans text-xs bg-white group-hover:bg-emerald-50/40">
+                                {p.category}
+                              </td>
+
+                              {/* Column D: Product Link */}
+                              <td className="border border-slate-300 py-2 px-4 text-slate-900 font-sans text-xs bg-white group-hover:bg-emerald-50/40">
+                                <div className="flex items-center justify-between gap-3">
+                                  <a
+                                    href={prodUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-700 hover:text-blue-900 hover:underline font-mono text-[11px] truncate max-w-[340px]"
+                                    title={prodUrl}
+                                  >
+                                    {prodUrl}
+                                  </a>
+
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => copySingleLink(prodUrl, idx)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${isCopied ? 'bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}`}
+                                      title="Copy link to clipboard"
+                                    >
+                                      {isCopied ? (
+                                        <>
+                                          <Check className="h-3 w-3" />
+                                          <span>Copied!</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="h-3 w-3" />
+                                          <span>Copy</span>
+                                        </>
+                                      )}
+                                    </button>
+
+                                    <a
+                                      href={prodUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded"
+                                      title="Open product page in new tab"
+                                    >
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
+
+            {/* Excel Sheet Footer Bar */}
+            <div className="bg-[#FAF6F0] border-t border-slate-300 px-5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded bg-[#107C41] text-white font-bold text-xs flex items-center gap-1.5 shadow-xs">
+                  <FileSpreadsheet className="h-3.5 w-3.5" />
+                  <span>Sheet1 (All Products Catalog)</span>
+                </span>
+                <span className="font-semibold text-slate-600">Total Rows: {products.length} Items</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportProductsCSV}
+                  className="px-3.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Save CSV File</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
