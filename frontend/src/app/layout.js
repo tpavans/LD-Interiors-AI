@@ -61,7 +61,7 @@ export const metadata = {
     images: ['https://www.ldinteriors.in/og-image.jpg'],
   },
   other: {
-    'p:domain_verify': '6994d5bfbe5409b190fcd21a03c84411',
+    'p:domain_verify': '6994d5bfbe5409fed21a03c84411',
   },
 };
 
@@ -93,7 +93,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
       <head>
-        <meta name="p:domain_verify" content="6994d5bfbe5409b190fcd21a03c84411" />
+        <meta name="p:domain_verify" content="6994d5bfbe5409fed21a03c84411" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
