@@ -186,6 +186,70 @@ export default function AdminDashboardComponent() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [pendingGreetingOrder, setPendingGreetingOrder] = useState(null);
 
+  // Amazon Affiliate States
+  const [amazonProducts, setAmazonProducts] = useState([]);
+  const [amazonLoading, setAmazonLoading] = useState(false);
+  const [amzTitle, setAmzTitle] = useState('');
+  const [amzAffiliateUrl, setAmzAffiliateUrl] = useState('');
+  const [amzImage, setAmzImage] = useState('');
+  const [amzCategory, setAmzCategory] = useState('Amazon Home & Living');
+  const [amzPrice, setAmzPrice] = useState('');
+  const [amzFormLoading, setAmzFormLoading] = useState(false);
+
+  const fetchAmazonProducts = async () => {
+    setAmazonLoading(true);
+    try {
+      const res = await api.get('/amazon');
+      if (Array.isArray(res.data)) {
+        setAmazonProducts(res.data);
+      }
+    } catch (err) {
+      console.warn('Fetch Amazon products error:', err?.message);
+    } finally {
+      setAmazonLoading(false);
+    }
+  };
+
+  const handleCreateAmazonProduct = async (e) => {
+    e.preventDefault();
+    if (!amzTitle || !amzAffiliateUrl || !amzImage) {
+      alert('Please fill Title, Affiliate URL, and Image URL');
+      return;
+    }
+    try {
+      setAmzFormLoading(true);
+      const res = await api.post('/amazon', {
+        title: amzTitle,
+        affiliateUrl: amzAffiliateUrl,
+        image: amzImage,
+        category: amzCategory,
+        price: amzPrice || 'Check Price on Amazon'
+      });
+      alert('✨ Amazon Affiliate Product added with automatic Pinterest SEO Title & Keywords!');
+      setAmazonProducts([res.data, ...amazonProducts]);
+      setAmzTitle('');
+      setAmzAffiliateUrl('');
+      setAmzImage('');
+      setAmzPrice('');
+    } catch (err) {
+      console.error('Error adding Amazon product:', err);
+      alert('Failed to add Amazon affiliate product.');
+    } finally {
+      setAmzFormLoading(false);
+    }
+  };
+
+  const handleDeleteAmazonProduct = async (id, title) => {
+    if (!window.confirm(`Delete Amazon product "${title}"?`)) return;
+    try {
+      await api.delete(`/amazon/${id}`);
+      setAmazonProducts(amazonProducts.filter(p => p._id !== id));
+    } catch (err) {
+      console.error('Error deleting Amazon product:', err);
+      alert('Failed to delete item');
+    }
+  };
+
   const handleExportOrdersCSV = () => {
     if (!orders || orders.length === 0) {
       alert('No orders found to export.');
@@ -1250,6 +1314,16 @@ LD Interiors & Furnitures
             }`}
           >
             <span>Manage Categories ({categoriesList.length})</span>
+          </button>
+          <button
+            onClick={() => { setAdminTab('amazon'); fetchAmazonProducts(); }}
+            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
+              adminTab === 'amazon'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-wood-light hover:text-wood-dark'
+            }`}
+          >
+            <span>🛒 Amazon Affiliate Pins ({amazonProducts.length})</span>
           </button>
         </div>
 
@@ -2569,6 +2643,193 @@ LD Interiors & Furnitures
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Amazon Affiliate Manager Tab Panel */}
+      {adminTab === 'amazon' && (
+        <div className="space-y-8 animate-fadeIn text-left">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 border-2 border-amber-300 rounded-3xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs uppercase tracking-wider shadow-xs">
+                  ⚡ Auto-Pin System Active
+                </span>
+                <span className="text-xs font-bold text-amber-950">
+                  🎯 Daily Distribution: 10 Amazon Pins + 5 LD Interiors Pins = 15 Total Auto Pins / Day
+                </span>
+              </div>
+              <h2 className="font-serif text-xl font-bold text-amber-950">
+                🛒 Amazon Affiliate Products Manager
+              </h2>
+              <p className="text-xs text-amber-800 font-medium mt-1">
+                Add Amazon affiliate links. Our system automatically generates high-ranking Pinterest SEO Titles, Descriptions, and Hashtags!
+              </p>
+            </div>
+            <a
+              href="https://ld-interiors-ai.onrender.com/api/products/pinterest-catalog.csv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all shrink-0 cursor-pointer"
+            >
+              <Download className="h-4 w-4" />
+              <span>Download Combined Pinterest Feed (CSV)</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left: Add Amazon Product Form */}
+            <div className="lg:col-span-5 bg-white border border-amber-200 rounded-3xl p-6 shadow-md space-y-4">
+              <h3 className="font-serif text-base font-bold text-amber-900 flex items-center gap-2 border-b border-amber-100 pb-3">
+                <Plus className="h-4.5 w-4.5 text-amber-600" />
+                <span>Add Amazon Affiliate Item</span>
+              </h3>
+
+              <form onSubmit={handleCreateAmazonProduct} className="space-y-4 text-xs font-semibold text-slate-700">
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Product Title / Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={amzTitle}
+                    onChange={(e) => setAmzTitle(e.target.value)}
+                    placeholder="e.g. Modern Teak Finish Coffee Table"
+                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-sans"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Amazon Affiliate Link (URL) *</label>
+                  <input
+                    type="url"
+                    required
+                    value={amzAffiliateUrl}
+                    onChange={(e) => setAmzAffiliateUrl(e.target.value)}
+                    placeholder="https://www.amazon.in/dp/B08xxx?tag=yourtag-21"
+                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Product Image Link (URL) *</label>
+                  <input
+                    type="url"
+                    required
+                    value={amzImage}
+                    onChange={(e) => setAmzImage(e.target.value)}
+                    placeholder="https://m.media-amazon.com/images/I/xxxx.jpg"
+                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Category</label>
+                    <select
+                      value={amzCategory}
+                      onChange={(e) => setAmzCategory(e.target.value)}
+                      className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
+                    >
+                      <option value="Amazon Home & Living">Amazon Home & Living</option>
+                      <option value="Kitchen Essentials">Kitchen Essentials</option>
+                      <option value="Wooden Decor">Wooden Decor</option>
+                      <option value="Furniture Deals">Furniture Deals</option>
+                      <option value="Lighting & Lamps">Lighting & Lamps</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Price (INR)</label>
+                    <input
+                      type="text"
+                      value={amzPrice}
+                      onChange={(e) => setAmzPrice(e.target.value)}
+                      placeholder="e.g. ₹1,499"
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2.5 text-xs text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={amzFormLoading}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {amzFormLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>Add with Auto SEO & Keywords</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Right: Amazon Products List Grid */}
+            <div className="lg:col-span-7 bg-white border border-amber-200 rounded-3xl p-6 shadow-md overflow-hidden space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-100 pb-3">
+                <h3 className="font-serif text-base font-bold text-amber-950">
+                  Stored Amazon Affiliate Items ({amazonProducts.length})
+                </h3>
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                  10 Pins / Day
+                </span>
+              </div>
+
+              {amazonLoading ? (
+                <div className="py-16 text-center">
+                  <Loader2 className="h-7 w-7 animate-spin text-amber-600 mx-auto" />
+                </div>
+              ) : amazonProducts.length === 0 ? (
+                <div className="py-16 text-center text-slate-500 font-medium text-xs">
+                  No Amazon affiliate products added yet. Use the form to add your first affiliate item!
+                </div>
+              ) : (
+                <div className="overflow-x-auto overflow-y-auto max-h-[520px] scrollbar-thin space-y-3 pr-1">
+                  {amazonProducts.map((item) => (
+                    <div key={item._id} className="p-3.5 bg-amber-50/50 hover:bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 transition-colors">
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="h-16 w-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-white"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="font-bold text-xs text-slate-900 truncate">{item.title}</h4>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAmazonProduct(item._id, item.title)}
+                            className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer shrink-0"
+                            title="Delete Item"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="text-[11px] font-bold text-amber-800 mt-0.5">{item.category} &bull; {item.price}</p>
+                        <p className="text-[10px] text-slate-600 italic mt-1 line-clamp-2 bg-white/70 p-1.5 rounded-lg border border-amber-200/60">
+                          <span className="font-bold text-amber-900 not-italic">Pinterest SEO: </span>
+                          {item.pinterestSeoTitle}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <a
+                            href={item.affiliateUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-1 font-mono truncate max-w-[280px]"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{item.affiliateUrl}</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

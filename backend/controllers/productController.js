@@ -155,6 +155,7 @@
 
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
+const AmazonProduct = require('../models/AmazonProduct');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 /**
@@ -871,19 +872,59 @@ const exportProductsCSV = async (req, res) => {
  * @route   GET /api/products/pinterest-rss.xml
  * @access  Public
  */
+/**
+ * @desc    Export Pinterest Auto-Publish RSS Feed (XML) with 10 Amazon : 5 LD Interiors distribution
+ * @route   GET /api/products/pinterest-rss.xml
+ * @access  Public
+ */
 const exportPinterestRSS = async (req, res) => {
   try {
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    const ldProducts = await Product.find({}).sort({ createdAt: -1 });
+    const amzProducts = await AmazonProduct.find({}).sort({ createdAt: -1 });
     const baseUrl = 'https://www.ldinteriors.in';
 
-    const itemsXml = products.map((p) => {
-      const prodLink = `${baseUrl}/products/${p._id}`;
-      const imgUrl = p.image || '';
-      const titleClean = (p.title || 'Teakwood Furniture Design').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const descClean = (p.description || `Handcrafted Burma Teakwood ${p.title || 'Furniture'} by Master Carpenter Nagaraju garu at LD Interiors Alamuru Mandal Mulasthanam AP.`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const pubDate = p.createdAt ? new Date(p.createdAt).toUTCString() : new Date().toUTCString();
+    // Interleave Amazon (10) and LD Interiors (5)
+    const combinedList = [];
+    let amzIdx = 0;
+    let ldIdx = 0;
 
-      return `
+    while (amzIdx < amzProducts.length || ldIdx < ldProducts.length) {
+      // Pick up to 10 Amazon items
+      for (let i = 0; i < 10 && amzIdx < amzProducts.length; i++) {
+        combinedList.push({ type: 'AMAZON', item: amzProducts[amzIdx++] });
+      }
+      // Pick up to 5 LD Interiors items
+      for (let i = 0; i < 5 && ldIdx < ldProducts.length; i++) {
+        combinedList.push({ type: 'LD', item: ldProducts[ldIdx++] });
+      }
+    }
+
+    const itemsXml = combinedList.map(({ type, item }) => {
+      if (type === 'AMAZON') {
+        const prodLink = item.affiliateUrl || 'https://www.amazon.in';
+        const imgUrl = item.image || '';
+        const titleClean = (item.pinterestSeoTitle || item.title || 'Amazon Home Deal').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const descClean = (item.pinterestSeoDescription || item.title || 'Discover top rated home items on Amazon').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const pubDate = item.createdAt ? new Date(item.createdAt).toUTCString() : new Date().toUTCString();
+
+        return `
+    <item>
+      <title>${titleClean}</title>
+      <link>${prodLink}</link>
+      <guid isPermaLink="false">AMZ-${item._id}</guid>
+      <description>${descClean}</description>
+      <pubDate>${pubDate}</pubDate>
+      <enclosure url="${imgUrl}" type="image/jpeg" />
+      <media:content url="${imgUrl}" medium="image" />
+    </item>`;
+      } else {
+        const prodLink = `${baseUrl}/products/${item._id}`;
+        const imgUrl = item.image || '';
+        const titleClean = (item.title || 'Teakwood Furniture Design').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const descClean = (item.description || `Handcrafted Burma Teakwood ${item.title || 'Furniture'} by Master Carpenter Nagaraju garu at LD Interiors Alamuru Mandal Mulasthanam AP.`).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const pubDate = item.createdAt ? new Date(item.createdAt).toUTCString() : new Date().toUTCString();
+
+        return `
     <item>
       <title>${titleClean}</title>
       <link>${prodLink}</link>
@@ -893,14 +934,15 @@ const exportPinterestRSS = async (req, res) => {
       <enclosure url="${imgUrl}" type="image/jpeg" />
       <media:content url="${imgUrl}" medium="image" />
     </item>`;
+      }
     }).join('\n');
 
     const rssXml = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
-    <title>LD Interiors &amp; Furnitures - Teakwood Designs</title>
+    <title>LD Interiors &amp; Amazon Affiliate Store Catalog</title>
     <link>${baseUrl}</link>
-    <description>Handcrafted Teakwood Doors, Beds, Windows, Swings, Dining Tables, and Custom Interiors from Mulasthanam, Andhra Pradesh.</description>
+    <description>Handcrafted Teakwood Furniture and Curated Amazon Home Decor Deals from LD Interiors.</description>
     <language>en-in</language>
     ${itemsXml}
   </channel>
@@ -915,13 +957,14 @@ const exportPinterestRSS = async (req, res) => {
 };
 
 /**
- * @desc    Export Pinterest Catalog Spec CSV Feed
+ * @desc    Export Pinterest Catalog Spec CSV Feed with 10 Amazon : 5 LD Interiors ratio
  * @route   GET /api/products/pinterest-catalog.csv
  * @access  Public
  */
 const exportPinterestCatalogCSV = async (req, res) => {
   try {
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    const ldProducts = await Product.find({}).sort({ createdAt: -1 });
+    const amzProducts = await AmazonProduct.find({}).sort({ createdAt: -1 });
     const baseUrl = 'https://www.ldinteriors.in';
 
     const headers = [
@@ -937,25 +980,60 @@ const exportPinterestCatalogCSV = async (req, res) => {
       'google_product_category'
     ];
 
-    const csvRows = products.map((p) => {
-      const prodLink = `${baseUrl}/products/${p._id}`;
-      const priceText = p.price && p.price > 0 ? `${p.price} INR` : '5000 INR';
-      const titleClean = (p.title || 'Teakwood Design').replace(/"/g, '""');
-      const descClean = (p.description || `Burma Teakwood ${p.title || 'Furniture'} by Master Carpenter Nagaraju Garu at LD Interiors.`).replace(/"/g, '""');
-      const imgLink = p.image || '';
+    // Interleave Amazon (10) and LD Interiors (5)
+    const combinedList = [];
+    let amzIdx = 0;
+    let ldIdx = 0;
 
-      return [
-        `"${p._id}"`,
-        `"${titleClean}"`,
-        `"${descClean}"`,
-        `"${prodLink}"`,
-        `"${imgLink}"`,
-        `"${priceText}"`,
-        `"in stock"`,
-        `"new"`,
-        `"LD Interiors"`,
-        `"Home &amp; Garden > Furniture"`
-      ].join(',');
+    while (amzIdx < amzProducts.length || ldIdx < ldProducts.length) {
+      for (let i = 0; i < 10 && amzIdx < amzProducts.length; i++) {
+        combinedList.push({ type: 'AMAZON', item: amzProducts[amzIdx++] });
+      }
+      for (let i = 0; i < 5 && ldIdx < ldProducts.length; i++) {
+        combinedList.push({ type: 'LD', item: ldProducts[ldIdx++] });
+      }
+    }
+
+    const csvRows = combinedList.map(({ type, item }) => {
+      if (type === 'AMAZON') {
+        const prodLink = item.affiliateUrl || 'https://www.amazon.in';
+        const priceText = item.price || 'Check Price on Amazon';
+        const titleClean = (item.pinterestSeoTitle || item.title || 'Amazon Deal').replace(/"/g, '""');
+        const descClean = (item.pinterestSeoDescription || item.title || 'Discover top rated products on Amazon').replace(/"/g, '""');
+        const imgLink = item.image || '';
+
+        return [
+          `"AMZ-${item._id}"`,
+          `"${titleClean}"`,
+          `"${descClean}"`,
+          `"${prodLink}"`,
+          `"${imgLink}"`,
+          `"${priceText}"`,
+          `"in stock"`,
+          `"new"`,
+          `"Amazon Home Deals"`,
+          `"Home &amp; Garden > Decor"`
+        ].join(',');
+      } else {
+        const prodLink = `${baseUrl}/products/${item._id}`;
+        const priceText = item.price && item.price > 0 ? `${item.price} INR` : '5000 INR';
+        const titleClean = (item.title || 'Teakwood Design').replace(/"/g, '""');
+        const descClean = (item.description || `Burma Teakwood ${item.title || 'Furniture'} by Master Carpenter Nagaraju Garu at LD Interiors.`).replace(/"/g, '""');
+        const imgLink = item.image || '';
+
+        return [
+          `"LD-${item._id}"`,
+          `"${titleClean}"`,
+          `"${descClean}"`,
+          `"${prodLink}"`,
+          `"${imgLink}"`,
+          `"${priceText}"`,
+          `"in stock"`,
+          `"new"`,
+          `"LD Interiors"`,
+          `"Home &amp; Garden > Furniture"`
+        ].join(',');
+      }
     });
 
     const csvContent = '\uFEFF' + [headers.join(','), ...csvRows].join('\n');
