@@ -202,9 +202,21 @@ export default function AdminDashboardComponent() {
       const res = await api.get('/amazon');
       if (Array.isArray(res.data)) {
         setAmazonProducts(res.data);
+        return;
       }
     } catch (err) {
-      console.warn('Fetch Amazon products error:', err?.message);
+      console.warn('Fetch Render Amazon products error, trying local API fallback:', err?.message);
+    }
+    try {
+      const resLocal = await fetch('/api/amazon');
+      if (resLocal.ok) {
+        const localData = await resLocal.json();
+        if (Array.isArray(localData)) {
+          setAmazonProducts(localData);
+        }
+      }
+    } catch (errLocal) {
+      console.warn('Local Amazon fetch failed:', errLocal?.message);
     } finally {
       setAmazonLoading(false);
     }
@@ -216,28 +228,49 @@ export default function AdminDashboardComponent() {
       alert('Please fill Title, Affiliate URL, and Image URL');
       return;
     }
+    const payload = {
+      title: amzTitle.trim(),
+      affiliateUrl: amzAffiliateUrl.trim(),
+      image: amzImage.trim(),
+      category: amzCategory || 'Amazon Home & Living',
+      price: amzPrice.trim() || 'Check Price on Amazon'
+    };
+
+    setAmzFormLoading(true);
+    let savedItem = null;
+
     try {
-      setAmzFormLoading(true);
-      const res = await api.post('/amazon', {
-        title: amzTitle.trim(),
-        affiliateUrl: amzAffiliateUrl.trim(),
-        image: amzImage.trim(),
-        category: amzCategory || 'Amazon Home & Living',
-        price: amzPrice.trim() || 'Check Price on Amazon'
-      });
+      const res = await api.post('/amazon', payload);
+      if (res.data && res.data._id) {
+        savedItem = res.data;
+      }
+    } catch (err) {
+      console.warn('Render API post failed, trying local API fallback:', err?.message);
+      try {
+        const localRes = await fetch('/api/amazon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (localRes.ok) {
+          savedItem = await localRes.json();
+        }
+      } catch (localErr) {
+        console.error('Local API post failed:', localErr);
+      }
+    }
+
+    if (savedItem) {
       alert('✨ Amazon Affiliate Product added with automatic Pinterest SEO Title & Keywords!');
-      setAmazonProducts([res.data, ...amazonProducts]);
+      setAmazonProducts([savedItem, ...amazonProducts]);
       setAmzTitle('');
       setAmzAffiliateUrl('');
       setAmzImage('');
       setAmzPrice('');
-    } catch (err) {
-      console.error('Error adding Amazon product:', err);
-      const errMsg = err?.response?.data?.message || err?.message || 'Failed to add Amazon affiliate product.';
-      alert(`⚠️ Error: ${errMsg}`);
-    } finally {
-      setAmzFormLoading(false);
+    } else {
+      alert('⚠️ Failed to save Amazon affiliate product. Please check network connection and try again.');
     }
+    setAmzFormLoading(false);
   };
 
   const handleDeleteAmazonProduct = async (id, title) => {
