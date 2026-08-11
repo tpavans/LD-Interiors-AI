@@ -219,11 +219,11 @@ export default function AdminDashboardComponent() {
     try {
       setAmzFormLoading(true);
       const res = await api.post('/amazon', {
-        title: amzTitle,
-        affiliateUrl: amzAffiliateUrl,
-        image: amzImage,
-        category: amzCategory,
-        price: amzPrice || 'Check Price on Amazon'
+        title: amzTitle.trim(),
+        affiliateUrl: amzAffiliateUrl.trim(),
+        image: amzImage.trim(),
+        category: amzCategory || 'Amazon Home & Living',
+        price: amzPrice.trim() || 'Check Price on Amazon'
       });
       alert('✨ Amazon Affiliate Product added with automatic Pinterest SEO Title & Keywords!');
       setAmazonProducts([res.data, ...amazonProducts]);
@@ -233,7 +233,8 @@ export default function AdminDashboardComponent() {
       setAmzPrice('');
     } catch (err) {
       console.error('Error adding Amazon product:', err);
-      alert('Failed to add Amazon affiliate product.');
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to add Amazon affiliate product.';
+      alert(`⚠️ Error: ${errMsg}`);
     } finally {
       setAmzFormLoading(false);
     }
@@ -2704,7 +2705,7 @@ LD Interiors & Furnitures
                 <div>
                   <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Amazon Affiliate Link (URL) *</label>
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={amzAffiliateUrl}
                     onChange={(e) => setAmzAffiliateUrl(e.target.value)}
@@ -2716,7 +2717,7 @@ LD Interiors & Furnitures
                 <div>
                   <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Product Image Link (URL) *</label>
                   <input
-                    type="url"
+                    type="text"
                     required
                     value={amzImage}
                     onChange={(e) => setAmzImage(e.target.value)}

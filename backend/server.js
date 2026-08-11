@@ -103,7 +103,7 @@ app.use((req, res, next) => {
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: 'v2026.07.26.2', message: 'LD Interiors API is running...' });
+  res.json({ status: 'ok', version: 'v2026.08.11.amz', message: 'LD Interiors API with Amazon Affiliate engine is running...' });
 });
 
 // Mount routing endpoints
