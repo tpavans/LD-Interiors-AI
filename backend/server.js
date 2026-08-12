@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const phonepeRoutes = require('./routes/phonepeRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 const amazonRoutes = require('./routes/amazonRoutes');
 
 // Global exception and rejection loggers

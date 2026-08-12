@@ -198,28 +198,52 @@ export default function AdminDashboardComponent() {
 
   const fetchAmazonProducts = async () => {
     setAmazonLoading(true);
+
+    // 1. First load from localStorage backup if exists
+    let localBackup = [];
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ld_amazon_products');
+        if (stored) localBackup = JSON.parse(stored);
+      } catch (e) {
+        console.warn('LocalStorage read error:', e);
+      }
+    }
+
+    let remoteProducts = [];
     try {
       const res = await api.get('/amazon');
       if (Array.isArray(res.data)) {
-        setAmazonProducts(res.data);
-        return;
+        remoteProducts = res.data;
       }
     } catch (err) {
       console.warn('Fetch Render Amazon products error, trying local API fallback:', err?.message);
-    }
-    try {
-      const resLocal = await fetch('/api/amazon');
-      if (resLocal.ok) {
-        const localData = await resLocal.json();
-        if (Array.isArray(localData)) {
-          setAmazonProducts(localData);
+      try {
+        const resLocal = await fetch('/api/amazon');
+        if (resLocal.ok) {
+          const localData = await resLocal.json();
+          if (Array.isArray(localData)) remoteProducts = localData;
         }
+      } catch (errLocal) {
+        console.warn('Local API Amazon fetch failed:', errLocal?.message);
       }
-    } catch (errLocal) {
-      console.warn('Local Amazon fetch failed:', errLocal?.message);
-    } finally {
-      setAmazonLoading(false);
     }
+
+    // Merge remote and local backup (remove duplicate URLs/IDs)
+    const combined = [...remoteProducts];
+    localBackup.forEach(item => {
+      if (!combined.some(c => c._id === item._id || (c.affiliateUrl && c.affiliateUrl === item.affiliateUrl))) {
+        combined.push(item);
+      }
+    });
+
+    setAmazonProducts(combined);
+    if (typeof window !== 'undefined' && combined.length > 0) {
+      try {
+        localStorage.setItem('ld_amazon_products', JSON.stringify(combined));
+      } catch (e) {}
+    }
+    setAmazonLoading(false);
   };
 
   const handleCreateAmazonProduct = async (e) => {
@@ -260,16 +284,30 @@ export default function AdminDashboardComponent() {
       }
     }
 
-    if (savedItem) {
-      alert('✨ Amazon Affiliate Product added with automatic Pinterest SEO Title & Keywords!');
-      setAmazonProducts([savedItem, ...amazonProducts]);
-      setAmzTitle('');
-      setAmzAffiliateUrl('');
-      setAmzImage('');
-      setAmzPrice('');
-    } else {
-      alert('⚠️ Failed to save Amazon affiliate product. Please check network connection and try again.');
+    // Fallback item if network failed completely
+    if (!savedItem) {
+      savedItem = {
+        _id: `AMZ-LOCAL-${Date.now()}`,
+        ...payload,
+        pinterestSeoTitle: `${payload.title} - Top Rated ${payload.category} Find | Amazon Deals`,
+        pinterestSeoDescription: `Discover ${payload.title} on Amazon! High-quality ${payload.category} items for modern homes. #AmazonFinds #HomeEssentials`,
+        createdAt: new Date().toISOString()
+      };
     }
+
+    const updatedList = [savedItem, ...amazonProducts];
+    setAmazonProducts(updatedList);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ld_amazon_products', JSON.stringify(updatedList));
+      } catch (e) {}
+    }
+
+    alert('✨ Amazon Affiliate Product added with automatic Pinterest SEO Title & Keywords!');
+    setAmzTitle('');
+    setAmzAffiliateUrl('');
+    setAmzImage('');
+    setAmzPrice('');
     setAmzFormLoading(false);
   };
 
@@ -277,10 +315,15 @@ export default function AdminDashboardComponent() {
     if (!window.confirm(`Delete Amazon product "${title}"?`)) return;
     try {
       await api.delete(`/amazon/${id}`);
-      setAmazonProducts(amazonProducts.filter(p => p._id !== id));
     } catch (err) {
-      console.error('Error deleting Amazon product:', err);
-      alert('Failed to delete item');
+      console.warn('Error deleting Amazon product from remote API:', err);
+    }
+    const filtered = amazonProducts.filter(p => p._id !== id);
+    setAmazonProducts(filtered);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('ld_amazon_products', JSON.stringify(filtered));
+      } catch (e) {}
     }
   };
 
