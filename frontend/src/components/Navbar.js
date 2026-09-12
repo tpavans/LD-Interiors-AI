@@ -260,18 +260,7 @@ export default function Navbar() {
               {t.orders}
             </Link>
 
-            {/* Admin-only Dashboard & Logout Links */}
-            {isLoggedIn && (
-              <Link
-                href="/admin"
-                className={`flex items-center gap-1 transition-colors py-1 ${
-                  pathname.startsWith('/admin') ? 'text-amber-400 font-extrabold border-b-2 border-amber-400' : 'text-slate-200 hover:text-amber-300'
-                }`}
-              >
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                <span>{t.dashboard}</span>
-              </Link>
-            )}
+            {/* Admin Logout Link */}
             {isLoggedIn && (
               <button
                 onClick={handleLogout}

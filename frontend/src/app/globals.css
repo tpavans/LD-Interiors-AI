@@ -40,8 +40,15 @@ html.dark .bg-wood-cream,
 html.dark .bg-wood-beige,
 html.dark .bg-slate-50,
 html.dark .bg-gray-50,
-html.dark .bg-neutral-50 {
+html.dark .bg-neutral-50,
+html.dark .wood-plank-bg,
+html.dark .wood-light-gradient,
+html.dark .wood-card,
+html.dark .wood-slat-accent-bg,
+html.dark .glass-panel,
+html.dark main {
   background-color: #0B192C !important;
+  background-image: none !important;
   color: #F8FAFC !important;
 }
 
