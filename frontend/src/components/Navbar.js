@@ -7,6 +7,7 @@ import { LogOut, User, LayoutDashboard, Menu, X, Heart, Search, Sparkles, Chevro
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 import ProfileDrawer from './ProfileDrawer';
+import SidebarDrawer from './SidebarDrawer';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminName, setAdminName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Customer Login Drawer States
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
@@ -134,22 +136,34 @@ export default function Navbar() {
         
         {/* Top Header Row (Logo on Left, Controls on Right) */}
         <div className="flex h-14 sm:h-16 md:h-20 items-center justify-between gap-2 sm:gap-4">
-          {/* Brand Logo & Title (Amazon Left Section) */}
-          <Link href="/" className="group flex items-center gap-2 select-none shrink-0">
-            <img 
-              src="/logo.png" 
-              alt="LD Interiors Logo" 
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
-            />
-            <div className="flex flex-col">
-              <span className="font-serif text-xs sm:text-sm md:text-base font-extrabold tracking-wider text-white hover:text-sky-300 transition-all uppercase leading-tight">
-                LD INTERIORS
-              </span>
-              <span className="text-[8px] tracking-widest text-sky-300/80 uppercase font-semibold hidden lg:inline">
-                Designing Spaces. Defining Lifestyles.
-              </span>
-            </div>
-          </Link>
+          {/* Brand Logo & Sidebar Menu Trigger */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-sky-400/40 bg-white/10 text-sky-300 hover:bg-sky-400 hover:text-slate-950 font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm select-none"
+              title="Open Navigation Sidebar"
+            >
+              <Menu className="h-4.5 w-4.5" />
+              <span className="hidden sm:inline">{isTelugu ? "మెనూ" : "Menu"}</span>
+            </button>
+
+            <Link href="/" className="group flex items-center gap-2 select-none">
+              <img 
+                src="/logo.png" 
+                alt="LD Interiors Logo" 
+                className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover border border-sky-400/40 shadow-md shrink-0 group-hover:scale-105 transition-all" 
+              />
+              <div className="flex flex-col">
+                <span className="font-serif text-xs sm:text-sm md:text-base font-extrabold tracking-wider text-white hover:text-sky-300 transition-all uppercase leading-tight">
+                  LD INTERIORS
+                </span>
+                <span className="text-[8px] tracking-widest text-sky-300/80 uppercase font-semibold hidden lg:inline">
+                  Designing Spaces. Defining Lifestyles.
+                </span>
+              </div>
+            </Link>
+          </div>
 
           {/* Desktop Search Bar (Hidden on Mobile, Visible on md:block) */}
           <form onSubmit={handleSearchSubmit} className="hidden md:block relative flex-1 max-w-xl lg:max-w-2xl mx-3">
@@ -491,6 +505,12 @@ export default function Navbar() {
       <ProfileDrawer 
         isOpen={isProfileDrawerOpen} 
         onClose={() => setIsProfileDrawerOpen(false)} 
+      />
+
+      {/* Slide-out Sidebar Drawer Overlay */}
+      <SidebarDrawer 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
       />
     </header>
   );
