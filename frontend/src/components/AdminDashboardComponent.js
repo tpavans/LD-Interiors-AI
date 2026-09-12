@@ -496,6 +496,23 @@ export default function AdminDashboardComponent() {
     checkAuth();
   }, []);
 
+  // Check URL query parameters for direct order greeting links
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchStr = window.location.search;
+      const params = new URLSearchParams(searchStr);
+      const targetId = params.get('greetingOrderId') || params.get('sendGreeting') || params.get('orderId') || params.get('id');
+      const tabParam = params.get('tab');
+
+      if (targetId) {
+        setPendingGreetingOrder(targetId);
+        setAdminTab('orders');
+      } else if (tabParam === 'orders') {
+        setAdminTab('orders');
+      }
+    }
+  }, [isAuthenticated]);
+
   const handleAddCategory = async (e) => {
     if (e) e.preventDefault();
     if (!newCategoryInput.trim()) return;
@@ -2286,16 +2303,19 @@ LD Interiors & Furnitures
       {adminTab === 'orders' && (
         <div className="space-y-6">
           {pendingGreetingOrder && orders.find(o => o._id === pendingGreetingOrder) && (
-            <div className="mb-6 p-6 bg-emerald-50 border border-emerald-250 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn border-dashed text-left">
+            <div className="mb-6 p-6 bg-emerald-50 border border-emerald-250 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn border-dashed text-left shadow-md">
               <div>
-                <span className="text-[10px] font-extrabold tracking-widest text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded-full">
-                  Action Required
+                <span className="text-[10px] font-extrabold tracking-widest text-emerald-800 uppercase bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-300">
+                  ⚡ Action Required: Greeting Ready
                 </span>
-                <h3 className="font-serif text-lg font-bold text-emerald-950 mt-1">
-                  Send welcome greeting to {orders.find(o => o._id === pendingGreetingOrder).name}?
+                <h3 className="font-serif text-lg font-bold text-emerald-950 mt-1.5">
+                  Send Welcome Greeting to {orders.find(o => o._id === pendingGreetingOrder)?.name}?
                 </h3>
+                <p className="text-xs text-emerald-700 font-light mt-0.5">
+                  This will open both WhatsApp and Gmail with the complete customer welcome & order tracking message.
+                </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setPendingGreetingOrder(null)}
                   className="px-4 py-2.5 rounded-xl border border-emerald-200 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
@@ -2305,17 +2325,26 @@ LD Interiors & Furnitures
                 <button
                   onClick={() => {
                     const o = orders.find(ord => ord._id === pendingGreetingOrder);
-                    const cleanPhone = o.phone.replace(/\D/g, '');
+                    if (!o) return;
+                    const cleanPhone = (o.phone || '').replace(/\D/g, '');
                     const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
-                    const welcomeMsg = getBilingualGreetingText(o);
+                    const welcomeMsg = generateCustomerGreetingMessage(o);
+                    const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+                    const targetEmail = (o.email || '').trim();
+
+                    // Open WhatsApp
                     window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`, '_blank');
-                    window.open(`mailto:${o.email || ''}?subject=${encodeURIComponent('Order Confirmation')}&body=${encodeURIComponent(welcomeMsg)}`, '_blank');
+
+                    // Open Gmail
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
+                    window.open(gmailUrl, '_blank');
+
                     api.post(`/orders/${o._id}/send-greeting`).catch(() => {});
                     setPendingGreetingOrder(null);
                   }}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm rounded-xl"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer shadow-md rounded-xl flex items-center gap-1.5 active:scale-95"
                 >
-                  âš¡ Send WhatsApp & Email
+                  <span>⚡ Send WhatsApp & Gmail Both</span>
                 </button>
               </div>
             </div>
@@ -2380,6 +2409,26 @@ LD Interiors & Furnitures
                               {o.phone}
                             </a>
                             <div className="flex flex-col gap-1 mt-0.5">
+                              <button
+                                onClick={() => {
+                                  const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                                  const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+                                  const msg = generateCustomerGreetingMessage(o);
+                                  const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+                                  const targetEmail = (o.email || '').trim();
+
+                                  // Open WhatsApp
+                                  window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                  // Open Gmail
+                                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+                                  window.open(gmailUrl, '_blank');
+                                }}
+                                className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-amber-400/40 active:scale-95 w-full text-center"
+                                title="Send Greeting to both WhatsApp and Gmail at once"
+                              >
+                                <span>⚡ Send Both (WA + Mail)</span>
+                              </button>
+
                               <button
                                 onClick={() => {
                                   const cleanPhone = (o.phone || '').replace(/\D/g, '');
