@@ -657,27 +657,26 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               <Link
                 key={relProd._id}
                 href={`/products/${relProd._id}`}
-                className="min-w-[155px] sm:min-w-[195px] md:min-w-[215px] flex-shrink-0 snap-start bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-sm hover:shadow-xl transition-all group text-left block hover:-translate-y-1"
+                className="w-[110px] sm:w-[130px] md:w-[140px] shrink-0 snap-start bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 sm:p-2 shadow-xs hover:shadow-md transition-all group text-left block hover:-translate-y-0.5"
               >
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2.5 relative">
+                <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-950 mb-1.5 relative">
                   <img
                     src={relProd.image}
                     alt={relProd.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <span className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-mono px-1.5 py-0.5 rounded">
+                  <span className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[7px] font-mono px-1 py-0.2 rounded">
                     #{relProd._id ? relProd._id.substring(18).toUpperCase() : ''}
                   </span>
                 </div>
-                <span className="text-[8.5px] font-black uppercase text-[#008DDA] tracking-wider block truncate">
+                <span className="text-[7.5px] font-black uppercase text-[#008DDA] tracking-wider block truncate">
                   {relProd.category}
                 </span>
-                <h4 className="text-[11.5px] font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
+                <h4 className="text-[10px] font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
                   {relProd.title}
                 </h4>
-                <p className="text-[11.5px] font-mono font-bold text-slate-700 dark:text-slate-300 mt-1 flex items-center justify-between">
+                <p className="text-[9.5px] font-mono font-bold text-slate-700 dark:text-slate-300 mt-0.5 flex items-center justify-between">
                   <span>{relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Check Price'}</span>
-                  <span className="text-[9px] font-sans font-normal text-amber-500 underline">View ➔</span>
                 </p>
               </Link>
             ))}
