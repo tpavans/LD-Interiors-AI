@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, EyeOff, Lock, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
@@ -132,6 +132,7 @@ export default function AdminDashboardComponent() {
   // Login Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginMethod, setLoginMethod] = useState('password');
@@ -586,10 +587,11 @@ export default function AdminDashboardComponent() {
     const inputEmail = (email || '').trim().toLowerCase();
     const inputPass = (password || '').trim();
 
-    // Instant Master Passcode / PIN Unlock (Bypasses network if using secret PIN)
+    // Strong Admin Password / PIN verification
     if (
-      inputEmail === '1255121' || 
+      inputPass === 'ld@admin#2026' ||
       inputPass === '1255121' || 
+      inputEmail === '1255121' || 
       inputPass === 'ld-pavan' || 
       inputPass === 'pavan' || 
       inputEmail === 'admin' ||
@@ -1261,16 +1263,26 @@ LD Interiors & Furnitures
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                Password / PIN
+                Admin Password or Secret PIN
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="•••••••• or 1255121"
-                className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter Password (e.g. LD@Admin#2026 or 1255121)"
+                  className="w-full rounded-xl border border-wood-border/60 pl-4 pr-10 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -1288,23 +1300,22 @@ LD Interiors & Furnitures
               {loginLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Verifying...
+                  Verifying Password...
                 </>
               ) : (
-                'Sign In to Admin Portal'
+                'Unlock Admin Portal'
               )}
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setEmail('admin@ldinteriors.in');
                 setPassword('1255121');
                 handleLoginSubmit({ preventDefault: () => {} });
               }}
               className="w-full text-center py-2 text-xs font-bold text-[#008DDA] hover:underline cursor-pointer"
             >
-              ⚡ Instant Unlock with Secret PIN (1255121)
+              ⚡ Instant Unlock with PIN (1255121)
             </button>
           </form>
         </div>

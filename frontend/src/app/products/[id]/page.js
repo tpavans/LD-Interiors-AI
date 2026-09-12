@@ -159,10 +159,14 @@ export default function ProductDetailPage() {
         try {
           const relRes = await api.get('/products');
           if (Array.isArray(relRes.data)) {
-            const sameCategory = relRes.data.filter(
+            let sameCategory = relRes.data.filter(
               p => p._id !== currentProd._id && p.category?.toLowerCase() === currentProd.category?.toLowerCase()
-            ).slice(0, 4);
-            setRelatedProducts(sameCategory);
+            );
+            if (sameCategory.length < 6) {
+              const others = relRes.data.filter(p => p._id !== currentProd._id && !sameCategory.some(s => s._id === p._id));
+              sameCategory = [...sameCategory, ...others];
+            }
+            setRelatedProducts(sameCategory.slice(0, 6));
           }
         } catch (relErr) {
           console.warn('Could not fetch related products:', relErr);
@@ -603,28 +607,28 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
             {relatedProducts.map((relProd) => (
               <Link
                 key={relProd._id}
                 href={`/products/${relProd._id}`}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-md hover:shadow-xl transition-all group text-left block"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-sm hover:shadow-lg transition-all group text-left block"
               >
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2.5">
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2">
                   <img
                     src={relProd.image}
                     alt={relProd.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <span className="text-[9px] font-black uppercase text-[#008DDA] tracking-wider block">
+                <span className="text-[8.5px] font-black uppercase text-[#008DDA] tracking-wider block">
                   {relProd.category}
                 </span>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
+                <h4 className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
                   {relProd.title}
                 </h4>
-                <p className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mt-1">
-                  {relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+                <p className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 mt-0.5">
+                  {relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Check Price'}
                 </p>
               </Link>
             ))}
