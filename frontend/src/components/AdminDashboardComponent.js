@@ -439,7 +439,7 @@ export default function AdminDashboardComponent() {
         const searchStr = typeof window !== 'undefined' ? window.location.search : '';
         const params = new URLSearchParams(searchStr);
         const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const isSecretPath = currentPath.includes('admin1255121');
+        const isSecretPath = currentPath.includes('admin');
         const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
         const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
 

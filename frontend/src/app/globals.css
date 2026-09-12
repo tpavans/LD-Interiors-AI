@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
@@ -21,15 +23,20 @@
   --foreground: #111111;
 }
 
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark, html.dark body {
+  background-color: #0B192C !important;
+  color: #FFFFFF !important;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom utilities for Amazon-style compact grid layout */
@@ -275,5 +282,25 @@ body {
 }
 
 .logo-marquee-content:hover {
+  animation-play-state: paused;
+}
+
+/* Products Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
   animation-play-state: paused;
 }

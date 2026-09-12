@@ -5,8 +5,46 @@ import api from '../utils/api';
 import { Sparkles, ChevronRight, Heart } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
+const FALLBACK_SHOWCASE = [
+  {
+    _id: "showcase_door_1",
+    title: "Hand-Carved Burma Teak Main Door",
+    category: "Doors",
+    price: 45000,
+    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    _id: "showcase_bed_1",
+    title: "Classic Teak Wood King Bed",
+    category: "Wooden Beds",
+    price: 52000,
+    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    _id: "showcase_mandir_1",
+    title: "Royal Puja Mandir",
+    category: "Puja Mandiralu",
+    price: 38000,
+    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    _id: "showcase_sofa_1",
+    title: "Chesterfield Teak Sofa Set",
+    category: "Sofas",
+    price: 65000,
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    _id: "showcase_dining_1",
+    title: "6-Seater Burma Teak Dining Set",
+    category: "Dining Tables",
+    price: 58000,
+    image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80"
+  }
+];
+
 export default function ScrollingProductsMarquee() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(FALLBACK_SHOWCASE);
   const { language } = useLanguage();
   const isTelugu = language === 'TE';
 
@@ -15,7 +53,7 @@ export default function ScrollingProductsMarquee() {
       try {
         const res = await api.get('/products');
         if (Array.isArray(res.data) && res.data.length > 0) {
-          setProducts(res.data.slice(0, 12));
+          setProducts(res.data.slice(0, 15));
         }
       } catch (err) {
         console.warn('Could not load marquee products:', err);
@@ -24,10 +62,9 @@ export default function ScrollingProductsMarquee() {
     fetchTopProducts();
   }, []);
 
-  if (products.length === 0) return null;
-
-  // Duplicate list for infinite smooth marquee loop
-  const marqueeItems = [...products, ...products];
+  const activeList = products.length > 0 ? products : FALLBACK_SHOWCASE;
+  // Multiply array to ensure seamless infinite looping animation width
+  const marqueeItems = [...activeList, ...activeList, ...activeList];
 
   return (
     <section className="py-12 bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 text-white overflow-hidden border-y border-amber-500/30 relative text-left">
