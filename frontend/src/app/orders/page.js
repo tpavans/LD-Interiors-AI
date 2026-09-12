@@ -161,11 +161,27 @@ export default function UserOrdersPage() {
 
     try {
       const response = await api.get(`/orders/track?phone=${queryPhone}`);
-      const ordersData = response.data;
-      setOrders(ordersData);
+      const ordersData = Array.isArray(response.data) ? response.data : [];
       
-      if (ordersData && ordersData.length > 0) {
-        const primaryOrder = ordersData[0];
+      // Load local orders backup if present
+      let localOrders = [];
+      try {
+        const stored = localStorage.getItem('ld_user_orders');
+        if (stored) localOrders = JSON.parse(stored);
+      } catch (e) {}
+
+      // Combine remote and local orders (avoid duplicate _id)
+      const combined = [...ordersData];
+      localOrders.forEach(item => {
+        if (!combined.some(c => c._id === item._id)) {
+          combined.push(item);
+        }
+      });
+
+      setOrders(combined);
+      
+      if (combined && combined.length > 0) {
+        const primaryOrder = combined[0];
         const recoveredName = primaryOrder.name || localStorage.getItem('ld_user_name') || '';
         const recoveredEmail = primaryOrder.email || localStorage.getItem('ld_user_email') || '';
         const recoveredAddress = primaryOrder.address || localStorage.getItem('ld_user_address') || '';

@@ -252,6 +252,14 @@ ${orderNotes.trim() || 'No custom notes.'}`;
 
       const createdOrder = response.data;
       const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+      
+      // Save order to local storage backup for instant customer portal sync
+      try {
+        const stored = JSON.parse(localStorage.getItem('ld_user_orders') || '[]');
+        const updated = [createdOrder, ...stored.filter(o => o._id !== createdOrder._id)];
+        localStorage.setItem('ld_user_orders', JSON.stringify(updated));
+      } catch (e) {}
+
       const productIdStr = product._id ? product._id.toString() : (createdOrder.productId || 'N/A');
       const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
 

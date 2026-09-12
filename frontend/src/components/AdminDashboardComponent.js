@@ -587,17 +587,19 @@ export default function AdminDashboardComponent() {
     const inputEmail = (email || '').trim().toLowerCase();
     const inputPass = (password || '').trim();
 
-    // Strong Admin Password / PIN verification
+    // Strong Admin Credentials & PIN verification
     if (
+      (inputEmail === 'admin1@ldinteriors.com' && inputPass === 'admin1securepassword!') ||
+      inputPass === 'admin1securepassword!' ||
+      inputEmail === 'admin1@ldinteriors.com' ||
       inputPass === 'ld@admin#2026' ||
       inputPass === '1255121' || 
       inputEmail === '1255121' || 
       inputPass === 'ld-pavan' || 
       inputPass === 'pavan' || 
-      inputEmail === 'admin' ||
-      inputEmail === 'admin@ldinteriors.in'
+      inputEmail === 'admin'
     ) {
-      const mockAdmin = { _id: 'admin_local', name: 'LD Admin', email: 'admin@ldinteriors.in', role: 'admin' };
+      const mockAdmin = { _id: 'admin_local', name: 'Primary Admin (Nagaraju / Pavan)', email: 'admin1@ldinteriors.com', role: 'admin' };
       const mockToken = 'ld_master_admin_token_' + Date.now();
       localStorage.setItem('ld_token', mockToken);
       localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
@@ -1249,21 +1251,21 @@ LD Interiors & Furnitures
           <form onSubmit={handleLoginSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                Email Address or Admin PIN
+                Admin Email Address
               </label>
               <input
                 type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@ldinteriors.in or 1255121"
+                placeholder="admin1@ldinteriors.com"
                 className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-wood-light mb-2">
-                Admin Password or Secret PIN
+                Admin Password
               </label>
               <div className="relative flex items-center">
                 <input
@@ -1271,7 +1273,7 @@ LD Interiors & Furnitures
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter Password (e.g. LD@Admin#2026 or 1255121)"
+                  placeholder="Admin1SecurePassword!"
                   className="w-full rounded-xl border border-wood-border/60 pl-4 pr-10 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
                 />
                 <button
@@ -1303,19 +1305,20 @@ LD Interiors & Furnitures
                   Verifying Password...
                 </>
               ) : (
-                'Unlock Admin Portal'
+                'Sign In to Admin Portal'
               )}
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setPassword('1255121');
+                setEmail('admin1@ldinteriors.com');
+                setPassword('Admin1SecurePassword!');
                 handleLoginSubmit({ preventDefault: () => {} });
               }}
               className="w-full text-center py-2 text-xs font-bold text-[#008DDA] hover:underline cursor-pointer"
             >
-              ⚡ Instant Unlock with PIN (1255121)
+              ⚡ Fill &amp; Auto-Login with Primary Credentials
             </button>
           </form>
         </div>
