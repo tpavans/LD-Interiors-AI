@@ -429,77 +429,7 @@ export default function AdminDashboardComponent() {
   const fileInputRef = useRef(null);
   const bulkFileInputRef = useRef(null);
 
-  // 1. Check Authentication on Mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (typeof window === 'undefined') return;
-
-      try {
-        const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-        const params = new URLSearchParams(searchStr);
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const isSecretDirectRoute = currentPath.includes('admin1255121') || params.get('pass') === '1255121' || params.get('pass') === 'ld-pavan';
-
-        // Direct instant authorization for secret URL admin1255121
-        if (isSecretDirectRoute) {
-          const mockAdmin = { _id: 'admin_1255121', name: 'LD Admin', email: 'admin@ldinteriors.in', role: 'admin' };
-          localStorage.setItem('ld_token', 'ld_secret_admin_token_1255121');
-          localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
-          localStorage.setItem('ld_admin_secret_passed', 'true');
-          setIsAuthenticated(true);
-          setIsSecretPassed(true);
-          fetchProducts();
-          fetchOrders();
-          fetchCategories();
-          setAuthLoading(false);
-          return;
-        }
-
-        const token = localStorage.getItem('ld_token');
-        const isSecretPath = currentPath.includes('admin');
-        const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
-        const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
-
-        if (token) {
-          // If token is local secret token or valid session, accept immediately
-          setIsAuthenticated(true);
-          setIsSecretPassed(true);
-          localStorage.setItem('ld_admin_secret_passed', 'true');
-          fetchProducts();
-          fetchOrders();
-          fetchCategories();
-        } else if (hasSecretParam || hasStoredSecret) {
-          setIsSecretPassed(true);
-          localStorage.setItem('ld_admin_secret_passed', 'true');
-          fetchCategories();
-        }
-      } catch (err) {
-        console.error('Error during checkAuth:', err);
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // 1b. Check query params for mail-initiated actions
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-    const urlParams = new URLSearchParams(searchStr);
-    const action = urlParams.get('action');
-    const orderId = urlParams.get('orderId');
-
-    if (action === 'send-greeting' && orderId) {
-      setPendingGreetingOrder(orderId);
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      setAdminTab('orders');
-    }
-  }, []);
-
-  // 2. Fetch all products
+  // 2. Fetch all products (declared before useEffect to prevent hoisting errors)
   const fetchProducts = async () => {
     setProductsLoading(true);
     try {
@@ -537,6 +467,31 @@ export default function AdminDashboardComponent() {
       console.error('Error fetching categories:', err);
     }
   };
+
+  // 1. Check Authentication on Mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (typeof window === 'undefined') return;
+
+      try {
+        const token = localStorage.getItem('ld_token');
+        const hasStoredSecret = localStorage.getItem('ld_admin_secret_passed') === 'true';
+
+        if (token || hasStoredSecret) {
+          setIsAuthenticated(true);
+          setIsSecretPassed(true);
+          fetchProducts();
+          fetchOrders();
+          fetchCategories();
+        }
+      } catch (err) {
+        console.error('Error during checkAuth:', err);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const handleAddCategory = async (e) => {
     if (e) e.preventDefault();
