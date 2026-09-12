@@ -89,9 +89,11 @@ const jsonLd = {
   'telephone': '+916281653998'
 };
 
+import { ThemeProvider } from "@/context/ThemeContext";
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} h-full transition-colors duration-300`}>
       <head>
         <meta name="p:domain_verify" content="6994d5bfbe5409fed21a03c84411" />
         <script
@@ -99,17 +101,19 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-neutral-800 antialiased font-sans pb-16 md:pb-0">
-        <LanguageProvider>
-          <Navbar />
-          <main className="flex-grow wood-plank-bg pt-[104px] md:pt-24">
-            {children}
-          </main>
-          <Footer />
-          <ClientWrapper />
-          <WhatsAppWidget />
-          <MobileBottomNav />
-        </LanguageProvider>
+      <body className="min-h-full flex flex-col bg-white dark:bg-slate-950 text-neutral-800 dark:text-slate-100 antialiased font-sans pb-16 md:pb-0 transition-colors duration-300">
+        <ThemeProvider>
+          <LanguageProvider>
+            <Navbar />
+            <main className="flex-grow wood-plank-bg dark:wood-plank-bg-dark pt-[104px] md:pt-24 transition-colors duration-300">
+              {children}
+            </main>
+            <Footer />
+            <ClientWrapper />
+            <WhatsAppWidget />
+            <MobileBottomNav />
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

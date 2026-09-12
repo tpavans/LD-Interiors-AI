@@ -161,6 +161,9 @@ const renderMaterialBrandLogo = (name) => {
   }
 };
 
+import Woodgrain3DHeroCanvas from '@/components/Woodgrain3DHeroCanvas';
+import ScrollingProductsMarquee from '@/components/ScrollingProductsMarquee';
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [filteredShowcase, setFilteredShowcase] = useState([]);
@@ -200,9 +203,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-20 pb-20">
-      {/* Hero Section */}
-      <section className="-mt-20 relative overflow-hidden border-b border-wood-border/30 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(44, 26, 15, 0.4), rgba(26, 15, 8, 0.75)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <div className="mx-auto max-w-4xl text-center">
+      {/* Hero Section with Interactive 3D Canvas */}
+      <section className="-mt-20 relative overflow-hidden border-b border-wood-border/30 shadow-2xl px-6 pt-44 pb-28 sm:pt-52 sm:pb-36 lg:px-8" style={{ backgroundImage: "linear-gradient(to bottom, rgba(11, 25, 44, 0.65), rgba(8, 18, 32, 0.88)), url('/images/hero-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <Woodgrain3DHeroCanvas />
+
+        <div className="mx-auto max-w-4xl text-center relative z-10">
           <h1 className="font-serif text-5xl font-black tracking-tight sm:text-7xl lg:text-8xl leading-none uppercase">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-amber-100 block">LD INTERIORS</span>
             <span className="bg-gradient-to-r from-sky-400 via-amber-300 to-amber-100 bg-clip-text text-transparent font-serif font-light italic block tracking-widest mt-2 capitalize text-3xl sm:text-5xl lg:text-6xl">{isTelugu ? "& ఫర్నిచర్స్" : "& Furnitures"}</span>
@@ -222,6 +227,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Auto-Scrolling Infinite Product Cards Marquee */}
+      <ScrollingProductsMarquee />
 
       {/* Trust & Metric Highlights Section */}
       <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 -mt-16 sm:-mt-24 relative z-10">

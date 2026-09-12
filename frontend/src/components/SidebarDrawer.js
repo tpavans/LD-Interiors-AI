@@ -1,25 +1,28 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen } from 'lucide-react';
+import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 
 const CATEGORY_SHORTLINKS = [
-  { name: 'Teakwood Doors', nameTe: 'టేకు గుమ్మాలు', href: '/products?category=Doors' },
-  { name: 'Puja Mandiralu', nameTe: 'పూజ మందిరాలు', href: '/products?category=Puja%20Mandiralu' },
-  { name: 'Wooden Beds', nameTe: 'టేకువుడ్ బెడ్స్', href: '/products?category=Wooden%20Beds' },
-  { name: 'Living Room Sofas', nameTe: 'సోఫాలు', href: '/products?category=Sofas' },
-  { name: 'Dining Tables', nameTe: 'డైనింగ్ టేబుల్స్', href: '/products?category=Dining%20Tables' },
-  { name: 'Uyyala Swings', nameTe: 'ఉయ్యాలలు', href: '/products?category=Uyyala%20Swings' },
-  { name: 'Teak Windows', nameTe: 'టేకువుడ్ కిటికీలు', href: '/products?category=Wooden%20Windows' },
-  { name: 'Custom Interiors', nameTe: 'ఇంటీరియర్ పనులు', href: '/contact' },
+  { name: 'Teakwood Doors', nameTe: 'టేకు గుమ్మాలు', href: '/products?category=Doors', subCount: '50+ Designs' },
+  { name: 'Puja Mandiralu', nameTe: 'పూజ మందిరాలు', href: '/products?category=Puja%20Mandiralu', subCount: '40+ Designs' },
+  { name: 'Wooden Beds', nameTe: 'టేకువుడ్ బెడ్స్', href: '/products?category=Wooden%20Beds', subCount: '60+ Designs' },
+  { name: 'Living Room Sofas', nameTe: 'సోఫాలు', href: '/products?category=Sofas', subCount: '35+ Designs' },
+  { name: 'Dining Tables', nameTe: 'డైనింగ్ టేబుల్స్', href: '/products?category=Dining%20Tables', subCount: '25+ Designs' },
+  { name: 'Uyyala Swings', nameTe: 'ఉయ్యాలలు', href: '/products?category=Uyyala%20Swings', subCount: '20+ Designs' },
+  { name: 'Teak Windows', nameTe: 'టేకువుడ్ కిటికీలు', href: '/products?category=Wooden%20Windows', subCount: '30+ Designs' },
+  { name: 'Custom Interiors', nameTe: 'ఇంటీరియర్ పనులు', href: '/contact', subCount: 'Full Setup' },
 ];
 
 export default function SidebarDrawer({ isOpen, onClose }) {
   const pathname = usePathname();
   const { language, toggleLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const isTelugu = language === 'TE';
+  const [selectedWoodFilter, setSelectedWoodFilter] = useState('All');
 
   // Prevent background body scroll when sidebar is open
   useEffect(() => {
@@ -133,10 +136,30 @@ export default function SidebarDrawer({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Popular Categories */}
+          {/* Quick Design Filters */}
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-sky-400 mb-2 px-2 flex items-center gap-1.5">
+              <Filter className="h-3 w-3 text-amber-400" />
+              <span>{isTelugu ? "డిజైన్ ఫిల్టర్స్" : "Quick Design Filters"}</span>
+            </p>
+            <div className="flex flex-wrap gap-1.5 px-1">
+              {['All', 'Burma Teak', 'Rosewood', 'PU Polish', 'Carving'].map((filterName) => (
+                <Link
+                  key={filterName}
+                  href={`/products?search=${encodeURIComponent(filterName === 'All' ? '' : filterName)}`}
+                  onClick={onClose}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${selectedWoodFilter === filterName ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-slate-300 hover:bg-white/20'}`}
+                >
+                  {filterName}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Popular Categories with Inside Sub-counts */}
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2 px-2">
-              {isTelugu ? "పాపులర్ కేటగిరీలు" : "Popular Categories"}
+              {isTelugu ? "పాపులర్ కేటగిరీలు & డిజైన్స్" : "Popular Categories & Designs"}
             </p>
             <div className="grid grid-cols-1 gap-1">
               {CATEGORY_SHORTLINKS.map((cat, idx) => (
@@ -144,10 +167,13 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                   key={idx}
                   href={cat.href}
                   onClick={onClose}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-amber-300 transition-colors"
+                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-amber-300 transition-colors group"
                 >
-                  <span>{isTelugu ? cat.nameTe : cat.name}</span>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                  <div>
+                    <span className="font-semibold">{isTelugu ? cat.nameTe : cat.name}</span>
+                    <span className="text-[9px] text-amber-400/80 block font-mono">{cat.subCount}</span>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-300 transition-colors shrink-0" />
                 </Link>
               ))}
             </div>
@@ -175,8 +201,21 @@ export default function SidebarDrawer({ isOpen, onClose }) {
 
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer Actions: Dark / Light Mode Switch & WhatsApp */}
         <div className="p-4 border-t border-sky-500/30 bg-[#081220] space-y-2.5">
+          {/* Dark / Light Mode Theme Toggle Switch */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-full py-2.5 px-3 rounded-xl border border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400 hover:text-slate-950 font-bold text-xs flex items-center justify-between transition-all cursor-pointer"
+          >
+            <span className="flex items-center gap-2">
+              {theme === 'dark' ? <Moon className="h-4 w-4 text-amber-400" /> : <Sun className="h-4 w-4 text-amber-400" />}
+              <span>{theme === 'dark' ? (isTelugu ? "డార్క్ మోడ్ (Dark)" : "Dark Theme Active") : (isTelugu ? "లైట్ మోడ్ (Light)" : "Light Theme Active")}</span>
+            </span>
+            <span className="text-[10px] font-black uppercase underline">{theme === 'dark' ? 'Switch to Light ☀️' : 'Switch to Dark 🌙'}</span>
+          </button>
+
           {/* Language Selector */}
           <button
             type="button"

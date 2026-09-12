@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCirc
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
+import ProductCard from '@/components/ProductCard';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -143,13 +144,29 @@ export default function ProductDetailPage() {
     }
   };
 
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
   useEffect(() => {
     if (!id) return;
     const fetchProduct = async () => {
       try {
         const response = await api.get(`/products/${id}`);
-        setProduct(response.data);
+        const currentProd = response.data;
+        setProduct(currentProd);
         setActiveImageIndex(0);
+
+        // Fetch related products in the same category
+        try {
+          const relRes = await api.get('/products');
+          if (Array.isArray(relRes.data)) {
+            const sameCategory = relRes.data.filter(
+              p => p._id !== currentProd._id && p.category?.toLowerCase() === currentProd.category?.toLowerCase()
+            ).slice(0, 4);
+            setRelatedProducts(sameCategory);
+          }
+        } catch (relErr) {
+          console.warn('Could not fetch related products:', relErr);
+        }
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('We couldn\'t load this design. It may have been deleted or the link is invalid.');
@@ -564,6 +581,56 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           </div>
         </div>
       </div>
+
+      {/* Related Products Grid Section */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 animate-fadeIn text-left">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">
+                {isTelugu ? "సంబంధిత డిజైన్లు" : "Recommended Designs"}
+              </span>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
+                {isTelugu ? `ఇతర ${product?.category} డిజైన్లు` : `Related ${product?.category} Teakwood Designs`}
+              </h2>
+            </div>
+            <Link
+              href={`/products?category=${encodeURIComponent(product?.category || '')}`}
+              className="text-xs font-bold text-[#008DDA] hover:underline flex items-center gap-1"
+            >
+              <span>{isTelugu ? "అన్నీ చూడండి" : "View All"}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {relatedProducts.map((relProd) => (
+              <Link
+                key={relProd._id}
+                href={`/products/${relProd._id}`}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-md hover:shadow-xl transition-all group text-left block"
+              >
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2.5">
+                  <img
+                    src={relProd.image}
+                    alt={relProd.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <span className="text-[9px] font-black uppercase text-[#008DDA] tracking-wider block">
+                  {relProd.category}
+                </span>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
+                  {relProd.title}
+                </h4>
+                <p className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mt-1">
+                  {relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Contact for Price'}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Order Details Modal Popup */}
       {showOrderModal && (

@@ -1339,88 +1339,105 @@ LD Interiors & Furnitures
         </div>
       </div>
 
-      <div className="flex flex-wrap border-b border-wood-border/30 mb-8 gap-4 sm:gap-6 text-left select-none items-center justify-between">
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <button
-            onClick={() => setAdminTab('analytics')}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
-              adminTab === 'analytics'
-                ? 'text-[#008DDA] border-b-2 border-[#008DDA]'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4 text-[#008DDA]" />
-            <span>Analytics & Visitors</span>
-          </button>
-          <button
-            onClick={() => setAdminTab('showcase')}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer ${
-              adminTab === 'showcase'
-                ? 'text-wood-accent border-b-2 border-wood-accent'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            Designs Showcase
-          </button>
-          <button
-            onClick={() => { setAdminTab('orders'); fetchOrders(); }}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer ${
-              adminTab === 'orders'
-                ? 'text-wood-accent border-b-2 border-wood-accent'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            Customer Orders ({orders.length})
-          </button>
-          <button
-            onClick={() => { setAdminTab('payments'); fetchOrders(); }}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
-              adminTab === 'payments'
-                ? 'text-wood-accent border-b-2 border-wood-accent'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            <span>Verify Payments</span>
-            {pendingPayments.length > 0 && (
-              <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-[8.5px] font-bold animate-pulse">
-                {pendingPayments.length}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+        {/* Admin Left Sidebar */}
+        <div className="lg:col-span-3 space-y-3">
+          <div className="bg-[#0B192C] text-white border border-sky-500/30 rounded-3xl p-5 shadow-xl space-y-2 select-none">
+            <div className="pb-3 border-b border-sky-500/20 mb-3">
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-400 block">
+                ⚡ Admin Navigation Sidebar
               </span>
-            )}
-          </button>
-          <button
-            onClick={() => { setAdminTab('categories'); fetchCategories(); }}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
-              adminTab === 'categories'
-                ? 'text-wood-accent border-b-2 border-wood-accent'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            <span>Manage Categories ({categoriesList.length})</span>
-          </button>
-          <button
-            onClick={() => { setAdminTab('amazon'); fetchAmazonProducts(); }}
-            className={`pb-3.5 text-xs font-extrabold uppercase tracking-widest transition-colors cursor-pointer flex items-center gap-1.5 ${
-              adminTab === 'amazon'
-                ? 'text-amber-600 border-b-2 border-amber-600'
-                : 'text-wood-light hover:text-wood-dark'
-            }`}
-          >
-            <span>🛒 Amazon Affiliate Pins ({amazonProducts.length})</span>
-          </button>
+              <h2 className="font-serif text-base font-bold text-white mt-0.5">
+                LD Interiors Portal
+              </h2>
+            </div>
+
+            <button
+              onClick={() => setAdminTab('analytics')}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'analytics'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>Analytics &amp; Visitors</span>
+              </span>
+            </button>
+
+            <button
+              onClick={() => setAdminTab('showcase')}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'showcase'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Grid className="h-4 w-4" />
+                <span>Designs Catalog ({products.length})</span>
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setAdminTab('orders'); fetchOrders(); }}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'orders'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                <span>Customer Orders</span>
+              </span>
+              <span className="bg-white/20 text-white rounded-full px-2 py-0.5 text-[9px] font-bold">
+                {orders.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setAdminTab('payments'); fetchOrders(); }}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'payments'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                <span>Verify Payments</span>
+              </span>
+              {pendingPayments.length > 0 && (
+                <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-[9px] font-bold animate-pulse">
+                  {pendingPayments.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => { setAdminTab('categories'); fetchCategories(); }}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'categories'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                <span>Manage Categories</span>
+              </span>
+              <span className="bg-white/20 text-white rounded-full px-2 py-0.5 text-[9px] font-bold">
+                {categoriesList.length}
+              </span>
+            </button>
+          </div>
         </div>
 
-        {adminTab === 'orders' && (
-          <button
-            onClick={handleExportOrdersCSV}
-            className="mb-3.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold uppercase tracking-wider rounded-full shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <Download className="h-3.5 w-3.5" />
-            <span>Export CSV</span>
-          </button>
-        )}
-      </div>
-
-      {adminTab === 'analytics' && (
+        {/* Admin Right Panel Content Area */}
+        <div className="lg:col-span-9 space-y-6">
+          {adminTab === 'analytics' && (
         <div className="space-y-8 animate-fadeIn text-left">
           {/* Header Bar */}
           <div className="flex items-center justify-between bg-sky-50 border border-sky-100 rounded-3xl p-5">
@@ -2729,203 +2746,8 @@ LD Interiors & Furnitures
           </div>
         </div>
       )}
-
-      {/* Amazon Affiliate Manager Tab Panel */}
-      {adminTab === 'amazon' && (
-        <div className="space-y-8 animate-fadeIn text-left">
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 border-2 border-amber-300 rounded-3xl p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs uppercase tracking-wider shadow-xs">
-                  ⚡ Auto-Pin System Active
-                </span>
-                <span className="text-xs font-bold text-amber-950">
-                  🎯 Daily Distribution: 10 Amazon Pins + 5 LD Interiors Pins = 15 Total Auto Pins / Day
-                </span>
-              </div>
-              <h2 className="font-serif text-xl font-bold text-amber-950">
-                🛒 Amazon Affiliate Products Manager
-              </h2>
-              <p className="text-xs text-amber-800 font-medium mt-1">
-                Add Amazon affiliate links. Our system automatically generates high-ranking Pinterest SEO Titles, Descriptions, and Hashtags!
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsAmazonExcelViewerOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                <span>📊 View Live Combined Excel Sheet</span>
-              </button>
-              <a
-                href="https://ld-interiors-ai.onrender.com/api/products/pinterest-catalog.csv"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <Download className="h-4 w-4" />
-                <span>Download CSV Feed</span>
-              </a>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Add Amazon Product Form */}
-            <div className="lg:col-span-5 bg-white border border-amber-200 rounded-3xl p-6 shadow-md space-y-4">
-              <h3 className="font-serif text-base font-bold text-amber-900 flex items-center gap-2 border-b border-amber-100 pb-3">
-                <Plus className="h-4.5 w-4.5 text-amber-600" />
-                <span>Add Amazon Affiliate Item</span>
-              </h3>
-
-              <form onSubmit={handleCreateAmazonProduct} className="space-y-4 text-xs font-semibold text-slate-700">
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Product Title / Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={amzTitle}
-                    onChange={(e) => setAmzTitle(e.target.value)}
-                    placeholder="e.g. Modern Teak Finish Coffee Table"
-                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-sans"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Amazon Affiliate Link (URL) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={amzAffiliateUrl}
-                    onChange={(e) => setAmzAffiliateUrl(e.target.value)}
-                    placeholder="https://www.amazon.in/dp/B08xxx?tag=yourtag-21"
-                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Product Image Link (URL) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={amzImage}
-                    onChange={(e) => setAmzImage(e.target.value)}
-                    placeholder="https://m.media-amazon.com/images/I/xxxx.jpg"
-                    className="w-full rounded-xl border border-amber-200 px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Category</label>
-                    <select
-                      value={amzCategory}
-                      onChange={(e) => setAmzCategory(e.target.value)}
-                      className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
-                    >
-                      <option value="Amazon Home & Living">Amazon Home & Living</option>
-                      <option value="Kitchen Essentials">Kitchen Essentials</option>
-                      <option value="Wooden Decor">Wooden Decor</option>
-                      <option value="Furniture Deals">Furniture Deals</option>
-                      <option value="Lighting & Lamps">Lighting & Lamps</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] uppercase font-bold text-amber-900 mb-1">Price (INR)</label>
-                    <input
-                      type="text"
-                      value={amzPrice}
-                      onChange={(e) => setAmzPrice(e.target.value)}
-                      placeholder="e.g. ₹1,499"
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2.5 text-xs text-slate-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={amzFormLoading}
-                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {amzFormLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      <span>Add with Auto SEO & Keywords</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Right: Amazon Products List Grid */}
-            <div className="lg:col-span-7 bg-white border border-amber-200 rounded-3xl p-6 shadow-md overflow-hidden space-y-4">
-              <div className="flex items-center justify-between border-b border-amber-100 pb-3">
-                <h3 className="font-serif text-base font-bold text-amber-950">
-                  Stored Amazon Affiliate Items ({amazonProducts.length})
-                </h3>
-                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                  10 Pins / Day
-                </span>
-              </div>
-
-              {amazonLoading ? (
-                <div className="py-16 text-center">
-                  <Loader2 className="h-7 w-7 animate-spin text-amber-600 mx-auto" />
-                </div>
-              ) : amazonProducts.length === 0 ? (
-                <div className="py-16 text-center text-slate-500 font-medium text-xs">
-                  No Amazon affiliate products added yet. Use the form to add your first affiliate item!
-                </div>
-              ) : (
-                <div className="overflow-x-auto overflow-y-auto max-h-[520px] scrollbar-thin space-y-3 pr-1">
-                  {amazonProducts.map((item) => (
-                    <div key={item._id} className="p-3.5 bg-amber-50/50 hover:bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 transition-colors">
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="h-16 w-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-white"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="font-bold text-xs text-slate-900 truncate">{item.title}</h4>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteAmazonProduct(item._id, item.title)}
-                            className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer shrink-0"
-                            title="Delete Item"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <p className="text-[11px] font-bold text-amber-800 mt-0.5">{item.category} &bull; {item.price}</p>
-                        <p className="text-[10px] text-slate-600 italic mt-1 line-clamp-2 bg-white/70 p-1.5 rounded-lg border border-amber-200/60">
-                          <span className="font-bold text-amber-900 not-italic">Pinterest SEO: </span>
-                          {item.pinterestSeoTitle}
-                        </p>
-                        <div className="mt-2 flex items-center gap-2">
-                          <a
-                            href={item.affiliateUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-1 font-mono truncate max-w-[280px]"
-                          >
-                            <ExternalLink className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{item.affiliateUrl}</span>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
-      )}
+      </div>
 
       {activePricingOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto" onClick={() => setActivePricingOrder(null)}>

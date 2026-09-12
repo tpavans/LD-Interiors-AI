@@ -334,10 +334,10 @@ export default function ProductsPage() {
             <button
               key={category}
               onClick={() => handleCategoryChange(category)}
-              className={`px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer shadow-sm ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer shadow-sm ${
                 selectedCategory === category
                   ? 'bg-[#008DDA] text-white ring-2 ring-[#008DDA]/40 scale-105'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
               {category}
