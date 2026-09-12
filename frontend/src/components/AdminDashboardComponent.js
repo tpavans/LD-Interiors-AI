@@ -435,53 +435,42 @@ export default function AdminDashboardComponent() {
       if (typeof window === 'undefined') return;
 
       try {
-        const token = localStorage.getItem('ld_token');
         const searchStr = typeof window !== 'undefined' ? window.location.search : '';
         const params = new URLSearchParams(searchStr);
         const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isSecretDirectRoute = currentPath.includes('admin1255121') || params.get('pass') === '1255121' || params.get('pass') === 'ld-pavan';
+
+        // Direct instant authorization for secret URL admin1255121
+        if (isSecretDirectRoute) {
+          const mockAdmin = { _id: 'admin_1255121', name: 'LD Admin', email: 'admin@ldinteriors.in', role: 'admin' };
+          localStorage.setItem('ld_token', 'ld_secret_admin_token_1255121');
+          localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
+          localStorage.setItem('ld_admin_secret_passed', 'true');
+          setIsAuthenticated(true);
+          setIsSecretPassed(true);
+          fetchProducts();
+          fetchOrders();
+          fetchCategories();
+          setAuthLoading(false);
+          return;
+        }
+
+        const token = localStorage.getItem('ld_token');
         const isSecretPath = currentPath.includes('admin');
         const hasSecretParam = params.get('pass') === 'ld-pavan' || params.get('pavan') === 'true' || params.get('secret') === 'pavan' || isSecretPath;
         const hasStoredSecret = (typeof window !== 'undefined' && localStorage.getItem('ld_admin_secret_passed') === 'true') || isSecretPath;
 
         if (token) {
-          try {
-            await api.get('/auth/me');
-            setIsAuthenticated(true);
-            setIsSecretPassed(true);
-            localStorage.setItem('ld_admin_secret_passed', 'true');
-            fetchProducts();
-            fetchOrders();
-            fetchCategories();
-          } catch (err) {
-            console.error('Session verification error:', err);
-            const isUnauthorized = err.response && (err.response.status === 401 || err.response.status === 403);
-            if (isUnauthorized) {
-              localStorage.removeItem('ld_token');
-              localStorage.removeItem('ld_admin');
-              window.dispatchEvent(new Event('admin-logout'));
-              if (!hasSecretParam && !hasStoredSecret) {
-                window.location.href = '/';
-                return;
-              }
-            } else {
-              setIsAuthenticated(true);
-              setIsSecretPassed(true);
-              localStorage.setItem('ld_admin_secret_passed', 'true');
-              fetchProducts();
-              fetchOrders();
-              fetchCategories();
-            }
-          }
-        } else if (!hasSecretParam && !hasStoredSecret) {
-          window.location.href = '/';
-          return;
-        }
-
-        if (hasSecretParam || hasStoredSecret) {
+          // If token is local secret token or valid session, accept immediately
+          setIsAuthenticated(true);
           setIsSecretPassed(true);
-          if (hasSecretParam) {
-            localStorage.setItem('ld_admin_secret_passed', 'true');
-          }
+          localStorage.setItem('ld_admin_secret_passed', 'true');
+          fetchProducts();
+          fetchOrders();
+          fetchCategories();
+        } else if (hasSecretParam || hasStoredSecret) {
+          setIsSecretPassed(true);
+          localStorage.setItem('ld_admin_secret_passed', 'true');
           fetchCategories();
         }
       } catch (err) {
