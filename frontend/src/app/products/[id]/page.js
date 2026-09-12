@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
@@ -21,6 +21,18 @@ export default function ProductDetailPage() {
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
+
+  const relatedScrollRef = useRef(null);
+  const scrollRelatedLeft = () => {
+    if (relatedScrollRef.current) {
+      relatedScrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+  const scrollRelatedRight = () => {
+    if (relatedScrollRef.current) {
+      relatedScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
 
   // Touch Swipe Carousel State
   const [touchStart, setTouchStart] = useState(null);
@@ -162,11 +174,11 @@ export default function ProductDetailPage() {
             let sameCategory = relRes.data.filter(
               p => p._id !== currentProd._id && p.category?.toLowerCase() === currentProd.category?.toLowerCase()
             );
-            if (sameCategory.length < 6) {
+            if (sameCategory.length < 20) {
               const others = relRes.data.filter(p => p._id !== currentProd._id && !sameCategory.some(s => s._id === p._id));
               sameCategory = [...sameCategory, ...others];
             }
-            setRelatedProducts(sameCategory.slice(0, 6));
+            setRelatedProducts(sameCategory.slice(0, 20));
           }
         } catch (relErr) {
           console.warn('Could not fetch related products:', relErr);
@@ -594,49 +606,78 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
         </div>
       </div>
 
-      {/* Related Products Grid Section */}
+      {/* Related Products Horizontal Scroll Carousel Section */}
       {relatedProducts.length > 0 && (
-        <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 animate-fadeIn text-left">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800 animate-fadeIn text-left relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
             <div>
               <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block">
-                {isTelugu ? "సంబంధిత డిజైన్లు" : "Recommended Designs"}
+                {isTelugu ? "సంబంధిత డిజైన్లు (సైడ్‌కి స్క్రోల్ చేయండి ➔)" : "Recommended Designs (Scroll Sideways ➔)"}
               </span>
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
                 {isTelugu ? `ఇతర ${product?.category} డిజైన్లు` : `Related ${product?.category} Teakwood Designs`}
               </h2>
             </div>
-            <Link
-              href={`/products?category=${encodeURIComponent(product?.category || '')}`}
-              className="text-xs font-bold text-[#008DDA] hover:underline flex items-center gap-1"
-            >
-              <span>{isTelugu ? "అన్నీ చూడండి" : "View All"}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
+
+            <div className="flex items-center gap-3 self-end sm:self-auto">
+              {/* Left and Right Scroll Navigation Buttons */}
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full border border-slate-200 dark:border-slate-700">
+                <button
+                  onClick={scrollRelatedLeft}
+                  className="p-1.5 rounded-full hover:bg-amber-500 hover:text-white text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Scroll Left"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={scrollRelatedRight}
+                  className="p-1.5 rounded-full hover:bg-amber-500 hover:text-white text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Scroll Right"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <Link
+                href={`/products?category=${encodeURIComponent(product?.category || '')}`}
+                className="text-xs font-bold text-[#008DDA] hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>{isTelugu ? "అన్నీ చూడండి" : "View All"}</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+          {/* Horizontally Scrollable Cards Container */}
+          <div
+            ref={relatedScrollRef}
+            className="flex overflow-x-auto gap-3.5 sm:gap-4 py-3 pb-6 px-1 scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-slate-100 dark:scrollbar-track-slate-900 snap-x snap-mandatory scroll-smooth"
+          >
             {relatedProducts.map((relProd) => (
               <Link
                 key={relProd._id}
                 href={`/products/${relProd._id}`}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-sm hover:shadow-lg transition-all group text-left block"
+                className="min-w-[155px] sm:min-w-[195px] md:min-w-[215px] flex-shrink-0 snap-start bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-sm hover:shadow-xl transition-all group text-left block hover:-translate-y-1"
               >
-                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2">
+                <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 mb-2.5 relative">
                   <img
                     src={relProd.image}
                     alt={relProd.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
                   />
+                  <span className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-mono px-1.5 py-0.5 rounded">
+                    #{relProd._id ? relProd._id.substring(18).toUpperCase() : ''}
+                  </span>
                 </div>
-                <span className="text-[8.5px] font-black uppercase text-[#008DDA] tracking-wider block">
+                <span className="text-[8.5px] font-black uppercase text-[#008DDA] tracking-wider block truncate">
                   {relProd.category}
                 </span>
-                <h4 className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
+                <h4 className="text-[11.5px] font-bold text-slate-900 dark:text-white line-clamp-1 mt-0.5 group-hover:text-[#008DDA] transition-colors">
                   {relProd.title}
                 </h4>
-                <p className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 mt-0.5">
-                  {relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Check Price'}
+                <p className="text-[11.5px] font-mono font-bold text-slate-700 dark:text-slate-300 mt-1 flex items-center justify-between">
+                  <span>{relProd.price && relProd.price > 0 ? `₹${relProd.price.toLocaleString('en-IN')}` : 'Check Price'}</span>
+                  <span className="text-[9px] font-sans font-normal text-amber-500 underline">View ➔</span>
                 </p>
               </Link>
             ))}

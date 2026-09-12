@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, EyeOff, Lock, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, EyeOff, Lock, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers, Mail, MessageCircle } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
@@ -469,30 +469,23 @@ export default function AdminDashboardComponent() {
     }
   };
 
-  // 1. Check Authentication on Mount
+  // 1. Check Authentication on Mount (Requires password entry each session)
   useEffect(() => {
     const checkAuth = async () => {
       if (typeof window === 'undefined') return;
 
       try {
-        const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-        const params = new URLSearchParams(searchStr);
-        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-        const isSecretDirectRoute = currentPath.includes('admin1255121') || params.get('pass') === '1255121' || params.get('pass') === 'ld-pavan';
+        const isSessionAuth = sessionStorage.getItem('ld_admin_authenticated') === 'true';
 
-        const token = localStorage.getItem('ld_token');
-        const hasStoredSecret = localStorage.getItem('ld_admin_secret_passed') === 'true';
-
-        if (isSecretDirectRoute || token || hasStoredSecret) {
-          const mockAdmin = { _id: 'admin_1255121', name: 'LD Admin', email: 'admin@ldinteriors.in', role: 'admin' };
-          localStorage.setItem('ld_token', token || 'ld_secret_admin_token_1255121');
-          localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
-          localStorage.setItem('ld_admin_secret_passed', 'true');
+        if (isSessionAuth) {
           setIsAuthenticated(true);
           setIsSecretPassed(true);
           fetchProducts();
           fetchOrders();
           fetchCategories();
+        } else {
+          setIsAuthenticated(false);
+          setIsSecretPassed(false);
         }
       } catch (err) {
         console.error('Error during checkAuth:', err);
@@ -585,30 +578,28 @@ export default function AdminDashboardComponent() {
     setLoginLoading(true);
 
     const inputEmail = (email || '').trim().toLowerCase();
-    const inputPass = (password || '').trim();
+    const inputPass = (password || '').trim().toLowerCase();
 
-    // Strong Admin Credentials & PIN verification
-    if (
-      (inputEmail === 'admin1@ldinteriors.com' && inputPass === 'admin1securepassword!') ||
-      inputPass === 'admin1securepassword!' ||
-      inputEmail === 'admin1@ldinteriors.com' ||
-      inputPass === 'ld@admin#2026' ||
+    // Check if valid password entered
+    const isPasswordValid = 
+      inputPass === 'admin1securepassword!' || 
       inputPass === '1255121' || 
-      inputEmail === '1255121' || 
       inputPass === 'ld-pavan' || 
       inputPass === 'pavan' || 
-      inputEmail === 'admin'
-    ) {
+      inputPass === 'ld@admin#2026';
+
+    if (isPasswordValid) {
       const mockAdmin = { _id: 'admin_local', name: 'Primary Admin (Nagaraju / Pavan)', email: 'admin1@ldinteriors.com', role: 'admin' };
       const mockToken = 'ld_master_admin_token_' + Date.now();
       localStorage.setItem('ld_token', mockToken);
       localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
-      localStorage.setItem('ld_admin_secret_passed', 'true');
+      sessionStorage.setItem('ld_admin_authenticated', 'true');
       setIsAuthenticated(true);
       setIsSecretPassed(true);
       window.dispatchEvent(new Event('admin-login'));
       fetchProducts();
       fetchOrders();
+      fetchCategories();
       setLoginLoading(false);
       return;
     }
@@ -619,7 +610,7 @@ export default function AdminDashboardComponent() {
 
       localStorage.setItem('ld_token', token);
       localStorage.setItem('ld_admin', JSON.stringify(adminData));
-      localStorage.setItem('ld_admin_secret_passed', 'true');
+      sessionStorage.setItem('ld_admin_authenticated', 'true');
       setIsAuthenticated(true);
       setIsSecretPassed(true);
 
@@ -627,24 +618,26 @@ export default function AdminDashboardComponent() {
 
       fetchProducts();
       fetchOrders();
+      fetchCategories();
     } catch (err) {
       console.error('Login error:', err);
-      // If network/Render fails, still fallback to local secret PIN unlock
-      if (inputPass === '1255121' || inputEmail === '1255121' || inputPass.length >= 4) {
+      // Fallback fallback check if password matches 1255121 PIN
+      if (inputPass === '1255121') {
         const mockAdmin = { _id: 'admin_local', name: 'LD Admin', email: 'admin@ldinteriors.in', role: 'admin' };
         const mockToken = 'ld_master_admin_token_' + Date.now();
         localStorage.setItem('ld_token', mockToken);
         localStorage.setItem('ld_admin', JSON.stringify(mockAdmin));
-        localStorage.setItem('ld_admin_secret_passed', 'true');
+        sessionStorage.setItem('ld_admin_authenticated', 'true');
         setIsAuthenticated(true);
         setIsSecretPassed(true);
         window.dispatchEvent(new Event('admin-login'));
         fetchProducts();
         fetchOrders();
+        fetchCategories();
         setLoginLoading(false);
         return;
       }
-      setLoginError(err.response?.data?.message || 'Invalid email or password. You can also log in using PIN: 1255121');
+      setLoginError('Invalid Email or Password! Please enter valid admin password (e.g., Admin1SecurePassword! or PIN: 1255121)');
     } finally {
       setLoginLoading(false);
     }
@@ -2382,13 +2375,40 @@ LD Interiors & Furnitures
                           </div>
                         </td>
                         <td className="py-4 px-6 font-mono text-xs">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1.5">
                             <a href={`tel:+91${o.phone}`} className="text-wood-accent hover:underline flex items-center gap-1 font-semibold">
                               {o.phone}
                             </a>
-                            <a href={`https://wa.me/91${o.phone}`} target="_blank" className="text-emerald-600 hover:underline text-[9px] font-bold uppercase tracking-wider">
-                              Chat WhatsApp
-                            </a>
+                            <div className="flex flex-col gap-1 mt-0.5">
+                              <button
+                                onClick={() => {
+                                  const cleanPhone = (o.phone || '').replace(/\D/g, '');
+                                  const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+                                  const msg = generateCustomerGreetingMessage(o);
+                                  window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                }}
+                                className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-emerald-500/30 active:scale-95 w-full text-center"
+                                title="Send Welcome Greeting on WhatsApp"
+                              >
+                                <MessageCircle className="h-3 w-3" />
+                                <span>WhatsApp Greeting</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  const msg = generateCustomerGreetingMessage(o);
+                                  const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+                                  const targetEmail = (o.email || '').trim();
+                                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+                                  window.open(gmailUrl, '_blank');
+                                }}
+                                className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-red-500/30 active:scale-95 w-full text-center"
+                                title="Send Welcome Greeting Invitation on Gmail"
+                              >
+                                <Mail className="h-3 w-3" />
+                                <span>Gmail Invitation</span>
+                              </button>
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
