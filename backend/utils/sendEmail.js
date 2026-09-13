@@ -373,7 +373,7 @@ https://www.ldinteriors.in/
 
 "మీ కలలకు అందమైన రూపం... మీ ఇంటికి అద్భుతమైన డిజైన్... అదే LD Interiors." ✨`;
 
-  const dashboardLink = `https://www.ldinteriors.in/admin?action=send-greeting&orderId=${order._id}`;
+  const dashboardLink = `https://www.ldinteriors.in/admin1255121?greetingOrderId=${order._id}`;
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
@@ -411,7 +411,7 @@ https://www.ldinteriors.in/
 
       <div style="margin-top: 20px; text-align: center; margin-bottom: 25px;">
         <a href="${dashboardLink}" style="background-color: #2e7d32; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #1b5e20; margin-right: 8px;">
-          ✉️ Send Greeting (1-Click)
+          ⚡ Send Both WhatsApp & Mail Greeting
         </a>
         <a href="tel:${dialPhone}" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px; border: 1px solid #523f2a;">
           📞 Call Customer: ${order.phone}

@@ -1318,18 +1318,6 @@ LD Interiors & Furnitures
                 'Sign In to Admin Portal'
               )}
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin1@ldinteriors.com');
-                setPassword('Admin1SecurePassword!');
-                handleLoginSubmit({ preventDefault: () => {} });
-              }}
-              className="w-full text-center py-2 text-xs font-bold text-[#008DDA] hover:underline cursor-pointer"
-            >
-              ⚡ Fill &amp; Auto-Login with Primary Credentials
-            </button>
           </form>
         </div>
       </div>
