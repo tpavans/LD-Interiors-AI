@@ -308,12 +308,10 @@ Address: ${orderAddress.trim()}
 Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
 Link: ${mainProductUrl}`;
 
-      const waCustUrl = `https://wa.me/${targetCustPhone}?text=${encodeURIComponent(customerWelcomeMsg)}`;
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Open owner WhatsApp in background/tab and redirect main window to Customer WhatsApp greeting
-      window.open(waUrlNagaraju, '_blank');
-      window.location.href = waCustUrl;
+      // Redirect directly to Manager Nagaraju WhatsApp (+91 62816 53998)
+      window.location.href = waUrlNagaraju;
     } catch (err) {
       console.error('Error saving order record to database:', err);
       alert('Failed to place order. Please check that you entered valid details.');
