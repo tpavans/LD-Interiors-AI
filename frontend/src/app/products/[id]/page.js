@@ -275,25 +275,45 @@ ${orderNotes.trim() || 'No custom notes.'}`;
       const productIdStr = product._id ? product._id.toString() : (createdOrder.productId || 'N/A');
       const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
 
-      const baseMessageBody = `*Product Details:*
-- Product ID: #${productIdStr}
-- Name: ${product.title}
-- Category: ${product.category}
-- Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-- Main Product Link: ${mainProductUrl}
-${orderImage ? `- Reference Image URL: ${orderImage}\n` : ''}
-*Customer Details:*
-- Name: ${orderName.trim()}
-- Phone: ${orderPhone.trim()}
-- Gmail: ${orderEmail.trim()}
-- Delivery Address: ${orderAddress.trim()}
-${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
+      const cleanCustPhone = orderPhone.trim().replace(/\D/g, '');
+      const targetCustPhone = cleanCustPhone.startsWith('91') && cleanCustPhone.length === 12 ? cleanCustPhone : `91${cleanCustPhone.slice(-10)}`;
 
-      const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
+      const customerWelcomeMsg = `🏠 Welcome to LD Interiors!
+
+Hello Mr./Ms. ${orderName.trim()}, 👋
+
+🎉 Your order for "${product.title}" has been received successfully!
+
+📦 Order Details:
+🆔 Product ID: #${productIdStr}
+🪑 Product: ${product.title}
+📂 Category: ${product.category || 'Teakwood Design'}
+💰 Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+🌐 Product Link: ${mainProductUrl}
+
+🌐 Track your order live anytime:
+https://www.ldinteriors.in/orders
+
+Thank you for choosing LD Interiors. We look forward to transforming your space into reality. ❤️
+
+📞 +91 93463 25291 / +91 62816 53998
+🌐 https://www.ldinteriors.in/`;
+
+      const msgNagaraju = `Hello Nagaraju Garu! New order placed on website:
+
+Product: ${product.title} (ID: #${productIdStr})
+Customer: ${orderName.trim()} (${orderPhone.trim()})
+Email: ${orderEmail.trim()}
+Address: ${orderAddress.trim()}
+Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+Link: ${mainProductUrl}`;
+
+      const waCustUrl = `https://wa.me/${targetCustPhone}?text=${encodeURIComponent(customerWelcomeMsg)}`;
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect the current tab to WhatsApp directly to bypass mobile popup blockers
-      window.location.href = waUrlNagaraju;
+      // Open owner WhatsApp in background/tab and redirect main window to Customer WhatsApp greeting
+      window.open(waUrlNagaraju, '_blank');
+      window.location.href = waCustUrl;
     } catch (err) {
       console.error('Error saving order record to database:', err);
       alert('Failed to place order. Please check that you entered valid details.');

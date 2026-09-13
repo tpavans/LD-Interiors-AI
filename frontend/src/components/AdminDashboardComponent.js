@@ -443,17 +443,45 @@ export default function AdminDashboardComponent() {
     }
   };
 
-  // 2b. Fetch all orders
+  // 2b. Fetch all orders (Combines API orders with local storage backup so orders never disappear)
   const fetchOrders = async () => {
     setOrdersLoading(true);
+
+    let localBackup = [];
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ld_user_orders');
+        if (stored) localBackup = JSON.parse(stored);
+      } catch (e) {
+        console.warn('Error reading local orders backup:', e);
+      }
+    }
+
+    let remoteOrders = [];
     try {
       const response = await api.get('/orders');
-      setOrders(response.data);
+      if (Array.isArray(response.data)) {
+        remoteOrders = response.data;
+      }
     } catch (err) {
-      console.error('Error fetching orders:', err);
-    } finally {
-      setOrdersLoading(false);
+      console.error('Error fetching orders from API:', err);
     }
+
+    // Merge remote orders and local backup (remove duplicate IDs)
+    const combinedOrders = [...remoteOrders];
+    localBackup.forEach(localOrd => {
+      if (localOrd && localOrd._id && !combinedOrders.some(r => r._id === localOrd._id)) {
+        combinedOrders.push(localOrd);
+      }
+    });
+
+    setOrders(combinedOrders);
+    if (typeof window !== 'undefined' && combinedOrders.length > 0) {
+      try {
+        localStorage.setItem('ld_user_orders', JSON.stringify(combinedOrders));
+      } catch (e) {}
+    }
+    setOrdersLoading(false);
   };
 
   // 2c. Fetch Categories
