@@ -48,7 +48,7 @@ Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
 📂 Category: ${o.category || 'Furniture Design'}
 💰 Price: ${o.price && o.price > 0 ? `₹${o.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
 🌐 Main Product Link: ${mainProductUrl}
-${o.imageUrl ? `🖼️ Reference Image URL: ${resolvedImageUrl}\n` : ''}📅 Order Date: ${orderDate}
+${o.imageUrl ? `🖼️ Official Design Image URL: ${resolvedImageUrl}\n` : ''}${o.referenceImageUrl ? `📸 Customer Reference Upload Image URL: ${o.referenceImageUrl}\n` : ''}📅 Order Date: ${orderDate}
 ⏰ Order Time: ${orderTime}
 
 Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
@@ -2403,15 +2403,36 @@ LD Interiors & Furnitures
                     {orders.map((o) => (
                       <tr key={o._id} className="hover:bg-wood-beige/10 transition-colors">
                         <td className="py-4 px-6">
-                          {o.imageUrl ? (
-                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10">
-                              <img src={o.imageUrl} alt="" className="h-full w-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="h-12 w-12 rounded-lg bg-wood-beige/40 flex items-center justify-center text-wood-accent font-serif font-bold text-xs border border-wood-border/20 shadow-sm">
-                              LD
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {/* Main Product Design Image */}
+                            {o.imageUrl && (
+                              <div className="flex flex-col items-center">
+                                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-wood-border/30 bg-wood-beige/10 shadow-xs">
+                                  <img src={o.imageUrl} alt="Design" className="h-full w-full object-cover" />
+                                </div>
+                                <span className="text-[8px] font-extrabold text-slate-500 uppercase mt-0.5">Design</span>
+                              </div>
+                            )}
+
+                            {/* Customer Custom Reference Image */}
+                            {o.referenceImageUrl && (
+                              <div className="flex flex-col items-center">
+                                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border-2 border-amber-500 bg-amber-50 shadow-xs relative">
+                                  <img src={o.referenceImageUrl} alt="Customer Ref" className="h-full w-full object-cover" />
+                                  <span className="absolute bottom-0 inset-x-0 bg-amber-600 text-white text-[7px] font-black text-center uppercase tracking-tighter">
+                                    REF
+                                  </span>
+                                </div>
+                                <span className="text-[8px] font-black text-amber-600 uppercase mt-0.5">Custom Ref</span>
+                              </div>
+                            )}
+
+                            {!o.imageUrl && !o.referenceImageUrl && (
+                              <div className="h-12 w-12 rounded-lg bg-wood-beige/40 flex items-center justify-center text-wood-accent font-serif font-bold text-xs border border-wood-border/20 shadow-sm">
+                                LD
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4 px-6 font-bold text-wood-dark">
                           <div>

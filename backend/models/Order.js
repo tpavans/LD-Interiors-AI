@@ -50,6 +50,10 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  referenceImageUrl: {
+    type: String,
+    trim: true,
+  },
   status: {
     type: String,
     enum: ['Pending', 'Processing', 'In Progress', 'Completed', 'Cancelled'],

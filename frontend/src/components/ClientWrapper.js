@@ -409,14 +409,27 @@ How can I help you today?`;
     }
   }, [messages, isChatOpen, activeTab]);
 
-  // Pure HD Female Telugu Audio Stream Engine
+  // Pre-load Web Speech Synthesis voices for cross-device support (Android/iOS/Windows/Mac)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    }
+  }, []);
+
+  // Universal Cross-Platform Speech Synthesis Voice Engine
   const speakMessage = (text, isTelugu = true) => {
     if (typeof window === 'undefined') return;
 
     try {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+      if (!window.speechSynthesis) return;
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
 
       // Clean text for speech
       let cleanText = text
@@ -435,32 +448,32 @@ How can I help you today?`;
       }
       if (!cleanText) return;
 
-      const snippet = cleanText.slice(0, 160);
+      const snippet = cleanText.slice(0, 180);
+      const utterance = new SpeechSynthesisUtterance(snippet);
 
-      // Stream Pure Female Telugu Voice MP3
-      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=te&client=tw-ob&q=${encodeURIComponent(snippet)}`;
+      const voices = window.speechSynthesis.getVoices() || [];
       
-      let audioEl = document.getElementById('ld-telugu-speech-stream');
-      if (!audioEl) {
-        audioEl = document.createElement('audio');
-        audioEl.id = 'ld-telugu-speech-stream';
-        document.body.appendChild(audioEl);
+      // Select best voice: Telugu -> Hindi/Indian English -> Local system voice
+      let matchedVoice = voices.find(v => v.lang === 'te-IN' || v.lang?.startsWith('te'));
+      if (!matchedVoice && isTelugu) {
+        matchedVoice = voices.find(v => v.lang === 'hi-IN' || v.lang === 'en-IN' || v.name?.includes('India'));
+      }
+      if (!matchedVoice) {
+        matchedVoice = voices.find(v => v.lang?.startsWith('en'));
       }
 
-      audioEl.src = ttsUrl;
-      const playPromise = audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          if (window.speechSynthesis) {
-            window.speechSynthesis.resume();
-            const utterance = new SpeechSynthesisUtterance(snippet);
-            utterance.lang = 'te-IN';
-            utterance.pitch = 1.15;
-            utterance.rate = 0.92;
-            window.speechSynthesis.speak(utterance);
-          }
-        });
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+        utterance.lang = matchedVoice.lang;
+      } else {
+        utterance.lang = isTelugu ? 'te-IN' : 'en-IN';
       }
+
+      utterance.pitch = 1.1;
+      utterance.rate = 0.95;
+      utterance.volume = 1.0;
+
+      window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.warn('Speech engine safe catch:', err);
     }

@@ -37,13 +37,14 @@ const createOrder = async (req, res) => {
     // Always prioritize the official ordered product image URL
     let finalImageUrl = imageUrl ? imageUrl.trim() : undefined;
     let finalImagePublicId = undefined;
+    let referenceImageUrl = undefined;
 
     // Handle reference image file upload
     if (req.file) {
       try {
         console.log('Uploading customer reference image to Cloudinary:', req.file.path);
         const uploadResult = await uploadToCloudinary(req.file.path, 'ld_orders');
-        // Only use uploaded file as fallback if product imageUrl is missing
+        referenceImageUrl = uploadResult.url;
         if (!finalImageUrl) {
           finalImageUrl = uploadResult.url;
           finalImagePublicId = uploadResult.publicId;
@@ -59,6 +60,7 @@ const createOrder = async (req, res) => {
       product: product.trim(),
       imageUrl: finalImageUrl,
       imagePublicId: finalImagePublicId,
+      referenceImageUrl: referenceImageUrl,
       email: email.trim(),
       address: address.trim(),
       customSize: customSize ? customSize.trim() : undefined,

@@ -299,14 +299,17 @@ Thank you for choosing LD Interiors. We look forward to transforming your space 
 📞 +91 93463 25291 / +91 62816 53998
 🌐 https://www.ldinteriors.in/`;
 
+      const refImageUrl = createdOrder.referenceImageUrl || (referenceImageFile ? 'Uploaded reference image file attached' : null);
+
       const msgNagaraju = `Hello Nagaraju Garu! New order placed on website:
 
-Product: ${product.title} (ID: #${productIdStr})
-Customer: ${orderName.trim()} (${orderPhone.trim()})
-Email: ${orderEmail.trim()}
-Address: ${orderAddress.trim()}
-Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
-Link: ${mainProductUrl}`;
+📦 Product: ${product.title} (ID: #${productIdStr})
+👤 Customer: ${orderName.trim()} (${orderPhone.trim()})
+📧 Email: ${orderEmail.trim()}
+📍 Address: ${orderAddress.trim()}
+💰 Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+🌐 Product Link: ${mainProductUrl}
+${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}${refImageUrl ? `📸 Customer Reference Upload Image: ${refImageUrl}\n` : ''}`;
 
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
