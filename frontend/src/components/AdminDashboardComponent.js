@@ -682,7 +682,7 @@ export default function AdminDashboardComponent() {
         setLoginLoading(false);
         return;
       }
-      setLoginError('Invalid Email or Password! Please enter valid admin password (e.g., Admin1SecurePassword! or PIN: 1255121)');
+      setLoginError('Invalid Email or Password! Please enter valid admin credentials.');
     } finally {
       setLoginLoading(false);
     }
@@ -1296,7 +1296,7 @@ LD Interiors & Furnitures
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin1@ldinteriors.com"
+                placeholder="Enter your admin email"
                 className="w-full rounded-xl border border-wood-border/60 px-4 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
               />
             </div>
@@ -1311,7 +1311,7 @@ LD Interiors & Furnitures
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Admin1SecurePassword!"
+                  placeholder="••••••••••••"
                   className="w-full rounded-xl border border-wood-border/60 pl-4 pr-10 py-3 text-sm focus:border-wood-accent focus:ring-2 focus:ring-wood-accent/15 focus:outline-none transition-all"
                 />
                 <button

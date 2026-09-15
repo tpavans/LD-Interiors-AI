@@ -186,23 +186,69 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
 };
 
 /**
+ * Helper to validate email recipient formats and block dummy placeholder domains
+ * (e.g. 9346355291@ldinteriors.com, phone@ldinteriors.com) to prevent Gmail Mail Delivery Subsystem bounce-backs.
+ */
+const isValidEmailRecipient = (emailStr) => {
+  if (!emailStr || typeof emailStr !== 'string') return false;
+  const trimmed = emailStr.trim().toLowerCase();
+  
+  // Basic standard email format regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmed)) return false;
+
+  // Filter out dummy/unroutable domains that trigger mailer-daemon bounce-back loops
+  if (trimmed.endsWith('@ldinteriors.com') || trimmed.endsWith('@ldinteriors.in')) {
+    // Only allow explicit official mailboxes (e.g. pavan@ldinteriors.in or info@ldinteriors.in)
+    // Reject dummy phone number emails like 9346355291@ldinteriors.com or placeholder emails
+    if (/^\d+@/.test(trimmed) || trimmed.includes('phone') || trimmed.includes('dummy') || trimmed.includes('test') || trimmed.includes('placeholder')) {
+      return false;
+    }
+  }
+
+  if (trimmed.endsWith('@example.com') || trimmed.endsWith('@test.com') || trimmed.endsWith('@localhost')) {
+    return false;
+  }
+
+  return true;
+};
+
+/**
  * Common self-healing fallback helper that tries Resend, Brevo, and SMTP.
  */
 const sendGenericEmail = async ({ to, subject, html, text, orderId, productName }) => {
   const orderIdStr = orderId ? orderId.toString() : 'test_mock_id';
   const pName = productName || 'Furniture Design';
   
+  // Validate recipient list and skip dummy / non-routable addresses to prevent bounce loops
+  const rawList = Array.isArray(to) ? to : [to];
+  const validTargets = rawList.filter(isValidEmailRecipient);
+
+  if (validTargets.length === 0) {
+    console.warn(`[sendEmail] No valid routable email recipients found in "${Array.isArray(to) ? to.join(', ') : to}". Skipping email delivery to prevent mailer-daemon bounce-backs.`);
+    await EmailLog.create({
+      orderId: orderIdStr,
+      product: pName,
+      recipient: Array.isArray(to) ? to.join(', ') : (to || 'none'),
+      status: 'skipped',
+      smtpUser: 'Skipped - Invalid/Dummy Recipient Domain',
+    }).catch(err => console.error('Failed to save EmailLog:', err));
+    return;
+  }
+
+  const finalTo = validTargets.length === 1 ? validTargets[0] : validTargets;
+
   let sent = false;
   let errors = [];
 
   // 1. Try Resend if configured
   if (process.env.RESEND_API_KEY) {
     try {
-      await sendViaResend({ to, subject, html, text, orderIdStr, pName });
+      await sendViaResend({ to: finalTo, subject, html, text, orderIdStr, pName });
       sent = true;
       return;
     } catch (err) {
-      console.warn(`Resend API failed for recipient ${to}. Error: ${err.message}. Attempting fallback...`);
+      console.warn(`Resend API failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}. Attempting fallback...`);
       errors.push(`Resend: ${err.message}`);
     }
   }
@@ -210,11 +256,11 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   // 2. Try Brevo if configured and not sent
   if (!sent && process.env.BREVO_API_KEY) {
     try {
-      await sendViaBrevo({ to, subject, html, text, orderIdStr, pName });
+      await sendViaBrevo({ to: finalTo, subject, html, text, orderIdStr, pName });
       sent = true;
       return;
     } catch (err) {
-      console.warn(`Brevo API failed for recipient ${to}. Error: ${err.message}. Attempting fallback...`);
+      console.warn(`Brevo API failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}. Attempting fallback...`);
       errors.push(`Brevo: ${err.message}`);
     }
   }
@@ -222,23 +268,23 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   // 3. Fallback to SMTP if not sent
   if (!sent) {
     try {
-      await sendViaSMTP({ to, subject, html, text, orderIdStr, pName });
+      await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
       sent = true;
       return;
     } catch (err) {
-      console.error(`SMTP fallback failed for recipient ${to}. Error: ${err.message}`);
+      console.error(`SMTP fallback failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}`);
       errors.push(`SMTP: ${err.message}`);
     }
   }
 
   // If all failed, log and reject
   if (!sent) {
-    const combinedError = `All email transports failed for recipient ${to}. Errors: [${errors.join(', ')}]`;
+    const combinedError = `All email transports failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Errors: [${errors.join(', ')}]`;
     console.error(combinedError);
     await EmailLog.create({
       orderId: orderIdStr,
       product: pName,
-      recipient: Array.isArray(to) ? to.join(', ') : to,
+      recipient: Array.isArray(finalTo) ? finalTo.join(', ') : finalTo,
       status: 'failed',
       error: combinedError,
       smtpUser: 'All Transports Failed',
