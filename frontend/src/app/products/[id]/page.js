@@ -8,6 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
 import ProductCard from '@/components/ProductCard';
+import CelebrationModal from '@/components/CelebrationModal';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function ProductDetailPage() {
   const [error, setError] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showARModal, setShowARModal] = useState(false);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
   const { language } = useLanguage();
   const t = translations[language];
   const isTelugu = language === 'TE';
@@ -313,21 +316,25 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}${refImageUrl ?
 
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect directly to Manager Nagaraju WhatsApp (+91 62816 53998)
-      window.location.href = waUrlNagaraju;
-    } catch (err) {
-      console.error('Error saving order record to database:', err);
-      alert('Failed to place order. Please check that you entered valid details.');
-    }
-    
-    setTimeout(() => {
+      // Trigger Celebration Modal with Confetti
+      setCelebrationData({
+        product: product.title,
+        image: orderImage,
+        _id: createdOrder._id,
+        waUrl: waUrlNagaraju,
+      });
+
       setShowOrderModal(false);
       setOrderSuccess(false);
       setOrderNotes('');
       setCustomSize('');
       setDesiredPrice('');
       setReferenceImageFile(null);
-    }, 2000);
+      setShowCelebrationModal(true);
+    } catch (err) {
+      console.error('Error saving order record to database:', err);
+      alert('Failed to place order. Please check that you entered valid details.');
+    }
   };
 
   if (loading) {
@@ -1001,6 +1008,13 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}${refImageUrl ?
           </div>
         </div>
       )}
+
+      {/* Celebration Confetti Modal */}
+      <CelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        orderData={celebrationData}
+      />
     </div>
   );
 }

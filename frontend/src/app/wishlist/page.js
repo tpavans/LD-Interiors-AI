@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
+import CelebrationModal from '@/components/CelebrationModal';
 
 export default function WishlistPage() {
   const router = useRouter();
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
   const [activePaymentProduct, setActivePaymentProduct] = useState(null);
   const [bookingName, setBookingName] = useState('');
   const [bookingPhone, setBookingPhone] = useState('');
@@ -98,12 +101,16 @@ export default function WishlistPage() {
       localStorage.setItem('ld_user_address', bookingAddress);
       window.dispatchEvent(new Event('storage'));
 
-      setOrderSuccessMsg(`✅ Order Booked Successfully! ID: LD-${res.data.order?._id?.substring(18).toUpperCase() || 'NEW'}`);
-      
-      setTimeout(() => {
-        setActivePaymentProduct(null);
-        setIsSubmittingOrder(false);
-      }, 2500);
+      setCelebrationData({
+        product: activePaymentProduct.name || activePaymentProduct.title,
+        image: activePaymentProduct.imageUrl,
+        _id: res.data.order?._id,
+        waUrl: `https://wa.me/916281653998?text=${encodeURIComponent(`Hello Nagaraju Garu! Wishlist order placed: ${activePaymentProduct.name || activePaymentProduct.title}`)}`,
+      });
+
+      setActivePaymentProduct(null);
+      setIsSubmittingOrder(false);
+      setShowCelebrationModal(true);
     } catch (err) {
       console.error('Order creation failed:', err);
       alert(err.response?.data?.message || 'Failed to place order. Please try again.');
@@ -302,6 +309,13 @@ export default function WishlistPage() {
           </div>
         </div>
       )}
+
+      {/* Celebration Confetti Modal */}
+      <CelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        orderData={celebrationData}
+      />
     </div>
   );
 }

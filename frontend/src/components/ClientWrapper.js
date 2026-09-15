@@ -2,8 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Sparkles, MessageSquare, X, Send, Phone, User, Check, Hammer, HelpCircle, ShoppingBag, MessageCircle, MapPin, Loader2, Camera, Heart, Maximize2, Minimize2, Volume2 } from 'lucide-react';
 import api from '@/utils/api';
+import CelebrationModal from './CelebrationModal';
 
 export default function ClientWrapper() {
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
+
   // Visitor Registration Modal State
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [userName, setUserName] = useState('');
@@ -1614,8 +1618,17 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect the current tab to WhatsApp directly to bypass mobile popup blockers
-      window.location.href = waUrlNagaraju;
+      // Trigger Celebration Modal with Confetti
+      setCelebrationData({
+        product: selectedProduct,
+        image: orderImage,
+        _id: createdOrder._id,
+        waUrl: waUrlNagaraju,
+      });
+
+      setShowOrderModal(false);
+      setOrderSuccess(false);
+      setShowCelebrationModal(true);
 
       // Pre-fill tracking input with the order phone so they can track it immediately
       setTrackPhone(orderPhone.trim());
@@ -2467,6 +2480,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           )}
         </div>
       )}
+
+      {/* HackerRank Style Celebration Modal with Confetti */}
+      <CelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        orderData={celebrationData}
+      />
     </>
   );
 }

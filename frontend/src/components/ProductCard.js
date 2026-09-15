@@ -7,11 +7,15 @@ import api from '../utils/api';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
+import CelebrationModal from './CelebrationModal';
+
 export default function ProductCard({ product }) {
   const router = useRouter();
   const { _id, title, category, image, price, rating, createdAt } = product;
   const isNew = createdAt ? (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24) <= 7 : false;
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -193,21 +197,25 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
       const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
       const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
-      // Redirect the current tab to WhatsApp directly to bypass mobile popup blockers
-      window.location.href = waUrlNagaraju;
-    } catch (err) {
-      console.error('Error saving order record to database:', err);
-      alert('Failed to place order. Please check that you entered valid details.');
-    }
-    
-    setTimeout(() => {
+      // Trigger HackerRank-style Celebration Modal with Confetti
+      setCelebrationData({
+        product: title,
+        image: orderImage,
+        _id: createdOrder._id,
+        waUrl: waUrlNagaraju,
+      });
+
       setShowOrderModal(false);
       setOrderSuccess(false);
       setOrderNotes('');
       setCustomSize('');
       setDesiredPrice('');
       setReferenceImageFile(null);
-    }, 2000);
+      setShowCelebrationModal(true);
+    } catch (err) {
+      console.error('Error saving order record to database:', err);
+      alert('Failed to place order. Please check that you entered valid details.');
+    }
   };
 
   return (
@@ -609,6 +617,13 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
           </div>
         </div>
       )}
+
+      {/* HackerRank Style Celebration Modal with Confetti */}
+      <CelebrationModal
+        isOpen={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        orderData={celebrationData}
+      />
     </>
   );
 }
