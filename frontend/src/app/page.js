@@ -164,6 +164,7 @@ const renderMaterialBrandLogo = (name) => {
 import Woodgrain3DHeroCanvas from '@/components/Woodgrain3DHeroCanvas';
 import ScrollingProductsMarquee from '@/components/ScrollingProductsMarquee';
 import FestiveGiftAdsSection from '@/components/FestiveGiftAdsSection';
+import LuxuryLookbookGrid from '@/components/LuxuryLookbookGrid';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -235,6 +236,11 @@ export default function Home() {
       {/* Festive Gift Celebration & Order Rewards Ads Section */}
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <FestiveGiftAdsSection />
+      </div>
+
+      {/* Editorial Luxury Furniture Lookbook Grid (Terracotta & Teal Catalog Showcase) */}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <LuxuryLookbookGrid products={products} />
       </div>
 
       {/* Trust & Metric Highlights Section */}
