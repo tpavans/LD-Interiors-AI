@@ -354,3 +354,28 @@ body {
 .animate-marquee:hover {
   animation-play-state: paused !important;
 }
+
+/* Floating Balloon Animations for Festive Celebration Banner */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-180px) rotate(10deg);
+  }
+  100% {
+    transform: translateY(-360px) rotate(-6deg);
+  }
+}
+
+.animate-float-slow {
+  animation: float-up 14s ease-in-out infinite alternate;
+}
+
+.animate-float-medium {
+  animation: float-up 10s ease-in-out infinite alternate;
+}
+
+.animate-float-fast {
+  animation: float-up 7s ease-in-out infinite alternate;
+}

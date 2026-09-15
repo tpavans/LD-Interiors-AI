@@ -163,6 +163,7 @@ const renderMaterialBrandLogo = (name) => {
 
 import Woodgrain3DHeroCanvas from '@/components/Woodgrain3DHeroCanvas';
 import ScrollingProductsMarquee from '@/components/ScrollingProductsMarquee';
+import FestiveGiftAdsSection from '@/components/FestiveGiftAdsSection';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -230,6 +231,11 @@ export default function Home() {
 
       {/* Auto-Scrolling Infinite Product Cards Marquee */}
       <ScrollingProductsMarquee />
+
+      {/* Festive Gift Celebration & Order Rewards Ads Section */}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <FestiveGiftAdsSection />
+      </div>
 
       {/* Trust & Metric Highlights Section */}
       <section className="mx-auto w-full max-w-7xl px-6 sm:px-8 -mt-16 sm:-mt-24 relative z-10">
