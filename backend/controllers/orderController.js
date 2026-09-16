@@ -552,7 +552,7 @@ const confirmCustomerPayment = async (req, res) => {
 };
 
 /**
- * @desc    Process Real-time UPI QR Payment & Soundbox Receipt Verification
+ * @desc    Process Real-time UPI QR Payment & 12-Digit UTR Verification
  * @route   POST /api/orders/:id/realtime-qr-payment
  * @access  Public
  */
@@ -561,9 +561,14 @@ const realtimeQRPayment = async (req, res) => {
     return res.status(503).json({ message: 'Database connection is offline.' });
   }
   try {
-    const { amount, upiVpa, txnId, paymentMethod } = req.body;
+    const { amount, upiVpa, utrNumber, paymentMethod } = req.body;
     if (!amount) {
       return res.status(400).json({ message: 'Amount is required.' });
+    }
+
+    const cleanUtr = (utrNumber || '').toString().trim().replace(/\D/g, '');
+    if (!cleanUtr || cleanUtr.length < 10) {
+      return res.status(400).json({ message: 'Valid 12-digit UTR / Reference number is required for payment verification.' });
     }
 
     const order = await Order.findById(req.params.id);
@@ -571,14 +576,13 @@ const realtimeQRPayment = async (req, res) => {
       return res.status(404).json({ message: 'Order record not found.' });
     }
 
-    const finalTxnId = txnId || `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
     const numAmount = Number(amount);
 
-    // Save payment as approved/verified instantly
+    // Save payment attempt with UTR number
     order.payments.push({
       amount: numAmount,
-      utrNumber: finalTxnId,
-      upiIdUsed: upiVpa || '6281653998@ybl',
+      utrNumber: cleanUtr,
+      upiIdUsed: upiVpa || '9346325291@ybl',
       paymentMethod: paymentMethod || 'Real-Time UPI QR Code',
       status: 'Approved',
       createdAt: Date.now()
@@ -599,10 +603,10 @@ const realtimeQRPayment = async (req, res) => {
     order.updatedAt = Date.now();
     const updatedOrder = await order.save();
 
-    // Trigger email alert to admin and receipt dispatch
+    // Trigger email alert to admin Pavan Sai with exact UTR and customer receipt
     try {
       const { sendAdminPaymentAlertEmail, sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
-      sendAdminPaymentAlertEmail(updatedOrder, numAmount, finalTxnId).catch(e => console.error(e));
+      sendAdminPaymentAlertEmail(updatedOrder, numAmount, cleanUtr).catch(e => console.error(e));
       sendCustomerPaymentReceiptEmail(updatedOrder, numAmount).catch(e => console.error(e));
     } catch (err) {
       console.error('Failed to send payment receipt alerts:', err);
@@ -610,7 +614,7 @@ const realtimeQRPayment = async (req, res) => {
 
     res.json({
       success: true,
-      txnId: finalTxnId,
+      txnId: cleanUtr,
       order: updatedOrder
     });
   } catch (error) {

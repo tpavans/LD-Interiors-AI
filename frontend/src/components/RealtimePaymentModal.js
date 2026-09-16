@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, X, Copy, Check, Clock, QrCode, Smartphone, CreditCard, 
-  Sparkles, Download, Printer, ExternalLink, RefreshCw, ShieldCheck, ArrowRight, MessageSquare, FileText
+  Sparkles, Download, Printer, ExternalLink, RefreshCw, ShieldCheck, ArrowRight, MessageSquare, FileText, AlertCircle
 } from 'lucide-react';
 import api from '@/utils/api';
 
@@ -16,15 +16,28 @@ export default function RealtimePaymentModal({
   const [step, setStep] = useState('qr'); // 'qr' -> 'success' -> 'receipt'
   const [copiedLink, setCopiedLink] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minute countdown
-  const [isSimulating, setIsSimulating] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [utrInput, setUtrInput] = useState('');
+  const [utrError, setUtrError] = useState('');
   const [txnDetails, setTxnDetails] = useState(null);
 
-  const merchantVpa = '6281653998@ybl';
+  const merchantVpa = '9346325291@ybl';
   const merchantName = 'LD Interiors & Furnitures';
 
-  // Unique transaction reference ID
+  // Unique internal transaction reference ID fallback
   const txnIdRef = useRef(`TXN-${Math.floor(100000 + Math.random() * 900000)}`);
   const txnId = txnIdRef.current;
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setStep('qr');
+      setUtrInput('');
+      setUtrError('');
+      setIsVerifying(false);
+      setTimeLeft(300);
+    }
+  }, [isOpen]);
 
   // Countdown timer for 5 minutes
   useEffect(() => {
@@ -52,10 +65,10 @@ export default function RealtimePaymentModal({
   if (!isOpen || !orderData) return null;
 
   const totalAmount = payableAmount || orderData?.paidAmount || orderData?.totalPrice || 5000;
-  const productIdDisplay = orderData?._id ? `#${orderData._id.toString().slice(-6).toUpperCase()}` : '#LD-NEW';
+  const cleanOrderCode = orderData?._id ? orderData._id.toString().slice(-6).toUpperCase() : 'LDNEW';
   
-  // UPI Deep Link & QR Code Data
-  const upiUrl = `upi://pay?pa=${merchantVpa}&pn=${encodeURIComponent(merchantName)}&am=${totalAmount}&tn=Order_${productIdDisplay}_${txnId}&cu=INR`;
+  // Clean UPI Deep Link & QR Code Data (No # or special chars in query params to prevent scanner errors)
+  const upiUrl = `upi://pay?pa=${merchantVpa}&pn=${encodeURIComponent(merchantName)}&am=${totalAmount}&tn=LD_${cleanOrderCode}_${txnId}&cu=INR`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
 
   const handleCopyUpi = () => {
@@ -64,30 +77,39 @@ export default function RealtimePaymentModal({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Real-time Payment Scan / Simulation Execution (Image 1 -> Image 2 -> Image 3)
-  const handleSimulatePayment = async () => {
-    setIsSimulating(true);
+  const handleUtrChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
+    setUtrInput(digitsOnly);
+    if (utrError) setUtrError('');
+  };
+
+  // Submit UTR and Verify Payment via Backend
+  const handleConfirmPayment = async () => {
+    if (!utrInput || utrInput.length < 12) {
+      setUtrError('⚠️ Please enter full 12-digit UTR / Reference number from GPay, PhonePe, or Paytm.');
+      return;
+    }
+
+    setIsVerifying(true);
+    setUtrError('');
 
     try {
-      // Simulate soundbox receipt delay
-      await new Promise(r => setTimeout(r, 800));
+      let responseData = null;
 
-      // Post realtime payment to backend DB to update order status
-      try {
-        if (orderData._id) {
-          await api.post(`/orders/${orderData._id}/realtime-qr-payment`, {
-            amount: totalAmount,
-            upiVpa: merchantVpa,
-            txnId: txnId,
-            paymentMethod: 'Real-Time UPI QR Code'
-          });
-        }
-      } catch (err) {
-        console.warn('Backend payment status update handled safely:', err.message);
+      // Post realtime payment with UTR to backend DB to update order status & alert Pavan Sai
+      if (orderData._id) {
+        const res = await api.post(`/orders/${orderData._id}/realtime-qr-payment`, {
+          amount: totalAmount,
+          upiVpa: merchantVpa,
+          utrNumber: utrInput,
+          paymentMethod: 'Real-Time UPI QR Code'
+        });
+        responseData = res.data;
       }
 
       const successTxn = {
-        txnId: txnId,
+        txnId: responseData?.txnId || utrInput,
+        utrNumber: utrInput,
         amount: totalAmount,
         merchantVpa: merchantVpa,
         merchantName: merchantName,
@@ -106,20 +128,21 @@ export default function RealtimePaymentModal({
 
       setTxnDetails(successTxn);
       setStep('success');
-      setIsSimulating(false);
+      setIsVerifying(false);
 
       if (onPaymentSuccess) {
         onPaymentSuccess(successTxn);
       }
     } catch (err) {
       console.error('Payment verification failed:', err);
-      setIsSimulating(false);
+      setUtrError(err.response?.data?.message || 'Payment submission failed. Please verify your 12-digit UTR number and try again.');
+      setIsVerifying(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 transform transition-all animate-scaleUp">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 transform transition-all my-8">
         
         {/* Close Button */}
         <button
@@ -131,7 +154,7 @@ export default function RealtimePaymentModal({
         </button>
 
         {/* =========================================================================
-            STEP 1: REAL-TIME UPI QR CODE PAYMENT SCREEN (Image 1 Style)
+            STEP 1: REAL-TIME UPI QR CODE PAYMENT & MANDATORY UTR INPUT SCREEN
             ========================================================================= */}
         {step === 'qr' && (
           <div className="p-6 sm:p-8 text-center font-sans">
@@ -143,15 +166,15 @@ export default function RealtimePaymentModal({
                 Real-Time Merchant Soundbox Gateway
               </span>
               <h2 className="text-xl font-bold font-serif text-slate-900 mt-2">
-                Scan QR Code & Pay
+                Scan QR Code & Enter 12-Digit UTR
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                To: <strong className="text-slate-900">{merchantName}</strong> ({merchantVpa})
+                Payee: <strong className="text-slate-900">{merchantName}</strong> ({merchantVpa})
               </p>
             </div>
 
             {/* Payable Amount Highlight */}
-            <div className="bg-gradient-to-r from-slate-900 to-wood-dark text-white rounded-2xl p-3.5 shadow-md mb-5 flex items-center justify-between border border-amber-500/30">
+            <div className="bg-gradient-to-r from-slate-900 to-wood-dark text-white rounded-2xl p-3.5 shadow-md mb-4 flex items-center justify-between border border-amber-500/30">
               <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Payable Amount:</span>
               <span className="font-mono text-2xl font-black text-amber-300">
                 ₹{totalAmount.toLocaleString('en-IN')}
@@ -159,66 +182,95 @@ export default function RealtimePaymentModal({
             </div>
 
             {/* QR Card Container */}
-            <div className="relative bg-slate-950 p-5 rounded-2xl border-2 border-slate-900 shadow-xl mx-auto max-w-[260px] text-center">
+            <div className="relative bg-slate-950 p-4 rounded-2xl border-2 border-slate-900 shadow-xl mx-auto max-w-[250px] text-center">
               
               {/* Dynamic QR Code */}
               <div className="relative bg-white p-3 rounded-xl border border-slate-200 inline-block shadow-inner">
                 <img
                   src={qrCodeUrl}
                   alt="UPI QR Code"
-                  className="w-48 h-48 object-contain rounded-md"
+                  className="w-44 h-44 object-contain rounded-md"
                 />
               </div>
 
-              <p className="text-[10px] text-slate-400 font-mono mt-3 uppercase tracking-wider flex items-center justify-center gap-1">
+              <p className="text-[10px] text-slate-400 font-mono mt-2.5 uppercase tracking-wider flex items-center justify-center gap-1">
                 <QrCode className="w-3.5 h-3.5 text-amber-400" />
-                Scan with PhonePe, GPay, Paytm or camera
+                Scan with GPay, PhonePe, Paytm
               </p>
             </div>
 
             {/* Timer & Polling Status */}
-            <div className="mt-4 flex items-center justify-between px-2 text-xs font-medium">
+            <div className="mt-3 flex items-center justify-between px-2 text-xs font-medium">
               <div className="flex items-center gap-1.5 text-slate-600">
                 <Clock className="w-4 h-4 text-amber-600 animate-spin" />
                 <span>Expires in: <strong className="font-mono text-slate-900 font-bold">{formatTime(timeLeft)}</strong></span>
               </div>
-              <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Live Soundbox Active</span>
-              </div>
+              <button
+                onClick={handleCopyUpi}
+                className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 transition-all cursor-pointer"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedLink ? 'Copied VPA!' : merchantVpa}</span>
+              </button>
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-5 space-y-2.5">
-              <div className="grid grid-cols-2 gap-2">
-                {/* Copy UPI Link */}
-                <button
-                  onClick={handleCopyUpi}
-                  className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                >
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedLink ? 'Copied!' : 'Copy UPI VPA'}</span>
-                </button>
-
-                {/* Simulate Scan & Pay (Matching Image 1 button!) */}
-                <button
-                  onClick={handleSimulatePayment}
-                  disabled={isSimulating}
-                  className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{isSimulating ? 'Scanning...' : '⚡ Simulate Scan'}</span>
-                </button>
+            {/* MANDATORY 12-DIGIT UTR INPUT SECTION */}
+            <div className="mt-4 text-left bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase text-amber-900 tracking-wider flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-amber-700" />
+                  Enter 12-Digit UTR / Ref No. *
+                </label>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                  utrInput.length === 12 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+                }`}>
+                  {utrInput.length}/12 Digits
+                </span>
               </div>
 
-              {/* Main Green Proceed Button */}
+              <p className="text-[11px] text-amber-800/90 leading-tight">
+                After paying in GPay / PhonePe / Paytm, copy the 12-digit UTR/Ref number from your payment receipt or SMS and paste below:
+              </p>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={12}
+                value={utrInput}
+                onChange={handleUtrChange}
+                placeholder="e.g. 425619873412"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white font-mono text-base font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-inner tracking-widest text-center"
+              />
+
+              {utrError && (
+                <div className="flex items-start gap-1.5 text-red-600 text-xs font-semibold pt-1">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                  <span>{utrError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Main Green Submit Button */}
+            <div className="mt-4">
               <button
-                onClick={handleSimulatePayment}
-                disabled={isSimulating}
-                className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01] cursor-pointer"
+                onClick={handleConfirmPayment}
+                disabled={isVerifying || utrInput.length < 10}
+                className={`w-full py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 transition-all transform cursor-pointer ${
+                  utrInput.length === 12 && !isVerifying
+                    ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-emerald-600/30 hover:scale-[1.01]'
+                    : 'bg-slate-300 text-slate-600 cursor-not-allowed shadow-none'
+                }`}
               >
                 <ShieldCheck className="w-5 h-5 fill-current" />
-                <span>{isSimulating ? 'Verifying Soundbox Receipt...' : 'Proceed & Confirm Payment'}</span>
+                <span>
+                  {isVerifying 
+                    ? 'Verifying UTR Soundbox Receipt...' 
+                    : utrInput.length === 12 
+                      ? 'Confirm & Verify Payment' 
+                      : `Enter 12-Digit UTR (${utrInput.length}/12)`}
+                </span>
               </button>
             </div>
 
@@ -226,7 +278,7 @@ export default function RealtimePaymentModal({
         )}
 
         {/* =========================================================================
-            STEP 2: PAYMENT SUCCESSFUL TRANSITION SCREEN (Image 2 Style)
+            STEP 2: PAYMENT SUCCESSFUL TRANSITION SCREEN
             ========================================================================= */}
         {step === 'success' && (
           <div className="p-8 text-center font-sans animate-fadeIn">
@@ -246,15 +298,15 @@ export default function RealtimePaymentModal({
             </h2>
 
             <p className="text-xs text-slate-600 font-medium mt-2">
-              Sent to <strong className="text-slate-900">{merchantName}</strong>
+              Received by <strong className="text-slate-900">{merchantName}</strong>
             </p>
             <p className="text-[11px] font-mono text-slate-400 mt-0.5 select-all">
-              VPA: {merchantVpa}
+              Merchant VPA: {merchantVpa}
             </p>
 
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 my-5 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Transaction Reference</span>
-              <span className="font-mono font-bold text-slate-800 text-sm">Ref #{txnDetails?.txnId}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Verified UTR Reference</span>
+              <span className="font-mono font-bold text-slate-800 text-base tracking-wider">Ref #{txnDetails?.utrNumber || txnDetails?.txnId}</span>
             </div>
 
             {/* Navigation Buttons */}
@@ -279,7 +331,7 @@ export default function RealtimePaymentModal({
         )}
 
         {/* =========================================================================
-            STEP 3: OFFICIAL ITEMIZED PAYMENT RECEIPT VIEW (Image 3 Style)
+            STEP 3: OFFICIAL ITEMIZED PAYMENT RECEIPT VIEW
             ========================================================================= */}
         {step === 'receipt' && (
           <div className="p-6 sm:p-8 text-left font-sans animate-fadeIn">
@@ -292,7 +344,7 @@ export default function RealtimePaymentModal({
               </div>
               <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 flex items-center gap-1">
                 <Check className="w-3.5 h-3.5" />
-                PAID
+                VERIFIED & PAID
               </span>
             </div>
 
@@ -303,15 +355,15 @@ export default function RealtimePaymentModal({
                 ₹{totalAmount.toLocaleString('en-IN')}
               </div>
               <span className="text-[10px] font-semibold text-emerald-800 mt-1 inline-block">
-                SUCCESSFUL • VERIFIED BY UPI SOUNDBOX
+                SUCCESSFUL • VERIFIED BY 12-DIGIT UTR SOUNDBOX
               </span>
             </div>
 
-            {/* Receipt Breakdown Table (Image 3 Style) */}
+            {/* Receipt Breakdown Table */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                <span className="text-slate-500 font-medium">Transaction ID:</span>
-                <span className="font-mono font-bold text-slate-900 select-all">#{txnDetails?.txnId || txnId}</span>
+                <span className="text-slate-500 font-medium">12-Digit UTR Ref:</span>
+                <span className="font-mono font-bold text-slate-900 select-all">{txnDetails?.utrNumber || txnDetails?.txnId || txnId}</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <span className="text-slate-500 font-medium">Date & Time:</span>
