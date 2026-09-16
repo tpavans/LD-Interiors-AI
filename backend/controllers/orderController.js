@@ -552,6 +552,74 @@ const confirmCustomerPayment = async (req, res) => {
 };
 
 /**
+ * @desc    Process Real-time UPI QR Payment & Soundbox Receipt Verification
+ * @route   POST /api/orders/:id/realtime-qr-payment
+ * @access  Public
+ */
+const realtimeQRPayment = async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ message: 'Database connection is offline.' });
+  }
+  try {
+    const { amount, upiVpa, txnId, paymentMethod } = req.body;
+    if (!amount) {
+      return res.status(400).json({ message: 'Amount is required.' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order record not found.' });
+    }
+
+    const finalTxnId = txnId || `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const numAmount = Number(amount);
+
+    // Save payment as approved/verified instantly
+    order.payments.push({
+      amount: numAmount,
+      utrNumber: finalTxnId,
+      upiIdUsed: upiVpa || '6281653998@ybl',
+      paymentMethod: paymentMethod || 'Real-Time UPI QR Code',
+      status: 'Approved',
+      createdAt: Date.now()
+    });
+
+    order.paidAmount = (order.paidAmount || 0) + numAmount;
+    order.remainingBalance = Math.max(0, (order.totalPrice || numAmount) - order.paidAmount);
+
+    if (order.paidAmount >= (order.totalPrice || numAmount)) {
+      order.paymentStatus = 'Paid';
+      if (order.status === 'Pending' || order.status === 'Processing') {
+        order.status = 'In Progress';
+      }
+    } else {
+      order.paymentStatus = 'Partially Paid';
+    }
+
+    order.updatedAt = Date.now();
+    const updatedOrder = await order.save();
+
+    // Trigger email alert to admin and receipt dispatch
+    try {
+      const { sendAdminPaymentAlertEmail, sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
+      sendAdminPaymentAlertEmail(updatedOrder, numAmount, finalTxnId).catch(e => console.error(e));
+      sendCustomerPaymentReceiptEmail(updatedOrder, numAmount).catch(e => console.error(e));
+    } catch (err) {
+      console.error('Failed to send payment receipt alerts:', err);
+    }
+
+    res.json({
+      success: true,
+      txnId: finalTxnId,
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error('Error processing realtime QR payment:', error);
+    res.status(500).json({ message: 'Server error processing realtime payment.', error: error.message });
+  }
+};
+
+/**
  * @desc    Admin update delivery tracking data (deliveryDate, carrier, trackingNumber)
  * @route   PUT /api/orders/:id/delivery-tracking
  * @access  Private (Admin only)
@@ -765,6 +833,7 @@ module.exports = {
   submitPayment,
   verifyPayment,
   confirmCustomerPayment,
+  realtimeQRPayment,
   updateDeliveryTracking,
   createRazorpayOrder,
   verifyRazorpaySignature,

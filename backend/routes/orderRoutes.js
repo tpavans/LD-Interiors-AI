@@ -12,6 +12,7 @@ const {
   submitPayment,
   verifyPayment,
   confirmCustomerPayment,
+  realtimeQRPayment,
   updateDeliveryTracking,
   createRazorpayOrder,
   verifyRazorpaySignature,
@@ -32,6 +33,9 @@ router.post('/:id/payments', submitPayment);
 
 // Public route to submit payment confirmation without UTR (WhatsApp alerts)
 router.post('/:id/confirm-payment', confirmCustomerPayment);
+
+// Public route to process Real-Time UPI QR payment
+router.post('/:id/realtime-qr-payment', realtimeQRPayment);
 
 // Public route to create Razorpay payment order
 router.post('/:id/razorpay-order', createRazorpayOrder);

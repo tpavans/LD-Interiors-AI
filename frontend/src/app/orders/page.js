@@ -4,6 +4,7 @@ import Link from 'next/link';
 import api from '@/utils/api';
 import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck, Printer, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
+import RealtimePaymentModal from '@/components/RealtimePaymentModal';
 
 const UPI_IDS = {
   phonepe: { id: "9346325291@ybl", name: "TEKI PAVAN SAI", label: "PhonePe" },
@@ -12,6 +13,7 @@ const UPI_IDS = {
 };
 
 export default function UserOrdersPage() {
+  const [showRealtimePayModal, setShowRealtimePayModal] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -1066,12 +1068,32 @@ ${profileName || activePayOrder.name}`;
 
                   <div className="space-y-4 pt-2">
                     {/* Product Summary Box */}
-                    <div className="p-3 bg-[#008DDA]/10 border border-[#008DDA]/30 rounded-2xl text-left">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#008DDA]">Product & Order Details</p>
-                      <p className="text-xs font-bold text-slate-900 mt-0.5">{activePayOrder.product}</p>
-                      <p className="text-[10.5px] font-mono font-black text-slate-700 mt-0.5">
-                        Product ID: #{activePayOrder._id.substring(18).toUpperCase()}
+                    <div className="p-3 bg-[#008DDA]/10 border border-[#008DDA]/30 rounded-2xl text-left flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#008DDA]">Product & Order Details</p>
+                        <p className="text-xs font-bold text-slate-900 mt-0.5">{activePayOrder.product}</p>
+                        <p className="text-[10.5px] font-mono font-black text-slate-700 mt-0.5">
+                          Product ID: #{activePayOrder._id.substring(18).toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Feature Highlight: Real-Time Soundbox QR Code Gateway Button */}
+                    <div className="p-4 bg-gradient-to-r from-slate-950 via-wood-dark to-slate-950 text-white rounded-2xl shadow-lg border-2 border-amber-400 text-center animate-pulse">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-600">
+                        ⚡ INSTANT SOUNDBOX AUTOMATION
+                      </span>
+                      <p className="text-xs font-bold text-white mt-1">
+                        Real-Time Dynamic UPI QR Code & Soundbox Gateway
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowRealtimePayModal(true)}
+                        className="mt-3 w-full py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer transform hover:scale-[1.02]"
+                      >
+                        <QrCode className="w-4.5 h-4.5" />
+                        <span>Open Real-Time UPI QR Gateway (Auto Close on Success)</span>
+                      </button>
                     </div>
 
                     {/* Option 1: Mobile App launcher */}
@@ -1424,6 +1446,17 @@ ${profileName || activePayOrder.name}`;
           </div>
         </div>
       )}
+
+      {/* Real-Time Soundbox UPI QR Code Payment Gateway Modal */}
+      <RealtimePaymentModal
+        isOpen={showRealtimePayModal}
+        onClose={() => setShowRealtimePayModal(false)}
+        orderData={activePayOrder}
+        payableAmount={getPayableAmount && activePayOrder ? getPayableAmount() : 0}
+        onPaymentSuccess={() => {
+          if (phone) handleSearch(null, phone);
+        }}
+      />
     </div>
   );
 }
