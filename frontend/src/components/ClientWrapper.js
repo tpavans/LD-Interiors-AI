@@ -1625,6 +1625,24 @@ Based on your room's style, here are some LD Interiors products that match beaut
     }
 
     const orderImage = createdOrder.imageUrl || absoluteImageUrl;
+    const productIdStr = matchedProduct?._id ? matchedProduct._id.toString() : (createdOrder.productId || 'N/A');
+    const mainProductUrl = matchedProduct?._id ? `https://www.ldinteriors.in/products/${matchedProduct._id}` : 'https://www.ldinteriors.in/products';
+
+    const baseMessageBody = `*Product Details:*
+- Product ID: #${productIdStr}
+- Name: ${selectedProduct}
+- Category: ${matchedProduct ? matchedProduct.category : 'General Inquiry'}
+- Main Product Link: ${mainProductUrl}
+${orderImage ? `- Reference Image URL: ${orderImage}\n` : ''}
+*Customer Details:*
+- Name: ${orderName.trim()}
+- Phone: ${cleanPhone}
+- Gmail: ${orderEmail.trim()}
+- Delivery Address: ${orderAddress.trim()}
+${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
+
+    const msgNagaraju = `Hello Nagaraju Garu! I would like to place a design order/inquiry via LD Interiors & Furnitures website:\n\n${baseMessageBody}`;
+    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
 
     // Trigger Celebration Modal with Confetti & Sound
     setCelebrationData({
@@ -1632,7 +1650,8 @@ Based on your room's style, here are some LD Interiors products that match beaut
       image: orderImage,
       _id: createdOrder._id,
       phone: cleanPhone,
-      email: orderEmail.trim()
+      email: orderEmail.trim(),
+      waUrl: waUrlNagaraju
     });
 
     setShowOrderModal(false);

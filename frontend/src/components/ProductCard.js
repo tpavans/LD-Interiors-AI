@@ -210,14 +210,34 @@ ${orderNotes.trim() || 'No custom notes.'}`;
     }
 
     const orderImage = createdOrder.imageUrl || absoluteImageUrl;
-    
+    const productIdStr = _id ? _id.toString() : (createdOrder.productId || 'N/A');
+    const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
+
+    const baseMessageBody = `*Product Details:*
+- Product ID: #${productIdStr}
+- Name: ${title}
+- Category: ${category}
+- Price: ${price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+- Main Product Link: ${mainProductUrl}
+${orderImage ? `- Reference Image URL: ${orderImage}\n` : ''}
+*Customer Details:*
+- Name: ${orderName.trim()}
+- Phone: ${cleanPhone}
+- Gmail: ${orderEmail.trim()}
+- Delivery Address: ${orderAddress.trim()}
+${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPrice.trim() ? `- Desired Budget: ${desiredPrice.trim()}\n` : ''}- Notes/Customization: ${orderNotes.trim() || 'No custom notes.'}`;
+
+    const msgNagaraju = `Hello Nagaraju Garu! I would like to place an order/inquiry via LD Interiors & Furnitures:\n\n${baseMessageBody}`;
+    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+
     // Trigger HackerRank-style Celebration Modal with Victory Chime
     setCelebrationData({
       product: title,
       image: orderImage,
       _id: createdOrder._id,
       phone: cleanPhone,
-      email: orderEmail.trim()
+      email: orderEmail.trim(),
+      waUrl: waUrlNagaraju
     });
 
     setShowOrderModal(false);

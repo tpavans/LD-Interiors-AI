@@ -400,14 +400,29 @@ ${orderNotes.trim() || 'No custom notes.'}`;
     }
 
     const orderImage = createdOrder.imageUrl || absoluteImageUrl;
-    
+    const productIdStr = product._id ? product._id.toString() : (createdOrder.productId || 'N/A');
+    const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
+
+    const msgNagaraju = `Hello Nagaraju Garu! New order placed on website:
+
+📦 Product: ${product.title} (ID: #${productIdStr})
+👤 Customer: ${orderName.trim()} (${cleanPhone})
+📧 Email: ${orderEmail.trim()}
+📍 Address: ${orderAddress.trim()}
+💰 Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+🌐 Product Link: ${mainProductUrl}
+${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
+
+    const waUrlNagaraju = `https://wa.me/916281653998?text=${encodeURIComponent(msgNagaraju)}`;
+
     // Trigger Celebration Modal with Victory Chime
     setCelebrationData({
       product: product.title,
       image: orderImage,
       _id: createdOrder._id,
       phone: cleanPhone,
-      email: orderEmail.trim()
+      email: orderEmail.trim(),
+      waUrl: waUrlNagaraju
     });
 
     setShowOrderModal(false);
