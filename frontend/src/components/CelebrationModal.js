@@ -1,10 +1,50 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { Sparkles, Star, CheckCircle2, MessageSquare, Truck, ArrowRight, X, Phone } from 'lucide-react';
+import { Sparkles, Star, CheckCircle2, Truck, ArrowRight, X, Phone, ShieldCheck, ShoppingBag } from 'lucide-react';
 
 export default function CelebrationModal({ isOpen, onClose, orderData }) {
   const canvasRef = useRef(null);
 
+  // Play PhonePe / Soundbox-style victory chime sound on order success
+  useEffect(() => {
+    if (!isOpen) return;
+
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const notes = [
+          { freq: 523.25, time: 0.0, duration: 0.12 },  // C5
+          { freq: 659.25, time: 0.10, duration: 0.12 }, // E5
+          { freq: 783.99, time: 0.20, duration: 0.15 }, // G5
+          { freq: 1046.50, time: 0.32, duration: 0.40 } // C6 (Victory high chime)
+        ];
+
+        const now = ctx.currentTime;
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'triangle'; // Warm soundbox tone
+          osc.frequency.setValueAtTime(n.freq, now + n.time);
+
+          gain.gain.setValueAtTime(0, now + n.time);
+          gain.gain.linearRampToValueAtTime(0.35, now + n.time + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + n.time);
+          osc.stop(now + n.time + n.duration + 0.05);
+        });
+      }
+    } catch (err) {
+      console.warn('Audio playback notice:', err.message);
+    }
+  }, [isOpen]);
+
+  // Confetti Animation Canvas
   useEffect(() => {
     if (!isOpen) return;
 
@@ -21,14 +61,13 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Confetti particles configuration (HackerRank celebration style)
     const colors = [
       '#f97316', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa',
       '#f43f5e', '#e11d48', '#d97706', '#059669', '#2563eb',
       '#fb7185', '#f472b6', '#38bdf8'
     ];
 
-    const particleCount = 140;
+    const particleCount = 150;
     const particles = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -91,15 +130,6 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
 
   const productTitle = orderData?.product || orderData?.title || 'Custom Teakwood Furniture';
   const orderId = orderData?._id ? `#LD-${orderData._id.toString().slice(-6).toUpperCase()}` : '#LD-SUCCESS';
-  const waUrl = orderData?.waUrl;
-
-  const handleWhatsAppClick = () => {
-    if (waUrl) {
-      window.open(waUrl, '_blank');
-    } else {
-      window.open('https://wa.me/916281653998', '_blank');
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-fadeIn">
@@ -121,10 +151,10 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Top Hexagon Badge Header */}
+        {/* Top Badge Header */}
         <div className="pt-8 pb-4 px-6 flex flex-col items-center text-center bg-gradient-to-b from-amber-50/90 via-orange-50/30 to-white">
           
-          {/* HackerRank-style Hexagon Badge */}
+          {/* Hexagon Badge */}
           <div className="relative mb-3 flex items-center justify-center">
             <div 
               className="w-20 h-20 bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400 flex flex-col items-center justify-center shadow-xl shadow-orange-500/30 transition-transform hover:scale-105"
@@ -154,8 +184,8 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
 
         {/* Order Details Preview Box */}
         <div className="px-6 py-3">
-          <div className="bg-gradient-to-br from-amber-50/60 to-orange-50/40 border border-amber-200/80 rounded-2xl p-4 text-left shadow-inner">
-            <div className="flex items-center justify-between border-b border-amber-200/60 pb-2 mb-3">
+          <div className="bg-gradient-to-br from-amber-50/60 to-orange-50/40 border border-amber-200/80 rounded-2xl p-4 text-left shadow-inner space-y-3">
+            <div className="flex items-center justify-between border-b border-amber-200/60 pb-2">
               <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">Order Reference</span>
               <span className="text-xs font-mono font-bold bg-amber-200/80 text-amber-950 px-2.5 py-0.5 rounded-md shadow-xs">
                 {orderId}
@@ -183,57 +213,55 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
                 </p>
                 <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  Email & WhatsApp notification ready
+                  Auto Notification & Voice Call Initiated
                 </p>
               </div>
+            </div>
+
+            {/* Verified Customer Info */}
+            <div className="pt-2 border-t border-amber-200/60 text-[11px] text-slate-600 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Valid Details Registered. Admin team will confirm your order.</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="px-6 pb-6 pt-2 space-y-3">
-          {/* Main Green Action Button (HackerRank 'Continue' Style) */}
-          <button
-            onClick={handleWhatsAppClick}
-            className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-          >
-            <MessageSquare className="w-5 h-5 fill-current" />
-            <span>Continue to WhatsApp Chat</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-
-          {/* Track Live Order Status Button */}
+        <div className="px-6 pb-6 pt-2 space-y-2.5">
+          {/* Main Action Button - Track Live Order Status */}
           <a
             href="/orders"
+            className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Truck className="w-5 h-5 text-amber-300" />
+            <span>Track Live Order Status</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
+
+          {/* Browse More Products Button */}
+          <a
+            href="/products"
             className="w-full py-3 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs tracking-wider uppercase shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            <Truck className="w-4 h-4 text-amber-400" />
-            <span>Track Live Order Status</span>
+            <ShoppingBag className="w-4 h-4 text-amber-400" />
+            <span>Explore More Furniture Designs</span>
           </a>
 
           {/* Bottom Quick Links */}
           <div className="pt-2 flex items-center justify-center gap-6 border-t border-slate-100">
-            <button
-              onClick={handleWhatsAppClick}
-              className="text-slate-500 hover:text-emerald-600 transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer"
-              title="Open WhatsApp"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </button>
             <a
               href="tel:+919346325291"
               className="text-slate-500 hover:text-amber-600 transition-colors flex items-center gap-1 text-xs font-medium"
-              title="Call Support"
+              title="Call Admin Pavan Sai"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span>Call Support</span>
+              <span>Call Admin (+91 93463 25291)</span>
             </a>
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-700 transition-colors text-xs font-medium cursor-pointer"
             >
-              Close
+              Done / Close
             </button>
           </div>
         </div>

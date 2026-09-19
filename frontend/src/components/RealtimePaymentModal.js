@@ -39,6 +39,39 @@ export default function RealtimePaymentModal({
     }
   }, [isOpen]);
 
+  // Play PhonePe / Soundbox-style victory chime sound on payment success
+  useEffect(() => {
+    if (step !== 'success') return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const notes = [
+          { freq: 523.25, time: 0.0, duration: 0.12 },
+          { freq: 659.25, time: 0.10, duration: 0.12 },
+          { freq: 783.99, time: 0.20, duration: 0.15 },
+          { freq: 1046.50, time: 0.32, duration: 0.40 }
+        ];
+        const now = ctx.currentTime;
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.freq, now + n.time);
+          gain.gain.setValueAtTime(0, now + n.time);
+          gain.gain.linearRampToValueAtTime(0.35, now + n.time + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + n.time);
+          osc.stop(now + n.time + n.duration + 0.05);
+        });
+      }
+    } catch (err) {
+      console.warn('Audio playback notice:', err.message);
+    }
+  }, [step]);
+
   // Countdown timer for 5 minutes
   useEffect(() => {
     if (!isOpen || step !== 'qr') return;

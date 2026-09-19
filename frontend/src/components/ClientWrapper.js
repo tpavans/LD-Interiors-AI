@@ -2200,25 +2200,25 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
                       ></textarea>
                     </div>
 
-                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[10px] text-amber-800 leading-relaxed font-medium">
-                      ⚠️ For the latest pricing, material selection, and final quotation, please speak with Mr. Nagaraju (+916281653998). Once the quotation is confirmed, we'll proceed with your order.
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[11px] text-amber-900 leading-relaxed font-semibold">
+                      ⚠️ <strong>MUST ENTER VALID DETAILS:</strong> దయచేసి మీ యొక్క నికరమైన పేరు, 10-అంకెల ఫోన్ నంబర్, ఈమెయిల్ మరియు ఆర్డర్ డెలివరీ అడ్రస్ తప్పనిసరిగా ఇవ్వగలరు. వర్క్‌షాప్‌లో మీ ఆర్డర్ ఖరారు చేయడానికి మా టీమ్ మిమ్మల్ని ఫోన్ ద్వారా సంప్రదిస్తారు.
                     </div>
 
                     {orderSuccess && (
-                      <div className="rounded-xl bg-emerald-50 border border-emerald-150 p-3 text-[11px] text-emerald-800 flex items-center gap-1.5">
+                      <div className="rounded-xl bg-emerald-50 border border-emerald-150 p-3 text-[11px] text-emerald-800 flex items-center gap-1.5 font-bold">
                         <Check className="h-4.5 w-4.5 text-emerald-600" />
-                        <span>Redirecting to WhatsApp successfully! Check details.</span>
+                        <span>Order Registered Successfully!</span>
                       </div>
                     )}
 
                     <button
                       type="submit"
                       disabled={orderSuccess}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-5 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-5 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <CheckCircle2 className="h-4 w-4" />
                       <span>
-                        {orderSuccess ? 'Submitting Order...' : 'Send Order to WhatsApp (Both Admins)'}
+                        {orderSuccess ? 'Submitting Order...' : 'Confirm & Submit Order'}
                       </span>
                     </button>
                   </form>
