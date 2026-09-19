@@ -200,12 +200,7 @@ ${orderNotes.trim() || 'No custom notes.'}`;
         formData.append('imageUrl', absoluteImageUrl);
       }
 
-      const response = await api.post('/orders', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
+      const response = await api.post('/orders', formData);
       createdOrder = response.data;
     } catch (err) {
       console.warn('Backend order post handled safely:', err.message);
@@ -218,8 +213,13 @@ ${orderNotes.trim() || 'No custom notes.'}`;
       };
     }
 
-    const orderImage = createdOrder.imageUrl || absoluteImageUrl;
-    const productIdStr = _id ? _id.toString() : (createdOrder.productId || 'N/A');
+    const safeOrder = createdOrder || {
+      _id: `LD-LOCAL-${Date.now()}`,
+      imageUrl: absoluteImageUrl
+    };
+
+    const orderImage = safeOrder.imageUrl || absoluteImageUrl;
+    const productIdStr = _id ? _id.toString() : (safeOrder.productId || 'N/A');
     const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
 
     const baseMessageBody = `*Product Details:*
@@ -243,7 +243,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
     setCelebrationData({
       product: title,
       image: orderImage,
-      _id: createdOrder._id,
+      _id: safeOrder._id,
       phone: cleanPhone,
       email: orderEmail.trim(),
       waUrl: waUrlNagaraju

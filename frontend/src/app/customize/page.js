@@ -64,16 +64,13 @@ export default function CustomizePage() {
         formData.append('referenceImage', referenceImageFile);
       }
 
-      const res = await api.post('/orders', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      const createdOrder = res.data;
+      const res = await api.post('/orders', formData);
+      const createdOrder = res.data || {};
 
       setCelebrationData({
         product: furnitureType,
-        image: createdOrder.imageUrl || createdOrder.referenceImageUrl,
-        _id: createdOrder._id,
+        image: createdOrder.imageUrl || createdOrder.referenceImageUrl || '',
+        _id: createdOrder._id || `LD-LOCAL-${Date.now()}`,
         phone: cleanPhone,
         email: email.trim()
       });

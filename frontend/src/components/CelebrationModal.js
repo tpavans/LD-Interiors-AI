@@ -52,6 +52,7 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let animationFrameId;
 
     const resizeCanvas = () => {
@@ -129,7 +130,7 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
   if (!isOpen) return null;
 
   const productTitle = orderData?.product || orderData?.title || 'Custom Teakwood Furniture';
-  const orderId = orderData?._id ? `#LD-${orderData._id.toString().slice(-6).toUpperCase()}` : '#LD-SUCCESS';
+  const orderId = orderData?._id ? `#LD-${String(orderData._id).slice(-6).toUpperCase()}` : '#LD-SUCCESS';
   const waUrl = orderData?.waUrl || 'https://wa.me/916281653998';
 
   const handleWhatsAppClick = () => {
