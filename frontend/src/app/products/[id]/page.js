@@ -53,6 +53,21 @@ const FALLBACK_PRODUCTS = [
   }
 ];
 
+const formatDate = (dateStr, isTelugu) => {
+  if (!dateStr) return isTelugu ? 'అందుబాటులో ఉంది' : 'Available';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return isTelugu ? 'అందుబాటులో ఉంది' : 'Available';
+    return d.toLocaleDateString(isTelugu ? 'te-IN' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (e) {
+    return isTelugu ? 'అందుబాటులో ఉంది' : 'Available';
+  }
+};
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -351,7 +366,10 @@ export default function ProductDetailPage() {
     // Dispatch login event to sync across navbar and account portal
     window.dispatchEvent(new Event('storage'));
 
-    const absoluteImageUrl = product.image ? (product.image.startsWith('http') ? product.image : `${window.location.origin}${product.image.startsWith('/') ? '' : '/'}${product.image}`) : '';
+    const currentProdTitle = product?.title || 'Custom Teakwood Design';
+    const currentProdId = product?._id ? product._id.toString() : 'N/A';
+    const currentProdPrice = product?.price && product.price > 0 ? product.price : 0;
+    const absoluteImageUrl = product?.image ? (product.image.startsWith('http') ? product.image : `${window.location.origin}${product.image.startsWith('/') ? '' : '/'}${product.image}`) : '';
 
     const finalNotes = `[Material Selections]
 Plywood Brand: ${plywoodBrand}
@@ -370,9 +388,9 @@ ${orderNotes.trim() || 'No custom notes.'}`;
       formData.append('phone', cleanPhone);
       formData.append('email', orderEmail.trim());
       formData.append('address', orderAddress.trim());
-      formData.append('product', product.title);
+      formData.append('product', currentProdTitle);
       formData.append('notes', finalNotes);
-      formData.append('productId', product._id);
+      formData.append('productId', currentProdId);
       if (customSize.trim()) formData.append('customSize', customSize.trim());
       if (desiredPrice.trim()) formData.append('desiredPrice', desiredPrice.trim());
       if (referenceImageFile) {
@@ -394,22 +412,21 @@ ${orderNotes.trim() || 'No custom notes.'}`;
         _id: `LD-LOCAL-${Date.now()}`,
         name: orderName.trim(),
         phone: cleanPhone,
-        product: product.title,
+        product: currentProdTitle,
         imageUrl: absoluteImageUrl
       };
     }
 
     const orderImage = createdOrder.imageUrl || absoluteImageUrl;
-    const productIdStr = product._id ? product._id.toString() : (createdOrder.productId || 'N/A');
-    const mainProductUrl = `https://www.ldinteriors.in/products/${productIdStr}`;
+    const mainProductUrl = `https://www.ldinteriors.in/products/${currentProdId}`;
 
     const msgNagaraju = `Hello Nagaraju Garu! New order placed on website:
 
-📦 Product: ${product.title} (ID: #${productIdStr})
+📦 Product: ${currentProdTitle} (ID: #${currentProdId})
 👤 Customer: ${orderName.trim()} (${cleanPhone})
 📧 Email: ${orderEmail.trim()}
 📍 Address: ${orderAddress.trim()}
-💰 Price: ${product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Contact for pricing'}
+💰 Price: ${currentProdPrice > 0 ? `₹${currentProdPrice.toLocaleString('en-IN')}` : 'Contact for pricing'}
 🌐 Product Link: ${mainProductUrl}
 ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
@@ -417,7 +434,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
     // Trigger Celebration Modal with Victory Chime
     setCelebrationData({
-      product: product.title,
+      product: currentProdTitle,
       image: orderImage,
       _id: createdOrder._id,
       phone: cleanPhone,
@@ -610,11 +627,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
               <div>
                 <p className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">{isTelugu ? "అప్‌లోడ్ చేసిన తేదీ" : "Date Uploaded"}</p>
                 <p className="text-xs font-light mt-0.5">
-                  {new Date(createdAt).toLocaleDateString(isTelugu ? 'te-IN' : 'en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                  {formatDate(createdAt, isTelugu)}
                 </p>
               </div>
             </div>
@@ -791,7 +804,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute bottom-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[7px] font-mono px-1 py-0.2 rounded">
-                    #{relProd._id ? relProd._id.substring(18).toUpperCase() : ''}
+                    #{String(relProd._id || '').slice(-6).toUpperCase()}
                   </span>
                 </div>
                 <span className="text-[7.5px] font-black uppercase text-[#008DDA] tracking-wider block truncate">
