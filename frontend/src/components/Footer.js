@@ -52,7 +52,7 @@ export default function Footer() {
             <Link href="/contact" className="hover:text-amber-400 transition-colors">{isTelugu ? "• రీ-ఇన్‌స్టాలేషన్ పనులు" : "• Re-installation Works"}</Link>
             <Link href="/products" className="hover:text-amber-400 transition-colors">{isTelugu ? "• లూజ్ ఫిట్టింగ్స్ కార్పెంటరీ" : "• Loose Fittings carpentry"}</Link>
             <Link href="/contact" className="hover:text-amber-400 transition-colors">{isTelugu ? "• కంప్లీట్ ఇంటీరియర్ డిజైనింగ్" : "• Complete Interior Design"}</Link>
-            <Link href="/products" className="hover:text-amber-400 transition-colors">{isTelugu ? "• కస్టమ్ డిజైన్స్ & ఫర్నిచర్" : "• Custom Designs & Furniture"}</Link>
+            <Link href="/customize" className="hover:text-amber-400 transition-colors">{isTelugu ? "• కస్టమ్ డిజైన్స్ & ఫర్నిచర్" : "• Custom Designs & Furniture"}</Link>
           </div>
         </div>
 
