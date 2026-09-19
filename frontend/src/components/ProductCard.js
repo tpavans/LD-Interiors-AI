@@ -11,7 +11,16 @@ import CelebrationModal from './CelebrationModal';
 
 export default function ProductCard({ product }) {
   const router = useRouter();
-  const { _id, title, category, image, price, rating, createdAt } = product;
+  if (!product) return null;
+  const { 
+    _id = '', 
+    title = 'LD Teakwood Design', 
+    category = 'Furniture', 
+    image = '/images/hero-bg.png', 
+    price = 0, 
+    rating = 5, 
+    createdAt = null 
+  } = product || {};
   const isNew = createdAt ? (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24) <= 7 : false;
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);

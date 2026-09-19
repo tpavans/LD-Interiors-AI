@@ -9,11 +9,12 @@ export default function LuxuryLookbookGrid({ products = [] }) {
   const isTelugu = language === 'TE';
 
   // Extract products for specific category highlights
-  const bedProduct = products.find(p => p.category?.toLowerCase().includes('bed') || p.category?.toLowerCase().includes('bedroom')) || products[0];
-  const diningProduct = products.find(p => p.category?.toLowerCase().includes('dining') || p.category?.toLowerCase().includes('table')) || products[1];
-  const sofaProduct = products.find(p => p.category?.toLowerCase().includes('sofa') || p.category?.toLowerCase().includes('living')) || products[2];
-  const doorProduct = products.find(p => p.category?.toLowerCase().includes('gummalu') || p.category?.toLowerCase().includes('door')) || products[3];
-  const mandirProduct = products.find(p => p.category?.toLowerCase().includes('puja') || p.category?.toLowerCase().includes('mandir')) || products[4];
+  const validProducts = Array.isArray(products) ? products.filter(Boolean) : [];
+  const bedProduct = validProducts.find(p => p.category?.toLowerCase()?.includes('bed') || p.category?.toLowerCase()?.includes('bedroom')) || validProducts[0] || null;
+  const diningProduct = validProducts.find(p => p.category?.toLowerCase()?.includes('dining') || p.category?.toLowerCase()?.includes('table')) || validProducts[1] || null;
+  const sofaProduct = validProducts.find(p => p.category?.toLowerCase()?.includes('sofa') || p.category?.toLowerCase()?.includes('living')) || validProducts[2] || null;
+  const doorProduct = validProducts.find(p => p.category?.toLowerCase()?.includes('gummalu') || p.category?.toLowerCase()?.includes('door')) || validProducts[3] || null;
+  const mandirProduct = validProducts.find(p => p.category?.toLowerCase()?.includes('puja') || p.category?.toLowerCase()?.includes('mandir')) || validProducts[4] || null;
 
   // Image helpers with fallback high-res aesthetic interior images
   const getImage = (prod, defaultUrl) => {

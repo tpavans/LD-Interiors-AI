@@ -26,10 +26,21 @@ export default function Error({ error, reset }) {
 
         <div className="space-y-3 pt-2">
           <button
-            onClick={() => (reset ? reset() : window.location.reload())}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                try {
+                  sessionStorage.removeItem('ld_cached_products');
+                } catch (e) {}
+              }
+              if (reset) {
+                reset();
+              } else {
+                window.location.reload();
+              }
+            }}
             className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4 animate-spin" />
+            <RefreshCw className="w-4 h-4" />
             <span>Reload Page / మళ్ళీ ప్రయత్నించండి</span>
           </button>
 

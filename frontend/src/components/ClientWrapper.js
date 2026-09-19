@@ -395,9 +395,11 @@ How can I help you today?`;
     const fetchProducts = async () => {
       try {
         const response = await api.get('/products');
-        setDbProducts(response.data);
-        if (response.data && response.data.length > 0) {
-          setSelectedProduct(response.data[0].title);
+        if (Array.isArray(response.data)) {
+          setDbProducts(response.data);
+          if (response.data.length > 0 && response.data[0]?.title) {
+            setSelectedProduct(response.data[0].title);
+          }
         }
       } catch (err) {
         console.error('Error loading designs list for chatbot:', err);
@@ -574,7 +576,7 @@ How can I help you today?`;
       } else if (query.includes('dressing') || query.includes('mirror') || query.includes('makeup') || query.includes('అద్దం బల్ల') || query.includes('డ్రెస్సింగ్')) {
         return "Custom Teak Dressing Table with Mirror";
       }
-      const matched = dbProducts.find(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+      const matched = dbProducts.find(p => p && (p.title?.toLowerCase()?.includes(query) || p.category?.toLowerCase()?.includes(query)));
       return matched ? matched.title : null;
     };
     
@@ -620,7 +622,7 @@ How can I help you today?`;
           // Trigger backend function submitOrder()
           const submitWorkflowOrder = async () => {
             try {
-              const matchedProduct = dbProducts.find(p => p.title === (collected.product || collected.furnitureType));
+              const matchedProduct = dbProducts.find(p => p && p.title === (collected.product || collected.furnitureType));
               const productImage = matchedProduct ? matchedProduct.image : '';
               const absoluteImageUrl = productImage ? (productImage.startsWith('http') ? productImage : `${window.location.origin}${productImage.startsWith('/') ? '' : '/'}${productImage}`) : '';
 
@@ -691,21 +693,21 @@ How can I help you today?`;
           let recText = '';
 
           if (roomValue.includes('kitchen') || roomValue.includes('వంట')) {
-            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+            recommendations = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('kitchen') || p.title?.toLowerCase()?.includes('kitchen')));
             recText = lang === 'en'
               ? `We recommend checking out our Premium Modular Kitchen Cabinets.`
               : lang === 'te'
               ? `మా ప్రీమియం మోడ్యులర్ కిచెన్ క్యాబినెట్‌లను చూడాల్సిందిగా మేము సిఫార్సు చేస్తున్నాము.`
               : `Maa Premium Modular Kitchen Cabinets models chudandi, chala baguntayi.`;
           } else if (roomValue.includes('bedroom') || roomValue.includes('పడుకునే') || roomValue.includes('bed')) {
-            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed'));
+            recommendations = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('bed') || p.category?.toLowerCase()?.includes('bedroom') || p.title?.toLowerCase()?.includes('bed')));
             recText = lang === 'en'
               ? `We recommend our Classic Teak Wood Canopy Bed or Bespoke Walnut Wardrobes.`
               : lang === 'te'
               ? `మా క్లాసిక్ టేక్ వుడ్ పందిరి మంచం లేదా వాల్నట్ వార్డ్రోబ్‌లను మేము సిఫార్సు చేస్తున్నాము.`
               : `Maa Classic Teak Wood Canopy Bed leda Walnut Wardrobes models try cheyyandi.`;
           } else if (roomValue.includes('living') || roomValue.includes('hall') || roomValue.includes('sitting') || roomValue.includes('సోఫా')) {
-            recommendations = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.category.toLowerCase().includes('living') || p.title.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('tv'));
+            recommendations = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('sofa') || p.category?.toLowerCase()?.includes('living') || p.title?.toLowerCase()?.includes('sofa') || p.title?.toLowerCase()?.includes('tv')));
             recText = lang === 'en'
               ? `We recommend our Premium Chesterfield Sofa or Floating Teak Wood TV Console.`
               : lang === 'te'
@@ -1097,16 +1099,16 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
         let items = [];
         let similarRec = '';
         if (matchedCat === 'tv') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('tv') || p.title?.toLowerCase()?.includes('tv')));
           similarRec = langStyle === 'en' 
             ? "We also recommend styling it with: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: కాఫీ టేబుల్, వాల్ ప్యానెల్, ఫాల్స్ సీలింగ్, డిస్ప్లే షెల్ఫ్‌లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend similar products: Coffee Table, Wall Panel, False Ceiling, Living Room Package, Display Shelf, Side Storage.";
         } else if (matchedCat === 'wardrobe') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('bedroom') && p.title.toLowerCase().includes('wardrobe'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('wardrobe') || p.title?.toLowerCase()?.includes('wardrobe') || (p.title?.toLowerCase()?.includes('bedroom') && p.title?.toLowerCase()?.includes('wardrobe'))));
           if (items.length === 0) {
-            items = dbProducts.filter(p => p.title.toLowerCase().includes('wardrobe'));
+            items = dbProducts.filter(p => p && p.title?.toLowerCase()?.includes('wardrobe'));
           }
           similarRec = langStyle === 'en'
             ? "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk."
@@ -1114,49 +1116,49 @@ Meeru direct call chesi or WhatsApp chat direct start chesi coordinates set ches
             ? "మేము వీటికి అదనంగా: బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్, చెస్ట్ ఆఫ్ డ్రాయర్స్‌లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Bedside Tables, Dressing Table, Chest of Drawers, Study Desk.";
         } else if (matchedCat === 'kitchen') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('kitchen') || p.title?.toLowerCase()?.includes('kitchen')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: ప్యాంట్రీ యూనిట్, చిమ్నీ, బ్రేక్‌ఫాస్ట్ కౌంటర్‌ను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Pantry unit, Chimney, Breakfast counter, Tall cabinet unit.";
         } else if (matchedCat === 'bedroom') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('bed') || p.category?.toLowerCase()?.includes('bedroom') || (p.title?.toLowerCase()?.includes('bed') && !p.title?.toLowerCase()?.includes('bunk'))));
           similarRec = langStyle === 'en'
             ? "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: వార్డ్‌రోబ్‌లు, బెడ్‌సైడ్ టేబుల్స్, డ్రెస్సింగ్ టేబుల్స్‌లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Wardrobes, Bedside Tables, Dressing Table, Chest of Drawers.";
         } else if (matchedCat === 'office') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office') || p.title.toLowerCase().includes('desk'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('office') || p.title?.toLowerCase()?.includes('office') || p.title?.toLowerCase()?.includes('desk')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Executive Chair, Bookshelf, side cabinet storage."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: ఎగ్జిక్యూటివ్ చైర్, బుక్‌షెల్ఫ్ మరియు ఫైలింగ్ క్యాబినెట్‌ను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Executive Chair, Bookshelf, side cabinet storage.";
         } else if (matchedCat === 'mandiralu') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('mandiralu') || p.title?.toLowerCase()?.includes('mandiram') || p.title?.toLowerCase()?.includes('temple') || p.title?.toLowerCase()?.includes('pooja') || p.title?.toLowerCase()?.includes('devudi')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Pooja stools, brass bells, customized drawers."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: పూజా పీటలు, ఇత్తడి గంటలు, అనుకూల డ్రాయర్లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend similar items: Pooja stools, brass bells, customized drawers.";
         } else if (matchedCat === 'gummalu') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('gummalu') || p.title?.toLowerCase()?.includes('gummam') || p.title?.toLowerCase()?.includes('frame')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Traditional carved threshold (Gadapa), matching main door."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: సాంప్రదాయ గడప, మరియు ప్రధాన తలుపు డిజైన్లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Traditional carved threshold (Gadapa), matching main door.";
         } else if (matchedCat === 'dressing') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('mirror'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('dressing') || p.title?.toLowerCase()?.includes('dressing') || p.title?.toLowerCase()?.includes('mirror')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Hairdryer holder, accessory organizers, side stool."
             : langStyle === 'te'
             ? "మేము వీటికి అదనంగా: హెయిర్ డ్రైయర్ హోల్డర్, అనుకూల ఆర్గనైజర్‌లను సిఫార్సు చేస్తున్నాము."
             : "We also recommend: Hairdryer holder, accessory organizers, side stool.";
         } else if (matchedCat === 'swing') {
-          items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala') || p.title.toLowerCase().includes('swing') || p.title.toLowerCase().includes('uyyala'));
+          items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('swing') || p.category?.toLowerCase()?.includes('uyyala') || p.title?.toLowerCase()?.includes('swing') || p.title?.toLowerCase()?.includes('uyyala')));
           similarRec = langStyle === 'en'
             ? "We also recommend: Heavy-duty brass chains, protective cushion pads, ceiling hooks."
             : langStyle === 'te'
@@ -1259,45 +1261,45 @@ Or website top navbar menu lo unna 'Orders' link click chesi live tracking and r
     
     let items = [];
     if (categoryKey === 'mandiralu') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('mandiralu') || p.title.toLowerCase().includes('mandiram') || p.title.toLowerCase().includes('temple') || p.title.toLowerCase().includes('pooja') || p.title.toLowerCase().includes('devudi'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('mandiralu') || p.title?.toLowerCase()?.includes('mandiram') || p.title?.toLowerCase()?.includes('temple') || p.title?.toLowerCase()?.includes('pooja') || p.title?.toLowerCase()?.includes('devudi')));
     } else if (categoryKey === 'bedroom') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('bedroom') || p.title.toLowerCase().includes('bed') && !p.title.toLowerCase().includes('bunk'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('bed') || p.category?.toLowerCase()?.includes('bedroom') || (p.title?.toLowerCase()?.includes('bed') && !p.title?.toLowerCase()?.includes('bunk'))));
     } else if (categoryKey === 'sofa' || categoryKey === 'sofas') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('sofa') || p.title.toLowerCase().includes('living') || p.title.toLowerCase().includes('tv') || p.title.toLowerCase().includes('coffee'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('sofa') || p.title?.toLowerCase()?.includes('sofa') || p.title?.toLowerCase()?.includes('living') || p.title?.toLowerCase()?.includes('tv') || p.title?.toLowerCase()?.includes('coffee')));
     } else if (categoryKey === 'wardrobe') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('wardrobe') || p.title.toLowerCase().includes('almirah') || p.title.toLowerCase().includes('cupboard'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('wardrobe') || p.title?.toLowerCase()?.includes('wardrobe') || p.title?.toLowerCase()?.includes('almirah') || p.title?.toLowerCase()?.includes('cupboard')));
     } else if (categoryKey === 'kitchen') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('kitchen') || p.title.toLowerCase().includes('kitchen'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('kitchen') || p.title?.toLowerCase()?.includes('kitchen')));
     } else if (categoryKey === 'gummalu') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('gummalu') || p.title.toLowerCase().includes('gummam') || p.title.toLowerCase().includes('frame'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('gummalu') || p.title?.toLowerCase()?.includes('gummam') || p.title?.toLowerCase()?.includes('frame')));
     } else if (categoryKey === 'living') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('living'));
+      items = dbProducts.filter(p => p && p.category?.toLowerCase()?.includes('living'));
     } else if (categoryKey === 'kids') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('kids') || p.category.toLowerCase().includes('bunk'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('kids') || p.category?.toLowerCase()?.includes('bunk')));
     } else if (categoryKey === 'beds') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('bed') || p.category.toLowerCase().includes('wooden beds'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('bed') || p.category?.toLowerCase()?.includes('wooden beds')));
     } else if (categoryKey === 'dining') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('dining') || p.title.toLowerCase().includes('dining'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('dining') || p.title?.toLowerCase()?.includes('dining')));
     } else if (categoryKey === 'tv') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('tv') || p.title.toLowerCase().includes('tv'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('tv') || p.title?.toLowerCase()?.includes('tv')));
     } else if (categoryKey === 'swings') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('swing') || p.category.toLowerCase().includes('uyyala'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('swing') || p.category?.toLowerCase()?.includes('uyyala')));
     } else if (categoryKey === 'windows') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('window') && !p.category.toLowerCase().includes('glass'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('window') && !p.category?.toLowerCase()?.includes('glass')));
     } else if (categoryKey === 'mesh') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('mesh'));
+      items = dbProducts.filter(p => p && p.category?.toLowerCase()?.includes('mesh'));
     } else if (categoryKey === 'polish') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('polish'));
+      items = dbProducts.filter(p => p && p.category?.toLowerCase()?.includes('polish'));
     } else if (categoryKey === 'money') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('money') || p.category.toLowerCase().includes('box') || p.title.toLowerCase().includes('hundi'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('money') || p.category?.toLowerCase()?.includes('box') || p.title?.toLowerCase()?.includes('hundi')));
     } else if (categoryKey === 'glass') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('glass'));
+      items = dbProducts.filter(p => p && p.category?.toLowerCase()?.includes('glass'));
     } else if (categoryKey === 'office') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('office') || p.title.toLowerCase().includes('office'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('office') || p.title?.toLowerCase()?.includes('office')));
     } else if (categoryKey === 'bathroom') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('bathroom') || p.title.toLowerCase().includes('bathroom'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('bathroom') || p.title?.toLowerCase()?.includes('bathroom')));
     } else if (categoryKey === 'dressing') {
-      items = dbProducts.filter(p => p.category.toLowerCase().includes('dressing') || p.title.toLowerCase().includes('dressing'));
+      items = dbProducts.filter(p => p && (p.category?.toLowerCase()?.includes('dressing') || p.title?.toLowerCase()?.includes('dressing')));
     }
     
     // Speak synchronously inside the click handler to bypass mobile pop-up blockers!
