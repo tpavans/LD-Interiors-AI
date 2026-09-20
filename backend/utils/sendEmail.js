@@ -241,8 +241,20 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   let sent = false;
   let errors = [];
 
-  // 1. Try Resend if configured
-  if (process.env.RESEND_API_KEY) {
+  // 1. Try Gmail SMTP first if valid credentials are configured
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
+      sent = true;
+      return;
+    } catch (err) {
+      console.warn(`SMTP delivery failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}. Attempting API fallback...`);
+      errors.push(`SMTP: ${err.message}`);
+    }
+  }
+
+  // 2. Try Resend API if configured and SMTP not sent
+  if (!sent && process.env.RESEND_API_KEY) {
     try {
       await sendViaResend({ to: finalTo, subject, html, text, orderIdStr, pName });
       sent = true;
@@ -253,7 +265,7 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
     }
   }
 
-  // 2. Try Brevo if configured and not sent
+  // 3. Try Brevo API if configured and not sent
   if (!sent && process.env.BREVO_API_KEY) {
     try {
       await sendViaBrevo({ to: finalTo, subject, html, text, orderIdStr, pName });
@@ -265,15 +277,15 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
     }
   }
 
-  // 3. Fallback to SMTP if not sent
+  // 4. Fallback to mock SMTP if no primary method succeeded
   if (!sent) {
     try {
       await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
       sent = true;
       return;
     } catch (err) {
-      console.error(`SMTP fallback failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}`);
-      errors.push(`SMTP: ${err.message}`);
+      console.error(`Final mock SMTP fallback failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}`);
+      errors.push(`SMTP Fallback: ${err.message}`);
     }
   }
 
