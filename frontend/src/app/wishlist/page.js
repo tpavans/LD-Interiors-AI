@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { Heart, ArrowLeft, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
 import CelebrationModal from '@/components/CelebrationModal';

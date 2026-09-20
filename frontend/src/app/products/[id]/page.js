@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/utils/api';
-import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Sparkles } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, Tag, ChevronRight, ChevronLeft, AlertCircle, Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
@@ -706,11 +706,15 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               {/* Order via WhatsApp Button */}
               <button
-                onClick={() => setShowOrderModal(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowOrderModal(true);
+                }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-wood-dark hover:bg-wood-medium text-white px-4 py-3.5 text-xs font-bold tracking-widest uppercase transition-colors duration-300 shadow-md cursor-pointer"
               >
                 <ShoppingBag className="h-4 w-4" />
-                {t.orderBtn}
+                {t?.orderBtn || (isTelugu ? "ఆర్డర్ వివరాలు" : "Order / Customize")}
               </button>
             </div>
 
@@ -831,7 +835,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
           <div className="w-full max-w-md bg-wood-cream border-2 border-wood-accent/30 rounded-3xl p-6 shadow-2xl relative overflow-y-auto max-h-[85vh] text-left" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-wood-border/30">
               <h3 className="font-serif text-lg font-bold text-wood-dark">
-                Order Design
+                {t?.orderTitle || (isTelugu ? "కస్టమ్ ఫర్నిచర్ ఆర్డర్ ఫారమ్" : "Custom Furniture Order Form")}
               </h3>
               <button 
                 onClick={() => setShowOrderModal(false)}
@@ -849,7 +853,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
             <form onSubmit={handleOrderSubmit} className="space-y-4">
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.fullName}
+                  {t?.fullName || (isTelugu ? "మీ పూర్తి పేరు" : "Full Name")}
                 </label>
                 <input
                   type="text"
@@ -863,7 +867,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.phoneNumber}
+                  {t?.phoneNumber || (isTelugu ? "ఫోన్ నెంబర్ (వాట్సాప్)" : "Phone Number (WhatsApp)")}
                 </label>
                 <input
                   type="tel"
@@ -877,7 +881,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.gmail}
+                  {t?.gmail || (isTelugu ? "జిమెయిల్ / ఈమెయిల్ అడ్రస్" : "Gmail / Email Address")}
                 </label>
                 <input
                   type="email"
@@ -891,7 +895,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.address}
+                  {t?.address || (isTelugu ? "డెలివరీ అడ్రస్" : "Delivery Address")}
                 </label>
                 <input
                   type="text"
@@ -906,35 +910,33 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                    {t.customSize}
+                    {t?.customSize || (isTelugu ? "కస్టమ్ సైజు" : "Custom Size")}
                   </label>
                   <input
                     type="text"
                     value={customSize}
                     onChange={(e) => setCustomSize(e.target.value)}
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                    placeholder={t.customSizePlaceholder}
+                    placeholder={t?.customSizePlaceholder || (isTelugu ? "ఉదా: 7x4 ఫీట్లు" : "e.g. 7x4 feet")}
                   />
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                    {t.budget}
+                    {t?.budget || (isTelugu ? "మీ బడ్జెట్" : "Desired Budget")}
                   </label>
                   <input
                     type="text"
                     value={desiredPrice}
                     onChange={(e) => setDesiredPrice(e.target.value)}
                     className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark"
-                    placeholder={t.budgetPlaceholder}
+                    placeholder={t?.budgetPlaceholder || (isTelugu ? "ఉదా: ₹45,000" : "e.g. ₹45,000")}
                   />
                 </div>
               </div>
 
-
-
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.refImage}
+                  {t?.refImage || (isTelugu ? "రిఫరెన్స్ ఫోటో (ఐచ్ఛికం)" : "Reference Photo (Optional)")}
                 </label>
                 <input
                   type="file"
@@ -946,14 +948,14 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               <div>
                 <label className="block text-[9px] font-bold uppercase tracking-wider text-wood-accent mb-1">
-                  {t.customNotes}
+                  {t?.customNotes || (isTelugu ? "కస్టమైజేషన్ వివరాలు & నోట్స్" : "Customization Notes")}
                 </label>
                 <textarea
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                   rows="2"
                   className="w-full rounded-xl border border-wood-border bg-white px-3 py-2 text-xs text-wood-dark focus:outline-none focus:border-wood-dark placeholder-neutral-400 font-light"
-                  placeholder={t.customNotesPlaceholder}
+                  placeholder={t?.customNotesPlaceholder || (isTelugu ? "డిజైన్ మార్పులు లేదా సూచనలు రాయండి..." : "Write any special requests...")}
                 ></textarea>
               </div>
 
@@ -970,7 +972,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
               {orderSuccess && (
                 <div className="rounded-xl bg-emerald-50 border border-emerald-150 p-3 text-[11px] text-emerald-800 flex items-center gap-1.5 font-bold">
                   <Check className="h-4.5 w-4.5 text-emerald-600 animate-bounce" />
-                  <span>{t.orderSuccessMsg}</span>
+                  <span>{t?.orderSuccessMsg || (isTelugu ? "ఆర్డర్ వివరాలు నమోదయ్యాయి!" : "Order Details Captured Successfully!")}</span>
                 </div>
               )}
 
@@ -981,7 +983,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>
-                  {orderSuccess ? t.submitting : (isTelugu ? "ఆర్డర్ సబ్మిట్ చేయండి (Confirm Order)" : "Confirm & Submit Order")}
+                  {orderSuccess ? (t?.submitting || (isTelugu ? "సబ్మిట్ అవుతోంది..." : "Submitting Order...")) : (isTelugu ? "ఆర్డర్ సబ్మిట్ చేయండి (Confirm Order)" : "Confirm & Submit Order")}
                 </span>
               </button>
             </form>

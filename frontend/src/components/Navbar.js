@@ -27,32 +27,38 @@ export default function Navbar() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
 
-  const { language, toggleLanguage } = useLanguage();
-  const t = translations[language];
-  const isTelugu = language === 'TE';
+  const { language = 'TE', toggleLanguage } = useLanguage() || {};
+  const langKey = (language && typeof language === 'string') ? language.toUpperCase() : 'TE';
+  const t = translations[langKey] || translations.TE || {};
+  const isTelugu = langKey === 'TE';
 
   // Sync login status from localstorage
   const checkLogin = () => {
-    const token = localStorage.getItem('ld_token');
-    const admin = localStorage.getItem('ld_admin');
-    if (token && admin) {
-      setIsLoggedIn(true);
-      try {
-        setAdminName(JSON.parse(admin).name || 'Admin');
-      } catch (e) {
-        setAdminName('Admin');
+    try {
+      const token = localStorage.getItem('ld_token');
+      const admin = localStorage.getItem('ld_admin');
+      if (token && admin) {
+        setIsLoggedIn(true);
+        try {
+          setAdminName(JSON.parse(admin).name || 'Admin');
+        } catch (e) {
+          setAdminName('Admin');
+        }
+      } else {
+        setIsLoggedIn(false);
+        setAdminName('');
       }
-    } else {
-      setIsLoggedIn(false);
-      setAdminName('');
-    }
 
-    // Check user login
-    const userToken = localStorage.getItem('ld_user_token');
-    const userPhone = localStorage.getItem('ld_user_phone');
-    if (userToken && userPhone) {
-      setIsUserLoggedIn(true);
-    } else {
+      // Check user login
+      const userToken = localStorage.getItem('ld_user_token');
+      const userPhone = localStorage.getItem('ld_user_phone');
+      if (userToken && userPhone) {
+        setIsUserLoggedIn(true);
+      } else {
+        setIsUserLoggedIn(false);
+      }
+    } catch (err) {
+      setIsLoggedIn(false);
       setIsUserLoggedIn(false);
     }
   };
