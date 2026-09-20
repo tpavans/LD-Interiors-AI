@@ -185,8 +185,8 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-800 mt-1 bg-emerald-100/80 px-3 py-1 rounded-full border border-emerald-300 shadow-sm">
             Order Placed Successfully!
           </p>
-          <p className="text-sm text-slate-600 mt-2 max-w-xs font-medium">
-            మీ ఆర్డర్ విజయవంతంగా నమోదైంది!
+          <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xs font-medium leading-relaxed">
+            మీ ఆర్డర్ నమోదైంది! మా అడ్మిన్ <strong>పవన్ సాయి</strong> గారు సత్వరమే మీ వాట్సాప్‌ నెంబర్‌లో సంప్రదిస్తారు.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
                 </p>
                 <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  Email & WhatsApp notification ready
+                  Automatic Greeting Email Sent to Your Inbox
                 </p>
               </div>
             </div>
@@ -230,42 +230,25 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
 
         {/* Action Buttons */}
         <div className="px-6 pb-6 pt-2 space-y-3">
-          {/* Main Green Action Button (HackerRank 'Continue' Style) */}
-          <button
-            onClick={handleWhatsAppClick}
-            className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-          >
-            <MessageSquare className="w-5 h-5 fill-current" />
-            <span>Continue to WhatsApp Chat</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-
-          {/* Track Live Order Status Button */}
+          {/* Main Track Live Order Status Button */}
           <a
             href="/orders"
-            className="w-full py-3 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs tracking-wider uppercase shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
           >
-            <Truck className="w-4 h-4 text-amber-400" />
+            <Truck className="w-5 h-5 text-amber-300" />
             <span>Track Live Order Status</span>
+            <ArrowRight className="w-4 h-4" />
           </a>
 
           {/* Bottom Quick Links */}
           <div className="pt-2 flex items-center justify-center gap-6 border-t border-slate-100">
-            <button
-              onClick={handleWhatsAppClick}
-              className="text-slate-500 hover:text-emerald-600 transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer"
-              title="Open WhatsApp"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </button>
             <a
               href="tel:+919346325291"
               className="text-slate-500 hover:text-amber-600 transition-colors flex items-center gap-1 text-xs font-medium"
               title="Call Support"
             >
               <Phone className="w-3.5 h-3.5" />
-              <span>Call Support</span>
+              <span>Call Support (+91 93463 25291)</span>
             </a>
             <button
               onClick={onClose}
