@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const https = require('https');
+const mongoose = require('mongoose');
 const EmailLog = require('../models/EmailLog');
 const Product = require('../models/Product');
 
@@ -31,16 +32,18 @@ const sendViaResend = async ({ to, subject, html, text, orderIdStr, pName }) => 
     const req = https.request(options, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
-      res.on('end', async () => {
+      res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           console.log(`Email successfully sent via Resend to ${to}!`);
-          await EmailLog.create({
-            orderId: orderIdStr,
-            product: pName,
-            recipient: Array.isArray(to) ? to.join(', ') : to,
-            status: 'success',
-            smtpUser: 'Resend API',
-          }).catch(err => console.error('Failed to save EmailLog:', err));
+          if (mongoose.connection && mongoose.connection.readyState === 1) {
+            EmailLog.create({
+              orderId: orderIdStr,
+              product: pName,
+              recipient: Array.isArray(to) ? to.join(', ') : to,
+              status: 'success',
+              smtpUser: 'Resend API',
+            }).catch(err => console.error('Failed to save EmailLog:', err.message));
+          }
           resolve();
         } else {
           const errMessage = `Resend API returned status ${res.statusCode}: ${body}`;
@@ -87,16 +90,18 @@ const sendViaBrevo = async ({ to, subject, html, text, orderIdStr, pName }) => {
     const req = https.request(options, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
-      res.on('end', async () => {
+      res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           console.log(`Email successfully sent via Brevo to ${to}!`);
-          await EmailLog.create({
-            orderId: orderIdStr,
-            product: pName,
-            recipient: Array.isArray(to) ? to.join(', ') : to,
-            status: 'success',
-            smtpUser: 'Brevo API',
-          }).catch(err => console.error('Failed to save EmailLog:', err));
+          if (mongoose.connection && mongoose.connection.readyState === 1) {
+            EmailLog.create({
+              orderId: orderIdStr,
+              product: pName,
+              recipient: Array.isArray(to) ? to.join(', ') : to,
+              status: 'success',
+              smtpUser: 'Brevo API',
+            }).catch(err => console.error('Failed to save EmailLog:', err.message));
+          }
           resolve();
         } else {
           const errMessage = `Brevo API returned status ${res.statusCode}: ${body}`;
@@ -125,21 +130,35 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
     const isGmail = process.env.SMTP_USER.endsWith('@gmail.com');
     if (isGmail) {
       transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // SSL/TLS for maximum stability and no socket drop
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        tls: {
+          rejectUnauthorized: false
+        },
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+        connectionTimeout: 10000,
+        socketTimeout: 15000,
       });
     } else {
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
+        port: parseInt(process.env.SMTP_PORT || '465'),
+        secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        tls: {
+          rejectUnauthorized: false
+        },
+        pool: true,
       });
     }
   } else {
@@ -172,13 +191,15 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   const info = await transporter.sendMail(mailOptions);
   console.log(`Email successfully sent via SMTP to ${to}! Message ID:`, info.messageId);
   
-  await EmailLog.create({
-    orderId: orderIdStr,
-    product: pName,
-    recipient: Array.isArray(to) ? to.join(', ') : to,
-    status: 'success',
-    smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
-  }).catch(err => console.error('Failed to save EmailLog:', err));
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    EmailLog.create({
+      orderId: orderIdStr,
+      product: pName,
+      recipient: Array.isArray(to) ? to.join(', ') : to,
+      status: 'success',
+      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+    }).catch(err => console.error('Failed to save EmailLog:', err.message));
+  }
 
   if (!hasSmtpConfig) {
     console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
