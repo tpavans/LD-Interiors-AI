@@ -7,16 +7,20 @@ export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState('EN');
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('ld_lang');
-    if (savedLang) {
-      setLanguage(savedLang);
-    }
+    try {
+      const savedLang = localStorage.getItem('ld_lang');
+      if (savedLang) {
+        setLanguage(savedLang);
+      }
+    } catch (e) {}
   }, []);
 
   const toggleLanguage = (lang) => {
     const newLang = lang || (language === 'EN' ? 'TE' : 'EN');
     setLanguage(newLang);
-    localStorage.setItem('ld_lang', newLang);
+    try {
+      localStorage.setItem('ld_lang', newLang);
+    } catch (e) {}
   };
 
   return (

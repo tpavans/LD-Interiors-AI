@@ -79,9 +79,10 @@ export default function ProductDetailPage() {
   const [showARModal, setShowARModal] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const [celebrationData, setCelebrationData] = useState(null);
-  const { language } = useLanguage();
-  const t = translations[language];
-  const isTelugu = language === 'TE';
+  const { language = 'TE' } = useLanguage() || {};
+  const langKey = (language && typeof language === 'string') ? language.toUpperCase() : 'TE';
+  const t = translations[langKey] || translations.TE || {};
+  const isTelugu = langKey === 'TE';
 
   const relatedScrollRef = useRef(null);
   const scrollRelatedLeft = () => {
@@ -312,11 +313,13 @@ export default function ProductDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    // Pre-populate fields from localStorage if available
-    const savedName = localStorage.getItem('ld_user_name') || '';
-    const savedPhone = localStorage.getItem('ld_user_phone') || '';
-    const savedEmail = localStorage.getItem('ld_user_email') || '';
-    const savedAddress = localStorage.getItem('ld_user_address') || '';
+    let savedName = '', savedPhone = '', savedEmail = '', savedAddress = '';
+    try {
+      savedName = localStorage.getItem('ld_user_name') || '';
+      savedPhone = localStorage.getItem('ld_user_phone') || '';
+      savedEmail = localStorage.getItem('ld_user_email') || '';
+      savedAddress = localStorage.getItem('ld_user_address') || '';
+    } catch (e) {}
     setOrderName(savedName);
     setOrderPhone(savedPhone);
     setOrderEmail(savedEmail);

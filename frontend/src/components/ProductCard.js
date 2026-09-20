@@ -28,9 +28,10 @@ export default function ProductCard({ product }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const { language } = useLanguage();
-  const t = translations[language];
-  const isTelugu = language === 'TE';
+  const { language = 'TE' } = useLanguage() || {};
+  const langKey = (language && typeof language === 'string') ? language.toUpperCase() : 'TE';
+  const t = translations[langKey] || translations.TE || {};
+  const isTelugu = langKey === 'TE';
 
   const formatImageUrl = (imgUrl) => {
     if (!imgUrl || typeof imgUrl !== 'string') return '/images/hero-bg.png';
@@ -115,11 +116,13 @@ export default function ProductCard({ product }) {
   const [hardwareBrand, setHardwareBrand] = useState('Hettich Soft-Close Channels');
 
   useEffect(() => {
-    // Pre-populate fields from localStorage if available
-    const savedName = localStorage.getItem('ld_user_name') || '';
-    const savedPhone = localStorage.getItem('ld_user_phone') || '';
-    const savedEmail = localStorage.getItem('ld_user_email') || '';
-    const savedAddress = localStorage.getItem('ld_user_address') || '';
+    let savedName = '', savedPhone = '', savedEmail = '', savedAddress = '';
+    try {
+      savedName = localStorage.getItem('ld_user_name') || '';
+      savedPhone = localStorage.getItem('ld_user_phone') || '';
+      savedEmail = localStorage.getItem('ld_user_email') || '';
+      savedAddress = localStorage.getItem('ld_user_address') || '';
+    } catch (e) {}
     setOrderName(savedName);
     setOrderPhone(savedPhone);
     setOrderEmail(savedEmail);
@@ -161,11 +164,13 @@ export default function ProductCard({ product }) {
     setOrderSuccess(true);
     
     // Save to localStorage to keep visitor info synced
-    localStorage.setItem('ld_user_registered', 'true');
-    localStorage.setItem('ld_user_name', orderName.trim());
-    localStorage.setItem('ld_user_phone', cleanPhone);
-    localStorage.setItem('ld_user_email', orderEmail.trim());
-    localStorage.setItem('ld_user_address', orderAddress.trim());
+    try {
+      localStorage.setItem('ld_user_registered', 'true');
+      localStorage.setItem('ld_user_name', orderName.trim());
+      localStorage.setItem('ld_user_phone', cleanPhone);
+      localStorage.setItem('ld_user_email', orderEmail.trim());
+      localStorage.setItem('ld_user_address', orderAddress.trim());
+    } catch (e) {}
 
     // Dispatch login event to sync across navbar and account portal
     window.dispatchEvent(new Event('storage'));
