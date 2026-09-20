@@ -186,7 +186,7 @@ export default function CelebrationModal({ isOpen, onClose, orderData }) {
             Order Placed Successfully!
           </p>
           <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xs font-medium leading-relaxed">
-            మీ ఆర్డర్ నమోదైంది! మా అడ్మిన్ <strong>పవన్ సాయి</strong> గారు సత్వరమే మీ వాట్సాప్‌ నెంబర్‌లో సంప్రదిస్తారు.
+            మీ ఆర్డర్ విజయవంతంగా నమోదైంది!
           </p>
         </div>
 
