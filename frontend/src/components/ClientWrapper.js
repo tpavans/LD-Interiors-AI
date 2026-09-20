@@ -1608,11 +1608,7 @@ Based on your room's style, here are some LD Interiors products that match beaut
         formData.append('imageUrl', absoluteImageUrl);
       }
 
-      const response = await api.post('/orders', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/orders', formData);
 
       createdOrder = response.data;
     } catch (err) {

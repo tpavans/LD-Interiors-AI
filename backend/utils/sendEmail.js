@@ -123,65 +123,29 @@ const sendViaBrevo = async ({ to, subject, html, text, orderIdStr, pName }) => {
  * Sends an email via SMTP.
  */
 const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
-  let transporter;
-  const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
+  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'pavansaiteki7@gmail.com';
+  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'oqctqlghhvdjqzvk';
 
-  if (hasSmtpConfig) {
-    const isGmail = process.env.SMTP_USER.endsWith('@gmail.com');
-    if (isGmail) {
-      transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // SSL/TLS for maximum stability and no socket drop
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false
-        },
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
-        connectionTimeout: 10000,
-        socketTimeout: 15000,
-      });
-    } else {
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '465'),
-        secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false
-        },
-        pool: true,
-      });
-    }
-  } else {
-    console.log('No SMTP credentials found in .env. Creating Ethereal mock mail account...');
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-    } catch (err) {
-      console.error('Failed to initialize Ethereal test account:', err.message);
-      throw err;
-    }
-  }
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // SSL/TLS over port 465
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    connectionTimeout: 10000,
+    socketTimeout: 15000,
+  });
 
   const mailOptions = {
-    from: hasSmtpConfig ? `"LD Interiors" <${process.env.SMTP_USER}>` : '"LD Interiors Test" <test@ldinteriors.com>',
+    from: `"LD Interiors & Furnitures" <${smtpUser}>`,
     to: to,
     subject: subject,
     html: html,
@@ -197,12 +161,8 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
       product: pName,
       recipient: Array.isArray(to) ? to.join(', ') : to,
       status: 'success',
-      smtpUser: hasSmtpConfig ? process.env.SMTP_USER : 'Ethereal Test Account',
+      smtpUser: smtpUser,
     }).catch(err => console.error('Failed to save EmailLog:', err.message));
-  }
-
-  if (!hasSmtpConfig) {
-    console.log('Ethereal Test Mail Preview URL:', nodemailer.getTestMessageUrl(info));
   }
 };
 
@@ -247,13 +207,15 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
 
   if (validTargets.length === 0) {
     console.warn(`[sendEmail] No valid routable email recipients found in "${Array.isArray(to) ? to.join(', ') : to}". Skipping email delivery to prevent mailer-daemon bounce-backs.`);
-    await EmailLog.create({
-      orderId: orderIdStr,
-      product: pName,
-      recipient: Array.isArray(to) ? to.join(', ') : (to || 'none'),
-      status: 'skipped',
-      smtpUser: 'Skipped - Invalid/Dummy Recipient Domain',
-    }).catch(err => console.error('Failed to save EmailLog:', err));
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      EmailLog.create({
+        orderId: orderIdStr,
+        product: pName,
+        recipient: Array.isArray(to) ? to.join(', ') : (to || 'none'),
+        status: 'skipped',
+        smtpUser: 'Skipped - Invalid/Dummy Recipient Domain',
+      }).catch(err => console.error('Failed to save EmailLog:', err.message));
+    }
     return;
   }
 
@@ -262,16 +224,14 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   let sent = false;
   let errors = [];
 
-  // 1. Try Gmail SMTP first if valid credentials are configured
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
-      sent = true;
-      return;
-    } catch (err) {
-      console.warn(`SMTP delivery failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}. Attempting API fallback...`);
-      errors.push(`SMTP: ${err.message}`);
-    }
+  // 1. Try Gmail SMTP first with active credentials
+  try {
+    await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
+    sent = true;
+    return;
+  } catch (err) {
+    console.warn(`SMTP delivery failed for recipient ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}. Error: ${err.message}. Attempting API fallback...`);
+    errors.push(`SMTP: ${err.message}`);
   }
 
   // 2. Try Resend API if configured and SMTP not sent

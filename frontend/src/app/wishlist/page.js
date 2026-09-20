@@ -82,11 +82,17 @@ export default function WishlistPage() {
       const totalAmt = activePaymentProduct.price || activePaymentProduct.estimatePrice || 25000;
       const payableNow = bookingPaymentType === '50' ? Math.round(totalAmt * 0.5) : totalAmt;
 
+      let savedEmail = '';
+      try {
+        savedEmail = localStorage.getItem('ld_user_email') || '';
+      } catch (e) {}
+
       const orderData = {
-        product: activePaymentProduct.name || activePaymentProduct.title,
-        customerName: bookingName,
+        name: bookingName || 'Customer',
         phone: cleanPhone,
-        address: bookingAddress,
+        email: savedEmail || 'pavansaiteki7@gmail.com',
+        address: bookingAddress || 'Workshop Pickup',
+        product: activePaymentProduct.name || activePaymentProduct.title,
         notes: `Wishlist booking - ${bookingPaymentType === '50' ? '50% Advance Online Booking' : 'Full Payment'}`,
         totalPrice: totalAmt,
         paidAmount: payableNow,
