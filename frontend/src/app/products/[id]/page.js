@@ -183,6 +183,7 @@ export default function ProductDetailPage() {
   const [referenceImageFile, setReferenceImageFile] = useState(null);
   const [orderNotes, setOrderNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [formError, setFormError] = useState('');
   const [plywoodBrand, setPlywoodBrand] = useState('Pure Teak Wood (No Plywood)');
   const [polishBrand, setPolishBrand] = useState('Asian Paints PU Polish');
   const [glueBrand, setGlueBrand] = useState('Fevicol Marine (Waterproof)');
@@ -332,6 +333,7 @@ export default function ProductDetailPage() {
     setPolishBrand('Asian Paints PU Polish');
     setGlueBrand('Fevicol Marine (Waterproof)');
     setHardwareBrand('Hettich Soft-Close Channels');
+    setFormError('');
   }, [showOrderModal]);
 
   const handleOrderSubmit = async (e) => {
@@ -638,7 +640,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
           {/* User Feedback Star Rating Widget */}
           <div className="mt-6 pt-5 border-t border-wood-border/30 text-left">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">{t.rateTitle}</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-wood-accent">{t?.rateTitle || (isTelugu ? "డిజైన్ రేటింగ్ ఇవ్వండి" : "Rate this Design")}</span>
             <div className="flex flex-col gap-1 mt-1">
               <div className="flex items-center gap-1.5">
                 {[1, 2, 3, 4, 5].map((star) => {
@@ -745,7 +747,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
               href="/products"
               className="block w-full text-center rounded-xl border border-wood-border hover:bg-wood-cream hover:text-wood-dark px-6 py-3.5 text-xs font-bold tracking-widest text-wood-light uppercase shadow-sm transition-colors duration-300"
             >
-              {t.backToGallery}
+              {t?.backToGallery || (isTelugu ? "తిరిగి గ్యాలరీకి" : "Back to Gallery")}
             </Link>
           </div>
         </div>
