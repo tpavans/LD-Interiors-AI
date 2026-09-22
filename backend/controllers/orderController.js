@@ -98,18 +98,28 @@ const createOrder = async (req, res) => {
       console.error('[AUTO-PROFILE ERROR] Failed to manage customer profile:', profileErr.message);
     }
 
-    // Dispatch notifications in parallel (so slow SMTP emails don't delay the Twilio voice call)
-    sendOrderEmail(order).catch((err) => {
-      console.error('Failed to send admin order email:', err);
-    });
+    // Dispatch notifications: send customer greeting email first, then admin alert and voice call
+    (async () => {
+      try {
+        await sendCustomerGreetingEmail(order);
+        console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
+      }
 
-    sendCustomerGreetingEmail(order).catch((err) => {
-      console.error('Failed to send customer greeting email:', err);
-    });
+      try {
+        await sendOrderEmail(order);
+        console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
+      }
 
-    triggerCustomerVoiceCall(order).catch((err) => {
-      console.error('Failed to trigger customer voice call:', err);
-    });
+      try {
+        await triggerCustomerVoiceCall(order);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Customer voice call trigger failed:', err.message);
+      }
+    })();
 
     res.status(201).json(order);
   } catch (error) {

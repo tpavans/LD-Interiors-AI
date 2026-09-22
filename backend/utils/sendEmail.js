@@ -119,30 +119,41 @@ const sendViaBrevo = async ({ to, subject, html, text, orderIdStr, pName }) => {
   });
 };
 
+let globalSmtpTransporter = null;
+let currentSmtpUser = null;
+
+const getSMTPTransporter = () => {
+  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'pavansaiteki7@gmail.com';
+  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'oqctqlghhvdjqzvk';
+
+  if (!globalSmtpTransporter || currentSmtpUser !== smtpUser) {
+    currentSmtpUser = smtpUser;
+    globalSmtpTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // SSL/TLS over port 465
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
+    });
+  }
+  return { transporter: globalSmtpTransporter, smtpUser };
+};
+
 /**
  * Sends an email via SMTP.
  */
 const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
-  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'pavansaiteki7@gmail.com';
-  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'oqctqlghhvdjqzvk';
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // SSL/TLS over port 465
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    connectionTimeout: 10000,
-    socketTimeout: 15000,
-  });
+  const { transporter, smtpUser } = getSMTPTransporter();
 
   const mailOptions = {
     from: `"LD Interiors & Furnitures" <${smtpUser}>`,
