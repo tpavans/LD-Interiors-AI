@@ -322,12 +322,20 @@ const sendManualGreetingEmail = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (!order.email || order.email.includes('no-email') || !order.email.includes('@')) {
+    const inputEmail = req.body && req.body.email ? req.body.email.trim() : '';
+    const targetEmail = inputEmail || order.email;
+
+    if (!targetEmail || targetEmail.includes('no-email') || !targetEmail.includes('@')) {
       return res.status(400).json({ message: 'This order does not have a valid customer email address.' });
     }
 
+    if (inputEmail && inputEmail !== order.email) {
+      order.email = inputEmail;
+      await order.save();
+    }
+
     await sendCustomerGreetingEmail(order);
-    res.json({ message: 'Greeting email sent successfully to ' + order.email });
+    res.json({ message: 'Greeting email sent successfully to ' + order.email, order });
   } catch (error) {
     console.error('Error sending manual greeting email:', error);
     res.status(500).json({

@@ -146,14 +146,14 @@ const getSMTPTransporter = () => {
       socketTimeout: 15000,
     });
   }
-  return { transporter: globalSmtpTransporter, smtpUser };
+  return { transporter: globalSmtpTransporter, smtpUser, smtpPass };
 };
 
 /**
- * Sends an email via SMTP.
+ * Sends an email via SMTP with dual-port fallback (Port 465 SSL & Port 587 STARTTLS).
  */
 const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
-  const { transporter, smtpUser } = getSMTPTransporter();
+  const { transporter, smtpUser, smtpPass } = getSMTPTransporter();
 
   const mailOptions = {
     from: `"LD Interiors & Furnitures" <${smtpUser}>`,
@@ -163,17 +163,58 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
     text: text,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`Email successfully sent via SMTP to ${to}! Message ID:`, info.messageId);
-  
-  if (mongoose.connection && mongoose.connection.readyState === 1) {
-    EmailLog.create({
-      orderId: orderIdStr,
-      product: pName,
-      recipient: Array.isArray(to) ? to.join(', ') : to,
-      status: 'success',
-      smtpUser: smtpUser,
-    }).catch(err => console.error('Failed to save EmailLog:', err.message));
+  // Try 1: Pooled Port 465 SSL
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Email successfully sent via SMTP (Port 465) to ${to}! Message ID:`, info.messageId);
+    
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      EmailLog.create({
+        orderId: orderIdStr,
+        product: pName,
+        recipient: Array.isArray(to) ? to.join(', ') : to,
+        status: 'success',
+        smtpUser: `${smtpUser} (Port 465)`,
+      }).catch(err => console.error('Failed to save EmailLog:', err.message));
+    }
+    return;
+  } catch (err465) {
+    console.warn(`SMTP Port 465 failed (${err465.message}). Retrying via Port 587 (STARTTLS)...`);
+  }
+
+  // Try 2: Port 587 STARTTLS (standard cloud provider fallback)
+  try {
+    const transporter587 = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // STARTTLS
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
+    });
+
+    const info = await transporter587.sendMail(mailOptions);
+    console.log(`Email successfully sent via SMTP (Port 587 STARTTLS) to ${to}! Message ID:`, info.messageId);
+    
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      EmailLog.create({
+        orderId: orderIdStr,
+        product: pName,
+        recipient: Array.isArray(to) ? to.join(', ') : to,
+        status: 'success',
+        smtpUser: `${smtpUser} (Port 587)`,
+      }).catch(err => console.error('Failed to save EmailLog:', err.message));
+    }
+    return;
+  } catch (err587) {
+    console.error(`SMTP Port 587 delivery also failed for ${to}:`, err587.message);
+    throw new Error(`SMTP SSL (465) & STARTTLS (587) failed: ${err587.message}`);
   }
 };
 

@@ -2355,7 +2355,7 @@ LD Interiors & Furnitures
                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
                     window.open(gmailUrl, '_blank');
 
-                    api.post(`/orders/${o._id}/send-greeting`).catch(() => {});
+                    api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail }).catch(() => {});
                     setPendingGreetingOrder(null);
                   }}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer shadow-md rounded-xl flex items-center gap-1.5 active:scale-95"
