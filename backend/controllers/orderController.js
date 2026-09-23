@@ -98,28 +98,26 @@ const createOrder = async (req, res) => {
       console.error('[AUTO-PROFILE ERROR] Failed to manage customer profile:', profileErr.message);
     }
 
-    // Dispatch notifications: send customer greeting email first, then admin alert and voice call
-    (async () => {
-      try {
-        await sendCustomerGreetingEmail(order);
-        console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
-      } catch (err) {
-        console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
-      }
+    // Dispatch notifications sequentially with await so SMTP emails finish transmitting before server responds
+    try {
+      await sendCustomerGreetingEmail(order);
+      console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
+    } catch (err) {
+      console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
+    }
 
-      try {
-        await sendOrderEmail(order);
-        console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
-      } catch (err) {
-        console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
-      }
+    try {
+      await sendOrderEmail(order);
+      console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
+    } catch (err) {
+      console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
+    }
 
-      try {
-        await triggerCustomerVoiceCall(order);
-      } catch (err) {
-        console.error('[ORDER NOTIFICATION ERROR] Customer voice call trigger failed:', err.message);
-      }
-    })();
+    try {
+      await triggerCustomerVoiceCall(order);
+    } catch (err) {
+      console.error('[ORDER NOTIFICATION ERROR] Customer voice call trigger failed:', err.message);
+    }
 
     res.status(201).json(order);
   } catch (error) {
@@ -483,7 +481,7 @@ const verifyPayment = async (req, res) => {
       // Trigger customer PDF receipt dispatch
       try {
         const { sendCustomerPaymentReceiptEmail } = require('../utils/sendEmail');
-        sendCustomerPaymentReceiptEmail(order, finalAmount).catch(e => console.error(e));
+        await sendCustomerPaymentReceiptEmail(order, finalAmount);
       } catch (err) {
         console.error('Failed to send payment receipt:', err);
       }
