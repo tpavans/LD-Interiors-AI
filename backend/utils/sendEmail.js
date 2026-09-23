@@ -157,6 +157,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
 
   const mailOptions = {
     from: `"LD Interiors & Furnitures" <${smtpUser}>`,
+    replyTo: `"LD Interiors & Furnitures" <ldinteriors.in@gmail.com>`,
     to: to,
     subject: subject,
     html: html,
@@ -753,7 +754,7 @@ https://www.ldinteriors.in/
     </div>
   `;
 
-  const subject = `🎉 Order Received successfully! - ${order.product} | ఆర్డర్ విజయవంతంగా అందింది!`;
+  const subject = `Order Received: ${order.product} | LD Interiors & Furnitures`;
   return sendGenericEmail({
     to: order.email,
     subject,
