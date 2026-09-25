@@ -98,28 +98,31 @@ const createOrder = async (req, res) => {
       console.error('[AUTO-PROFILE ERROR] Failed to manage customer profile:', profileErr.message);
     }
 
-    // Dispatch notifications sequentially with await so SMTP emails finish transmitting before server responds
-    try {
-      await sendCustomerGreetingEmail(order);
-      console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
-    }
-
-    try {
-      await sendOrderEmail(order);
-      console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
-    }
-
-    try {
-      await triggerCustomerVoiceCall(order);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Customer voice call trigger failed:', err.message);
-    }
-
+    // 1. Respond HTTP 201 Created INSTANTLY (< 150ms) so user UI opens Celebration Modal immediately!
     res.status(201).json(order);
+
+    // 2. Dispatch notifications in background queue without delaying HTTP response
+    setImmediate(async () => {
+      try {
+        await sendCustomerGreetingEmail(order);
+        console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
+      }
+
+      try {
+        await sendOrderEmail(order);
+        console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
+      }
+
+      try {
+        await triggerCustomerVoiceCall(order);
+      } catch (err) {
+        console.error('[ORDER NOTIFICATION ERROR] Customer voice call trigger failed:', err.message);
+      }
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({
