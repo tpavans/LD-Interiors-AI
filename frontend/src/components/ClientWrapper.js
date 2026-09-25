@@ -629,7 +629,7 @@ How can I help you today?`;
               await api.post('/orders', {
                 name: (collected.name || localStorage.getItem('ld_user_name') || 'Guest').trim(),
                 phone: (collected.phone || localStorage.getItem('ld_user_phone') || '0000000000').trim(),
-                email: (collected.email || localStorage.getItem('ld_user_email') || 'no-email@ldinteriors.com').trim(),
+                email: (collected.email || localStorage.getItem('ld_user_email') || 'pavansaiteki7@gmail.com').trim(),
                 address: (collected.address || localStorage.getItem('ld_user_address') || 'Workshop pickup').trim(),
                 product: (collected.product || collected.furnitureType || 'Custom Furniture').trim(),
                 imageUrl: absoluteImageUrl,
