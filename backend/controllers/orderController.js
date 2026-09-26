@@ -122,27 +122,22 @@ const createOrder = async (req, res) => {
       orderObj.user = userObj;
     }
 
-    // 1. Send Customer Greeting Email FIRST directly to customer's order email address
-    try {
-      await sendCustomerGreetingEmail(order);
-      console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
-    }
-
-    // 2. Send Admin Notification Email SECOND
-    try {
-      await sendOrderEmail(order);
-      console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
-    }
-
-    // 3. Trigger Customer Voice Call in background queue
-    triggerCustomerVoiceCall(order).catch(err => console.error('[ORDER NOTIFICATION ERROR] Customer voice call failed:', err.message));
-
-    // 4. Respond HTTP 201 Created after email delivery is 100% completed and guaranteed!
+    // 1. Respond HTTP 201 Created IMMEDIATELY to customer so order submission is ultra-fast (<200ms)!
     res.status(201).json(orderObj);
+
+    // 2. Dispatch Customer Greeting Email, Admin Notification Email, and Voice Call concurrently in background
+    setImmediate(async () => {
+      try {
+        const results = await Promise.allSettled([
+          sendCustomerGreetingEmail(order),
+          sendOrderEmail(order),
+          triggerCustomerVoiceCall(order)
+        ]);
+        console.log(`[ORDER NOTIFICATIONS] Background notifications completed for order ID: ${order._id}`);
+      } catch (notifyErr) {
+        console.error('[ORDER NOTIFICATIONS ERROR]', notifyErr.message);
+      }
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({
