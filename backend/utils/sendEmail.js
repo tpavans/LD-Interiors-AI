@@ -758,8 +758,11 @@ https://www.ldinteriors.in/
 
   const orderIdDisplay = order._id ? `#LD-${order._id.toString().slice(-6).toUpperCase()}` : '';
   const subject = `🎉 Order Received (${orderIdDisplay}): ${order.product} | LD Interiors & Furnitures`;
+  
+  const targetEmail = (order.email || (order.user && order.user.email) || '').toString().trim().toLowerCase();
+
   return sendGenericEmail({
-    to: order.email,
+    to: targetEmail,
     subject,
     html: htmlContent,
     text: textContent,
