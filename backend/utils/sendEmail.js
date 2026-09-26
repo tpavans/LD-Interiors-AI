@@ -157,7 +157,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   const { transporter, smtpUser, smtpPass } = getSMTPTransporter();
 
   const mailOptions = {
-    from: `"LD Interiors & Furnitures" <${smtpUser}>`,
+    from: `"LD Interiors & Furnitures" <ldinteriors.in@gmail.com>`,
     replyTo: `"LD Interiors & Furnitures" <ldinteriors.in@gmail.com>`,
     to: to,
     subject: subject,

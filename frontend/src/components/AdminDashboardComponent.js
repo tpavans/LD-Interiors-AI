@@ -624,28 +624,21 @@ export default function AdminDashboardComponent() {
     const msg = generateCustomerGreetingMessage(o);
     const targetEmail = (o.email || '').trim();
 
-    let emailSent = false;
-    if (targetEmail && targetEmail.includes('@')) {
-      try {
-        await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
-        emailSent = true;
-      } catch (err) {
-        console.warn('Backend email send error:', err.message);
-      }
-    }
-
-    // Open WhatsApp
+    // 1. Open WhatsApp synchronously FIRST to prevent browser popup blockers from blocking the tab
     const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
 
-    if (emailSent) {
-      alert(`✅ Success: Greeting Email sent automatically to customer (${targetEmail})! WhatsApp chat opened.`);
-    } else if (targetEmail && targetEmail.includes('@')) {
-      const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
-      const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-      window.open(mailtoUrl, '_blank');
-    } else {
-      alert('⚠️ Order has no valid customer email address. WhatsApp chat opened.');
+    // 2. Dispatch Customer Greeting Email via Backend API
+    if (targetEmail && targetEmail.includes('@')) {
+      try {
+        await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
+        console.log(`[GREETING] Email successfully dispatched to ${targetEmail}`);
+      } catch (err) {
+        console.warn('Backend email send error, opening fallback mailto:', err.message);
+        const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+        const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+        window.open(mailtoUrl, '_blank');
+      }
     }
   };
 
