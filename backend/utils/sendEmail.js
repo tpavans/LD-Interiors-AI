@@ -560,8 +560,8 @@ https://www.ldinteriors.in/
       </div>
       ` : ''}
 
-      <div style="padding: 12px 15px; background-color: #f5eee4; border-left: 4px solid #6d553b; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #5a4b3b;">
-        <strong>Admin Status:</strong> Mr. Nagaraju has been redirected to chat on WhatsApp. Please check the database and coordinate with the customer.
+      <div style="padding: 12px 15px; background-color: #e8f5e9; border-left: 4px solid #2e7d32; border-radius: 4px; font-size: 12px; line-height: 1.4; color: #1b5e20;">
+        <strong>System Status:</strong> Order registered successfully & automatic greeting email sent to customer email (<strong>${order.email}</strong>).
       </div>
 
       <div style="margin-top: 30px; text-align: center; border-top: 1px solid #e2d7c5; padding-top: 15px; font-size: 10px; color: #a59582;">
