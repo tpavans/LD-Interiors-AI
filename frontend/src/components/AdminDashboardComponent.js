@@ -616,6 +616,39 @@ export default function AdminDashboardComponent() {
     }
   };
 
+  // 2e. Send Both WhatsApp & Mail Greeting
+  const handleSendBothGreeting = async (o) => {
+    if (!o) return;
+    const cleanPhone = (o.phone || '').replace(/\D/g, '');
+    const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
+    const msg = generateCustomerGreetingMessage(o);
+    const targetEmail = (o.email || '').trim();
+
+    let emailSent = false;
+    if (targetEmail && targetEmail.includes('@')) {
+      try {
+        await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
+        emailSent = true;
+      } catch (err) {
+        console.warn('Backend email send error:', err.message);
+      }
+    }
+
+    // Open WhatsApp
+    const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+
+    if (emailSent) {
+      alert(`✅ Success: Greeting Email sent automatically to customer (${targetEmail})! WhatsApp chat opened.`);
+    } else if (targetEmail && targetEmail.includes('@')) {
+      const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+      const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+      window.open(mailtoUrl, '_blank');
+    } else {
+      alert('⚠️ Order has no valid customer email address. WhatsApp chat opened.');
+    }
+  };
+
   // 3. Handle Login Submission
   const handleLoginSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -2339,23 +2372,10 @@ LD Interiors & Furnitures
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const o = orders.find(ord => ord._id === pendingGreetingOrder);
                     if (!o) return;
-                    const cleanPhone = (o.phone || '').replace(/\D/g, '');
-                    const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
-                    const welcomeMsg = generateCustomerGreetingMessage(o);
-                    const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
-                    const targetEmail = (o.email || '').trim();
-
-                    // Open WhatsApp
-                    window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(welcomeMsg)}`, '_blank');
-
-                    // Open Gmail
-                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(welcomeMsg)}`;
-                    window.open(gmailUrl, '_blank');
-
-                    api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail }).catch(() => {});
+                    await handleSendBothGreeting(o);
                     setPendingGreetingOrder(null);
                   }}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer shadow-md rounded-xl flex items-center gap-1.5 active:scale-95"
@@ -2447,19 +2467,7 @@ LD Interiors & Furnitures
                             </a>
                             <div className="flex flex-col gap-1 mt-0.5">
                               <button
-                                onClick={() => {
-                                  const cleanPhone = (o.phone || '').replace(/\D/g, '');
-                                  const targetPhone = cleanPhone.startsWith('91') && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone.slice(-10)}`;
-                                  const msg = generateCustomerGreetingMessage(o);
-                                  const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
-                                  const targetEmail = (o.email || '').trim();
-
-                                  // Open WhatsApp
-                                  window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-                                  // Open Gmail
-                                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-                                  window.open(gmailUrl, '_blank');
-                                }}
+                                onClick={() => handleSendBothGreeting(o)}
                                 className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-amber-400/40 active:scale-95 w-full text-center"
                                 title="Send Greeting to both WhatsApp and Gmail at once"
                               >
@@ -2480,13 +2488,23 @@ LD Interiors & Furnitures
                                 <span>WhatsApp Greeting</span>
                               </button>
 
-                              <button
-                                onClick={() => {
-                                  const msg = generateCustomerGreetingMessage(o);
-                                  const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+                               <button
+                                onClick={async () => {
                                   const targetEmail = (o.email || '').trim();
-                                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-                                  window.open(gmailUrl, '_blank');
+                                  if (!targetEmail || !targetEmail.includes('@')) {
+                                    alert('⚠️ Notice: This order has no valid customer email address.');
+                                    return;
+                                  }
+                                  try {
+                                    await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
+                                    alert(`✅ Success: Greeting Email sent to customer (${targetEmail})!`);
+                                  } catch (err) {
+                                    console.warn('Backend email API error, opening mail composer:', err.message);
+                                    const msg = generateCustomerGreetingMessage(o);
+                                    const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
+                                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+                                    window.open(gmailUrl, '_blank');
+                                  }
                                 }}
                                 className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-red-500/30 active:scale-95 w-full text-center"
                                 title="Send Welcome Greeting Invitation on Gmail"
