@@ -583,7 +583,7 @@ const sendCustomerGreetingEmail = async (order) => {
         timeZone: 'Asia/Kolkata'
       });
 
-  if (order.productId) {
+  if (order.productId && mongoose.Types.ObjectId.isValid(order.productId)) {
     try {
       const prod = await Product.findById(order.productId);
       if (prod) {
@@ -754,7 +754,8 @@ https://www.ldinteriors.in/
     </div>
   `;
 
-  const subject = `Order Received: ${order.product} | LD Interiors & Furnitures`;
+  const orderIdDisplay = order._id ? `#LD-${order._id.toString().slice(-6).toUpperCase()}` : '';
+  const subject = `🎉 Order Received (${orderIdDisplay}): ${order.product} | LD Interiors & Furnitures`;
   return sendGenericEmail({
     to: order.email,
     subject,
