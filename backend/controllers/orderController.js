@@ -69,13 +69,16 @@ const createOrder = async (req, res) => {
       productId: productId ? productId.trim() : undefined,
     });
 
-    // Auto-create/update customer profile on order placement
+    // Auto-create/update customer profile on order placement and generate auth token
+    let userObj = null;
+    let authToken = null;
     try {
       const User = require('../models/User');
+      const jwt = require('jsonwebtoken');
       const cleanedPhone = phone.trim();
       let user = await User.findOne({ phone: cleanedPhone });
       if (!user) {
-        await User.create({
+        user = await User.create({
           name: name.trim(),
           email: email.trim(),
           phone: cleanedPhone,
@@ -94,12 +97,33 @@ const createOrder = async (req, res) => {
           console.log(`[AUTO-PROFILE] Updated customer profile details for phone: ${cleanedPhone}`);
         }
       }
+
+      userObj = {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        address: user.address,
+        role: user.role || 'user'
+      };
+
+      const secret = process.env.JWT_SECRET || 'ld_secret_key_123';
+      authToken = jwt.sign({ id: user._id, role: user.role || 'user' }, secret, { expiresIn: '30d' });
     } catch (profileErr) {
       console.error('[AUTO-PROFILE ERROR] Failed to manage customer profile:', profileErr.message);
     }
 
+    const orderObj = order.toObject ? order.toObject() : { ...order };
+    if (authToken) {
+      orderObj.token = authToken;
+      orderObj.userToken = authToken;
+    }
+    if (userObj) {
+      orderObj.user = userObj;
+    }
+
     // 1. Respond HTTP 201 Created INSTANTLY (< 150ms) so user UI opens Celebration Modal immediately!
-    res.status(201).json(order);
+    res.status(201).json(orderObj);
 
     // 2. Dispatch notifications concurrently and independently in background queue
     setImmediate(() => {

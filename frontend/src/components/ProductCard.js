@@ -207,8 +207,20 @@ ${orderNotes.trim() || 'No custom notes.'}`;
 
       const response = await api.post('/orders', formData);
       createdOrder = response.data;
+      if (createdOrder && (createdOrder.token || createdOrder.userToken)) {
+        const uToken = createdOrder.token || createdOrder.userToken;
+        localStorage.setItem('ld_user_token', uToken);
+        localStorage.setItem('ld_token', uToken);
+      } else {
+        localStorage.setItem('ld_user_token', 'USER_TOKEN_' + cleanPhone);
+      }
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('user-logged-in'));
     } catch (err) {
       console.warn('Backend order post handled safely:', err.message);
+      localStorage.setItem('ld_user_token', 'USER_TOKEN_' + cleanPhone);
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('user-logged-in'));
       createdOrder = {
         _id: `LD-LOCAL-${Date.now()}`,
         name: orderName.trim(),

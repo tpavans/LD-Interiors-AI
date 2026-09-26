@@ -67,6 +67,19 @@ export default function CustomizePage() {
       const res = await api.post('/orders', formData);
       const createdOrder = res.data || {};
 
+      try {
+        const uToken = createdOrder.token || createdOrder.userToken || ('USER_TOKEN_' + cleanPhone);
+        localStorage.setItem('ld_user_token', uToken);
+        localStorage.setItem('ld_token', uToken);
+        localStorage.setItem('ld_user_registered', 'true');
+        localStorage.setItem('ld_user_name', name.trim());
+        localStorage.setItem('ld_user_phone', cleanPhone);
+        localStorage.setItem('ld_user_email', email.trim());
+        localStorage.setItem('ld_user_address', address.trim());
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event('user-logged-in'));
+      } catch (e) {}
+
       setCelebrationData({
         product: furnitureType,
         image: createdOrder.imageUrl || createdOrder.referenceImageUrl || '',

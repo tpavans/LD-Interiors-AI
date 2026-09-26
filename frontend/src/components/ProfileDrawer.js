@@ -64,12 +64,15 @@ export default function ProfileDrawer({ isOpen, onClose }) {
       const savedEmail = localStorage.getItem('ld_user_email') || '';
       const savedAddress = localStorage.getItem('ld_user_address') || '';
 
-      if (token && savedPhone) {
+      if (savedPhone || token) {
+        if (savedPhone && !token) {
+          localStorage.setItem('ld_user_token', 'USER_TOKEN_' + savedPhone);
+        }
         setIsUserLoggedIn(true);
         setProfilePhone(savedPhone);
-        setProfileName(savedName);
-        setProfileEmail(savedEmail);
-        setProfileAddress(savedAddress);
+        setProfileName(savedName || 'Customer');
+        setProfileEmail(savedEmail || '');
+        setProfileAddress(savedAddress || '');
       } else {
         setIsUserLoggedIn(false);
       }
@@ -80,10 +83,12 @@ export default function ProfileDrawer({ isOpen, onClose }) {
     checkUserSession();
     loadWishlistProducts();
     window.addEventListener('storage', checkUserSession);
+    window.addEventListener('user-logged-in', checkUserSession);
     window.addEventListener('storage', loadWishlistProducts);
     window.addEventListener('liked-updated', loadWishlistProducts);
     return () => {
       window.removeEventListener('storage', checkUserSession);
+      window.removeEventListener('user-logged-in', checkUserSession);
       window.removeEventListener('storage', loadWishlistProducts);
       window.removeEventListener('liked-updated', loadWishlistProducts);
     };

@@ -52,7 +52,10 @@ export default function Navbar() {
       // Check user login
       const userToken = localStorage.getItem('ld_user_token');
       const userPhone = localStorage.getItem('ld_user_phone');
-      if (userToken && userPhone) {
+      if (userPhone || userToken) {
+        if (userPhone && !userToken) {
+          localStorage.setItem('ld_user_token', 'USER_TOKEN_' + userPhone);
+        }
         setIsUserLoggedIn(true);
       } else {
         setIsUserLoggedIn(false);
@@ -66,6 +69,7 @@ export default function Navbar() {
   useEffect(() => {
     checkLogin();
     window.addEventListener('storage', checkLogin);
+    window.addEventListener('user-logged-in', checkLogin);
     window.addEventListener('admin-login', checkLogin);
     window.addEventListener('admin-logout', checkLogin);
 

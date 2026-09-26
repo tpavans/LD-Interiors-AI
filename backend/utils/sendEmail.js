@@ -256,7 +256,9 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   
   // Validate recipient list and skip dummy / non-routable addresses to prevent bounce loops
   const rawList = Array.isArray(to) ? to : [to];
-  const validTargets = rawList.filter(isValidEmailRecipient);
+  const validTargets = rawList
+    .map(e => (typeof e === 'string' ? e.trim().toLowerCase() : ''))
+    .filter(isValidEmailRecipient);
 
   if (validTargets.length === 0) {
     console.warn(`[sendEmail] No valid routable email recipients found in "${Array.isArray(to) ? to.join(', ') : to}". Skipping email delivery to prevent mailer-daemon bounce-backs.`);
