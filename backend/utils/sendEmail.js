@@ -132,6 +132,7 @@ const getSMTPTransporter = () => {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true, // SSL/TLS over port 465
+      family: 4, // Force IPv4 to prevent ENETUNREACH on cloud containers
       auth: {
         user: smtpUser,
         pass: smtpPass,
@@ -142,8 +143,8 @@ const getSMTPTransporter = () => {
       pool: true,
       maxConnections: 5,
       maxMessages: 100,
-      connectionTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 15000,
+      socketTimeout: 20000,
     });
   }
   return { transporter: globalSmtpTransporter, smtpUser, smtpPass };
@@ -168,6 +169,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   try {
     const serviceTransporter = nodemailer.createTransport({
       service: 'gmail',
+      family: 4, // Force IPv4
       auth: {
         user: smtpUser,
         pass: smtpPass,
@@ -175,8 +177,8 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 15000,
+      socketTimeout: 20000,
     });
 
     const info = await serviceTransporter.sendMail(mailOptions);
@@ -221,6 +223,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
       host: 'smtp.gmail.com',
       port: 587,
       secure: false, // STARTTLS
+      family: 4, // Force IPv4
       auth: {
         user: smtpUser,
         pass: smtpPass,
@@ -228,8 +231,8 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 15000,
+      socketTimeout: 20000,
     });
 
     const info = await transporter587.sendMail(mailOptions);
