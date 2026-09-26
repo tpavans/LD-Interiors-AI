@@ -164,6 +164,38 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
     text: text,
   };
 
+  // Try 0: Nodemailer Service Gmail (Fastest & direct for Gmail App Passwords)
+  try {
+    const serviceTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
+    });
+
+    const info = await serviceTransporter.sendMail(mailOptions);
+    console.log(`Email successfully sent via Nodemailer Service (Gmail) to ${to}! Message ID:`, info.messageId);
+    
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      EmailLog.create({
+        orderId: orderIdStr,
+        product: pName,
+        recipient: Array.isArray(to) ? to.join(', ') : to,
+        status: 'success',
+        smtpUser: `${smtpUser} (Gmail Service)`,
+      }).catch(err => console.error('Failed to save EmailLog:', err.message));
+    }
+    return;
+  } catch (errService) {
+    console.warn(`Nodemailer Service Gmail failed (${errService.message}). Retrying via Port 465 (SSL)...`);
+  }
+
   // Try 1: Pooled Port 465 SSL
   try {
     const info = await transporter.sendMail(mailOptions);
