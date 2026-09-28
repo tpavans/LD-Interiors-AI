@@ -122,26 +122,18 @@ const createOrder = async (req, res) => {
       orderObj.user = userObj;
     }
 
-    // 1. Send Customer Greeting Email FIRST directly to customer's order email address & AWAIT IT for 100% guaranteed delivery on cloud server!
+    // 1. Send Customer Greeting Email (to customer form email) and Admin Email concurrently in parallel
     try {
-      await sendCustomerGreetingEmail(order);
-      console.log(`[ORDER NOTIFICATION] Customer greeting email sent successfully to: ${order.email}`);
+      await Promise.allSettled([
+        sendCustomerGreetingEmail(order),
+        sendOrderEmail(order)
+      ]);
+      console.log(`[ORDER NOTIFICATIONS] Email notifications completed for order ID: ${order._id}`);
     } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Customer greeting email failed:', err.message);
+      console.error('[ORDER NOTIFICATION ERROR]', err.message);
     }
 
-    // 2. Send Admin Notification Email SECOND & AWAIT IT
-    try {
-      await sendOrderEmail(order);
-      console.log(`[ORDER NOTIFICATION] Admin notification email sent for order ID: ${order._id}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR] Admin notification email failed:', err.message);
-    }
-
-    // 3. Trigger Customer Voice Call in background
-    triggerCustomerVoiceCall(order).catch(err => console.error('[ORDER NOTIFICATION ERROR] Customer voice call failed:', err.message));
-
-    // 4. Respond HTTP 201 Created AFTER email delivery is 100% completed and guaranteed!
+    // 2. Respond HTTP 201 Created AFTER email delivery is 100% completed!
     res.status(201).json(orderObj);
   } catch (error) {
     console.error('Error creating order:', error);
