@@ -161,8 +161,6 @@ export default function ProductCard({ product }) {
       return;
     }
 
-    setOrderSuccess(true);
-    
     // Save to localStorage to keep visitor info synced
     try {
       localStorage.setItem('ld_user_registered', 'true');

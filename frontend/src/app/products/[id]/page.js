@@ -359,8 +359,6 @@ export default function ProductDetailPage() {
       return;
     }
 
-    setOrderSuccess(true);
-    
     // Save to localStorage to keep visitor info synced
     localStorage.setItem('ld_user_registered', 'true');
     localStorage.setItem('ld_user_name', orderName.trim());
