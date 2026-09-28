@@ -2251,12 +2251,12 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
 
                     <button
                       type="submit"
-                      disabled={orderSuccess}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-5 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isSubmitting}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 active:bg-emerald-800 px-5 py-3.5 text-xs font-extrabold tracking-widest text-white uppercase shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <ShoppingBag className="h-4 w-4" />
                       <span>
-                        {orderSuccess ? 'Submitting Order...' : 'Send Order to WhatsApp (Both Admins)'}
+                        {isSubmitting ? 'Submitting Order...' : '✨ Submit Order & Get Email Confirmation'}
                       </span>
                     </button>
                   </form>

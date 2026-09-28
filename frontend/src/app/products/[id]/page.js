@@ -336,26 +336,32 @@ export default function ProductDetailPage() {
     setFormError('');
   }, [showOrderModal]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
-    
     setFormError('');
+    setIsSubmitting(true);
 
     const cleanPhone = orderPhone.trim().replace(/\D/g, '');
     if (!orderName.trim()) {
       setFormError('⚠️ Please enter your full name.');
+      setIsSubmitting(false);
       return;
     }
     if (cleanPhone.length < 10) {
       setFormError('⚠️ Please enter a valid 10-digit mobile number.');
+      setIsSubmitting(false);
       return;
     }
     if (!orderEmail.trim() || !orderEmail.includes('@')) {
       setFormError('⚠️ Please enter a valid Gmail / Email address.');
+      setIsSubmitting(false);
       return;
     }
     if (!orderAddress.trim()) {
       setFormError('⚠️ Please enter your full delivery address.');
+      setIsSubmitting(false);
       return;
     }
 
@@ -459,6 +465,7 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
     setShowOrderModal(false);
     setOrderSuccess(false);
+    setIsSubmitting(false);
     setOrderNotes('');
     setCustomSize('');
     setDesiredPrice('');
@@ -990,12 +997,12 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
               <button
                 type="submit"
-                disabled={orderSuccess}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3 text-xs font-bold tracking-widest text-white uppercase shadow-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 hover:bg-emerald-650 px-4 py-3.5 text-xs font-extrabold tracking-widest text-white uppercase shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <MessageCircle className="h-4 w-4" />
+                <ShoppingBag className="h-4 w-4" />
                 <span>
-                  {orderSuccess ? (t?.submitting || (isTelugu ? "సబ్మిట్ అవుతోంది..." : "Submitting Order...")) : (isTelugu ? "వాట్సాప్ ద్వారా ఆర్డర్ చేయండి" : "Send Order to WhatsApp (Both Admins)")}
+                  {isSubmitting ? (isTelugu ? "సబ్మిట్ అవుతోంది..." : "Submitting Order...") : (isTelugu ? "✨ ఆర్డర్ సబ్మిట్ చేయండి" : "✨ Submit Order & Get Email Confirmation")}
                 </span>
               </button>
             </form>
