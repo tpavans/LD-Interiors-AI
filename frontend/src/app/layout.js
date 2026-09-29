@@ -90,6 +90,7 @@ const jsonLd = {
 };
 
 import { ThemeProvider } from "@/context/ThemeContext";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 export default function RootLayout({ children }) {
   return (
@@ -102,6 +103,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="min-h-full flex flex-col bg-white dark:bg-slate-950 text-neutral-800 dark:text-slate-100 antialiased font-sans pb-16 md:pb-0 transition-colors duration-300">
+        <GoogleAnalytics />
         <ThemeProvider>
           <LanguageProvider>
             <Navbar />
