@@ -165,6 +165,7 @@ import Woodgrain3DHeroCanvas from '@/components/Woodgrain3DHeroCanvas';
 import ScrollingProductsMarquee from '@/components/ScrollingProductsMarquee';
 import FestiveGiftAdsSection from '@/components/FestiveGiftAdsSection';
 import LuxuryLookbookGrid from '@/components/LuxuryLookbookGrid';
+import HomeFeaturedVideo from '@/components/HomeFeaturedVideo';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -275,6 +276,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Featured YouTube Workshop Video Showcase */}
+      <HomeFeaturedVideo />
 
       {/* 1. OFFICIAL LOGISTICS & DELIVERY PARTNERS MARQUEE TICKER (NEW) */}
       <section className="py-10 bg-slate-900 border-y border-slate-800 text-white overflow-hidden shadow-2xl">
