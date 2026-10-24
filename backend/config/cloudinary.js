@@ -10,7 +10,7 @@ cloudinary.config({
 
 /**
  * Uploads a local file to Cloudinary and deletes the local temporary file.
- * For videos, uses upload_large chunked streaming to prevent timeouts.
+ * For videos, uses upload_large chunked streaming wrapped in Promise to prevent timeouts.
  * @param {string} filePath - Path to the temporary local file
  * @param {string} folder - Folder name on Cloudinary
  * @param {string} resourceType - Resource type ('image', 'video', 'auto')
@@ -20,12 +20,21 @@ const uploadToCloudinary = async (filePath, folder = 'ld_interiors', resourceTyp
   try {
     let result;
     if (resourceType === 'video') {
-      // For videos, use chunked upload_large to prevent timeouts and memory overflow on large files
-      result = await cloudinary.uploader.upload_large(filePath, {
-        folder: folder,
-        resource_type: 'video',
-        chunk_size: 6000000, // 6 MB chunks
-        timeout: 180000,     // 3 minutes timeout
+      // Wrap upload_large in Promise for async/await support in Cloudinary Node SDK
+      result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_large(
+          filePath,
+          {
+            folder: folder,
+            resource_type: 'video',
+            chunk_size: 6000000, // 6 MB chunks
+            timeout: 180000,     // 3 minutes timeout
+          },
+          (error, res) => {
+            if (error) return reject(error);
+            resolve(res);
+          }
+        );
       });
     } else {
       const options = {

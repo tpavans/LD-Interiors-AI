@@ -19,9 +19,17 @@ const storage = multer.diskStorage({
   },
 });
 
-// Filter to check file MIME type (both images and videos allowed)
+// Filter to check file MIME type and extensions (both images and videos allowed)
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowedExts = [
+    '.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg',
+    '.mp4', '.mov', '.webm', '.m4v', '.mkv', '.avi', '.3gp'
+  ];
+  if (
+    (file.mimetype && (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/'))) ||
+    allowedExts.includes(ext)
+  ) {
     cb(null, true);
   } else {
     cb(new Error('Only image and video files are allowed!'), false);
