@@ -239,18 +239,23 @@ const createProduct = async (req, res) => {
     let videoUrl = '';
     let videoPublicId = '';
 
-    // Handle images array
-    if (req.files && req.files.images && req.files.images.length > 0) {
-      const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image'));
-      const uploadResults = await Promise.all(uploadPromises);
+    // Concurrently upload images and video to prevent long waits and proxy timeouts
+    const imageUploadPromise = (req.files && req.files.images && req.files.images.length > 0)
+      ? Promise.all(req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image')))
+      : Promise.resolve([]);
+
+    const videoUploadPromise = (req.files && req.files.video && req.files.video.length > 0)
+      ? uploadToCloudinary(req.files.video[0].path, 'ld_interiors', 'video')
+      : Promise.resolve(null);
+
+    const [uploadResults, videoResult] = await Promise.all([imageUploadPromise, videoUploadPromise]);
+
+    if (uploadResults && uploadResults.length > 0) {
       images = uploadResults.map(res => res.url);
       imagesPublicIds = uploadResults.map(res => res.publicId);
     }
 
-    // Handle video upload
-    if (req.files && req.files.video && req.files.video.length > 0) {
-      const videoFile = req.files.video[0];
-      const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
+    if (videoResult) {
       videoUrl = videoResult.url;
       videoPublicId = videoResult.publicId;
     } else if (req.body.video) {
@@ -595,11 +600,19 @@ const updateProduct = async (req, res) => {
     let videoUrl = product.video || '';
     let videoPublicId = product.videoPublicId || '';
 
-    // If new images uploaded
-    if (req.files && req.files.images && req.files.images.length > 0) {
-      const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image'));
-      const uploadResults = await Promise.all(uploadPromises);
+    // Concurrently upload new images and new video if provided
+    const imageUploadPromise = (req.files && req.files.images && req.files.images.length > 0)
+      ? Promise.all(req.files.images.map(file => uploadToCloudinary(file.path, 'ld_interiors', 'image')))
+      : Promise.resolve(null);
 
+    const videoUploadPromise = (req.files && req.files.video && req.files.video.length > 0)
+      ? uploadToCloudinary(req.files.video[0].path, 'ld_interiors', 'video')
+      : Promise.resolve(null);
+
+    const [uploadResults, videoResult] = await Promise.all([imageUploadPromise, videoUploadPromise]);
+
+    // If new images uploaded
+    if (uploadResults && uploadResults.length > 0) {
       // delete all old images safely
       if (product.imagesPublicIds && product.imagesPublicIds.length > 0) {
         for (const id of product.imagesPublicIds) {
@@ -624,7 +637,7 @@ const updateProduct = async (req, res) => {
     }
 
     // If new video uploaded
-    if (req.files && req.files.video && req.files.video.length > 0) {
+    if (videoResult) {
       // Delete old video if exists
       if (product.videoPublicId) {
         try {
@@ -633,9 +646,6 @@ const updateProduct = async (req, res) => {
           console.error('Old video deletion failed:', err.message);
         }
       }
-
-      const videoFile = req.files.video[0];
-      const videoResult = await uploadToCloudinary(videoFile.path, 'ld_interiors', 'video');
       videoUrl = videoResult.url;
       videoPublicId = videoResult.publicId;
     } else if (req.body.video !== undefined) {

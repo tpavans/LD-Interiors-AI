@@ -75,7 +75,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [showARModal, setShowARModal] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const [celebrationData, setCelebrationData] = useState(null);
@@ -116,11 +116,11 @@ export default function ProductDetailPage() {
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
     
-    if (isLeftSwipe && product && product.images && product.images.length > 1) {
-      setActiveImageIndex((prev) => (prev < product.images.length - 1 ? prev + 1 : 0));
+    if (isLeftSwipe && mediaItems.length > 1) {
+      setActiveMediaIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : 0));
     }
-    if (isRightSwipe && product && product.images && product.images.length > 1) {
-      setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : product.images.length - 1));
+    if (isRightSwipe && mediaItems.length > 1) {
+      setActiveMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaItems.length - 1));
     }
   };
 
@@ -129,30 +129,34 @@ export default function ProductDetailPage() {
     return url.includes('youtube.com') || url.includes('youtu.be');
   };
 
-  const getYouTubeEmbedUrl = (url) => {
+  const getYouTubeId = (url) => {
     if (!url) return '';
     let videoId = '';
-    
     if (url.includes('/shorts/')) {
       const parts = url.split('/shorts/');
-      if (parts[1]) {
-        videoId = parts[1].split(/[?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
     } else if (url.includes('youtu.be/')) {
       const parts = url.split('youtu.be/');
-      if (parts[1]) {
-        videoId = parts[1].split(/[?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
     } else if (url.includes('v=')) {
       const parts = url.split('v=');
-      if (parts[1]) {
-        videoId = parts[1].split(/[&?#]/)[0];
-      }
+      if (parts[1]) videoId = parts[1].split(/[&?#]/)[0];
     } else {
       videoId = url;
     }
-    
+    return videoId;
+  };
+
+  const getYouTubeEmbedUrl = (url) => {
+    const videoId = getYouTubeId(url);
+    if (!videoId) return '';
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0`;
+  };
+
+  const getYouTubeThumbnail = (url) => {
+    const videoId = getYouTubeId(url);
+    if (!videoId) return '';
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   };
 
   // Form Modal State
@@ -234,7 +238,7 @@ export default function ProductDetailPage() {
         if (response.data && response.data._id) {
           const currentProd = response.data;
           setProduct(currentProd);
-          setActiveImageIndex(0);
+          setActiveMediaIndex(0);
           setError(null);
 
           // Fetch related products in the same category
@@ -268,7 +272,7 @@ export default function ProductDetailPage() {
           const match = cachedProds.find(p => p._id === id || p._id?.toString() === id);
           if (match) {
             setProduct(match);
-            setActiveImageIndex(0);
+            setActiveMediaIndex(0);
             setError(null);
             setLoading(false);
             return;
@@ -503,6 +507,39 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
   const { title = "Teakwood Design", category = "Doors", image, images = [], createdAt, price = 0, description = "", rating = 5 } = product || {};
 
+  // Amazon-Style Media Composition: Images first (clean & pure), then dedicated Video thumbnail
+  const mediaItems = [];
+  if (images && images.length > 0) {
+    images.forEach((imgUrl, idx) => {
+      mediaItems.push({
+        type: 'image',
+        url: imgUrl,
+        title: `${title} view ${idx + 1}`
+      });
+    });
+  } else if (image) {
+    mediaItems.push({
+      type: 'image',
+      url: image,
+      title: title
+    });
+  }
+
+  if (product && product.video && product.video.trim() !== '') {
+    const isYt = isYouTubeUrl(product.video);
+    mediaItems.push({
+      type: 'video',
+      url: product.video,
+      title: `${title} - Video Showcase`,
+      isYouTube: isYt,
+      poster: isYt ? getYouTubeThumbnail(product.video) : (images && images.length > 0 ? images[0] : image)
+    });
+  }
+
+  const activeMedia = (mediaItems.length > 0 && activeMediaIndex < mediaItems.length)
+    ? mediaItems[activeMediaIndex]
+    : (mediaItems[0] || null);
+
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 sm:py-16">
       {/* Breadcrumbs navigation */}
@@ -525,50 +562,73 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
       {/* Main product structure */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-        {/* Left Col: High-Res Image Display with Thumbnails */}
+        {/* Left Col: High-Res Image / Video Display with Thumbnails */}
         <div className="lg:col-span-8">
           <div 
-            onClick={() => setShowLightbox(true)}
+            onClick={() => {
+              if (activeMedia?.type === 'image') {
+                setShowLightbox(true);
+              }
+            }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
-            className="overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative cursor-zoom-in group select-none touch-pan-y"
+            className={`overflow-hidden rounded-2xl border border-wood-border/40 bg-wood-cream/30 shadow-sm relative select-none touch-pan-y ${
+              activeMedia?.type === 'image' ? 'cursor-zoom-in group' : 'bg-black'
+            }`}
           >
-            <img
-              src={images && images.length > 0 ? images[activeImageIndex] : image}
-              alt={title}
-              draggable="false"
-              className="w-full h-auto object-contain max-h-[70vh] mx-auto transition-transform duration-500 group-hover:scale-[1.01]"
-            />
-            {/* Play Button Overlay for Videos */}
-            {product.video && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/15 group-hover:bg-black/30 transition-colors duration-300">
-                <div className="bg-white/95 backdrop-blur-sm p-4 rounded-full text-wood-dark shadow-xl border border-wood-border/30 transform transition-transform group-hover:scale-110 duration-350">
-                  <Play className="h-8 w-8 fill-current text-wood-dark ml-0.5" />
-                </div>
+            {activeMedia?.type === 'image' ? (
+              <img
+                src={activeMedia.url}
+                alt={activeMedia.title || title}
+                draggable="false"
+                className="w-full h-auto object-contain max-h-[70vh] mx-auto transition-transform duration-500 group-hover:scale-[1.01]"
+              />
+            ) : (
+              // Active Media is Video - Render Responsive Video Player
+              <div className="w-full aspect-video max-h-[70vh] flex items-center justify-center bg-black rounded-2xl overflow-hidden relative">
+                {activeMedia?.isYouTube ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(activeMedia.url)}
+                    title={title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <video
+                    src={activeMedia?.url}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-w-full max-h-[70vh] object-contain rounded-2xl"
+                    poster={activeMedia?.poster}
+                  />
+                )}
               </div>
             )}
 
             {/* Left/Right Swipe Navigation Arrows overlay */}
-            {images && images.length > 1 && (
+            {mediaItems && mediaItems.length > 1 && (
               <>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+                    setActiveMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaItems.length - 1));
                   }}
                   className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/65 hover:scale-105 active:scale-95 text-white p-2 rounded-full z-20 backdrop-blur-xs transition-all cursor-pointer border border-white/10 flex items-center justify-center"
-                  title="Previous Image"
+                  title="Previous"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+                    setActiveMediaIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : 0));
                   }}
                   className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/65 hover:scale-105 active:scale-95 text-white p-2 rounded-full z-20 backdrop-blur-xs transition-all cursor-pointer border border-white/10 flex items-center justify-center"
-                  title="Next Image"
+                  title="Next"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -576,37 +636,61 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
             )}
 
             {/* Carousel Dot Indicators overlay */}
-            {images && images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20 bg-black/25 px-2.5 py-1.5 rounded-full backdrop-blur-xs border border-white/10">
-                {images.map((_, dotIdx) => (
+            {mediaItems && mediaItems.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/35 px-2.5 py-1.5 rounded-full backdrop-blur-xs border border-white/15">
+                {mediaItems.map((_, dotIdx) => (
                   <span 
                     key={dotIdx}
-                    className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                      dotIdx === activeImageIndex ? 'bg-wood-accent w-3.5' : 'bg-white/60'
+                    className={`rounded-full transition-all duration-300 ${
+                      dotIdx === activeMediaIndex ? 'bg-wood-accent w-4 h-1.5' : 'bg-white/60 w-1.5 h-1.5'
                     }`}
                   />
                 ))}
               </div>
             )}
           </div>
-          {images && images.length > 1 && (
-            <div className="flex flex-wrap gap-2 mt-4 justify-center">
-              {images.map((imgUrl, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
-                    idx === activeImageIndex
-                      ? 'border-wood-accent shadow-md scale-105'
-                      : 'border-wood-border/40 opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img
-                    src={imgUrl}
-                    alt={`${title} view ${idx + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                </button>
+
+          {/* Amazon-Style Thumbnails Row: Clean Image Thumbnails + Dedicated Video Slot */}
+          {mediaItems && mediaItems.length > 1 && (
+            <div className="flex flex-wrap gap-3 mt-5 justify-center items-end">
+              {mediaItems.map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center">
+                  <button
+                    onClick={() => setActiveMediaIndex(idx)}
+                    className={`relative h-16 w-16 overflow-hidden rounded-xl border-2 transition-all cursor-pointer bg-white ${
+                      idx === activeMediaIndex
+                        ? 'border-wood-accent shadow-md scale-105 ring-2 ring-wood-accent/30'
+                        : 'border-wood-border/40 opacity-70 hover:opacity-100 hover:border-wood-border'
+                    }`}
+                  >
+                    {item.type === 'image' ? (
+                      <img
+                        src={item.url}
+                        alt={`${title} view ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      // Dedicated Amazon-Style Video Thumbnail with Play Badge
+                      <div className="relative h-full w-full bg-neutral-900 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={item.poster || (images && images[0]) || image}
+                          alt="Video Preview"
+                          className="h-full w-full object-cover opacity-60"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-wood-dark/90 rounded-full p-1.5 text-white shadow-md border border-white/30">
+                            <Play className="h-4 w-4 fill-current text-white ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                  {item.type === 'video' && (
+                    <span className="text-[10px] font-bold tracking-wider text-wood-dark uppercase mt-1">
+                      VIDEO
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -1096,11 +1180,11 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
 
             {/* Media Canvas container */}
             <div className="w-full flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-2xl relative min-h-[300px]">
-              {product.video ? (
-                isYouTubeUrl(product.video) ? (
+              {activeMedia?.type === 'video' ? (
+                activeMedia?.isYouTube ? (
                   <div className="w-full aspect-video max-h-[75vh] max-w-full rounded-2xl overflow-hidden">
                     <iframe
-                      src={getYouTubeEmbedUrl(product.video)}
+                      src={getYouTubeEmbedUrl(activeMedia.url)}
                       title={title}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -1110,17 +1194,17 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
                   </div>
                 ) : (
                   <video
-                    src={product.video}
+                    src={activeMedia.url}
                     controls
                     autoPlay
                     playsInline
                     className="max-w-full max-h-[75vh] object-contain rounded-2xl"
-                    poster={images && images.length > 0 ? images[activeImageIndex] : image}
+                    poster={activeMedia.poster}
                   />
                 )
               ) : (
                 <img
-                  src={images && images.length > 0 ? images[activeImageIndex] : image}
+                  src={activeMedia?.url || image}
                   alt={title}
                   className="max-w-full max-h-[75vh] object-contain rounded-2xl animate-scaleIn select-none"
                 />

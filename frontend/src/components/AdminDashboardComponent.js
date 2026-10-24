@@ -183,6 +183,7 @@ export default function AdminDashboardComponent() {
 
   // Status/Error States
   const [formLoading, setFormLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
@@ -961,16 +962,30 @@ export default function AdminDashboardComponent() {
       }
       if (videoFile) {
         formData.append('video', videoFile);
-      } else {
+      } else if (youtubeUrl.trim()) {
         formData.append('video', youtubeUrl.trim());
+      } else if (isEditing && videoPreview && !videoPreview.startsWith('blob:')) {
+        // Retain existing video URL when editing
+        formData.append('video', videoPreview);
+      } else {
+        formData.append('video', '');
       }
 
+      const uploadConfig = {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        }
+      };
+
       if (isEditing) {
-        await api.put(`/products/${editId}`, formData);
+        await api.put(`/products/${editId}`, formData, uploadConfig);
         setFormSuccess('Product updated successfully!');
         resetForm();
       } else {
-        await api.post('/products', formData);
+        await api.post('/products', formData, uploadConfig);
         setFormSuccess('Design product uploaded successfully!');
         resetForm();
       }
@@ -979,6 +994,7 @@ export default function AdminDashboardComponent() {
       console.error('Form submit error:', err);
       setFormError(err.response?.data?.message || 'Server error occurred during save.');
     } finally {
+      setUploadProgress(0);
       setFormLoading(false);
     }
   };
@@ -2060,6 +2076,11 @@ LD Interiors & Furnitures
                                 onChange={(e) => {
                                   const file = e.target.files[0];
                                   if (file) {
+                                    if (file.size > 50 * 1024 * 1024) {
+                                      setFormError(`Selected video file is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum allowed video file size is 50MB. Please select a smaller video or paste a YouTube URL.`);
+                                      return;
+                                    }
+                                    setFormError('');
                                     setVideoFile(file);
                                     setVideoPreview(URL.createObjectURL(file));
                                     setYoutubeUrl('');
@@ -2093,6 +2114,7 @@ LD Interiors & Furnitures
                       }}
                       className="w-full rounded-xl border border-wood-border bg-white px-4 py-2.5 text-xs text-wood-dark focus:border-wood-accent focus:outline-none transition-colors"
                     />
+                    <p className="text-[10px] text-wood-light mt-1">💡 Recommended: YouTube Shorts or Videos stream instantly in 4K/1080p without server upload limits.</p>
                   </div>
                 </div>
 
@@ -2110,6 +2132,14 @@ LD Interiors & Furnitures
                   </div>
                 )}
 
+                {formLoading && uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="w-full bg-wood-beige/40 rounded-full h-2 overflow-hidden mb-2">
+                    <div
+                      className="bg-wood-accent h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                )}
                 <div className="flex gap-3 pt-2">
                   {isEditing && (
                     <button
@@ -2128,7 +2158,11 @@ LD Interiors & Furnitures
                     {formLoading ? (
                       <>
                         <Loader2 className="h-4.5 w-4.5 animate-spin text-white" />
-                        Saving...
+                        {uploadProgress > 0 && uploadProgress < 100
+                          ? `Uploading (${uploadProgress}%)...`
+                          : uploadProgress === 100
+                          ? 'Optimizing on Cloud...'
+                          : 'Saving...'}
                       </>
                     ) : (
                       isEditing ? 'Save Changes' : 'Upload Design'
