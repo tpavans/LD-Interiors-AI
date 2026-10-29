@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal } from 'lucide-react';
+import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal, Download } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -133,6 +133,21 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                 <BookOpen className="h-4 w-4 shrink-0 text-amber-400" />
                 <span>{isTelugu ? "బర్మా టేకువుడ్ గైడ్" : "Burma Teakwood Guide"}</span>
               </Link>
+              <button
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new Event('open-install-app'));
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/20 to-amber-600/30 border border-amber-500/40 text-amber-300 hover:from-amber-500/30 hover:to-amber-600/40 transition-all cursor-pointer mt-1"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="h-4 w-4 shrink-0 text-amber-400" />
+                  <span>{isTelugu ? "యాప్ ఇన్‌స్టాల్ చేసుకోండి" : "Install Mobile App"}</span>
+                </div>
+                <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                  App
+                </span>
+              </button>
             </div>
           </div>
 

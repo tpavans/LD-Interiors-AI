@@ -6,6 +6,9 @@ import ClientWrapper from "@/components/ClientWrapper";
 import { LanguageProvider } from "@/context/LanguageContext";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import InstallAppBanner from "@/components/InstallAppBanner";
+import { ThemeProvider } from "@/context/ThemeContext";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,6 +26,12 @@ export const metadata = {
   metadataBase: new URL('https://www.ldinteriors.in'),
   title: "LD Interiors & Furnitures | Premium Custom Woodwork & Interior Design",
   description: "Official online store & portfolio of LD Interiors & Furnitures, Alamuru. Discover handcrafted teak wood furniture, living rooms, bedrooms, kitchens, and custom woodwork.",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'LD Interiors',
+  },
   alternates: {
     canonical: 'https://www.ldinteriors.in',
   },
@@ -46,12 +55,13 @@ export const metadata = {
   },
   icons: {
     icon: [
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: 'https://www.ldinteriors.in/logo.png', type: 'image/png' },
       { url: 'https://www.ldinteriors.in/favicon.ico' },
     ],
-    shortcut: ['https://www.ldinteriors.in/logo.png'],
+    shortcut: ['/icons/icon-192x192.png'],
     apple: [
-      { url: 'https://www.ldinteriors.in/logo.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   twitter: {
@@ -62,6 +72,10 @@ export const metadata = {
   },
   other: {
     'p:domain_verify': '6994d5bfbe5409fed21a03c84411',
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'theme-color': '#0B192C',
   },
 };
 
@@ -89,14 +103,18 @@ const jsonLd = {
   'telephone': '+916281653998'
 };
 
-import { ThemeProvider } from "@/context/ThemeContext";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full transition-colors duration-300`}>
       <head>
         <meta name="p:domain_verify" content="6994d5bfbe5409fed21a03c84411" />
+        <meta name="theme-color" content="#0B192C" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="LD Interiors" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -114,6 +132,7 @@ export default function RootLayout({ children }) {
             <ClientWrapper />
             <WhatsAppWidget />
             <MobileBottomNav />
+            <InstallAppBanner />
           </LanguageProvider>
         </ThemeProvider>
       </body>
