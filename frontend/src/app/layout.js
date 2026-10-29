@@ -75,7 +75,7 @@ export const metadata = {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
-    'theme-color': '#0B192C',
+    'theme-color': '#000000',
   },
 };
 
@@ -108,7 +108,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full transition-colors duration-300`}>
       <head>
         <meta name="p:domain_verify" content="6994d5bfbe5409fed21a03c84411" />
-        <meta name="theme-color" content="#0B192C" />
+        <meta name="theme-color" content="#000000" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

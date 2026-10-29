@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         swipeRefresh.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary);
         swipeRefresh.setOnRefreshListener(() -> webView.reload());
+        webView.setBackgroundColor(0xFF000000);
 
         // Configure WebSettings
         WebSettings webSettings = webView.getSettings();
@@ -81,6 +82,18 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setDisplayZoomControls(false);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         webSettings.setUserAgentString(webSettings.getUserAgentString() + " LDInteriorsApp/1.0");
+
+        // Add native Android Share interface
+        webView.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public void shareApp(String text, String url) {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "LD Interiors App");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, (text != null ? text + " " : "") + url);
+                startActivity(Intent.createChooser(shareIntent, "Share LD Interiors App via"));
+            }
+        }, "AndroidShare");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);

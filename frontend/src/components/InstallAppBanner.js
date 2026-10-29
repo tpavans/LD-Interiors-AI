@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Download, X, Smartphone, Share, CheckCircle2 } from 'lucide-react';
+import { Download, X, Smartphone, Share, Share2, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { trackEvent } from '@/utils/telemetry';
 
@@ -15,6 +15,58 @@ export default function InstallAppBanner() {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [installedSuccess, setInstalledSuccess] = useState(false);
+  const [copiedToast, setCopiedToast] = useState(false);
+
+  // App Sharing Handler
+  const handleShareApp = async () => {
+    const shareTitle = isTelugu
+      ? "LD Interiors & Furnitures మొబైల్ యాప్"
+      : "LD Interiors & Furnitures Mobile App";
+    const shareText = isTelugu
+      ? "🏠 LD Interiors మొబైల్ యాప్‌ను ఇన్‌స్టాల్ చేసుకోండి!\nప్రీమియం బర్మా టేకు వుడ్ ఫర్నిచర్ డిజైన్లు & నేరుగా ఆర్డర్ చేసుకోండి:\n"
+      : "🏠 Install the official LD Interiors App for handcrafted Burma Teak furniture designs & direct ordering:\n";
+    const shareUrl = "https://www.ldinteriors.in";
+
+    // Track analytics
+    trackEvent('whatsapp_share');
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'share', {
+        method: 'app_share_button',
+        content_type: 'app',
+        item_id: 'ld_interiors_app'
+      });
+    }
+
+    // 1. Native Android WebView bridge
+    if (typeof window !== 'undefined' && window.AndroidShare && window.AndroidShare.shareApp) {
+      window.AndroidShare.shareApp(shareText, shareUrl);
+      return;
+    }
+
+    // 2. Web Share API (Chrome Mobile, Safari, etc.)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    // 3. Fallback: Copy link & open WhatsApp
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`${shareText}${shareUrl}`).catch(() => {});
+    }
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 4000);
+
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + shareUrl)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   useEffect(() => {
     // 1. Register PWA Service Worker
@@ -49,7 +101,7 @@ export default function InstallAppBanner() {
       return isStandaloneMode;
     };
 
-    if (checkStandalone()) return;
+    const isInstalled = checkStandalone();
 
     // 3. Detect iOS device
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -65,14 +117,14 @@ export default function InstallAppBanner() {
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      if (!isDismissedRecently) {
+      if (!isDismissedRecently && !isInstalled) {
         setShowBanner(true);
       }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Listen for custom open-install-app trigger from navbar / footer
+    // Listen for custom open-install-app trigger from navbar / footer / drawer
     const handleCustomTrigger = () => {
       if (deferredPrompt) {
         handleInstallClick();
@@ -83,6 +135,12 @@ export default function InstallAppBanner() {
       }
     };
     window.addEventListener('open-install-app', handleCustomTrigger);
+
+    // Listen for custom open-share-app trigger from drawer
+    const handleShareTrigger = () => {
+      handleShareApp();
+    };
+    window.addEventListener('open-share-app', handleShareTrigger);
 
     // Listen for successful installation
     const handleAppInstalled = () => {
@@ -100,8 +158,8 @@ export default function InstallAppBanner() {
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // If on iOS and not dismissed, show banner after a gentle delay (4 seconds)
-    if (isIosDevice && !isDismissedRecently) {
+    // If on iOS and not dismissed and not installed, show banner after 4s
+    if (isIosDevice && !isDismissedRecently && !isInstalled) {
       const timer = setTimeout(() => {
         setShowBanner(true);
       }, 4000);
@@ -111,6 +169,7 @@ export default function InstallAppBanner() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('open-install-app', handleCustomTrigger);
+      window.removeEventListener('open-share-app', handleShareTrigger);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, [deferredPrompt]);
@@ -126,7 +185,6 @@ export default function InstallAppBanner() {
     } else if (isIOS) {
       setShowIOSModal(true);
     } else {
-      // Fallback for browsers without direct prompt
       alert(
         isTelugu
           ? "మీ బ్రౌజర్ మెనూ (3 చుక్కలు) పై క్లిక్ చేసి 'Install app' లేదా 'Add to Home screen' ఎంచుకోండి."
@@ -140,11 +198,20 @@ export default function InstallAppBanner() {
     localStorage.setItem('ld_pwa_dismissed', Date.now().toString());
   };
 
-  // Do not render anything if already installed as standalone
-  if (isStandalone) return null;
-
   return (
     <>
+      {/* Share Copied Toast */}
+      {copiedToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#0B192C] text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center gap-3 animate-bounce">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+          <span className="text-xs font-semibold">
+            {isTelugu
+              ? "యాప్ లింక్ కాపీ అయ్యింది & WhatsApp ఓపెన్ అవుతోంది!"
+              : "App Share link copied & opening WhatsApp!"}
+          </span>
+        </div>
+      )}
+
       {/* Installed Success Toast */}
       {installedSuccess && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#0B192C] text-white px-5 py-3 rounded-2xl shadow-2xl border border-amber-500/40 flex items-center gap-3 animate-bounce">
@@ -158,7 +225,7 @@ export default function InstallAppBanner() {
       )}
 
       {/* Floating Bottom App Install Banner */}
-      {showBanner && (
+      {showBanner && !isStandalone && (
         <div className="fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-40 bg-[#0B192C]/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.4)] border border-amber-500/30 animate-fadeIn">
           <div className="flex items-center justify-between gap-3">
             {/* App Icon */}
@@ -203,15 +270,26 @@ export default function InstallAppBanner() {
                 className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-neutral-950 font-bold text-xs py-2 px-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>{isTelugu ? "యాప్ ఇన్‌స్టాల్ చేసుకోండి" : "Install App"}</span>
+                <span>{isTelugu ? "ఇన్‌స్టాల్ చేయండి" : "Install App"}</span>
               </button>
+
+              <button
+                onClick={handleShareApp}
+                className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                title={isTelugu ? "యాప్‌ను షేర్ చేయండి" : "Share App"}
+              >
+                <Share2 className="h-3.5 w-3.5 text-emerald-400" />
+                <span>{isTelugu ? "షేర్" : "Share"}</span>
+              </button>
+
               <button
                 onClick={handleDismiss}
-                className="text-[11px] text-neutral-400 hover:text-white px-2.5 py-2 transition-colors cursor-pointer"
+                className="text-[11px] text-neutral-400 hover:text-white px-2 py-2 transition-colors cursor-pointer"
               >
                 {isTelugu ? "తర్వాత" : "Later"}
               </button>
             </div>
+
             {!isIOS && (
               <a
                 href="/ld-interiors.apk"
@@ -295,12 +373,21 @@ export default function InstallAppBanner() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowIOSModal(false)}
-                className="mt-6 w-full bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
-              >
-                {isTelugu ? "అర్థమైంది" : "Got it!"}
-              </button>
+              <div className="flex gap-2 mt-6 w-full">
+                <button
+                  onClick={handleShareApp}
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>{isTelugu ? "యాప్‌ను షేర్ చేయండి" : "Share App"}</span>
+                </button>
+                <button
+                  onClick={() => setShowIOSModal(false)}
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
+                >
+                  {isTelugu ? "అర్థమైంది" : "Got it!"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

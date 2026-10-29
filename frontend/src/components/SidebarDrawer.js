@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal, Download } from 'lucide-react';
+import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal, Download, Share2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -146,6 +146,21 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                 </div>
                 <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
                   App
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new Event('open-share-app'));
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500/20 to-teal-600/20 border border-emerald-500/40 text-emerald-300 hover:from-emerald-500/30 hover:to-teal-600/30 transition-all cursor-pointer mt-1"
+              >
+                <div className="flex items-center gap-3">
+                  <Share2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <span>{isTelugu ? "??????? ???? ??????" : "Share Mobile App"}</span>
+                </div>
+                <span className="bg-emerald-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                  Share
                 </span>
               </button>
             </div>
