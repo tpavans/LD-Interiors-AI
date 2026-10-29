@@ -170,9 +170,25 @@ const getStats = async (req, res) => {
       pendingBalance += (o.remainingBalance || 0);
     });
 
+    // 11. App Installation & APK Download Metrics
+    const totalAppInstalls = await AnalyticsEvent.countDocuments({
+      eventType: 'app_installed'
+    });
+    const totalApkDownloads = await AnalyticsEvent.countDocuments({
+      eventType: 'apk_download'
+    });
+    const totalAppOpens = await AnalyticsEvent.countDocuments({
+      eventType: 'app_session'
+    });
+
     return res.status(200).json({
       success: true,
       data: {
+        appMetrics: {
+          totalAppInstalls,
+          totalApkDownloads,
+          totalAppOpens
+        },
         totalPageViews,
         liveActiveVisitors,
         totalDesignClicks,

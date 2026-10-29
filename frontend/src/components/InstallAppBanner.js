@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Download, X, Smartphone, Share, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { trackEvent } from '@/utils/telemetry';
 
 export default function InstallAppBanner() {
   const { language } = useLanguage();
@@ -36,6 +37,15 @@ export default function InstallAppBanner() {
         window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
       setIsStandalone(isStandaloneMode);
+      if (isStandaloneMode) {
+        trackEvent('app_session');
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'app_session', {
+            event_category: 'App',
+            event_label: 'Installed App Opened'
+          });
+        }
+      }
       return isStandaloneMode;
     };
 
@@ -79,6 +89,7 @@ export default function InstallAppBanner() {
       setShowBanner(false);
       setDeferredPrompt(null);
       setInstalledSuccess(true);
+      trackEvent('app_installed');
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'app_installed', {
           event_category: 'App',
@@ -206,6 +217,7 @@ export default function InstallAppBanner() {
                 href="/ld-interiors.apk"
                 download="LD-Interiors.apk"
                 onClick={() => {
+                  trackEvent('apk_download');
                   if (typeof window !== 'undefined' && window.gtag) {
                     window.gtag('event', 'apk_download', {
                       event_category: 'App',

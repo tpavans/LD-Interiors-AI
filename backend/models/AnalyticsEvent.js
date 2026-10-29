@@ -4,7 +4,7 @@ const analyticsEventSchema = new mongoose.Schema({
   eventType: {
     type: String,
     required: true,
-    enum: ['page_view', 'search_query', 'design_click', 'design_like', 'whatsapp_share', 'order_placed']
+    enum: ['page_view', 'search_query', 'design_click', 'design_like', 'whatsapp_share', 'order_placed', 'app_installed', 'apk_download', 'app_session']
   },
   path: {
     type: String,

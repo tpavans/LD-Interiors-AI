@@ -400,6 +400,7 @@ export default function AdminDashboardComponent() {
     totalDesignClicks: 0,
     totalLikes: 0,
     totalWhatsappShares: 0,
+    appMetrics: { totalAppInstalls: 0, totalApkDownloads: 0, totalAppOpens: 0 },
     devices: { mobilePercent: 82, desktopPercent: 15, tabletPercent: 3 },
     pageViewsBreakdown: [],
     topKeywords: [],

@@ -2,7 +2,7 @@ import api from './api';
 
 /**
  * Log a real analytics event to the backend database
- * @param {'page_view' | 'search_query' | 'design_click' | 'design_like' | 'whatsapp_share' | 'order_placed'} eventType 
+ * @param {'page_view' | 'search_query' | 'design_click' | 'design_like' | 'whatsapp_share' | 'order_placed' | 'app_installed' | 'apk_download' | 'app_session'} eventType 
  * @param {Object} payload 
  */
 export const trackEvent = async (eventType, payload = {}) => {
