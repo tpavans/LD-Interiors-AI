@@ -1,5 +1,5 @@
-// LD Interiors Service Worker for PWA App Experience
-const CACHE_NAME = 'ld-interiors-v1';
+// LD Interiors Service Worker for PWA App Experience (v2 - Black Theme)
+const CACHE_NAME = 'ld-interiors-v2-black';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

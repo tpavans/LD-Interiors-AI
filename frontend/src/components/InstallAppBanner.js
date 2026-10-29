@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Download, X, Smartphone, Share, Share2, CheckCircle2 } from 'lucide-react';
+import { Download, X, Smartphone, Share, Share2, CheckCircle2, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { trackEvent } from '@/utils/telemetry';
 
@@ -11,13 +11,14 @@ export default function InstallAppBanner() {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [installedSuccess, setInstalledSuccess] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
 
-  // App Sharing Handler
+  // App Sharing Handler (Points to ?install=true so shared user sees install screen!)
   const handleShareApp = async () => {
     const shareTitle = isTelugu
       ? "LD Interiors & Furnitures మొబైల్ యాప్"
@@ -25,7 +26,7 @@ export default function InstallAppBanner() {
     const shareText = isTelugu
       ? "🏠 LD Interiors మొబైల్ యాప్‌ను ఇన్‌స్టాల్ చేసుకోండి!\nప్రీమియం బర్మా టేకు వుడ్ ఫర్నిచర్ డిజైన్లు & నేరుగా ఆర్డర్ చేసుకోండి:\n"
       : "🏠 Install the official LD Interiors App for handcrafted Burma Teak furniture designs & direct ordering:\n";
-    const shareUrl = "https://www.ldinteriors.in";
+    const shareUrl = "https://www.ldinteriors.in?install=true";
 
     // Track analytics
     trackEvent('whatsapp_share');
@@ -69,13 +70,25 @@ export default function InstallAppBanner() {
   };
 
   useEffect(() => {
-    // 1. Register PWA Service Worker
+    // 1. Register PWA Service Worker & Force auto-update for existing installs
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')
           .then((reg) => {
             console.log('LD Interiors PWA Service Worker registered:', reg.scope);
+            // Check for new version on each visit to update existing cached icons/background
+            reg.update();
+            reg.onupdatefound = () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.onstatechange = () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New app version detected (v2 black theme). Updating cache...');
+                  }
+                };
+              }
+            };
           })
           .catch((err) => {
             console.warn('PWA Service Worker registration failed:', err);
@@ -108,16 +121,23 @@ export default function InstallAppBanner() {
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // 4. Check if banner was dismissed recently (within 5 days)
+    // 4. Check if user came from a shared install link (?install=true or #install)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasInstallQuery = urlParams.get('install') === 'true' || window.location.hash === '#install';
+    if (hasInstallQuery && !isInstalled) {
+      setShowInstallModal(true);
+    }
+
+    // 5. Check if banner was dismissed recently (within 5 days)
     const lastDismissed = localStorage.getItem('ld_pwa_dismissed');
     const isDismissedRecently =
       lastDismissed && Date.now() - parseInt(lastDismissed, 10) < 5 * 24 * 60 * 60 * 1000;
 
-    // 5. Listen for beforeinstallprompt event (Chromium, Android, Chrome, Edge)
+    // 6. Listen for beforeinstallprompt event (Chromium, Android, Chrome, Edge)
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      if (!isDismissedRecently && !isInstalled) {
+      if (!isDismissedRecently && !isInstalled && !hasInstallQuery) {
         setShowBanner(true);
       }
     };
@@ -126,13 +146,7 @@ export default function InstallAppBanner() {
 
     // Listen for custom open-install-app trigger from navbar / footer / drawer
     const handleCustomTrigger = () => {
-      if (deferredPrompt) {
-        handleInstallClick();
-      } else if (isIosDevice) {
-        setShowIOSModal(true);
-      } else {
-        setShowBanner(true);
-      }
+      setShowInstallModal(true);
     };
     window.addEventListener('open-install-app', handleCustomTrigger);
 
@@ -145,6 +159,7 @@ export default function InstallAppBanner() {
     // Listen for successful installation
     const handleAppInstalled = () => {
       setShowBanner(false);
+      setShowInstallModal(false);
       setDeferredPrompt(null);
       setInstalledSuccess(true);
       trackEvent('app_installed');
@@ -158,8 +173,8 @@ export default function InstallAppBanner() {
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // If on iOS and not dismissed and not installed, show banner after 4s
-    if (isIosDevice && !isDismissedRecently && !isInstalled) {
+    // If on iOS and not dismissed and not installed and not in query, show banner after 4s
+    if (isIosDevice && !isDismissedRecently && !isInstalled && !hasInstallQuery) {
       const timer = setTimeout(() => {
         setShowBanner(true);
       }, 4000);
@@ -180,15 +195,18 @@ export default function InstallAppBanner() {
       const choiceResult = await deferredPrompt.userChoice;
       if (choiceResult.outcome === 'accepted') {
         setShowBanner(false);
+        setShowInstallModal(false);
       }
       setDeferredPrompt(null);
     } else if (isIOS) {
+      setShowInstallModal(false);
       setShowIOSModal(true);
     } else {
+      // Fallback message for browsers without immediate native prompt
       alert(
         isTelugu
-          ? "మీ బ్రౌజర్ మెనూ (3 చుక్కలు) పై క్లిక్ చేసి 'Install app' లేదా 'Add to Home screen' ఎంచుకోండి."
-          : "Please tap your browser menu (3 dots) and select 'Install app' or 'Add to Home screen'."
+          ? "మీ బ్రౌజర్ పై భాగంలో ఉన్న (3 చుక్కల మెనూ) క్లిక్ చేసి 'Install app' లేదా 'Add to Home screen' ఎంచుకోండి. లేదా కింద ఉన్న 'Android APK డౌన్‌లోడ్' బటన్ ద్వారా నేరుగా ఇన్‌స్టాల్ చేసుకోండి."
+          : "Tap browser menu (3 dots) and select 'Install app' or 'Add to Home screen', or use the 'Download Android APK' button below."
       );
     }
   };
@@ -224,8 +242,118 @@ export default function InstallAppBanner() {
         </div>
       )}
 
-      {/* Floating Bottom App Install Banner */}
-      {showBanner && !isStandalone && (
+      {/* Prominent Shared-Link Install Modal (Shown when user opens via shared link ?install=true) */}
+      {showInstallModal && !isStandalone && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setShowInstallModal(false)}
+        >
+          <div
+            className="bg-[#0B192C] text-white max-w-sm w-full rounded-3xl p-6 sm:p-7 border border-amber-500/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowInstallModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1 rounded-full cursor-pointer transition-colors"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex flex-col items-center text-center">
+              {/* Brand Logo with Pure Black Backdrop */}
+              <div className="relative h-20 w-20 rounded-3xl overflow-hidden border-2 border-amber-500 shadow-xl mb-3 bg-black flex items-center justify-center p-1">
+                <img
+                  src="/icons/icon-192x192.png"
+                  alt="LD Interiors App"
+                  className="h-full w-full object-cover rounded-2xl"
+                />
+              </div>
+
+              {/* Badge */}
+              <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-500/30 mb-2 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-amber-400" />
+                {isTelugu ? "అధికారిక మొబైల్ యాప్" : "Official Mobile App"}
+              </span>
+
+              {/* Title */}
+              <h3 className="font-serif text-xl font-bold text-white tracking-wide">
+                LD Interiors & Furnitures
+              </h3>
+              <p className="text-xs text-neutral-300 mt-1 mb-5">
+                {isTelugu
+                  ? "మీ మొబైల్ హోమ్ స్క్రీన్‌పై యాప్‌ను ఇన్‌స్టాల్ చేసుకోండి — వేగవంతమైన షాపింగ్ & నేరుగా ఆర్డర్ చేసుకోండి."
+                  : "Install on your home screen for 2x faster shopping, teakwood designs & direct ordering."}
+              </p>
+
+              {/* Feature Highlights */}
+              <div className="w-full grid grid-cols-3 gap-2 mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col items-center text-center">
+                  <Zap className="h-4 w-4 text-amber-400 mb-1" />
+                  <span className="text-[10px] font-bold text-neutral-200">
+                    {isTelugu ? "2x స్పీడ్" : "2x Faster"}
+                  </span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col items-center text-center">
+                  <Sparkles className="h-4 w-4 text-amber-400 mb-1" />
+                  <span className="text-[10px] font-bold text-neutral-200">
+                    {isTelugu ? "500+ డిజైన్స్" : "500+ Designs"}
+                  </span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col items-center text-center">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400 mb-1" />
+                  <span className="text-[10px] font-bold text-neutral-200">
+                    {isTelugu ? "100% ఉచితం" : "100% Free"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="w-full space-y-2.5">
+                {/* 1. Primary Install Button (PWA) */}
+                <button
+                  onClick={handleInstallClick}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-neutral-950 font-black text-sm py-3.5 px-4 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Download className="h-4 w-4 text-neutral-950" />
+                  <span>{isTelugu ? "యాప్ ఇన్‌స్టాల్ చేసుకోండి" : "Install App"}</span>
+                </button>
+
+                {/* 2. Direct Android APK Download */}
+                <a
+                  href="/ld-interiors.apk"
+                  download="LD-Interiors.apk"
+                  onClick={() => {
+                    trackEvent('apk_download');
+                    if (typeof window !== 'undefined' && window.gtag) {
+                      window.gtag('event', 'apk_download', {
+                        event_category: 'App',
+                        event_label: 'Android APK Downloaded via Modal'
+                      });
+                    }
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white active:scale-95 font-bold text-xs py-3 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Smartphone className="h-4 w-4 text-amber-400" />
+                  <span>{isTelugu ? "Android APK డౌన్‌లోడ్ చేయండి (.apk)" : "Download Android APK (.apk)"}</span>
+                </a>
+
+                {/* 3. Continue to Website Link */}
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="w-full text-xs text-neutral-400 hover:text-white py-2 transition-colors cursor-pointer"
+                >
+                  {isTelugu ? "తర్వాత చూస్తాను / వెబ్‌సైట్ చూడండి →" : "Continue to Website →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Bottom App Install Banner (Shown for regular visitors) */}
+      {showBanner && !isStandalone && !showInstallModal && (
         <div className="fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-96 z-40 bg-[#0B192C]/95 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.4)] border border-amber-500/30 animate-fadeIn">
           <div className="flex items-center justify-between gap-3">
             {/* App Icon */}
