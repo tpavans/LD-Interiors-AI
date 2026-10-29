@@ -79,6 +79,12 @@ export default function InstallAppBanner() {
       setShowBanner(false);
       setDeferredPrompt(null);
       setInstalledSuccess(true);
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'app_installed', {
+          event_category: 'App',
+          event_label: 'PWA App Installed'
+        });
+      }
       setTimeout(() => setInstalledSuccess(false), 5000);
     };
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -199,6 +205,14 @@ export default function InstallAppBanner() {
               <a
                 href="/ld-interiors.apk"
                 download="LD-Interiors.apk"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'apk_download', {
+                      event_category: 'App',
+                      event_label: 'Android APK Downloaded'
+                    });
+                  }
+                }}
                 className="text-[10px] text-amber-400/90 hover:text-amber-300 text-center flex items-center justify-center gap-1 hover:underline transition-colors py-0.5"
               >
                 <Smartphone className="h-3 w-3 inline text-amber-400" />
