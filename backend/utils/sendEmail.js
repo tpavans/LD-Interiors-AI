@@ -1,3 +1,10 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+const customLookup = (hostname, options, callback) => {
+  dns.lookup(hostname, { family: 4, all: false }, callback);
+};
 const nodemailer = require('nodemailer');
 const https = require('https');
 const mongoose = require('mongoose');
@@ -123,8 +130,16 @@ let globalSmtpTransporter = null;
 let currentSmtpUser = null;
 
 const getSMTPTransporter = () => {
-  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'ldinteriors.in@gmail.com';
-  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'wocrxrxosoneayeu';
+  let smtpUser = 'ldinteriors.in@gmail.com';
+  let smtpPass = 'wocrxrxosoneayeu';
+
+  // Allow custom env overrides if explicitly set and not legacy
+  if (process.env.SMTP_USER && process.env.SMTP_USER.trim() && !process.env.SMTP_USER.includes('pavansaiteki7')) {
+    smtpUser = process.env.SMTP_USER.trim();
+  }
+  if (process.env.SMTP_PASS && process.env.SMTP_PASS.trim() && process.env.SMTP_PASS.trim() !== 'oqctqlghhvdjqzvk') {
+    smtpPass = process.env.SMTP_PASS.trim();
+  }
 
   if (!globalSmtpTransporter || currentSmtpUser !== smtpUser) {
     currentSmtpUser = smtpUser;
@@ -132,6 +147,7 @@ const getSMTPTransporter = () => {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true, // SSL/TLS over port 465
+      lookup: customLookup,
       family: 4, // Force IPv4 to prevent ENETUNREACH on cloud containers
       auth: {
         user: smtpUser,
@@ -151,7 +167,7 @@ const getSMTPTransporter = () => {
 };
 
 /**
- * Sends an email via SMTP with dual-port fallback (Port 465 SSL & Port 587 STARTTLS).
+ * Sends an email via SMTP with dual-port fallback (Port 465 SSL & Port 587 STARTTLS) strictly over IPv4.
  */
 const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   const { transporter, smtpUser, smtpPass } = getSMTPTransporter();
@@ -167,43 +183,10 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
     text: text,
   };
 
-  // Try 0: Nodemailer Service Gmail (Fastest & direct for Gmail App Passwords)
-  try {
-    const serviceTransporter = nodemailer.createTransport({
-      service: 'gmail',
-      family: 4, // Force IPv4
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 15000,
-      socketTimeout: 20000,
-    });
-
-    const info = await serviceTransporter.sendMail(mailOptions);
-    console.log(`Email successfully sent via Nodemailer Service (Gmail) to ${to}! Message ID:`, info.messageId);
-    
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      EmailLog.create({
-        orderId: orderIdStr,
-        product: pName,
-        recipient: Array.isArray(to) ? to.join(', ') : to,
-        status: 'success',
-        smtpUser: `${smtpUser} (Gmail Service)`,
-      }).catch(err => console.error('Failed to save EmailLog:', err.message));
-    }
-    return;
-  } catch (errService) {
-    console.warn(`Nodemailer Service Gmail failed (${errService.message}). Retrying via Port 465 (SSL)...`);
-  }
-
-  // Try 1: Pooled Port 465 SSL
+  // Try 1: Pooled Port 465 SSL over forced IPv4
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Email successfully sent via SMTP (Port 465) to ${to}! Message ID:`, info.messageId);
+    console.log(`Email successfully sent via SMTP (Port 465 SSL IPv4) to ${to}! Message ID:`, info.messageId);
     
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       EmailLog.create({
@@ -211,20 +194,21 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
         product: pName,
         recipient: Array.isArray(to) ? to.join(', ') : to,
         status: 'success',
-        smtpUser: `${smtpUser} (Port 465)`,
+        smtpUser: `${smtpUser} (Port 465 SSL IPv4)`,
       }).catch(err => console.error('Failed to save EmailLog:', err.message));
     }
     return;
   } catch (err465) {
-    console.warn(`SMTP Port 465 failed (${err465.message}). Retrying via Port 587 (STARTTLS)...`);
+    console.warn(`SMTP Port 465 failed (${err465.message}). Retrying via Port 587 (STARTTLS IPv4)...bi`);
   }
 
-  // Try 2: Port 587 STARTTLS (standard cloud provider fallback)
+  // Try 2: Port 587 STARTTLS over forced IPv4
   try {
     const transporter587 = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false, // STARTTLS
+      lookup: customLookup,
       family: 4, // Force IPv4
       auth: {
         user: smtpUser,
@@ -238,7 +222,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
     });
 
     const info = await transporter587.sendMail(mailOptions);
-    console.log(`Email successfully sent via SMTP (Port 587 STARTTLS) to ${to}! Message ID:`, info.messageId);
+    console.log(`Email successfully sent via SMTP (Port 587 STARTTLS IPv4) to ${to}! Message ID:`, info.messageId);
     
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       EmailLog.create({
@@ -246,7 +230,7 @@ const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
         product: pName,
         recipient: Array.isArray(to) ? to.join(', ') : to,
         status: 'success',
-        smtpUser: `${smtpUser} (Port 587)`,
+        smtpUser: `${smtpUser} (Port 587 STARTTLS IPv4)`,
       }).catch(err => console.error('Failed to save EmailLog:', err.message));
     }
     return;
