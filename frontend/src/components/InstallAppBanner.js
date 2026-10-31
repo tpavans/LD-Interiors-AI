@@ -202,12 +202,21 @@ export default function InstallAppBanner() {
       setShowInstallModal(false);
       setShowIOSModal(true);
     } else {
-      // Fallback message for browsers without immediate native prompt
-      alert(
-        isTelugu
-          ? "మీ బ్రౌజర్ పై భాగంలో ఉన్న (3 చుక్కల మెనూ) క్లిక్ చేసి 'Install app' లేదా 'Add to Home screen' ఎంచుకోండి. లేదా కింద ఉన్న 'Android APK డౌన్‌లోడ్' బటన్ ద్వారా నేరుగా ఇన్‌స్టాల్ చేసుకోండి."
-          : "Tap browser menu (3 dots) and select 'Install app' or 'Add to Home screen', or use the 'Download Android APK' button below."
-      );
+      // In-app browsers (Instagram, Facebook, etc.) or browsers without direct prompt
+      const isInApp = typeof navigator !== 'undefined' && /instagram|fbav|fban|messenger|whatsapp/i.test(navigator.userAgent || '');
+      if (isInApp) {
+        alert(
+          isTelugu
+            ? "మీరు ఇన్‌స్టాగ్రామ్ / యాప్ బ్రౌజర్‌లో ఉన్నారు. పైన కుడివైపు ఉన్న 3 చుక్కలు (⋮) క్లిక్ చేసి 'Open in Chrome' లేదా 'Open in external browser' ఎంచుకుంటే నేరుగా ఇన్‌స్టాల్ అవుతుంది."
+            : "You are in an in-app browser. Tap the 3 dots (⋮) at top right and select 'Open in Chrome' or 'Open in external browser' to install."
+        );
+      } else {
+        alert(
+          isTelugu
+            ? "మీ బ్రౌజర్ పై భాగంలో ఉన్న (3 చుక్కల మెనూ) క్లిక్ చేసి 'Install app' లేదా 'Add to Home screen' ఎంచుకోండి."
+            : "Tap browser menu (3 dots) and select 'Install app' or 'Add to Home screen'."
+        );
+      }
     }
   };
 
@@ -320,26 +329,7 @@ export default function InstallAppBanner() {
                   <span>{isTelugu ? "యాప్ ఇన్‌స్టాల్ చేసుకోండి" : "Install App"}</span>
                 </button>
 
-                {/* 2. Direct Android APK Download */}
-                <a
-                  href="/ld-interiors.apk"
-                  download="LD-Interiors.apk"
-                  onClick={() => {
-                    trackEvent('apk_download');
-                    if (typeof window !== 'undefined' && window.gtag) {
-                      window.gtag('event', 'apk_download', {
-                        event_category: 'App',
-                        event_label: 'Android APK Downloaded via Modal'
-                      });
-                    }
-                  }}
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/15 text-white active:scale-95 font-bold text-xs py-3 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Smartphone className="h-4 w-4 text-amber-400" />
-                  <span>{isTelugu ? "Android APK డౌన్‌లోడ్ చేయండి (.apk)" : "Download Android APK (.apk)"}</span>
-                </a>
-
-                {/* 3. Continue to Website Link */}
+                {/* 2. Continue to Website Link */}
                 <button
                   onClick={() => setShowInstallModal(false)}
                   className="w-full text-xs text-neutral-400 hover:text-white py-2 transition-colors cursor-pointer"
@@ -417,26 +407,6 @@ export default function InstallAppBanner() {
                 {isTelugu ? "తర్వాత" : "Later"}
               </button>
             </div>
-
-            {!isIOS && (
-              <a
-                href="/ld-interiors.apk"
-                download="LD-Interiors.apk"
-                onClick={() => {
-                  trackEvent('apk_download');
-                  if (typeof window !== 'undefined' && window.gtag) {
-                    window.gtag('event', 'apk_download', {
-                      event_category: 'App',
-                      event_label: 'Android APK Downloaded'
-                    });
-                  }
-                }}
-                className="text-[10px] text-amber-400/90 hover:text-amber-300 text-center flex items-center justify-center gap-1 hover:underline transition-colors py-0.5"
-              >
-                <Smartphone className="h-3 w-3 inline text-amber-400" />
-                <span>{isTelugu ? "లేదా డైరెక్ట్ Android APK డౌన్‌లోడ్ చేయండి (.apk)" : "Or Download Android APK (.apk)"}</span>
-              </a>
-            )}
           </div>
         </div>
       )}
