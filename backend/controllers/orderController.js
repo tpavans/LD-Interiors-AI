@@ -122,29 +122,31 @@ const createOrder = async (req, res) => {
       orderObj.user = userObj;
     }
 
-    // Sequential email dispatch per user specification:
-    // 1. First, send greeting email to customer's email (order.email)
-    try {
-      if (order.email && order.email.includes('@')) {
-        console.log(`[ORDER NOTIFICATION] 1. Dispatching customer greeting email to: ${order.email}`);
-        await sendCustomerGreetingEmail(order);
-        console.log(`[ORDER NOTIFICATION] Customer greeting email successfully sent to ${order.email}`);
-      }
-    } catch (customerEmailErr) {
-      console.error('[CUSTOMER GREETING EMAIL ERROR]:', customerEmailErr.message);
-    }
-
-    // 2. Next, send order notification email to LD Interiors admin team
-    try {
-      console.log(`[ORDER NOTIFICATION] 2. Dispatching order alert email to LD Interiors admin team`);
-      await sendOrderEmail(order);
-      console.log(`[ORDER NOTIFICATION] Admin order notification successfully sent`);
-    } catch (adminEmailErr) {
-      console.error('[ADMIN ORDER EMAIL ERROR]:', adminEmailErr.message);
-    }
-
-    // 2. Respond HTTP 201 Created AFTER email delivery is 100% completed!
+    // 1. Respond HTTP 201 Created IMMEDIATELY for 0-lag instant order confirmation!
     res.status(201).json(orderObj);
+
+    // 2. Dispatch emails asynchronously in the background so customer experiences instant checkout:
+    setImmediate(async () => {
+      // Step A: Send Customer Greeting Email (to customer's email)
+      if (order.email && order.email.includes('@')) {
+        try {
+          console.log(`[BACKGROUND NOTIFICATION] 1. Dispatching greeting email to customer: ${order.email}`);
+          await sendCustomerGreetingEmail(order);
+          console.log(`[BACKGROUND NOTIFICATION] Customer greeting email delivered successfully to ${order.email}`);
+        } catch (customerEmailErr) {
+          console.error('[BACKGROUND GREETING EMAIL ERROR]:', customerEmailErr.message);
+        }
+      }
+
+      // Step B: Send Admin Order Alert Email (ONLY to ldinteriors.in@gmail.com)
+      try {
+        console.log('[BACKGROUND NOTIFICATION] 2. Dispatching order alert to ldinteriors.in@gmail.com');
+        await sendOrderEmail(order);
+        console.log('[BACKGROUND NOTIFICATION] Order alert delivered successfully to ldinteriors.in@gmail.com');
+      } catch (adminEmailErr) {
+        console.error('[BACKGROUND ADMIN ALERT ERROR]:', adminEmailErr.message);
+      }
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({

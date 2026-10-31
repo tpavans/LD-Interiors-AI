@@ -123,7 +123,7 @@ let globalSmtpTransporter = null;
 let currentSmtpUser = null;
 
 const getSMTPTransporter = () => {
-  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'pavansaiteki7@gmail.com';
+  const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'ldinteriors.in@gmail.com';
   const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'oqctqlghhvdjqzvk';
 
   if (!globalSmtpTransporter || currentSmtpUser !== smtpUser) {
@@ -577,7 +577,7 @@ https://www.ldinteriors.in/
 
   const subject = `🔔 New Order: ${order.product} from ${order.name}`;
   return sendGenericEmail({
-    to: ['ldinteriors.in@gmail.com', 'pavansaiteki7@gmail.com'],
+    to: 'ldinteriors.in@gmail.com',
     subject,
     html: htmlContent,
     text: textContent,
