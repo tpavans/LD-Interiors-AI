@@ -13,6 +13,13 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const phonepeRoutes = require('./routes/phonepeRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const amazonRoutes = require('./routes/amazonRoutes');
+const {
+  globalLimiter,
+  authLimiter,
+  orderLimiter,
+  supportLimiter,
+  sanitizeNoSql
+} = require('./middleware/security');
 
 // Global exception and rejection loggers
 process.on('uncaughtException', (err) => {
@@ -91,6 +98,15 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Trust reverse proxy for accurate client IP resolution (Cloudflare, Render, Vercel)
+app.set('trust proxy', 1);
+
+// Prevent NoSQL Injection attacks
+app.use(sanitizeNoSql);
+
+// Apply global rate limiting to all /api routes
+app.use('/api', globalLimiter);
+
 // Security & Anti-Abuse Headers
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -113,10 +129,10 @@ app.get('/api/health', (req, res) => {
 });
 
 // Mount routing endpoints
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/support', supportRoutes);
+app.use('/api/orders', orderLimiter, orderRoutes);
+app.use('/api/support', supportLimiter, supportRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/phonepe', phonepeRoutes);
 app.use('/api/analytics', analyticsRoutes);
