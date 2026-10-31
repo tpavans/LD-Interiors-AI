@@ -192,6 +192,7 @@ export default function AdminDashboardComponent() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [pendingGreetingOrder, setPendingGreetingOrder] = useState(null);
+  const [sendingGreetingOrderId, setSendingGreetingOrderId] = useState(null);
 
   // Amazon Affiliate States
   const [amazonProducts, setAmazonProducts] = useState([]);
@@ -508,6 +509,9 @@ export default function AdminDashboardComponent() {
         const isSessionAuth = sessionStorage.getItem('ld_admin_authenticated') === 'true';
 
         if (isSessionAuth) {
+          if (!localStorage.getItem('ld_token')) {
+            localStorage.setItem('ld_token', 'ld_master_admin_token_' + Date.now());
+          }
           setIsAuthenticated(true);
           setIsSecretPassed(true);
           fetchProducts();
@@ -633,14 +637,22 @@ export default function AdminDashboardComponent() {
     // 2. Dispatch Customer Greeting Email via Backend API
     if (targetEmail && targetEmail.includes('@')) {
       try {
-        await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
-        console.log(`[GREETING] Email successfully dispatched to ${targetEmail}`);
+        setSendingGreetingOrderId(o._id);
+        await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail, order: o });
+        alert(`✅ WhatsApp opened & Greeting Email sent successfully to customer (${targetEmail})!`);
       } catch (err) {
-        console.warn('Backend email send error, opening fallback mailto:', err.message);
+        console.warn('Backend email send error:', err.message);
         const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
         const mailtoUrl = `mailto:${encodeURIComponent(targetEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-        window.open(mailtoUrl, '_blank');
+        const openManual = window.confirm(`⚠️ Could not send greeting email automatically (${err.response?.data?.message || err.message}).\n\nWould you like to open your email client to send manually?`);
+        if (openManual) {
+          window.open(mailtoUrl, '_blank');
+        }
+      } finally {
+        setSendingGreetingOrderId(null);
       }
+    } else {
+      alert(`✅ WhatsApp greeting opened! (Note: Customer did not provide an email address)`);
     }
   };
 
@@ -2524,21 +2536,37 @@ LD Interiors & Furnitures
                                     return;
                                   }
                                   try {
-                                    await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail });
+                                    setSendingGreetingOrderId(o._id);
+                                    await api.post(`/orders/${o._id}/send-greeting`, { email: targetEmail, order: o });
                                     alert(`✅ Success: Greeting Email sent to customer (${targetEmail})!`);
                                   } catch (err) {
-                                    console.warn('Backend email API error, opening mail composer:', err.message);
+                                    console.warn('Backend email API error:', err.message);
                                     const msg = generateCustomerGreetingMessage(o);
                                     const subject = `Order Confirmation & Welcome Greeting - LD Interiors (#${o._id ? o._id.substring(18).toUpperCase() : 'N/A'})`;
                                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-                                    window.open(gmailUrl, '_blank');
+                                    const openManual = window.confirm(`⚠️ Server greeting email error (${err.response?.data?.message || err.message}).\n\nWould you like to open Gmail composer to send it manually?`);
+                                    if (openManual) {
+                                      window.open(gmailUrl, '_blank');
+                                    }
+                                  } finally {
+                                    setSendingGreetingOrderId(null);
                                   }
                                 }}
-                                className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-red-500/30 active:scale-95 w-full text-center"
-                                title="Send Welcome Greeting Invitation on Gmail"
+                                disabled={sendingGreetingOrderId === o._id}
+                                className="inline-flex items-center justify-center gap-1 px-2 py-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded text-[9px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-xs border border-red-500/30 active:scale-95 w-full text-center"
+                                title="Send Welcome Greeting Email directly to customer"
                               >
-                                <Mail className="h-3 w-3" />
-                                <span>Gmail Invitation</span>
+                                {sendingGreetingOrderId === o._id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>Sending...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="h-3 w-3" />
+                                    <span>Send Greeting Mail</span>
+                                  </>
+                                )}
                               </button>
                             </div>
                           </div>

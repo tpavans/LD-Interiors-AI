@@ -156,10 +156,12 @@ const getSMTPTransporter = () => {
 const sendViaSMTP = async ({ to, subject, html, text, orderIdStr, pName }) => {
   const { transporter, smtpUser, smtpPass } = getSMTPTransporter();
 
+  const recipientString = Array.isArray(to) ? to.join(', ') : to;
+
   const mailOptions = {
     from: `"LD Interiors & Furnitures" <ldinteriors.in@gmail.com>`,
     replyTo: `"LD Interiors & Furnitures" <ldinteriors.in@gmail.com>`,
-    to: to,
+    to: recipientString,
     subject: subject,
     html: html,
     text: text,
@@ -575,7 +577,7 @@ https://www.ldinteriors.in/
 
   const subject = `🔔 New Order: ${order.product} from ${order.name}`;
   return sendGenericEmail({
-    to: 'ldinteriors.in@gmail.com',
+    to: ['ldinteriors.in@gmail.com', 'pavansaiteki7@gmail.com'],
     subject,
     html: htmlContent,
     text: textContent,
@@ -637,35 +639,35 @@ const sendCustomerGreetingEmail = async (order) => {
 
   const resolvedImageUrl = imageUrl || 'https://www.ldinteriors.in/products';
 
-  const textContent = `🏠 Welcome to LD Interiors!
+  const textContent = `🏠 Welcome to LD Interiors & Furnitures!
 
 Hello Mr./Ms. ${order.name}, 👋
 
+🎉 Congratulations! Your First Order Has Been Placed Successfully!
+(మీ మొదటి ఆర్డర్ విజయవంతంగా నమోదైంది!)
+
 Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.
 
-🎉 Your order has been received successfully!
-
-📦 Order Details
-🪑 Name: ${order.product}
+📦 Order Details:
+🪑 Product Name: ${order.product}
 📂 Category: ${category}
 💰 Price: ${price}
-🖼️ Image URL: ${resolvedImageUrl}
+🖼️ Design Preview Link: ${resolvedImageUrl}
 📅 Order Date: ${orderDate}
 ⏰ Order Time: ${orderTime}
+📍 Delivery Address: ${order.address || 'Address provided on checkout'}
 
-Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.
+Our interior design experts are already reviewing your order details. One of our team members will contact you within 24 hours to confirm all custom dimensions, timber preferences, and delivery schedules.
 
-🌐 Track your order anytime by visiting our website:
-https://www.ldinteriors.in/
+🌐 Track your live order status anytime at:
+https://www.ldinteriors.in/orders
 
-If you have any questions or need assistance, feel free to contact us anytime.
-
-Thank you for choosing LD Interiors. We look forward to transforming your dream space into reality. ❤️
+If you have any questions or custom requirements, reach us directly anytime at +91 93463 25291.
 
 Warm Regards,
-
 🏠 LD Interiors Team
 📞 +91 93463 25291
+🌐 https://www.ldinteriors.in/
 
 "Designing Beautiful Spaces, Creating Happy Homes." ✨
 
@@ -675,33 +677,25 @@ Warm Regards,
 
 నమస్కారం ${order.name} గారికి, 🙏
 
+🎉 మీ మొదటి ఆర్డర్ విజయవంతంగా నమోదైంది!
+
 LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.
 
-🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.
-
-📦 మీ ఆర్డర్ వివరాలు
+📦 మీ ఆర్డర్ వివరాలు:
 🪑 ఉత్పత్తి పేరు: ${order.product}
 📂 విభాగం: ${category}
 💰 ధర: ${price}
 🖼️ చిత్రం లింక్: ${resolvedImageUrl}
 📅 తేదీ: ${orderDate}
 ⏰ సమయం: ${orderTime}
+📍 డెలివరీ చిరునామా: ${order.address || 'చెక్‌అవుట్‌లో ఇచ్చిన చిరునామా'}
 
-మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది.
-
-📞 రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
+మీ ఆర్డర్ను మా నిపుణుల బృందం పరిశీలిస్తోంది. రాబోయే 24 గంటల్లోపు మా LD Interiors ప్రతినిధి మిమ్మల్ని సంప్రదించి, మీ ఆర్డర్ను నిర్ధారించి తదుపరి ప్రక్రియ గురించి పూర్తి వివరాలు తెలియజేస్తారు.
 
 🌐 మీ ఆర్డర్ పురోగతిని ఎప్పుడైనా మా వెబ్సైట్లో ట్రాక్ చేయవచ్చు:
-https://www.ldinteriors.in/
-
-🔍 'My Orders' విభాగంలోకి వెళ్లి మీ ఆర్డర్ స్థితిని సులభంగా తెలుసుకోవచ్చు.
-
-✨ మీ కలల ఇంటిని అందంగా, ఆధునికంగా, మీ అభిరుచికి అనుగుణంగా తీర్చిదిద్దడం మా లక్ష్యం.
-
-మాపై మీరు ఉంచిన నమ్మకానికి మరోసారి హృదయపూర్వక ధన్యవాదాలు. మీ ఇంటిని మరింత అందంగా తీర్చిదిద్దే ఈ ప్రయాణంలో మీతో కలిసి ఉండడం మా అదృష్టంగా భావిస్తున్నాము. ❤️
+https://www.ldinteriors.in/orders
 
 ధన్యవాదాలతో,
-
 🏠 LD Interiors బృందం
 📞 +91 93463 25291
 🌐 https://www.ldinteriors.in/
@@ -712,33 +706,36 @@ https://www.ldinteriors.in/
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2d7c5; border-radius: 16px; background-color: #faf8f5; color: #423525; line-height: 1.6;">
       <div style="text-align: center; border-bottom: 2px solid #e2d7c5; padding-bottom: 15px; margin-bottom: 20px;">
         <h2 style="color: #6d553b; margin: 0; font-family: Georgia, serif;">LD Interiors & Furnitures</h2>
-        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #8e7a65; margin: 5px 0 0 0;">Order Received / ఆర్డర్ అందింది</p>
+        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #8e7a65; margin: 5px 0 0 0;">First Order Successful / మీ ఆర్డర్ విజయవంతంగా నమోదైంది</p>
       </div>
 
       <!-- English Version -->
       <div style="margin-bottom: 30px;">
-        <h3 style="color: #6d553b; font-family: Georgia, serif; font-size: 16px; margin-top: 0; border-left: 4px solid #a07d57; padding-left: 10px;">🏠 Welcome to LD Interiors!</h3>
+        <h3 style="color: #6d553b; font-family: Georgia, serif; font-size: 17px; margin-top: 0; border-left: 4px solid #a07d57; padding-left: 10px;">🏠 Welcome to LD Interiors & Furnitures!</h3>
         <p style="font-size: 14px;">Hello Mr./Ms. <strong>${order.name}</strong>, 👋</p>
-        <p style="font-size: 14px;">Thank you for choosing LD Interiors. We sincerely appreciate your trust in us.</p>
-        <p style="font-size: 14px; font-weight: bold; color: #3d8b40;">🎉 Your order has been received successfully!</p>
+        <div style="background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 12px 16px; margin: 12px 0;">
+          <p style="font-size: 15px; font-weight: bold; color: #1b5e20; margin: 0;">🎉 Congratulations! Your First Order Has Been Placed Successfully!</p>
+        </div>
+        <p style="font-size: 14px; margin-top: 10px;">Thank you for choosing LD Interiors. We sincerely appreciate your trust in us and look forward to transforming your dream space.</p>
 
         <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 18px; margin: 15px 0;">
           <h4 style="color: #8e7a65; font-size: 12px; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">📦 Order Details</h4>
           <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-            <tr><td style="padding: 4px 0; color: #8e7a65; width: 30%;">🪑 Name:</td><td style="padding: 4px 0; font-weight: bold;">${order.product}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">📂 Category:</td><td style="padding: 4px 0;">${category}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">💰 Price:</td><td style="padding: 4px 0; font-weight: bold; color: #6d553b;">${price}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">🖼️ Image URL:</td><td style="padding: 4px 0; word-break: break-all;"><a href="${resolvedImageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${resolvedImageUrl}</a></td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">📅 Order Date:</td><td style="padding: 4px 0;">${orderDate}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">⏰ Order Time:</td><td style="padding: 4px 0;">${orderTime}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65; width: 32%;">🪑 Product:</td><td style="padding: 5px 0; font-weight: bold;">${order.product}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📂 Category:</td><td style="padding: 5px 0;">${category}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">💰 Price:</td><td style="padding: 5px 0; font-weight: bold; color: #6d553b;">${price}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📍 Delivery Address:</td><td style="padding: 5px 0;">${order.address || 'Address on file'}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">🖼️ Product Link:</td><td style="padding: 5px 0; word-break: break-all;"><a href="${resolvedImageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${resolvedImageUrl}</a></td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📅 Order Date:</td><td style="padding: 5px 0;">${orderDate}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">⏰ Order Time:</td><td style="padding: 5px 0;">${orderTime}</td></tr>
           </table>
         </div>
 
-        <p style="font-size: 14px;">Our team is currently reviewing your order. One of our interior design experts will contact you within 24 hours to confirm your order, discuss your requirements, and guide you through the next steps.</p>
+        <p style="font-size: 14px;">Our interior design experts are currently reviewing your custom requirements. One of our specialists will contact you within 24 hours to discuss details and guide you through production.</p>
         
         <div style="text-align: center; margin: 20px 0;">
-          <a href="https://www.ldinteriors.in/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px; border: 1px solid #523f2a;">
-            🌐 Track Your Order
+          <a href="https://www.ldinteriors.in/orders" target="_blank" style="background-color: #6d553b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; border: 1px solid #523f2a;">
+            🌐 Track Your Order Live
           </a>
         </div>
 
@@ -756,20 +753,23 @@ https://www.ldinteriors.in/
 
       <!-- Telugu Version -->
       <div>
-        <h3 style="color: #6d553b; font-family: Georgia, serif; font-size: 16px; margin-top: 0; border-left: 4px solid #a07d57; padding-left: 10px;">🏠 LD Interiors కి స్వాగతం!</h3>
+        <h3 style="color: #6d553b; font-family: Georgia, serif; font-size: 17px; margin-top: 0; border-left: 4px solid #a07d57; padding-left: 10px;">🏠 LD Interiors కి స్వాగతం!</h3>
         <p style="font-size: 14px;">నమస్కారం <strong>${order.name}</strong> గారికి, 🙏</p>
-        <p style="font-size: 14px;">LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.</p>
-        <p style="font-size: 14px; font-weight: bold; color: #3d8b40;">🎉 మీ ఆర్డర్ విజయవంతంగా మాకు అందింది.</p>
+        <div style="background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 12px 16px; margin: 12px 0;">
+          <p style="font-size: 15px; font-weight: bold; color: #1b5e20; margin: 0;">🎉 మీ మొదటి ఆర్డర్ విజయవంతంగా నమోదైంది!</p>
+        </div>
+        <p style="font-size: 14px; margin-top: 10px;">LD Interiors ను ఎంపిక చేసుకున్నందుకు హృదయపూర్వక ధన్యవాదాలు.</p>
 
         <div style="background-color: #ffffff; border: 1px solid #ebdcc5; border-radius: 12px; padding: 18px; margin: 15px 0;">
           <h4 style="color: #8e7a65; font-size: 12px; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #f2e9dc; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">📦 మీ ఆర్డర్ వివరాలు</h4>
           <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-            <tr><td style="padding: 4px 0; color: #8e7a65; width: 30%;">🪑 ఉత్పత్తి పేరు:</td><td style="padding: 4px 0; font-weight: bold;">${order.product}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">📂 విభాగం:</td><td style="padding: 4px 0;">${category}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">💰 ధర:</td><td style="padding: 4px 0; font-weight: bold; color: #6d553b;">${price}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">🖼️ చిత్రం లింక్:</td><td style="padding: 4px 0; word-break: break-all;"><a href="${resolvedImageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${resolvedImageUrl}</a></td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">📅 తేదీ:</td><td style="padding: 4px 0;">${orderDate}</td></tr>
-            <tr><td style="padding: 4px 0; color: #8e7a65;">⏰ సమయం:</td><td style="padding: 4px 0;">${orderTime}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65; width: 32%;">🪑 ఉత్పత్తి పేరు:</td><td style="padding: 5px 0; font-weight: bold;">${order.product}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📂 విభాగం:</td><td style="padding: 5px 0;">${category}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">💰 ధర:</td><td style="padding: 5px 0; font-weight: bold; color: #6d553b;">${price}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📍 డెలివరీ చిరునామా:</td><td style="padding: 5px 0;">${order.address || 'చెక్‌అవుట్‌లో ఇచ్చిన చిరునామా'}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">🖼️ చిత్రం లింక్:</td><td style="padding: 5px 0; word-break: break-all;"><a href="${resolvedImageUrl}" target="_blank" style="color: #a07d57; text-decoration: underline;">${resolvedImageUrl}</a></td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">📅 తేదీ:</td><td style="padding: 5px 0;">${orderDate}</td></tr>
+            <tr><td style="padding: 5px 0; color: #8e7a65;">⏰ సమయం:</td><td style="padding: 5px 0;">${orderTime}</td></tr>
           </table>
         </div>
 
@@ -792,7 +792,7 @@ https://www.ldinteriors.in/
   `;
 
   const orderIdDisplay = order._id ? `#LD-${order._id.toString().slice(-6).toUpperCase()}` : '';
-  const subject = `🎉 Order Received (${orderIdDisplay}): ${order.product} | LD Interiors & Furnitures`;
+  const subject = `🎉 Order Successful! First Order Confirmed (${orderIdDisplay}) - ${order.product} | LD Interiors & Furnitures`;
   
   const targetEmail = (order.email || (order.user && order.user.email) || '').toString().trim().toLowerCase();
 

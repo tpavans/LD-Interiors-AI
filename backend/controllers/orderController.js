@@ -122,15 +122,25 @@ const createOrder = async (req, res) => {
       orderObj.user = userObj;
     }
 
-    // 1. Send Customer Greeting Email (to customer form email) and Admin Email concurrently in parallel
+    // Sequential email dispatch per user specification:
+    // 1. First, send greeting email to customer's email (order.email)
     try {
-      await Promise.allSettled([
-        sendCustomerGreetingEmail(order),
-        sendOrderEmail(order)
-      ]);
-      console.log(`[ORDER NOTIFICATIONS] Email notifications completed for order ID: ${order._id}`);
-    } catch (err) {
-      console.error('[ORDER NOTIFICATION ERROR]', err.message);
+      if (order.email && order.email.includes('@')) {
+        console.log(`[ORDER NOTIFICATION] 1. Dispatching customer greeting email to: ${order.email}`);
+        await sendCustomerGreetingEmail(order);
+        console.log(`[ORDER NOTIFICATION] Customer greeting email successfully sent to ${order.email}`);
+      }
+    } catch (customerEmailErr) {
+      console.error('[CUSTOMER GREETING EMAIL ERROR]:', customerEmailErr.message);
+    }
+
+    // 2. Next, send order notification email to LD Interiors admin team
+    try {
+      console.log(`[ORDER NOTIFICATION] 2. Dispatching order alert email to LD Interiors admin team`);
+      await sendOrderEmail(order);
+      console.log(`[ORDER NOTIFICATION] Admin order notification successfully sent`);
+    } catch (adminEmailErr) {
+      console.error('[ADMIN ORDER EMAIL ERROR]:', adminEmailErr.message);
     }
 
     // 2. Respond HTTP 201 Created AFTER email delivery is 100% completed!
@@ -324,15 +334,48 @@ const deleteOrder = async (req, res) => {
  * @access  Private (Admin only)
  */
 const sendManualGreetingEmail = async (req, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      message: 'Database connection is offline.',
-    });
-  }
   try {
-    const order = await Order.findById(req.params.id);
+    let order = null;
+    const orderIdParam = req.params.id;
+
+    if (mongoose.connection && mongoose.connection.readyState === 1 && mongoose.isValidObjectId(orderIdParam)) {
+      try {
+        order = await Order.findById(orderIdParam);
+      } catch (findErr) {
+        console.warn('Order findById error:', findErr.message);
+      }
+    }
+
+    if (!order && mongoose.connection && mongoose.connection.readyState === 1) {
+      try {
+        order = await Order.findOne({
+          $or: [
+            { orderId: orderIdParam },
+            ...(mongoose.isValidObjectId(orderIdParam) ? [{ _id: orderIdParam }] : [])
+          ]
+        });
+      } catch (findErr2) {
+        console.warn('Order findOne fallback error:', findErr2.message);
+      }
+    }
+
+    // Fallback: construct order from req.body so greeting ALWAYS delivers even if order was local/offline
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      const b = (req.body && req.body.order) || req.body || {};
+      order = {
+        _id: orderIdParam,
+        name: b.name || 'Valued Customer',
+        email: (req.body && req.body.email) || b.email || '',
+        phone: b.phone || '',
+        product: b.product || 'Custom Furniture Design',
+        imageUrl: b.imageUrl || '',
+        totalPrice: b.totalPrice || b.price || 0,
+        paidAmount: b.paidAmount || 0,
+        remainingBalance: b.remainingBalance || 0,
+        address: b.address || '',
+        notes: b.notes || '',
+        createdAt: b.createdAt || new Date()
+      };
     }
 
     const inputEmail = req.body && req.body.email ? req.body.email.trim() : '';
@@ -342,27 +385,29 @@ const sendManualGreetingEmail = async (req, res) => {
       return res.status(400).json({ message: 'This order does not have a valid customer email address.' });
     }
 
-    if (inputEmail && inputEmail !== order.email) {
+    if (order.toObject && inputEmail && inputEmail !== order.email) {
       order.email = inputEmail;
-      await order.save();
+      try {
+        await Order.updateOne({ _id: order._id }, { $set: { email: inputEmail } });
+      } catch (saveErr) {
+        console.warn('Could not update email on order doc:', saveErr.message);
+      }
+    } else {
+      order.email = targetEmail;
     }
 
+    console.log(`[MANUAL GREETING] Dispatching greeting email to ${targetEmail} for order ${order._id}`);
     await sendCustomerGreetingEmail(order);
-    res.json({ message: 'Greeting email sent successfully to ' + order.email, order });
+    res.json({ success: true, message: 'Greeting email sent successfully to ' + targetEmail, order });
   } catch (error) {
     console.error('Error sending manual greeting email:', error);
     res.status(500).json({
-      message: 'Server error sending greeting email.',
+      message: 'Server error sending greeting email: ' + error.message,
       error: error.message,
     });
   }
 };
 
-/**
- * @desc    Update order pricing & total cost
- * @route   PUT /api/orders/:id/pricing
- * @access  Private (Admin only)
- */
 const updateOrderPricing = async (req, res) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ message: 'Database connection is offline.' });
