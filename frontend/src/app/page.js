@@ -180,9 +180,31 @@ export default function Home() {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const response = await api.get('/products');
-        setProducts(response.data);
-        setFilteredShowcase(response.data.slice(0, 6));
+        let prods = [];
+        try {
+          const response = await api.get('/products');
+          if (Array.isArray(response.data) && response.data.length > 0) {
+            prods = response.data;
+          }
+        } catch (apiErr) {
+          console.warn('api.get(/products) error on homepage, trying direct fetch:', apiErr.message);
+        }
+
+        if (prods.length === 0) {
+          const raw = await fetch('https://ld-interiors-ai.onrender.com/api/products');
+          if (raw.ok) {
+            const data = await raw.json();
+            if (Array.isArray(data) && data.length > 0) prods = data;
+          }
+        }
+
+        if (prods.length > 0) {
+          setProducts(prods);
+          setFilteredShowcase(prods.slice(0, 6));
+          setError(null);
+        } else {
+          setError('Could not connect to the backend server. Please verify the API endpoint is available.');
+        }
       } catch (err) {
         console.error('Error fetching products for homepage:', err);
         setError('Could not connect to the backend server. Please verify the API endpoint is available.');

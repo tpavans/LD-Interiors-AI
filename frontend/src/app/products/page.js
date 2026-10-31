@@ -142,8 +142,10 @@ export default function ProductsPage() {
       const cachedCatStr = sessionStorage.getItem('ld_cached_categories');
       if (cachedProdStr) {
         initialProducts = JSON.parse(cachedProdStr);
-        setProducts(initialProducts);
-        setLoading(false);
+        if (Array.isArray(initialProducts) && initialProducts.length > 5) {
+          setProducts(initialProducts);
+          setLoading(false);
+        }
       }
       if (cachedCatStr) {
         const catList = JSON.parse(cachedCatStr);
@@ -178,14 +180,47 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchData = async (retryCount = 0) => {
       try {
+        let fetchedProducts = [];
+        let catList = DEFAULT_CATEGORIES;
+
+        // Primary: Fetch via API client
         const [prodRes, catRes] = await Promise.allSettled([
           api.get('/products'),
           api.get('/categories')
         ]);
 
-        let fetchedProducts = [];
-        if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data) && prodRes.value.data.length > 0) {
+        if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value?.data) && prodRes.value.data.length > 0) {
           fetchedProducts = prodRes.value.data;
+        } else {
+          // Robust Secondary Fallback: Direct unintercepted fetch
+          try {
+            const rawRes = await fetch('https://ld-interiors-ai.onrender.com/api/products');
+            if (rawRes.ok) {
+              const rawData = await rawRes.json();
+              if (Array.isArray(rawData) && rawData.length > 0) {
+                fetchedProducts = rawData;
+              }
+            }
+          } catch (rawErr) {
+            console.warn('Direct fetch fallback error:', rawErr.message);
+          }
+        }
+
+        if (catRes.status === 'fulfilled' && Array.isArray(catRes.value?.data) && catRes.value.data.length > 0) {
+          catList = catRes.value.data.map(c => c.name);
+        } else {
+          try {
+            const rawCatRes = await fetch('https://ld-interiors-ai.onrender.com/api/categories');
+            if (rawCatRes.ok) {
+              const rawCatData = await rawCatRes.json();
+              if (Array.isArray(rawCatData) && rawCatData.length > 0) {
+                catList = rawCatData.map(c => c.name);
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (fetchedProducts.length > 0) {
           setProducts(fetchedProducts);
           setError(null);
           try {
@@ -193,24 +228,18 @@ export default function ProductsPage() {
           } catch (e) {}
         } else {
           if (retryCount < 2) {
-            setTimeout(() => fetchData(retryCount + 1), 1500);
+            setTimeout(() => fetchData(retryCount + 1), 1200);
             return;
           }
-          // Fallback to initial seed products so page is NEVER broken
           setProducts(FALLBACK_PRODUCTS);
           setError(null);
         }
 
-        let catList = DEFAULT_CATEGORIES;
-        if (catRes.status === 'fulfilled' && Array.isArray(catRes.value.data)) {
-          catList = catRes.value.data.map(c => c.name);
-          try {
-            sessionStorage.setItem('ld_cached_categories', JSON.stringify(catList));
-          } catch (e) {}
-        }
-
         const fullCatList = ["All", ...new Set([...catList])];
         setCategories(fullCatList);
+        try {
+          sessionStorage.setItem('ld_cached_categories', JSON.stringify(catList));
+        } catch (e) {}
 
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('category') || 'All';

@@ -92,7 +92,7 @@ const app = express();
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key', 'x-admin-secret', 'Accept', 'Origin', 'X-Requested-With'],
 }));
 
 app.use(express.json({ limit: '50mb' }));

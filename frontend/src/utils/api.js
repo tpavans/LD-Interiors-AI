@@ -32,10 +32,6 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      // If admin session is active, also attach master admin key header
-      if (sessionStorage.getItem('ld_admin_authenticated') === 'true' || localStorage.getItem('ld_admin')) {
-        config.headers['x-admin-key'] = 'ld_master_admin_secret_2026';
-      }
     }
     // If sending FormData, remove explicit Content-Type header so Axios generates proper boundary token
     if (config.data instanceof FormData) {
