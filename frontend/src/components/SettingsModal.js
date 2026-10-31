@@ -9,7 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { playWoodenChime } from '@/utils/audioChime';
 
-const CURRENT_VERSION = 'v2.4.0';
+const CURRENT_VERSION = 'v2.4.1';
 
 export default function SettingsModal() {
   const { language, toggleLanguage } = useLanguage();
@@ -301,7 +301,7 @@ export default function SettingsModal() {
           {/* 4. Appearance & Language Quick Toggles */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
-              onClick={toggleTheme}
+              onClick={() => toggleTheme()}
               className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 flex flex-col gap-1 transition-all cursor-pointer text-left"
             >
               <div className="flex items-center justify-between">
@@ -314,7 +314,7 @@ export default function SettingsModal() {
             </button>
 
             <button
-              onClick={toggleLanguage}
+              onClick={() => toggleLanguage()}
               className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 flex flex-col gap-1 transition-all cursor-pointer text-left"
             >
               <div className="flex items-center justify-between">

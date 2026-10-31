@@ -175,7 +175,7 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                   <span>{isTelugu ? "సెట్టింగ్స్ & అప్‌డేట్స్" : "Settings & Updates"}</span>
                 </div>
                 <span className="bg-slate-800 text-amber-400 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
-                  v2.4.0
+                  v2.4.1
                 </span>
               </button>
             </div>

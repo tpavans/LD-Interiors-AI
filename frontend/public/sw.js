@@ -1,5 +1,5 @@
-// LD Interiors Service Worker for PWA App Experience (v2.4.0)
-const APP_VERSION = 'v2.4.0';
+// LD Interiors Service Worker for PWA App Experience (v2.4.1)
+const APP_VERSION = 'v2.4.1';
 const CACHE_NAME = `ld-interiors-${APP_VERSION}`;
 
 const STATIC_ASSETS = [
@@ -65,22 +65,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML / navigation requests: Fast Stale-While-Revalidate
-  // Instant 0ms launch from cache, while updating fresh content in the background!
+  // HTML / navigation requests: Safe network-first with instant offline cache fallback
   if (req.mode === 'navigate') {
     event.respondWith(
-      caches.match('/').then((cached) => {
-        const fetchPromise = fetch(req).then((networkRes) => {
-          if (networkRes && networkRes.status === 200) {
-            const clone = networkRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put('/', clone));
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
           }
-          return networkRes;
-        }).catch(() => cached);
-
-        // Return cached page instantly for 0ms open speed, or fallback to network
-        return cached || fetchPromise;
-      })
+          return res;
+        })
+        .catch(() => {
+          return caches.match(req).then((cached) => cached || caches.match('/'));
+        })
     );
     return;
   }

@@ -119,7 +119,7 @@ export default function WoodSplashIntro() {
         </div>
 
         <span className="text-[9px] text-neutral-400 mt-3 font-mono">
-          Tap anywhere to skip • v2.4.0
+          Tap anywhere to skip • v2.4.1
         </span>
       </div>
     </div>
