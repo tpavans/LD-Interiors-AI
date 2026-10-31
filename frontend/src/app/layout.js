@@ -7,6 +7,8 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import SettingsModal from "@/components/SettingsModal";
+import WoodSplashIntro from "@/components/WoodSplashIntro";
 import { ThemeProvider } from "@/context/ThemeContext";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
@@ -124,6 +126,7 @@ export default function RootLayout({ children }) {
         <GoogleAnalytics />
         <ThemeProvider>
           <LanguageProvider>
+            <WoodSplashIntro />
             <Navbar />
             <main className="flex-grow wood-plank-bg dark:wood-plank-bg-dark pt-[104px] md:pt-24 transition-colors duration-300">
               {children}
@@ -133,6 +136,7 @@ export default function RootLayout({ children }) {
             <WhatsAppWidget />
             <MobileBottomNav />
             <InstallAppBanner />
+            <SettingsModal />
           </LanguageProvider>
         </ThemeProvider>
       </body>

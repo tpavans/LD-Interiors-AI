@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal, Download, Share2 } from 'lucide-react';
+import { X, Home, Grid, Film, Package, Heart, Phone, HelpCircle, ChevronRight, MessageCircle, Sparkles, BookOpen, Moon, Sun, Filter, SlidersHorizontal, Download, Share2, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -157,10 +157,25 @@ export default function SidebarDrawer({ isOpen, onClose }) {
               >
                 <div className="flex items-center gap-3">
                   <Share2 className="h-4 w-4 shrink-0 text-emerald-400" />
-                  <span>{isTelugu ? "??????? ???? ??????" : "Share Mobile App"}</span>
+                  <span>{isTelugu ? "యాప్‌ను షేర్ చేయండి" : "Share Mobile App"}</span>
                 </div>
                 <span className="bg-emerald-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
                   Share
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new Event('open-settings-modal'));
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 border border-slate-700/80 text-slate-200 transition-all cursor-pointer mt-1"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="h-4 w-4 shrink-0 text-amber-400" />
+                  <span>{isTelugu ? "సెట్టింగ్స్ & అప్‌డేట్స్" : "Settings & Updates"}</span>
+                </div>
+                <span className="bg-slate-800 text-amber-400 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
+                  v2.4.0
                 </span>
               </button>
             </div>

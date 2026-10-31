@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary);
         swipeRefresh.setOnRefreshListener(() -> webView.reload());
         webView.setBackgroundColor(0xFF000000);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         // Configure WebSettings
         WebSettings webSettings = webView.getSettings();

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut, User, LayoutDashboard, Menu, X, Heart, Search, Sparkles, ChevronRight } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, Menu, X, Heart, Search, Sparkles, ChevronRight, Settings } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
@@ -317,6 +317,15 @@ export default function Navbar() {
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               )}
             </button>
+
+            {/* Settings & App Updates Button */}
+            <button
+              onClick={() => window.dispatchEvent(new Event('open-settings-modal'))}
+              className="relative flex items-center justify-center p-2 rounded-md border border-sky-400/40 bg-white/10 text-sky-300 hover:text-amber-400 hover:border-amber-400 hover:bg-white/20 transition-all cursor-pointer"
+              title={isTelugu ? "సెట్టింగ్స్ & యాప్ అప్‌డేట్స్" : "Settings & App Updates"}
+            >
+              <Settings className="h-4 w-4" />
+            </button>
           </nav>
 
           {/* Mobile Right Controls */}
@@ -339,6 +348,13 @@ export default function Navbar() {
               title="Account"
             >
               <User className="h-4.5 w-4.5" />
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new Event('open-settings-modal'))}
+              className="p-1.5 text-sky-300 hover:text-amber-400 cursor-pointer"
+              title="Settings & App Updates"
+            >
+              <Settings className="h-4.5 w-4.5" />
             </button>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

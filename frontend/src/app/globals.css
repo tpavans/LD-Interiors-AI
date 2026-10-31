@@ -379,3 +379,34 @@ body {
 .animate-float-fast {
   animation: float-up 7s ease-in-out infinite alternate;
 }
+
+/* App Launch & Settings Modal Animations */
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes woodShimmer {
+  0% {
+    width: 0%;
+    opacity: 0.6;
+  }
+  50% {
+    width: 70%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
