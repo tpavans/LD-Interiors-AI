@@ -124,7 +124,7 @@ let currentSmtpUser = null;
 
 const getSMTPTransporter = () => {
   const smtpUser = (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || 'ldinteriors.in@gmail.com';
-  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'oqctqlghhvdjqzvk';
+  const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || 'wocrxrxosoneayeu';
 
   if (!globalSmtpTransporter || currentSmtpUser !== smtpUser) {
     currentSmtpUser = smtpUser;
