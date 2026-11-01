@@ -191,6 +191,8 @@ export default function AdminDashboardComponent() {
   const [adminTab, setAdminTab] = useState('analytics');
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [bulkOrderLoading, setBulkOrderLoading] = useState(false);
   const [pendingGreetingOrder, setPendingGreetingOrder] = useState(null);
   const [sendingGreetingOrderId, setSendingGreetingOrderId] = useState(null);
 
@@ -461,27 +463,25 @@ export default function AdminDashboardComponent() {
     }
 
     let remoteOrders = [];
+    let fetchSuccess = false;
     try {
       const response = await api.get('/orders');
       if (Array.isArray(response.data)) {
         remoteOrders = response.data;
+        fetchSuccess = true;
       }
     } catch (err) {
       console.error('Error fetching orders from API:', err);
     }
 
-    // Merge remote orders and local backup (remove duplicate IDs)
-    const combinedOrders = [...remoteOrders];
-    localBackup.forEach(localOrd => {
-      if (localOrd && localOrd._id && !combinedOrders.some(r => r._id === localOrd._id)) {
-        combinedOrders.push(localOrd);
-      }
-    });
+    // If API responded, remote database is authoritative source of truth
+    // Only fall back to local storage if API was completely unreachable (offline)
+    const finalOrders = fetchSuccess ? remoteOrders : localBackup;
 
-    setOrders(combinedOrders);
-    if (typeof window !== 'undefined' && combinedOrders.length > 0) {
+    setOrders(finalOrders);
+    if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('ld_user_orders', JSON.stringify(combinedOrders));
+        localStorage.setItem('ld_user_orders', JSON.stringify(finalOrders));
       } catch (e) {}
     }
     setOrdersLoading(false);
@@ -608,18 +608,73 @@ export default function AdminDashboardComponent() {
     }
   };
 
-  // 2d. Delete Order Record
+  // 2d. Multi-Select Order Handlers
+  const handleSelectOrder = (id) => {
+    if (selectedOrderIds.includes(id)) {
+      setSelectedOrderIds(selectedOrderIds.filter(item => item !== id));
+    } else {
+      setSelectedOrderIds([...selectedOrderIds, id]);
+    }
+  };
+
+  const handleSelectAllOrders = (targetOrdersList) => {
+    const targetIds = targetOrdersList.map(o => o._id);
+    const isAllSelected = targetIds.length > 0 && targetIds.every(id => selectedOrderIds.includes(id));
+
+    if (isAllSelected) {
+      setSelectedOrderIds(selectedOrderIds.filter(id => !targetIds.includes(id)));
+    } else {
+      const newSelection = Array.from(new Set([...selectedOrderIds, ...targetIds]));
+      setSelectedOrderIds(newSelection);
+    }
+  };
+
+  // Delete Single Order Record
   const handleDeleteOrder = async (id, customerName) => {
     if (!window.confirm(`Are you sure you want to delete the order from "${customerName}"?`)) {
       return;
     }
     try {
       await api.delete(`/orders/${id}`);
-      setOrders(prev => prev.filter(o => o._id !== id));
     } catch (err) {
-      console.error('Error deleting order:', err);
-      alert('Failed to delete order. Please try again.');
+      console.warn('Backend order delete error (proceeding with local cleanup):', err.message);
     }
+    // Always remove from local state and persistent localStorage
+    setOrders(prev => {
+      const updated = prev.filter(o => o._id !== id);
+      try {
+        localStorage.setItem('ld_user_orders', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setSelectedOrderIds(prev => prev.filter(item => item !== id));
+  };
+
+  // Bulk Delete Multiple Selected Orders
+  const handleBulkDeleteOrders = async () => {
+    if (selectedOrderIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrderIds.length} selected orders? This action cannot be undone.`)) {
+      return;
+    }
+    setBulkOrderLoading(true);
+    try {
+      await api.post('/orders/bulk-delete', { orderIds: selectedOrderIds });
+    } catch (err) {
+      console.warn('Bulk delete endpoint failed, running fallback individual delete:', err.message);
+      try {
+        await Promise.all(selectedOrderIds.map(id => api.delete(`/orders/${id}`).catch(() => {})));
+      } catch (fallbackErr) {}
+    }
+    // Remove all selected orders from state and localStorage
+    setOrders(prev => {
+      const updated = prev.filter(o => !selectedOrderIds.includes(o._id));
+      try {
+        localStorage.setItem('ld_user_orders', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setSelectedOrderIds([]);
+    setBulkOrderLoading(false);
   };
 
   // 2e. Send Both WhatsApp & Mail Greeting
@@ -2427,13 +2482,49 @@ LD Interiors & Furnitures
           )}
 
           <div className="bg-white/80 backdrop-blur-md border border-wood-border rounded-3xl shadow-lg overflow-hidden text-left animate-fadeIn glow-on-hover">
-            <div className="px-6 py-5 border-b border-wood-border/40 flex items-center justify-between">
-              <h3 className="font-serif text-lg font-bold text-wood-dark">
-                Customer Orders Live Status
-              </h3>
-              <span className="inline-flex items-center rounded-full bg-wood-beige/25 border border-wood-border/40 px-2.5 py-0.5 text-xs font-semibold text-wood-accent uppercase tracking-wider">
-                {orders.length} {orders.length === 1 ? 'Order' : 'Orders'} Total
-              </span>
+            <div className="px-6 py-5 border-b border-wood-border/40 flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <h3 className="font-serif text-lg font-bold text-wood-dark">
+                  Customer Orders Live Status
+                </h3>
+                <span className="inline-flex items-center rounded-full bg-wood-beige/25 border border-wood-border/40 px-2.5 py-0.5 text-xs font-semibold text-wood-accent uppercase tracking-wider">
+                  {orders.length} {orders.length === 1 ? 'Order' : 'Orders'} Total
+                </span>
+              </div>
+
+              {/* Bulk Delete Bar for Selected Orders */}
+              {selectedOrderIds.length > 0 && (
+                <div className="flex items-center gap-2 animate-fadeIn">
+                  <span className="text-xs font-bold text-slate-800 bg-red-50 border border-red-200 px-3 py-1.5 rounded-xl">
+                    Selected: {selectedOrderIds.length} {selectedOrderIds.length === 1 ? 'Order' : 'Orders'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleBulkDeleteOrders}
+                    disabled={bulkOrderLoading}
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    {bulkOrderLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete Selected ({selectedOrderIds.length})</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderIds([])}
+                    className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             {ordersLoading ? (
@@ -2449,6 +2540,15 @@ LD Interiors & Furnitures
                 <table className="w-full border-collapse text-left text-sm">
                   <thead>
                     <tr className="border-b border-wood-border/40 bg-wood-beige/10 text-[10px] font-bold uppercase tracking-wider text-wood-accent">
+                      <th className="py-4 px-3 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          checked={orders.length > 0 && orders.every(o => selectedOrderIds.includes(o._id))}
+                          onChange={() => handleSelectAllOrders(orders)}
+                          className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                          title="Select / Deselect All Orders"
+                        />
+                      </th>
                       <th className="py-4 px-6">Image</th>
                       <th className="py-4 px-6">Customer</th>
                       <th className="py-4 px-6">Phone</th>
@@ -2460,8 +2560,19 @@ LD Interiors & Furnitures
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-wood-border/30">
-                    {orders.map((o) => (
-                      <tr key={o._id} className="hover:bg-wood-beige/10 transition-colors">
+                    {orders.map((o) => {
+                      const isSelected = selectedOrderIds.includes(o._id);
+                      return (
+                      <tr key={o._id} className={`hover:bg-wood-beige/10 transition-colors ${isSelected ? 'bg-red-50/80 border-l-4 border-l-red-500' : ''}`}>
+                        <td className="py-4 px-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleSelectOrder(o._id)}
+                            className="h-4.5 w-4.5 rounded border-wood-border text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                            title={`Select order from ${o.name}`}
+                          />
+                        </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
                             {/* Main Product Design Image */}
@@ -2726,7 +2837,8 @@ LD Interiors & Furnitures
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               </div>

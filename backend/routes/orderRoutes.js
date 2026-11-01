@@ -7,6 +7,7 @@ const {
   trackOrders,
   updateOrderStatus,
   deleteOrder,
+  bulkDeleteOrders,
   sendManualGreetingEmail,
   updateOrderPricing,
   submitPayment,
@@ -48,6 +49,10 @@ router.post('/:id/cancel-pending-verification', cancelPendingPaymentVerification
 
 // Admin-only route to retrieve all orders
 router.get('/', protect, getOrders);
+
+// Admin-only route for bulk deleting orders (Must be defined BEFORE /:id route)
+router.post('/bulk-delete', protect, bulkDeleteOrders);
+router.delete('/bulk', protect, bulkDeleteOrders);
 
 // Admin-only route to manually send order greeting email
 router.post('/:id/send-greeting', protect, sendManualGreetingEmail);
