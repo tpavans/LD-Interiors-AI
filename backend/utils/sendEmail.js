@@ -126,6 +126,71 @@ const sendViaBrevo = async ({ to, subject, html, text, orderIdStr, pName }) => {
   });
 };
 
+/**
+ * Sends an email via the LD Interiors Vercel HTTPS Bridge.
+ * Bypasses cloud container (Render free tier) outbound SMTP port 465/587 blocks
+ * by communicating via standard HTTPS (Port 443) directly to the Vercel serverless gateway.
+ */
+const sendViaVercelBridge = async ({ to, subject, html, text, orderIdStr, pName }) => {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      text,
+      secret: process.env.EMAIL_BRIDGE_SECRET || 'ld_email_bridge_secret_2026',
+    });
+
+    const options = {
+      hostname: 'www.ldinteriors.in',
+      port: 443,
+      path: '/api/send-email',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-email-secret': process.env.EMAIL_BRIDGE_SECRET || 'ld_email_bridge_secret_2026',
+        'Content-Length': Buffer.byteLength(payload),
+      },
+      timeout: 20000,
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log(`Email successfully sent via Vercel HTTPS Bridge to ${to}!`);
+          if (mongoose.connection && mongoose.connection.readyState === 1) {
+            EmailLog.create({
+              orderId: orderIdStr,
+              product: pName,
+              recipient: Array.isArray(to) ? to.join(', ') : to,
+              status: 'success',
+              smtpUser: 'Vercel HTTPS Bridge (Gmail SMTP 465)',
+            }).catch((err) => console.error('Failed to save EmailLog:', err.message));
+          }
+          resolve();
+        } else {
+          const errMessage = `Vercel HTTPS Bridge returned status ${res.statusCode}: ${body}`;
+          reject(new Error(errMessage));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Vercel HTTPS Bridge request timed out after 20s'));
+    });
+
+    req.write(payload);
+    req.end();
+  });
+};
+
 let globalSmtpTransporter = null;
 let currentSmtpUser = null;
 
@@ -300,7 +365,18 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
   let sent = false;
   let errors = [];
 
-  // 1. Try Gmail SMTP first with active credentials
+  // 1. Try Vercel HTTPS Bridge first (runs over Port 443 HTTPS, bypassing cloud container SMTP port blocks)
+  try {
+    console.log(`[sendEmail] Dispatching email via Vercel HTTPS Bridge to ${Array.isArray(finalTo) ? finalTo.join(', ') : finalTo}...`);
+    await sendViaVercelBridge({ to: finalTo, subject, html, text, orderIdStr, pName });
+    sent = true;
+    return;
+  } catch (bridgeErr) {
+    console.warn(`[sendEmail] Vercel HTTPS Bridge delivery failed (${bridgeErr.message}). Retrying via direct SMTP...`);
+    errors.push(`Vercel Bridge: ${bridgeErr.message}`);
+  }
+
+  // 2. Try Direct Gmail SMTP (Port 465 SSL & Port 587 STARTTLS)
   try {
     await sendViaSMTP({ to: finalTo, subject, html, text, orderIdStr, pName });
     sent = true;
@@ -310,7 +386,7 @@ const sendGenericEmail = async ({ to, subject, html, text, orderId, productName 
     errors.push(`SMTP: ${err.message}`);
   }
 
-  // 2. Try Resend API if configured and SMTP not sent
+  // 3. Try Resend API if configured and SMTP not sent
   if (!sent && process.env.RESEND_API_KEY) {
     try {
       await sendViaResend({ to: finalTo, subject, html, text, orderIdStr, pName });
