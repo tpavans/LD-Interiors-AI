@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Play, Smartphone, Heart, CheckCircle2 } from 'lucide-react';
+import { Phone, ShoppingBag, X, MessageCircle, Check, Share2, Copy, Smartphone, Heart, CheckCircle2 } from 'lucide-react';
 import api from '../utils/api';
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
@@ -297,14 +297,6 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
               loading="lazy"
               className="h-full w-full object-cover object-center transform transition-transform duration-500 ease-out group-hover:scale-105"
             />
-            {/* Play Button Overlay for Videos */}
-            {product.video && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/15 group-hover:bg-black/30 transition-colors duration-300">
-                <div className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full text-slate-900 shadow-xl border border-slate-200 transform transition-transform group-hover:scale-110 duration-300">
-                  <Play className="h-5 w-5 fill-current text-slate-900 ml-0.5" />
-                </div>
-              </div>
-            )}
             {/* Category Overlay */}
             <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-widest text-[#008DDA] shadow-xs border border-slate-200">
               {category}
