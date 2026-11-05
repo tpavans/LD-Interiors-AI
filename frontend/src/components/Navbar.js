@@ -6,6 +6,7 @@ import { LogOut, User, LayoutDashboard, Menu, X, Heart, Search, Sparkles, Chevro
 
 import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
+import { getSmartAutocompleteSuggestions, QUICK_SEARCH_CHIPS } from '@/utils/searchEngine';
 import ProfileDrawer from './ProfileDrawer';
 import SidebarDrawer from './SidebarDrawer';
 
@@ -26,6 +27,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [keywordSuggestions, setKeywordSuggestions] = useState([]);
 
   const { language = 'TE', toggleLanguage } = useLanguage() || {};
   const langKey = (language && typeof language === 'string') ? language.toUpperCase() : 'TE';
@@ -116,12 +118,13 @@ export default function Navbar() {
     router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  // Filter live suggestions when typing
+  // Filter live suggestions when typing using Smart Search Engine
   const handleSearchInputChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     if (!query.trim()) {
       setSearchSuggestions([]);
+      setKeywordSuggestions([]);
       return;
     }
 
@@ -129,14 +132,13 @@ export default function Navbar() {
       const cachedProdStr = sessionStorage.getItem('ld_cached_products');
       if (cachedProdStr) {
         const prods = JSON.parse(cachedProdStr);
-        const filtered = prods.filter(p => 
-          p.title?.toLowerCase().includes(query.toLowerCase()) || 
-          p.category?.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 5);
-        setSearchSuggestions(filtered);
+        const { productSuggestions, keywordSuggestions: kws } = getSmartAutocompleteSuggestions(query, prods);
+        setSearchSuggestions(productSuggestions || []);
+        setKeywordSuggestions(kws || []);
       }
     } catch (err) {
       setSearchSuggestions([]);
+      setKeywordSuggestions([]);
     }
   };
 
@@ -206,45 +208,102 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Autocomplete Dropdown */}
-            {isSearchFocused && searchQuery.trim() !== "" && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-sky-500" />
-                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
-                </div>
+            {isSearchFocused && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn text-left">
+                {/* Popular Quick-Search Chips when input is focused */}
+                {!searchQuery.trim() && (
+                  <div className="p-3 bg-slate-50 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                      <span>{isTelugu ? "ట్రెండింగ్ శోధనలు" : "Trending Searches"}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_SEARCH_CHIPS.slice(1, 9).map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsSearchFocused(false);
+                            router.push(`/products?search=${encodeURIComponent(chip.query)}`);
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 hover:border-amber-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                {searchSuggestions.length > 0 ? (
-                  <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
-                    {searchSuggestions.map((item) => (
-                      <div
-                        key={item._id}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setIsSearchFocused(false);
-                          router.push(`/products/${item._id}`);
-                        }}
-                        className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
-                      >
-                        <img src={item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
-                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
-                          </div>
+                {/* Smart Query Completions */}
+                {keywordSuggestions.length > 0 && (
+                  <div className="p-2 bg-amber-50/40 border-b border-amber-100/60">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 px-2 pb-1 block">
+                      {isTelugu ? "సూచించబడిన శోధనలు" : "Suggested Searches"}
+                    </span>
+                    <div className="space-y-0.5">
+                      {keywordSuggestions.map((kw, idx) => (
+                        <div
+                          key={idx}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsSearchFocused(false);
+                            setSearchQuery(kw);
+                            router.push(`/products?search=${encodeURIComponent(kw)}`);
+                          }}
+                          className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-amber-100/70 rounded-lg text-xs font-semibold text-slate-800 cursor-pointer"
+                        >
+                          <Search className="h-3 w-3 text-amber-600 shrink-0" />
+                          <span className="truncate">{kw}</span>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Matching Products */}
+                {searchQuery.trim() !== '' && (
+                  <>
+                    <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3.5 py-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-sky-500" />
+                        {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ కోసం క్లిక్ చేయండి" : "Click to view design"}</span>
+                    </div>
+
+                    {searchSuggestions.length > 0 ? (
+                      <div className="p-1.5 divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                        {searchSuggestions.map((item) => (
+                          <div
+                            key={item._id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setIsSearchFocused(false);
+                              router.push(`/products/${item._id}`);
+                            }}
+                            className="flex items-center gap-3 p-2.5 hover:bg-sky-50 rounded-xl transition-colors cursor-pointer group text-left"
+                          >
+                            <img src={item.imageUrl || item.image} alt={item.title} className="h-11 w-11 rounded-lg object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition-transform" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#008DDA] transition-colors">{item.title}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[9px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-2 py-0.5 rounded-md">{item.category}</span>
+                                <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                              </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#008DDA] transition-colors shrink-0" />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-5 text-center">
-                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
-                  </div>
+                    ) : (
+                      <div className="p-5 text-center">
+                        <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు లేదా 'under 1000' అని వెతకండి" : "Try searching for Doors, Beds, or 'under 1000'..."}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -398,45 +457,93 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Full-Width Autocomplete Dropdown */}
-            {isSearchFocused && searchQuery.trim() !== "" && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3 py-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-sky-500" />
-                    {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ నొక్కండి" : "Tap to view"}</span>
-                </div>
+            {isSearchFocused && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden z-50 animate-fadeIn text-left">
+                {!searchQuery.trim() && (
+                  <div className="p-2.5 bg-slate-50 border-b border-slate-200">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1.5 block">
+                      {isTelugu ? "ట్రెండింగ్ శోధనలు" : "Trending Searches"}
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_SEARCH_CHIPS.slice(1, 7).map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsSearchFocused(false);
+                            router.push(`/products?search=${encodeURIComponent(chip.query)}`);
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-bold bg-white text-slate-700 border border-slate-200 rounded-md"
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                {searchSuggestions.length > 0 ? (
-                  <div className="p-1.5 divide-y divide-slate-100 max-h-72 overflow-y-auto">
-                    {searchSuggestions.map((item) => (
+                {keywordSuggestions.length > 0 && (
+                  <div className="p-1.5 bg-amber-50/40 border-b border-amber-100/60">
+                    {keywordSuggestions.map((kw, idx) => (
                       <div
-                        key={item._id}
+                        key={idx}
                         onMouseDown={(e) => {
                           e.preventDefault();
                           setIsSearchFocused(false);
-                          router.push(`/products/${item._id}`);
+                          setSearchQuery(kw);
+                          router.push(`/products?search=${encodeURIComponent(kw)}`);
                         }}
-                        className="flex items-center gap-3 p-2 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer group text-left"
+                        className="flex items-center gap-2 px-2 py-1 text-xs font-semibold text-slate-800"
                       >
-                        <img src={item.image} alt={item.title} className="h-10 w-10 rounded-md object-cover border border-slate-200 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-extrabold text-slate-900 truncate">{item.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[8.5px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-1.5 py-0.5 rounded">{item.category}</span>
-                            <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                        <Search className="h-3 w-3 text-amber-600 shrink-0" />
+                        <span className="truncate">{kw}</span>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="p-4 text-center">
-                    <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
-                  </div>
+                )}
+
+                {searchQuery.trim() !== '' && (
+                  <>
+                    <div className="p-2 border-b border-slate-100 bg-sky-50/50 flex items-center justify-between px-3 py-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-sky-500" />
+                        {isTelugu ? "లభించిన ఉత్పత్తులు" : "Matching Products"} ({searchSuggestions.length})
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-medium">{isTelugu ? "డిజైన్ నొక్కండి" : "Tap to view"}</span>
+                    </div>
+
+                    {searchSuggestions.length > 0 ? (
+                      <div className="p-1.5 divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                        {searchSuggestions.map((item) => (
+                          <div
+                            key={item._id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setIsSearchFocused(false);
+                              router.push(`/products/${item._id}`);
+                            }}
+                            className="flex items-center gap-3 p-2 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer group text-left"
+                          >
+                            <img src={item.imageUrl || item.image} alt={item.title} className="h-10 w-10 rounded-md object-cover border border-slate-200 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-extrabold text-slate-900 truncate">{item.title}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[8.5px] font-bold text-[#008DDA] uppercase tracking-wider bg-sky-100/70 px-1.5 py-0.5 rounded">{item.category}</span>
+                                <span className="text-xs font-mono font-bold text-slate-700">{item.price && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Contact for price'}</span>
+                              </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center">
+                        <p className="text-xs text-slate-600 font-medium">{isTelugu ? `"${searchQuery}" కి ఉత్పత్తులు లభించలేదు` : `No matching designs found for "${searchQuery}"`}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{isTelugu ? "గుమ్మాలు, బెడ్స్, పూజ మందిరాలు అని వెతకండి" : "Try searching for Doors, Beds, Puja Mandirams..."}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

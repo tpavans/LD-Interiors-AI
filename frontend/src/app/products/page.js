@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import ProductCard from '@/components/ProductCard';
-import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle, Heart, Trash2, Sparkles, ChevronRight, Sliders, Home, Calendar, Video, Eye } from 'lucide-react';
+import { Loader2, Layers, EyeOff, Search, X, Share2, Check, Copy, MessageCircle, Heart, Trash2, Sparkles, ChevronRight, Sliders, Home, Calendar, Video, Eye, ArrowUpDown, Filter, Flame, Zap } from 'lucide-react';
+import { parseSearchQuery, filterAndRankProducts, QUICK_SEARCH_CHIPS } from '@/utils/searchEngine';
 import CustomBuildStudio from '@/components/CustomBuildStudio';
 import HomePackagesPlanner from '@/components/HomePackagesPlanner';
 import WorkshopTourBookingModal from '@/components/WorkshopTourBookingModal';
@@ -62,6 +63,10 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [sortOption, setSortOption] = useState("relevance");
+  const [activePriceFilter, setActivePriceFilter] = useState(null);
+  const [activeQuickChip, setActiveQuickChip] = useState('🌟 All Designs');
+  const [detectedFilters, setDetectedFilters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -265,20 +270,58 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  // Reactive auto-filtering effect when products, selectedCategory, or searchQuery updates
+  // Amazon-Grade Reactive Filter & Rank Engine
   useEffect(() => {
-    let filtered = products.filter(p => isCategoryMatch(p.category, selectedCategory));
+    const parsed = parseSearchQuery(searchQuery);
 
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.title?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q)
-      );
+    const effectiveMinPrice = activePriceFilter?.minPrice !== undefined ? activePriceFilter.minPrice : parsed.minPrice;
+    const effectiveMaxPrice = activePriceFilter?.maxPrice !== undefined ? activePriceFilter.maxPrice : parsed.maxPrice;
+
+    const { results } = filterAndRankProducts(products, parsed, {
+      activeCategory: selectedCategory,
+      manualSort: sortOption,
+      customMinPrice: effectiveMinPrice,
+      customMaxPrice: effectiveMaxPrice
+    });
+
+    setFilteredProducts(results);
+    setDetectedFilters(parsed.extractedFilters || []);
+  }, [products, selectedCategory, searchQuery, sortOption, activePriceFilter]);
+
+  const handleQuickChipClick = (chip) => {
+    setActiveQuickChip(chip.label);
+    if (chip.category) {
+      setSelectedCategory(chip.category);
     }
+    if (chip.maxPrice !== undefined) {
+      setActivePriceFilter({ label: chip.label, maxPrice: chip.maxPrice, minPrice: null });
+      setSearchQuery('');
+    } else if (chip.filterType === 'latest') {
+      setActivePriceFilter(null);
+      setSearchQuery('latest models');
+    } else if (chip.icon === 'all') {
+      setSelectedCategory('All');
+      setActivePriceFilter(null);
+      setSearchQuery('');
+    } else {
+      setActivePriceFilter(null);
+      setSearchQuery(chip.query);
+    }
+  };
 
-    setFilteredProducts(filtered);
-  }, [products, selectedCategory, searchQuery]);
+  const handleClearAllFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setActivePriceFilter(null);
+    setSortOption('relevance');
+    setActiveQuickChip('🌟 All Designs');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location);
+      url.searchParams.delete('search');
+      url.searchParams.delete('category');
+      window.history.pushState({}, '', url);
+    }
+  };
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
@@ -356,6 +399,122 @@ export default function ProductsPage() {
         <ARRoomViewerModal product={arProduct} onClose={() => setArProduct(null)} />
       )}
 
+      {/* Amazon-Style Smart Search & Discovery Center */}
+      <div className="max-w-3xl mx-auto mb-8 text-left">
+        {/* Main Search Input */}
+        <div className="relative flex items-center bg-white rounded-2xl shadow-xl border-2 border-amber-400/70 focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-500/20 transition-all">
+          <div className="pl-4 pr-2 text-slate-400">
+            <Search className="h-5 w-5 text-amber-500" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search designs: 'sofa under 20000', 'latest models', 'dining table', 'under 1500'..."
+            className="w-full py-3.5 pr-24 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none bg-transparent"
+          />
+          <div className="absolute right-2 flex items-center gap-1">
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            <VoiceSearchButton onSpeechResult={(transcript) => setSearchQuery(transcript)} />
+          </div>
+        </div>
+
+        {/* Amazon Quick-Filter Chips Row */}
+        <div className="mt-3.5 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-1">
+          {QUICK_SEARCH_CHIPS.map((chip) => {
+            const isActive = activeQuickChip === chip.label || (chip.icon === 'all' && !searchQuery && selectedCategory === 'All' && !activePriceFilter);
+            return (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => handleQuickChipClick(chip)}
+                className={`px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer shadow-xs border ${
+                  isActive
+                    ? 'bg-amber-400 text-slate-950 border-amber-500 font-extrabold shadow-sm scale-105'
+                    : 'bg-white hover:bg-amber-50 text-slate-700 border-slate-200 hover:border-amber-300'
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Smart Filters Pills Banner */}
+        {(searchQuery || selectedCategory !== 'All' || activePriceFilter || detectedFilters.length > 0) && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 pt-2.5 border-t border-slate-200">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <Filter className="h-3 w-3 text-amber-500" />
+              Active:
+            </span>
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 bg-sky-50 text-sky-900 border border-sky-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                Keyword: &quot;{searchQuery}&quot;
+                <button onClick={() => setSearchQuery('')} className="hover:text-red-500 ml-0.5 cursor-pointer"><X className="h-3 w-3" /></button>
+              </span>
+            )}
+            {selectedCategory !== 'All' && (
+              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                Category: {selectedCategory}
+                <button onClick={() => setSelectedCategory('All')} className="hover:text-red-500 ml-0.5 cursor-pointer"><X className="h-3 w-3" /></button>
+              </span>
+            )}
+            {activePriceFilter && (
+              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                Price: {activePriceFilter.label}
+                <button onClick={() => setActivePriceFilter(null)} className="hover:text-red-500 ml-0.5 cursor-pointer"><X className="h-3 w-3" /></button>
+              </span>
+            )}
+            {detectedFilters.map((df, idx) => (
+              <span key={idx} className="inline-flex items-center gap-1 bg-purple-50 text-purple-900 border border-purple-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                Smart: {df.label}
+              </span>
+            ))}
+            <button
+              onClick={handleClearAllFilters}
+              className="text-xs font-bold text-red-600 hover:text-red-700 underline ml-auto cursor-pointer"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Amazon-Style Results Bar with Sort Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 px-2 border-b border-slate-200 pb-3 text-left">
+        <div className="text-xs sm:text-sm font-semibold text-slate-700">
+          Showing <span className="font-extrabold text-slate-900">{filteredProducts.length}</span> of {products.length} Designs
+          {searchQuery && <span className="text-slate-500"> for <span className="text-slate-900 font-bold">&quot;{searchQuery}&quot;</span></span>}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="product-sort" className="text-xs font-bold text-slate-500 flex items-center gap-1">
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            Sort:
+          </label>
+          <select
+            id="product-sort"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="text-xs font-bold bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-xs"
+          >
+            <option value="relevance">🎯 Best Match (Relevance)</option>
+            <option value="price_asc">💰 Price: Low to High</option>
+            <option value="price_desc">💎 Price: High to Low</option>
+            <option value="newest">🆕 Newest Arrivals (Latest Models)</option>
+          </select>
+        </div>
+      </div>
+
       {/* Aligned Category Filter Pills */}
       <div className="w-full overflow-x-auto scrollbar-none mb-8 pb-4 border-b border-slate-200">
         <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max px-2 select-none">
@@ -390,12 +549,48 @@ export default function ProductsPage() {
           <p className="mt-2 text-sm text-wood-light font-light">{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-wood-border p-12 text-center max-w-lg mx-auto">
-          <Layers className="mx-auto h-10 w-10 text-wood-light mb-4" />
-          <h3 className="text-lg font-serif font-bold text-wood-dark">No designs found</h3>
-          <p className="mt-2 text-sm text-wood-light font-light">
-            We don't have any uploads in the <strong className="font-semibold">"{selectedCategory}"</strong> category yet. Select another category or check back later!
+        <div className="rounded-3xl border border-slate-200 bg-gradient-to-b from-amber-50/40 to-white p-8 sm:p-12 text-center max-w-xl mx-auto shadow-md">
+          <Search className="mx-auto h-12 w-12 text-amber-500/70 mb-3" />
+          <h3 className="text-lg font-serif font-bold text-slate-900">
+            No exact designs match &quot;{searchQuery || selectedCategory}&quot;
+          </h3>
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Try checking for typos, exploring broader keywords, or try our smart search filters below.
           </p>
+
+          {/* Quick Fallback Filter Buttons */}
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <button onClick={() => { setSearchQuery('under 1500'); setSelectedCategory('All'); }} className="px-3 py-1.5 text-xs bg-white border border-amber-300 rounded-xl text-amber-900 font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-xs">
+              💰 Items Under ₹1,500
+            </button>
+            <button onClick={() => { setSearchQuery('latest models'); setSelectedCategory('All'); }} className="px-3 py-1.5 text-xs bg-white border border-amber-300 rounded-xl text-amber-900 font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-xs">
+              ⚡ Latest Models
+            </button>
+            <button onClick={() => { setSearchQuery('doors'); setSelectedCategory('Gummalu'); }} className="px-3 py-1.5 text-xs bg-white border border-amber-300 rounded-xl text-amber-900 font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-xs">
+              🚪 Main Doors
+            </button>
+            <button onClick={() => { setSearchQuery('mandir'); setSelectedCategory('Puja Mandiralu'); }} className="px-3 py-1.5 text-xs bg-white border border-amber-300 rounded-xl text-amber-900 font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-xs">
+              🕉️ Puja Mandirams
+            </button>
+            <button onClick={handleClearAllFilters} className="px-3.5 py-1.5 text-xs bg-amber-400 text-slate-950 font-extrabold rounded-xl hover:bg-amber-500 transition-colors cursor-pointer shadow-sm">
+              ✨ View All Designs
+            </button>
+          </div>
+
+          {/* Popular Recommendations Below */}
+          {products.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 mb-4 flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                Popular Designs You Might Like
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-left">
+                {products.slice(0, 6).map((p) => (
+                  <ProductCard key={p._id} product={p} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="masonry-grid">
