@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Mic, MicOff, Sparkles, Volume2, X } from 'lucide-react';
 
-export default function VoiceSearchButton({ onSpeechResult, language = 'te-IN' }) {
+export default function VoiceSearchButton({ onSpeechResult, language = 'te-IN', className = '' }) {
   const [isListening, setIsListening] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [transcriptText, setTranscriptText] = useState('');
@@ -68,20 +68,20 @@ export default function VoiceSearchButton({ onSpeechResult, language = 'te-IN' }
         type="button"
         onClick={startListening}
         title="Click to Voice Search (తెలుగు లేదా English లో మాట్లాడండి)"
-        className={`relative p-2 rounded-full transition-all cursor-pointer select-none flex items-center justify-center border shadow-sm ${
+        className={className || `relative p-2 rounded-full transition-all cursor-pointer select-none flex items-center justify-center border shadow-sm ${
           isListening
             ? 'bg-red-500 text-white ring-4 ring-red-300 animate-pulse scale-110 border-red-400'
             : 'bg-[#008DDA] hover:bg-[#0077B6] text-white border-sky-400/40'
         }`}
       >
         {isListening ? (
-          <MicOff className="h-4 w-4 animate-bounce" />
+          <MicOff className="h-4 w-4 animate-bounce text-red-500" />
         ) : (
           <Mic className="h-4 w-4" />
         )}
 
         {/* Badge */}
-        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white animate-ping" />
+        {!className && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white animate-ping" />}
       </button>
 
       {/* Voice Assistant Modal */}

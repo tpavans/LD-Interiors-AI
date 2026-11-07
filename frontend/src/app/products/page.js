@@ -8,7 +8,6 @@ import CustomBuildStudio from '@/components/CustomBuildStudio';
 import HomePackagesPlanner from '@/components/HomePackagesPlanner';
 import WorkshopTourBookingModal from '@/components/WorkshopTourBookingModal';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
-import VoiceSearchButton from '@/components/VoiceSearchButton';
 import CustomerInstallationsGallery from '@/components/CustomerInstallationsGallery';
 
 const DEFAULT_CATEGORIES = ["Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
@@ -270,6 +269,34 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
+  // Listen for search events from Main Navbar Search Bar
+  useEffect(() => {
+    const handleAppSearch = (e) => {
+      if (typeof e.detail === 'string') {
+        setSearchQuery(e.detail);
+      }
+    };
+    window.addEventListener('app-search', handleAppSearch);
+
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const s = params.get('search');
+      if (s !== null) {
+        setSearchQuery(s);
+      }
+      const c = params.get('category');
+      if (c) {
+        setSelectedCategory(c);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('app-search', handleAppSearch);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Amazon-Grade Reactive Filter & Rank Engine
   useEffect(() => {
     const parsed = parseSearchQuery(searchQuery);
@@ -399,35 +426,8 @@ export default function ProductsPage() {
         <ARRoomViewerModal product={arProduct} onClose={() => setArProduct(null)} />
       )}
 
-      {/* Amazon-Style Smart Search & Discovery Center */}
-      <div className="max-w-3xl mx-auto mb-8 text-left">
-        {/* Main Search Input */}
-        <div className="relative flex items-center bg-white rounded-2xl shadow-xl border-2 border-amber-400/70 focus-within:border-sky-500 focus-within:ring-4 focus-within:ring-sky-500/20 transition-all">
-          <div className="pl-4 pr-2 text-slate-400">
-            <Search className="h-5 w-5 text-amber-500" />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search designs: 'sofa under 20000', 'latest models', 'dining table', 'under 1500'..."
-            className="w-full py-3.5 pr-24 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400 focus:outline-none bg-transparent"
-          />
-          <div className="absolute right-2 flex items-center gap-1">
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-                title="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-            <VoiceSearchButton onSpeechResult={(transcript) => setSearchQuery(transcript)} />
-          </div>
-        </div>
-
+      {/* Amazon-Style Discovery Filter Chips & Active Filters */}
+      <div className="max-w-4xl mx-auto mb-6 text-left px-2">
         {/* Amazon Quick-Filter Chips Row */}
         <div className="mt-3.5 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-1">
           {QUICK_SEARCH_CHIPS.map((chip) => {
