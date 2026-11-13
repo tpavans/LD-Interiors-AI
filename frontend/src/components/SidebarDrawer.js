@@ -6,10 +6,11 @@ import {
   X, Home, Armchair, Film, ShoppingBag, Heart, BookOpen, 
   Download, Share2, Settings, Filter, ChevronRight, ChevronDown, 
   Sun, Moon, Globe, MessageCircle, Phone, HelpCircle, 
-  Compass, LayoutGrid, BedDouble, Utensils, AppWindow, Sparkles
+  Compass, LayoutGrid, BedDouble, Utensils, AppWindow, Loader2, Sparkles
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import api from '@/utils/api';
 
 // Custom Authentic Indian Temple Icon (Puja Mandir)
 function MandirIcon({ className = "h-5 w-5" }) {
@@ -82,319 +83,79 @@ function SwingIcon({ className = "h-5 w-5" }) {
   );
 }
 
-// Comprehensive Category & Subcategory Catalog
+// Main Categories Configuration
 const FURNITURE_CATEGORIES = [
-  {
-    id: 'doors',
-    name: 'Teakwood Doors',
-    nameTe: 'టేకు గుమ్మాలు',
-    subCount: '50+ Designs',
-    icon: DoorIcon,
-    categoryParam: 'Gummalu',
-    href: '/products?category=Gummalu',
-    subcategories: [
-      {
-        name: 'Main Entrance Doors',
-        nameTe: 'ప్రధాన సింహద్వారం',
-        image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Gummalu&search=Main%20Door',
-        search: 'Main Door'
-      },
-      {
-        name: 'Double Doors (Simhadwaram)',
-        nameTe: 'డబుల్ డోర్స్ సింహద్వారం',
-        image: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Gummalu&search=Double%20Doors',
-        search: 'Double Doors'
-      },
-      {
-        name: 'Pooja Room Doors',
-        nameTe: 'పూజా గది గుమ్మాలు',
-        image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Gummalu&search=Pooja%20Door',
-        search: 'Pooja Door'
-      },
-      {
-        name: 'CNC Carved Teak Doors',
-        nameTe: 'చెక్కడాల టేకు డోర్లు',
-        image: 'https://images.unsplash.com/photo-1534349762230-e0cadf78f5da?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Gummalu&search=Carved%20Door',
-        search: 'Carved Door'
-      }
-    ]
-  },
   {
     id: 'puja-mandir',
     name: 'Puja Mandir',
     nameTe: 'పూజ మందిరం',
-    subCount: '40+ Designs',
+    defaultCount: '40+ Designs',
     icon: MandirIcon,
     categoryParam: 'Puja Mandiralu',
-    href: '/products?category=Puja%20Mandiralu',
-    subcategories: [
-      {
-        name: 'Wooden Mandir',
-        nameTe: 'వుడెన్ టెంపుల్ మందిరం',
-        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Puja%20Mandiralu&search=Wooden%20Mandir',
-        search: 'Wooden Mandir'
-      },
-      {
-        name: 'Carved Mandir',
-        nameTe: 'సాంప్రదాయ కార్వింగ్ మందిరం',
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Puja%20Mandiralu&search=Carved%20Mandir',
-        search: 'Carved Mandir'
-      },
-      {
-        name: 'Modern Mandir',
-        nameTe: 'మోడరన్ లైటింగ్ మందిరం',
-        image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Puja%20Mandiralu&search=Modern%20Mandir',
-        search: 'Modern Mandir'
-      },
-      {
-        name: 'Wall Mounted Mandir',
-        nameTe: 'వాల్ మౌంటెడ్ మందిరం',
-        image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Puja%20Mandiralu&search=Wall%20Mounted%20Mandir',
-        search: 'Wall Mounted Mandir'
-      }
-    ]
+    href: '/products?category=Puja%20Mandiralu'
+  },
+  {
+    id: 'doors',
+    name: 'Teakwood Doors',
+    nameTe: 'టేకు గుమ్మాలు',
+    defaultCount: '50+ Designs',
+    icon: DoorIcon,
+    categoryParam: 'Doors',
+    href: '/products?category=Doors'
   },
   {
     id: 'beds',
     name: 'Wooden Beds',
     nameTe: 'టేకువుడ్ బెడ్స్',
-    subCount: '60+ Designs',
+    defaultCount: '60+ Designs',
     icon: BedDouble,
     categoryParam: 'Wooden Beds',
-    href: '/products?category=Wooden%20Beds',
-    subcategories: [
-      {
-        name: 'King Size Teak Beds',
-        nameTe: 'కింగ్ సైజ్ టేకు మంచాలు',
-        image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Beds&search=King%20Size',
-        search: 'King Size'
-      },
-      {
-        name: 'Queen Size Beds',
-        nameTe: 'క్వీన్ సైజ్ బెడ్స్',
-        image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Beds&search=Queen%20Size',
-        search: 'Queen Size'
-      },
-      {
-        name: 'Hydraulic Storage Beds',
-        nameTe: 'హైడ్రాలిక్ స్టోరేజ్ బెడ్స్',
-        image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Beds&search=Storage%20Bed',
-        search: 'Storage Bed'
-      },
-      {
-        name: 'Royal Canopy & Poster Beds',
-        nameTe: 'రాయల్ కానోపీ మంచాలు',
-        image: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Beds&search=Canopy',
-        search: 'Canopy'
-      }
-    ]
+    href: '/products?category=Wooden%20Beds'
   },
   {
     id: 'sofas',
     name: 'Living Room Sofas',
     nameTe: 'లివింగ్ రూమ్ సోఫాలు',
-    subCount: '35+ Designs',
+    defaultCount: '35+ Designs',
     icon: Armchair,
     categoryParam: 'Sofas',
-    href: '/products?category=Sofas',
-    subcategories: [
-      {
-        name: 'Wooden Carved Sofas',
-        nameTe: 'కార్వింగ్ టేకు సోఫా సెట్',
-        image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Sofas&search=Carved%20Sofa',
-        search: 'Carved Sofa'
-      },
-      {
-        name: 'L-Shape Sectional Sofas',
-        nameTe: 'ఎల్-షేప్ సెక్షనల్ సోఫా',
-        image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Sofas&search=L%20Shape',
-        search: 'L Shape'
-      },
-      {
-        name: 'Chesterfield Teak Sets',
-        nameTe: 'చెస్టర్‌ఫీల్డ్ టేకు సెట్స్',
-        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Sofas&search=Chesterfield',
-        search: 'Chesterfield'
-      },
-      {
-        name: 'Teakwood Diwans & Daybeds',
-        nameTe: 'దివాన్ & డేబెడ్స్',
-        image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Sofas&search=Diwan',
-        search: 'Diwan'
-      }
-    ]
+    href: '/products?category=Sofas'
   },
   {
     id: 'dining',
     name: 'Dining Tables',
     nameTe: 'డైనింగ్ టేబుల్స్',
-    subCount: '25+ Designs',
+    defaultCount: '25+ Designs',
     icon: Utensils,
     categoryParam: 'Dining Tables',
-    href: '/products?category=Dining%20Tables',
-    subcategories: [
-      {
-        name: '6-Seater Teak Dining',
-        nameTe: '6-సీటర్ టేకు డైనింగ్',
-        image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Dining%20Tables&search=6%20Seater',
-        search: '6 Seater'
-      },
-      {
-        name: '8-Seater Royal Dining',
-        nameTe: '8-సీటర్ రాయల్ డైనింగ్',
-        image: 'https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Dining%20Tables&search=8%20Seater',
-        search: '8 Seater'
-      },
-      {
-        name: 'Marble Top Teak Dining',
-        nameTe: 'మార్బుల్ టాప్ డైనింగ్ టేబుల్',
-        image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Dining%20Tables&search=Marble',
-        search: 'Marble'
-      },
-      {
-        name: 'Teak Dining Chairs & Benches',
-        nameTe: 'డైనింగ్ చైర్స్ & బెంచీలు',
-        image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Dining%20Tables&search=Chairs',
-        search: 'Chairs'
-      }
-    ]
+    href: '/products?category=Dining%20Tables'
+  },
+  {
+    id: 'tv-units',
+    name: 'TV Units & Consoles',
+    nameTe: 'టీవీ యూనిట్స్',
+    defaultCount: '20+ Designs',
+    icon: LayoutGrid,
+    categoryParam: 'TV Units',
+    href: '/products?category=TV%20Units'
+  },
+  {
+    id: 'kitchen',
+    name: 'Kitchen & Woodcraft',
+    nameTe: 'కిచెన్ & క్రాఫ్టింగ్',
+    defaultCount: '25+ Designs',
+    icon: AppWindow,
+    categoryParam: 'Kitchen',
+    href: '/products?category=Kitchen'
   },
   {
     id: 'swings',
     name: 'Uyyala Swings',
     nameTe: 'ఉయ్యాలలు',
-    subCount: '20+ Designs',
+    defaultCount: '15+ Designs',
     icon: SwingIcon,
     categoryParam: 'Uyyala Swings',
-    href: '/products?category=Uyyala%20Swings',
-    subcategories: [
-      {
-        name: 'Ceiling Hanging Swings',
-        nameTe: 'సీలింగ్ హ్యాంగింగ్ ఉయ్యాల',
-        image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Uyyala%20Swings&search=Ceiling',
-        search: 'Ceiling'
-      },
-      {
-        name: 'Stand & Frame Teak Swings',
-        nameTe: 'స్టాండ్ & ఫ్రేమ్ ఉయ్యాల',
-        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Uyyala%20Swings&search=Stand',
-        search: 'Stand'
-      },
-      {
-        name: 'Brass Chain Teak Swings',
-        nameTe: 'ఇత్తడి గొలుసు ఉయ్యాల',
-        image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Uyyala%20Swings&search=Brass%20Chain',
-        search: 'Brass Chain'
-      },
-      {
-        name: 'Traditional Carved Jhula',
-        nameTe: 'రాయల్ కార్వింగ్ జూలా',
-        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Uyyala%20Swings&search=Traditional',
-        search: 'Traditional'
-      }
-    ]
-  },
-  {
-    id: 'windows',
-    name: 'Teak Windows',
-    nameTe: 'టేకువుడ్ కిటికీలు',
-    subCount: '30+ Designs',
-    icon: AppWindow,
-    categoryParam: 'Wooden Windows',
-    href: '/products?category=Wooden%20Windows',
-    subcategories: [
-      {
-        name: 'Glass Teak Windows',
-        nameTe: 'గ్లాస్ టేకువుడ్ కిటికీలు',
-        image: 'https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Windows&search=Glass',
-        search: 'Glass'
-      },
-      {
-        name: 'Stainless Mesh Windows',
-        nameTe: 'స్టెయిన్‌లెస్ మెష్ కిటికీలు',
-        image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Mesh%20Doors&search=Mesh',
-        search: 'Mesh'
-      },
-      {
-        name: 'Traditional Teak Ventilators',
-        nameTe: 'సాంప్రదాయ వెంటిలేటర్స్',
-        image: 'https://images.unsplash.com/photo-1534349762230-e0cadf78f5da?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Windows&search=Ventilator',
-        search: 'Ventilator'
-      },
-      {
-        name: 'Sliding Teakwood Windows',
-        nameTe: 'స్లైడింగ్ టేకువుడ్ కిటికీలు',
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Wooden%20Windows&search=Sliding',
-        search: 'Sliding'
-      }
-    ]
-  },
-  {
-    id: 'custom-interiors',
-    name: 'Custom Interiors',
-    nameTe: 'ఇంటీరియర్ పనులు',
-    subCount: 'Full Setup',
-    icon: Settings,
-    categoryParam: 'All',
-    href: '/contact',
-    subcategories: [
-      {
-        name: 'Teakwood TV Units',
-        nameTe: 'టేకువుడ్ టీవీ యూనిట్స్',
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=TV%20Units',
-        search: 'TV Unit'
-      },
-      {
-        name: 'Modular Teak Kitchens',
-        nameTe: 'మాడ్యులర్ టేకు కిచెన్',
-        image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Kitchen',
-        search: 'Kitchen'
-      },
-      {
-        name: 'Teak Wardrobes & Dressing',
-        nameTe: 'వార్డ్‌రోబ్స్ & డ్రెస్సింగ్',
-        image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=160&q=80',
-        href: '/products?category=Dressing%20Tables',
-        search: 'Wardrobe'
-      },
-      {
-        name: 'Complete House Woodwork',
-        nameTe: 'ఇంటి మొత్తం వుడ్‌వర్క్',
-        image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=160&q=80',
-        href: '/contact',
-        search: ''
-      }
-    ]
+    href: '/products?category=Uyyala%20Swings'
   }
 ];
 
@@ -405,12 +166,27 @@ export default function SidebarDrawer({ isOpen, onClose }) {
   const { theme, toggleTheme } = useTheme();
   const isTelugu = language === 'TE';
 
-  // State management
-  const [activeTab, setActiveTab] = useState('categories'); // 'categories' (Image 2) or 'nav' (Image 1)
-  const [expandedCategory, setExpandedCategory] = useState('puja-mandir'); // Puja Mandir expanded by default as requested
+  // 1. Requirement 1: Quick Nav must be open by default when menu first opens
+  const [activeTab, setActiveTab] = useState('nav'); 
+  const [expandedCategory, setExpandedCategory] = useState('puja-mandir'); // Puja Mandir open by default in categories
   const [selectedWoodFilter, setSelectedWoodFilter] = useState('All');
 
-  // Prevent background body scroll when sidebar is open
+  // Live products loaded from store database (Lazy initialized from sessionStorage cache)
+  const [allProducts, setAllProducts] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('ld_cached_products');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Prevent background body scroll when opened
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -425,6 +201,49 @@ export default function SidebarDrawer({ isOpen, onClose }) {
     };
   }, [isOpen]);
 
+  // Load actual live products from API if cache is not present
+  useEffect(() => {
+    if (!isOpen || allProducts.length > 0) return;
+
+    let isMounted = true;
+    const fetchProducts = async () => {
+      setLoadingProducts(true);
+      try {
+        const res = await api.get('/products');
+        const data = res.data?.products || res.data;
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setAllProducts(data);
+          try {
+            sessionStorage.setItem('ld_cached_products', JSON.stringify(data));
+          } catch (e) {}
+        }
+      } catch (err) {
+        try {
+          const raw = await fetch('https://ld-interiors-ai.onrender.com/api/products');
+          if (raw.ok) {
+            const rawData = await raw.json();
+            if (isMounted && Array.isArray(rawData) && rawData.length > 0) {
+              setAllProducts(rawData);
+              try {
+                sessionStorage.setItem('ld_cached_products', JSON.stringify(rawData));
+              } catch (e) {}
+            }
+          }
+        } catch (rawErr) {
+          console.warn('Direct fallback error in sidebar:', rawErr);
+        }
+      } finally {
+        if (isMounted) setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, allProducts.length]);
+
   if (!isOpen) return null;
 
   // Toggle accordion expansion
@@ -432,13 +251,74 @@ export default function SidebarDrawer({ isOpen, onClose }) {
     setExpandedCategory(prev => prev === categoryId ? null : categoryId);
   };
 
-  // Handle Subcategory Click
-  const handleSubcategoryClick = (sub) => {
-    onClose();
-    if (typeof window !== 'undefined' && sub.search) {
-      window.dispatchEvent(new CustomEvent('app-search', { detail: sub.search }));
+  // Helper: Extract actual products for a given category
+  const getProductsForCategory = (catConfig) => {
+    if (!allProducts || allProducts.length === 0) return [];
+
+    return allProducts.filter(p => {
+      const pCat = (p.category || '').toLowerCase().trim();
+      const pTitle = (p.title || '').toLowerCase().trim();
+      const catId = catConfig.id;
+
+      if (catId === 'puja-mandir') {
+        return pCat.includes('mandir') || pCat.includes('puja') || pCat.includes('pooja') ||
+               pTitle.includes('mandir') || pTitle.includes('puja') || pTitle.includes('pooja') || 
+               pTitle.includes('mandapam') || pTitle.includes('temple');
+      }
+      if (catId === 'doors') {
+        return pCat === 'doors' || pCat === 'gummalu' || pCat.includes('door') || 
+               pTitle.includes('door') || pTitle.includes('gummam') || pTitle.includes('simhadwaram');
+      }
+      if (catId === 'beds') {
+        return pCat === 'wooden beds' || pCat === 'bedroom' || pCat.includes('bed') || 
+               pTitle.includes('bed') || pTitle.includes('cot') || pTitle.includes('mancham');
+      }
+      if (catId === 'sofas') {
+        return pCat === 'sofas' || pCat === 'living room' || pCat.includes('sofa') || 
+               pTitle.includes('sofa') || pTitle.includes('couch');
+      }
+      if (catId === 'dining') {
+        return pCat === 'dining tables' || pCat.includes('dining') || 
+               pTitle.includes('dining') || pTitle.includes('table');
+      }
+      if (catId === 'tv-units') {
+        return pCat === 'tv units' || pTitle.includes('tv unit') || pTitle.includes('console') || pTitle.includes('cabinet');
+      }
+      if (catId === 'kitchen') {
+        return pCat === 'kitchen' || pCat === 'art crafting' || pTitle.includes('masher') || pTitle.includes('spoon') || pTitle.includes('kitchen');
+      }
+      if (catId === 'swings') {
+        return pCat === 'uyyala swings' || pCat.includes('swing') || pCat.includes('uyyala') || 
+               pTitle.includes('uyyala') || pTitle.includes('swing') || pTitle.includes('jhula');
+      }
+
+      return pCat === (catConfig.categoryParam || '').toLowerCase().trim();
+    });
+  };
+
+  // Helper: Extract valid image URL from product object
+  const getProductImage = (p) => {
+    if (p.image && typeof p.image === 'string' && p.image.trim()) return p.image;
+    if (Array.isArray(p.images) && p.images.length > 0 && typeof p.images[0] === 'string') return p.images[0];
+    return '/logo.png';
+  };
+
+  // Helper: Format price display
+  const formatPrice = (price) => {
+    if (typeof price === 'number' && price > 0) {
+      return `₹${price.toLocaleString('en-IN')}`;
     }
-    router.push(sub.href);
+    return isTelugu ? 'ధర కోసం అడగండి' : 'Price on request';
+  };
+
+  // Handle clicking an actual product card
+  const handleProductClick = (product) => {
+    onClose();
+    if (product._id) {
+      router.push(`/products/${product._id}`);
+    } else {
+      router.push(`/products?search=${encodeURIComponent(product.title)}`);
+    }
   };
 
   // Handle Quick Filter Chip Click
@@ -505,21 +385,9 @@ export default function SidebarDrawer({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Mode Navigation Switcher Tabs (Quick Nav vs Categories & Mandir) */}
+        {/* Mode Navigation Switcher Tabs (Quick Nav on left as default, Categories on right) */}
         <div className="relative z-10 px-3 pt-2.5 pb-1 bg-[#051326]/60 shrink-0">
           <div className="flex p-1 bg-[#0B1E3B] rounded-xl border border-[#D6A04B]/30 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setActiveTab('categories')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                activeTab === 'categories'
-                  ? 'bg-gradient-to-r from-[#F5E6C8] to-[#E8D1A7] text-[#071A33] shadow-md font-black'
-                  : 'text-[#D6A04B]/90 hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span>{isTelugu ? "కేటగిరీలు & మందిరం" : "Categories & Mandir"}</span>
-            </button>
             <button
               type="button"
               onClick={() => setActiveTab('nav')}
@@ -532,13 +400,26 @@ export default function SidebarDrawer({ isOpen, onClose }) {
               <Compass className="h-3.5 w-3.5" />
               <span>{isTelugu ? "మెయిన్ నేవిగేషన్" : "Quick Nav"}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('categories')}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'categories'
+                  ? 'bg-gradient-to-r from-[#F5E6C8] to-[#E8D1A7] text-[#071A33] shadow-md font-black'
+                  : 'text-[#D6A04B]/90 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>{isTelugu ? "కేటగిరీలు & మందిరం" : "Categories & Mandir"}</span>
+            </button>
           </div>
         </div>
 
         {/* Scrollable Middle Content Body */}
         <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-4 scrollbar-thin text-left overscroll-contain">
 
-          {/* Quick Design Filters Pill Bar (Always visible across both views) */}
+          {/* Quick Design Filters Pill Bar */}
           <div>
             <div className="flex items-center gap-2 mb-2 px-1">
               <Filter className="h-3.5 w-3.5 text-[#D6A04B]" />
@@ -576,136 +457,7 @@ export default function SidebarDrawer({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* VIEW A: POPULAR CATEGORIES & EXPANDABLE ACCORDIONS (Reference Image 2) */}
-          {activeTab === 'categories' && (
-            <div className="space-y-2.5 animate-fadeIn">
-              <div className="flex items-center gap-2 mb-1 px-1">
-                <LayoutGrid className="h-3.5 w-3.5 text-[#D6A04B]" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B]">
-                  {isTelugu ? "పాపులర్ కేటగిరీలు & డిజైన్స్" : "POPULAR CATEGORIES & DESIGNS"}
-                </span>
-                <div className="flex-1 h-[1px] bg-gradient-to-r from-[#D6A04B]/40 to-transparent" />
-              </div>
-
-              <div className="space-y-2">
-                {FURNITURE_CATEGORIES.map((cat) => {
-                  const isExpanded = expandedCategory === cat.id;
-                  const IconComponent = cat.icon;
-
-                  return (
-                    <div 
-                      key={cat.id} 
-                      className="rounded-2xl overflow-hidden border border-[#D6A04B]/30 transition-all duration-300 shadow-md"
-                    >
-                      {/* Main Category Header Button */}
-                      <button
-                        type="button"
-                        onClick={() => toggleAccordion(cat.id)}
-                        aria-expanded={isExpanded}
-                        className={`w-full flex items-center justify-between p-3 transition-all duration-200 cursor-pointer ${
-                          isExpanded
-                            ? 'bg-[#F5E6C8] text-[#071A33] shadow-sm'
-                            : 'bg-[#0C223F] hover:bg-[#0F294D] text-[#F5E6C8]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-xl transition-colors ${
-                            isExpanded ? 'bg-[#A64B24]/15 text-[#071A33]' : 'bg-[#071A33] text-[#D6A04B] border border-[#D6A04B]/30'
-                          }`}>
-                            <IconComponent className="h-5 w-5 shrink-0" />
-                          </div>
-                          <div className="text-left">
-                            <span className={`block font-serif text-xs sm:text-sm font-bold ${
-                              isExpanded ? 'text-[#071A33] font-black' : 'text-[#F5E6C8]'
-                            }`}>
-                              {isTelugu ? cat.nameTe : cat.name}
-                            </span>
-                            <span className={`block text-[9.5px] font-mono ${
-                              isExpanded ? 'text-[#A64B24] font-bold' : 'text-[#D6A04B]/80 font-medium'
-                            }`}>
-                              {cat.subCount}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Animated Rotating Chevron */}
-                        <div className={`p-1.5 rounded-full transition-transform duration-300 ${
-                          isExpanded ? 'rotate-90 text-[#071A33]' : 'rotate-0 text-[#D6A04B]'
-                        }`}>
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                      </button>
-
-                      {/* Expandable Subcategories Accordion Container */}
-                      <div 
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-                        }`}
-                      >
-                        <div className="bg-gradient-to-b from-[#2B170E] via-[#221109] to-[#180C06] border-t border-[#D6A04B]/40 p-2 sm:p-2.5 space-y-1.5">
-                          {cat.subcategories.map((sub, sIdx) => (
-                            <div
-                              key={sIdx}
-                              onClick={() => handleSubcategoryClick(sub)}
-                              className="flex items-center justify-between p-2 rounded-xl bg-black/25 hover:bg-[#A64B24]/30 border border-white/5 hover:border-[#D6A04B]/50 transition-all cursor-pointer group"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                {/* Subcategory Photo Thumbnail */}
-                                <img
-                                  src={sub.image}
-                                  alt={sub.name}
-                                  onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=160&q=80";
-                                  }}
-                                  className="w-10 h-10 rounded-lg object-cover border border-[#D6A04B]/50 shadow-sm shrink-0"
-                                />
-                                <div className="text-left">
-                                  <span className="text-xs font-semibold text-[#F5E6C8] group-hover:text-white transition-colors block">
-                                    {isTelugu ? sub.nameTe : sub.name}
-                                  </span>
-                                  <span className="text-[9px] text-[#D6A04B]/80 font-mono block">
-                                    {isTelugu ? "డిజైన్లు చూడండి" : "View Designs"}
-                                  </span>
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-[#D6A04B]/70 group-hover:text-[#F5E6C8] group-hover:translate-x-0.5 transition-all shrink-0" />
-                            </div>
-                          ))}
-
-                          {/* Quick Link to View Entire Category */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onClose();
-                              router.push(cat.href);
-                            }}
-                            className="w-full text-center py-2 text-[10.5px] font-bold text-[#D6A04B] hover:text-[#F5E6C8] hover:underline cursor-pointer pt-2 flex items-center justify-center gap-1"
-                          >
-                            <span>{isTelugu ? `మొత్తం ${cat.nameTe} డిజైన్లు చూడండి` : `Browse All ${cat.name} (${cat.subCount})`}</span>
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Shortcut to switch to Quick Nav */}
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('nav')}
-                  className="text-[11px] font-bold text-[#D6A04B] hover:text-[#F5E6C8] underline cursor-pointer"
-                >
-                  {isTelugu ? "🧭 మెయిన్ నేవిగేషన్ మెనూ చూడండి" : "🧭 View Quick Navigation Links & Mobile App"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* VIEW B: QUICK NAVIGATION & MOBILE APP (Reference Image 1) */}
+          {/* VIEW 1: QUICK NAVIGATION & MOBILE APP (Default Initial View as requested) */}
           {activeTab === 'nav' && (
             <div className="space-y-3 animate-fadeIn">
               <div className="flex items-center gap-2 mb-1 px-1">
@@ -719,7 +471,7 @@ export default function SidebarDrawer({ isOpen, onClose }) {
               {/* Main Rounded Navigation Cards */}
               <div className="space-y-1.5">
                 {[
-                  { href: '/', name: 'Home', nameTe: 'హోమ్ పేజీ', icon: Home, isHome: true },
+                  { href: '/', name: 'Home', nameTe: 'హోమ్ పేజీ', icon: Home },
                   { href: '/products', name: 'All Furniture Designs', nameTe: '500+ ఫర్నిచర్ డిజైన్లు', icon: Armchair },
                   { href: '/reels', name: 'Workshop Reels & Shorts', nameTe: 'వర్క్‌షాప్ రీల్స్ & వీడియోస్', icon: Film },
                   { href: '/orders', name: 'My Orders & Tracking', nameTe: 'నా ఆర్డర్లు & ట్రాకింగ్', icon: ShoppingBag },
@@ -752,7 +504,7 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                 })}
               </div>
 
-              {/* App Action Cards (Burnt Sienna + Cream + Dark) */}
+              {/* App Action Cards */}
               <div className="space-y-1.5 pt-1">
                 {/* 1. Install Mobile App (Burnt Sienna #A64B24) */}
                 <button
@@ -815,6 +567,18 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                 </button>
               </div>
 
+              {/* Switch to Categories & Puja Mandir Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('categories')}
+                  className="w-full py-2.5 px-3 rounded-2xl border border-[#D6A04B]/40 bg-[#0B1E3B] hover:bg-[#0F294D] text-[#F5E6C8] text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                >
+                  <MandirIcon className="h-4 w-4 text-[#D6A04B]" />
+                  <span>{isTelugu ? "పూజ మందిరాలు & ఫర్నిచర్ కేటగిరీలు చూడండి →" : "Browse Puja Mandir & Furniture Categories →"}</span>
+                </button>
+              </div>
+
               {/* Support & Contact Links */}
               <div className="pt-2 border-t border-[#D6A04B]/20 space-y-1">
                 <Link 
@@ -833,6 +597,173 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                   <HelpCircle className="h-4 w-4 text-[#D6A04B] shrink-0" />
                   <span>{isTelugu ? "సపోర్ట్ & సహాయం" : "Customer Support & FAQs"}</span>
                 </Link>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 2: CATEGORIES & ACTUAL LIVE PRODUCTS (Requirement 2) */}
+          {activeTab === 'categories' && (
+            <div className="space-y-2.5 animate-fadeIn">
+              <div className="flex items-center gap-2 mb-1 px-1">
+                <LayoutGrid className="h-3.5 w-3.5 text-[#D6A04B]" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B]">
+                  {isTelugu ? "పాపులర్ కేటగిరీలు & డిజైన్స్" : "POPULAR CATEGORIES & DESIGNS"}
+                </span>
+                <div className="flex-1 h-[1px] bg-gradient-to-r from-[#D6A04B]/40 to-transparent" />
+              </div>
+
+              <div className="space-y-2">
+                {FURNITURE_CATEGORIES.map((cat) => {
+                  const isExpanded = expandedCategory === cat.id;
+                  const IconComponent = cat.icon;
+                  const catProducts = getProductsForCategory(cat);
+                  const displayCount = catProducts.length > 0 
+                    ? `${catProducts.length} Designs` 
+                    : cat.defaultCount;
+
+                  return (
+                    <div 
+                      key={cat.id} 
+                      className="rounded-2xl overflow-hidden border border-[#D6A04B]/30 transition-all duration-300 shadow-md"
+                    >
+                      {/* Main Category Header Button */}
+                      <button
+                        type="button"
+                        onClick={() => toggleAccordion(cat.id)}
+                        aria-expanded={isExpanded}
+                        className={`w-full flex items-center justify-between p-3 transition-all duration-200 cursor-pointer ${
+                          isExpanded
+                            ? 'bg-[#F5E6C8] text-[#071A33] shadow-sm'
+                            : 'bg-[#0C223F] hover:bg-[#0F294D] text-[#F5E6C8]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-xl transition-colors ${
+                            isExpanded ? 'bg-[#A64B24]/15 text-[#071A33]' : 'bg-[#071A33] text-[#D6A04B] border border-[#D6A04B]/30'
+                          }`}>
+                            <IconComponent className="h-5 w-5 shrink-0" />
+                          </div>
+                          <div className="text-left">
+                            <span className={`block font-serif text-xs sm:text-sm font-bold ${
+                              isExpanded ? 'text-[#071A33] font-black' : 'text-[#F5E6C8]'
+                            }`}>
+                              {isTelugu ? cat.nameTe : cat.name}
+                            </span>
+                            <span className={`block text-[9.5px] font-mono ${
+                              isExpanded ? 'text-[#A64B24] font-bold' : 'text-[#D6A04B]/80 font-medium'
+                            }`}>
+                              {displayCount}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Animated Rotating Chevron */}
+                        <div className={`p-1.5 rounded-full transition-transform duration-300 ${
+                          isExpanded ? 'rotate-90 text-[#071A33]' : 'rotate-0 text-[#D6A04B]'
+                        }`}>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </button>
+
+                      {/* Expandable Subcategories Accordion with ACTUAL STORE PRODUCTS */}
+                      <div 
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded ? 'max-h-[950px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        <div className="bg-gradient-to-b from-[#2B170E] via-[#221109] to-[#180C06] border-t border-[#D6A04B]/40 p-2 sm:p-2.5 space-y-1.5">
+                          
+                          {/* If products are loading */}
+                          {loadingProducts && catProducts.length === 0 && (
+                            <div className="py-6 text-center text-xs text-[#D6A04B] flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin text-[#D6A04B]" />
+                              <span>{isTelugu ? "డిజైన్లు లోడ్ అవుతున్నాయి..." : "Loading live designs..."}</span>
+                            </div>
+                          )}
+
+                          {/* Render ACTUAL PRODUCTS from the store */}
+                          {catProducts.length > 0 ? (
+                            catProducts.slice(0, 6).map((product) => {
+                              const imgSrc = getProductImage(product);
+                              const formattedPrice = formatPrice(product.price);
+
+                              return (
+                                <div
+                                  key={product._id || product.id}
+                                  onClick={() => handleProductClick(product)}
+                                  className="flex items-center justify-between p-2 rounded-xl bg-black/30 hover:bg-[#A64B24]/30 border border-white/5 hover:border-[#D6A04B]/50 transition-all cursor-pointer group"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    {/* Real Store Product Image */}
+                                    <img
+                                      src={imgSrc}
+                                      alt={product.title}
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "/logo.png";
+                                      }}
+                                      className="w-11 h-11 rounded-lg object-cover border border-[#D6A04B]/50 shadow-sm shrink-0 bg-slate-900"
+                                    />
+                                    <div className="text-left min-w-0">
+                                      <span className="text-xs font-semibold text-[#F5E6C8] group-hover:text-white transition-colors block truncate">
+                                        {product.title}
+                                      </span>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] text-[#D6A04B] font-bold font-mono">
+                                          {formattedPrice}
+                                        </span>
+                                        {product.category && (
+                                          <span className="text-[8.5px] text-white/50 uppercase tracking-wider truncate">
+                                            • {product.category}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-[#D6A04B]/70 group-hover:text-[#F5E6C8] group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                                </div>
+                              );
+                            })
+                          ) : (
+                            !loadingProducts && (
+                              <div className="p-3 text-center text-xs text-[#F5E6C8]/80">
+                                <p>{isTelugu ? "డిజైన్లు కేటలాగ్‌లో అందుబాటులో ఉన్నాయి" : "Designs available in custom catalog"}</p>
+                              </div>
+                            )
+                          )}
+
+                          {/* Link to View Entire Category in Catalog */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose();
+                              router.push(cat.href);
+                            }}
+                            className="w-full text-center py-2 text-[10.5px] font-bold text-[#D6A04B] hover:text-[#F5E6C8] hover:underline cursor-pointer pt-2 flex items-center justify-center gap-1"
+                          >
+                            <span>
+                              {isTelugu 
+                                ? `మొత్తం ${cat.nameTe} (${displayCount}) డిజైన్లు చూడండి` 
+                                : `Browse All ${cat.name} (${displayCount})`}
+                            </span>
+                            <ChevronRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Shortcut to switch back to Quick Nav */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('nav')}
+                  className="text-[11px] font-bold text-[#D6A04B] hover:text-[#F5E6C8] underline cursor-pointer"
+                >
+                  {isTelugu ? "🧭 మెయిన్ నేవిగేషన్ మెనూ చూడండి" : "🧭 View Quick Navigation Links & Mobile App"}
+                </button>
               </div>
             </div>
           )}
