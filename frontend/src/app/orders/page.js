@@ -5,6 +5,7 @@ import api from '@/utils/api';
 import { Loader2, Search, Calendar, Tag, MapPin, CheckCircle, AlertTriangle, Star, User, Mail, Compass, LogOut, Edit3, Check, CreditCard, QrCode, FileText, CheckCircle2, DollarSign, X, Smartphone, Truck, Printer, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import RealtimePaymentModal from '@/components/RealtimePaymentModal';
+import ReviewModal from '@/components/ReviewModal';
 
 const UPI_IDS = {
   phonepe: { id: "9346325291@ybl", name: "TEKI PAVAN SAI", label: "PhonePe" },
@@ -52,6 +53,11 @@ export default function UserOrdersPage() {
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderCategoryTab, setOrderCategoryTab] = useState('All');
+
+  // Review Modal States
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [activeReviewOrder, setActiveReviewOrder] = useState(null);
+  const [reviewedOrders, setReviewedOrders] = useState({});
 
   useEffect(() => {
     // Load Razorpay Checkout SDK Script
@@ -885,40 +891,50 @@ ${profileName || activePayOrder.name}`;
                       </div>
                     )}
 
-                    {/* Flipkart Bottom Rate & Review Row */}
-                    <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-700">Rate & Review</span>
-                        {userSubmittedRating ? (
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            Rated {userSubmittedRating} ★
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-light">Earn ⭐ rating points</span>
-                        )}
-                      </div>
+                    {/* Customer Review Eligibility & Action Row */}
+                    {(() => {
+                      const orderStatusNorm = (order.status || '').toLowerCase();
+                      const isCompletedOrDelivered = orderStatusNorm === 'completed' || orderStatusNorm === 'delivered';
+                      const isAlreadyReviewed = reviewedOrders[order._id] || (order.reviewSubmitted);
 
-                      {/* 5 Flipkart Rating Stars */}
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRateProduct(order._id, order.product, star);
-                            }}
-                            className={`text-lg transition-transform hover:scale-125 cursor-pointer ${
-                              userSubmittedRating && star <= userSubmittedRating
-                                ? 'text-amber-400'
-                                : 'text-slate-300 hover:text-amber-400'
-                            }`}
-                            title={`Rate ${star} Stars`}
-                          >
-                            ★
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                      return (
+                        <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800">Verified Review:</span>
+                            {isAlreadyReviewed ? (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                <span>Review Submitted (Verified)</span>
+                              </span>
+                            ) : isCompletedOrDelivered ? (
+                              <span className="text-[10px] font-bold text-[#A64B24] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                ⭐ Eligible to write review &amp; share photos
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                Unlocks when order status is Delivered / Completed ({order.status || 'Pending'})
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Write Review Button */}
+                          {isCompletedOrDelivered && !isAlreadyReviewed && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveReviewOrder(order);
+                                setShowReviewModal(true);
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#7B3215] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Star className="h-3.5 w-3.5 text-[#F5E6C8] fill-[#F5E6C8]" />
+                              <span>Write a Review</span>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Quick Action Buttons Bar */}
                     <div className="mt-3 flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-dashed border-slate-100">
@@ -1457,6 +1473,26 @@ ${profileName || activePayOrder.name}`;
           if (phone) handleSearch(null, phone);
         }}
       />
+
+      {/* Customer Review Submission Modal */}
+      {showReviewModal && activeReviewOrder && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setActiveReviewOrder(null);
+          }}
+          order={activeReviewOrder}
+          onReviewSubmitted={(newRev) => {
+            if (activeReviewOrder?._id) {
+              setReviewedOrders(prev => ({
+                ...prev,
+                [activeReviewOrder._id]: true
+              }));
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

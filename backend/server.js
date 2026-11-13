@@ -17,6 +17,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const phonepeRoutes = require('./routes/phonepeRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const amazonRoutes = require('./routes/amazonRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 const {
   globalLimiter,
   authLimiter,
@@ -141,6 +142,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/phonepe', phonepeRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/amazon', amazonRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Fallback path for undefined routes
 app.use((req, res, next) => {

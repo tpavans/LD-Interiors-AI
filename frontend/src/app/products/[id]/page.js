@@ -9,6 +9,7 @@ import { translations } from '@/utils/translations';
 import ARRoomViewerModal from '@/components/ARRoomViewerModal';
 import ProductCard from '@/components/ProductCard';
 import CelebrationModal from '@/components/CelebrationModal';
+import ProductReviewsSection from '@/components/ProductReviewsSection';
 
 const FALLBACK_PRODUCTS = [
   {
@@ -931,6 +932,12 @@ ${orderImage ? `🖼️ Main Design Image: ${orderImage}\n` : ''}`;
           </div>
         </div>
       )}
+
+      {/* Amazon-Style Real Customer Reviews & Ratings Section */}
+      <ProductReviewsSection
+        productId={product?._id || id}
+        productName={product?.title || title}
+      />
 
       {/* Order Details Modal Popup */}
       {showOrderModal && (

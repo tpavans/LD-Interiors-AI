@@ -6,7 +6,7 @@ import {
   X, Home, Armchair, Film, ShoppingBag, Heart, BookOpen, 
   Download, Share2, Settings, Filter, ChevronRight, ChevronDown, 
   Sun, Moon, Globe, MessageCircle, Phone, HelpCircle, 
-  Compass, LayoutGrid, BedDouble, Utensils, AppWindow, Loader2, Sparkles
+  Compass, LayoutGrid, BedDouble, Utensils, AppWindow, Loader2, Sparkles, Star
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -473,6 +473,7 @@ export default function SidebarDrawer({ isOpen, onClose }) {
                 {[
                   { href: '/', name: 'Home', nameTe: 'హోమ్ పేజీ', icon: Home },
                   { href: '/products', name: 'All Furniture Designs', nameTe: '500+ ఫర్నిచర్ డిజైన్లు', icon: Armchair },
+                  { href: '/reviews', name: 'Customer Reviews & Projects', nameTe: 'కస్టమర్ రివ్యూలు & ప్రాజెక్ట్స్', icon: Star },
                   { href: '/reels', name: 'Workshop Reels & Shorts', nameTe: 'వర్క్‌షాప్ రీల్స్ & వీడియోస్', icon: Film },
                   { href: '/orders', name: 'My Orders & Tracking', nameTe: 'నా ఆర్డర్లు & ట్రాకింగ్', icon: ShoppingBag },
                   { href: '/wishlist', name: 'My Wishlist Designs', nameTe: 'నా విష్‌లిస్ట్ డిజైన్స్', icon: Heart },
