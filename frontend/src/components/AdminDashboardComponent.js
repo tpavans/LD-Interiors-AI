@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import api from '@/utils/api';
-import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, EyeOff, Lock, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers, Mail, MessageCircle, Star, ThumbsUp, MapPin } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Eye, EyeOff, Lock, CreditCard, Check, ShieldCheck, DollarSign, Truck, Calendar, Play, Printer, Sparkles, BarChart3, Users, TrendingUp, Clock, Activity, Smartphone, Search, Download, Maximize2, FileSpreadsheet, Copy, ExternalLink, Grid, Package, Layers, Mail, MessageCircle, Star, ThumbsUp, MapPin, Film } from 'lucide-react';
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
@@ -273,6 +273,103 @@ export default function AdminDashboardComponent() {
       alert(err.response?.data?.message || 'Failed to delete review');
     } finally {
       setReviewActionLoading(null);
+    }
+  };
+
+  // Workshop Reels State
+  const [adminReels, setAdminReels] = useState([]);
+  const [adminReelsLoading, setAdminReelsLoading] = useState(false);
+  const [reelFormTitle, setReelFormTitle] = useState('');
+  const [reelFormCategory, setReelFormCategory] = useState('Doors');
+  const [reelFormVideoLink, setReelFormVideoLink] = useState('');
+  const [reelFormVideoFile, setReelFormVideoFile] = useState(null);
+  const [reelFormImageLink, setReelFormImageLink] = useState('');
+  const [reelFormImageFile, setReelFormImageFile] = useState(null);
+  const [reelFormPrice, setReelFormPrice] = useState('');
+  const [reelFormDescription, setReelFormDescription] = useState('');
+  const [reelFormSubmitting, setReelFormSubmitting] = useState(false);
+  const [reelFormMsg, setReelFormMsg] = useState({ error: '', success: '' });
+
+  const fetchAdminReels = async () => {
+    setAdminReelsLoading(true);
+    try {
+      const res = await api.get('/reels');
+      if (res.data?.success) {
+        setAdminReels(res.data.reels || []);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch admin reels:', err);
+    } finally {
+      setAdminReelsLoading(false);
+    }
+  };
+
+  const handleCreateReel = async (e) => {
+    e.preventDefault();
+    setReelFormMsg({ error: '', success: '' });
+
+    if (!reelFormTitle.trim()) {
+      setReelFormMsg({ error: 'Please enter a title for this reel.', success: '' });
+      return;
+    }
+    if (!reelFormVideoLink.trim() && !reelFormVideoFile) {
+      setReelFormMsg({ error: 'Please provide a video reel link (YouTube Shorts, Instagram, MP4) or upload a video file.', success: '' });
+      return;
+    }
+
+    setReelFormSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', reelFormTitle.trim());
+      formData.append('category', reelFormCategory || 'Workshop');
+      formData.append('price', reelFormPrice || 0);
+      formData.append('description', reelFormDescription.trim());
+
+      if (reelFormVideoFile) {
+        formData.append('video', reelFormVideoFile);
+      } else {
+        formData.append('video', reelFormVideoLink.trim());
+      }
+
+      if (reelFormImageFile) {
+        formData.append('image', reelFormImageFile);
+      } else if (reelFormImageLink.trim()) {
+        formData.append('image', reelFormImageLink.trim());
+      }
+
+      const res = await api.post('/reels', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data?.success) {
+        setReelFormMsg({ error: '', success: 'Reel published live! Customers can now watch and scroll it in Reels.' });
+        setReelFormTitle('');
+        setReelFormVideoLink('');
+        setReelFormVideoFile(null);
+        setReelFormImageLink('');
+        setReelFormImageFile(null);
+        setReelFormPrice('');
+        setReelFormDescription('');
+        fetchAdminReels();
+      } else {
+        setReelFormMsg({ error: res.data?.message || 'Failed to add reel', success: '' });
+      }
+    } catch (err) {
+      setReelFormMsg({ error: err.response?.data?.message || err.message || 'Error uploading reel', success: '' });
+    } finally {
+      setReelFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteReel = async (reelId) => {
+    if (!confirm('Are you sure you want to delete this workshop reel?')) return;
+    try {
+      const res = await api.delete(`/reels/${reelId}`);
+      if (res.data?.success) {
+        setAdminReels(prev => prev.filter(r => r._id !== reelId));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete reel');
     }
   };
 
@@ -598,6 +695,7 @@ export default function AdminDashboardComponent() {
           fetchOrders();
           fetchCategories();
           fetchAdminReviews();
+          fetchAdminReels();
         } else {
           setIsAuthenticated(false);
           setIsSecretPassed(false);
@@ -1691,6 +1789,23 @@ LD Interiors & Furnitures
                   {reviewStatusCounts.All || adminReviews.length}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => { setAdminTab('reels'); fetchAdminReels(); }}
+              className={`w-full px-3.5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer ${
+                adminTab === 'reels'
+                  ? 'bg-amber-400 text-slate-950 font-black shadow-md'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Film className="h-4 w-4" />
+                <span>Workshop Reels</span>
+              </span>
+              <span className="bg-white/20 text-white rounded-full px-2 py-0.5 text-[9px] font-bold">
+                {adminReels.length}
+              </span>
             </button>
           </div>
         </div>
@@ -3511,6 +3626,343 @@ LD Interiors & Furnitures
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Workshop Reels & Shorts Manager Tab */}
+      {adminTab === 'reels' && (
+        <div className="space-y-8 animate-fadeIn text-left">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-[#071A33] via-[#0B1E3B] to-[#071A33] text-white p-6 rounded-3xl border border-[#D6A04B]/30 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B] bg-[#0C223F] px-3 py-1 rounded-full border border-[#D6A04B]/40 flex items-center gap-1.5 w-fit">
+                  <Film className="h-3 w-3" />
+                  <span>Instagram-Style Workshop Reels Engine</span>
+                </span>
+                <h2 className="font-serif text-xl sm:text-2xl font-black text-[#F5E6C8] mt-2">
+                  Workshop Reels &amp; Shorts Manager
+                </h2>
+                <p className="text-xs text-slate-300 font-light mt-0.5">
+                  Upload video files or paste video links (YouTube Shorts, Instagram, MP4). Only videos uploaded here will play in the Reels section. Real-time views and likes are tracked in database.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={fetchAdminReels}
+                disabled={adminReelsLoading}
+                className="px-4 py-2 bg-[#D6A04B] hover:bg-[#c4903c] text-[#071A33] text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer self-start sm:self-auto disabled:opacity-50"
+              >
+                <Sparkles className={`h-3.5 w-3.5 ${adminReelsLoading ? 'animate-spin' : ''}`} />
+                <span>{adminReelsLoading ? 'Refreshing...' : 'Refresh Reels'}</span>
+              </button>
+            </div>
+
+            {/* Quick Metrics Bar */}
+            <div className="grid grid-cols-3 gap-3 mt-5">
+              <div className="bg-[#0C223F]/90 border border-[#D6A04B]/20 p-3 rounded-2xl text-center">
+                <span className="font-mono text-xl sm:text-2xl font-black text-white">{adminReels.length}</span>
+                <p className="text-[9.5px] uppercase font-bold text-slate-400 mt-0.5">Active Reels</p>
+              </div>
+
+              <div className="bg-[#0C223F]/90 border border-sky-500/30 p-3 rounded-2xl text-center">
+                <span className="font-mono text-xl sm:text-2xl font-black text-sky-400">
+                  {adminReels.reduce((acc, r) => acc + (r.views || 0), 0).toLocaleString('en-IN')}
+                </span>
+                <p className="text-[9.5px] uppercase font-bold text-sky-300 mt-0.5">Real-Time Views</p>
+              </div>
+
+              <div className="bg-[#0C223F]/90 border border-red-500/30 p-3 rounded-2xl text-center">
+                <span className="font-mono text-xl sm:text-2xl font-black text-red-400">
+                  {adminReels.reduce((acc, r) => acc + (r.likes || 0), 0).toLocaleString('en-IN')}
+                </span>
+                <p className="text-[9.5px] uppercase font-bold text-red-300 mt-0.5">Real-Time Likes</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Add New Reel Form */}
+          <div className="bg-white/90 dark:bg-[#0B1E3B] backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+            <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#F5E6C8] mb-1 flex items-center gap-2">
+              <Plus className="h-5 w-5 text-[#A64B24] dark:text-[#D6A04B]" />
+              <span>Add New Workshop Reel</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-light">
+              Paste any YouTube Shorts link, Instagram link, or upload an MP4 video file.
+            </p>
+
+            {reelFormMsg.error && (
+              <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700 flex items-center gap-2 font-bold">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{reelFormMsg.error}</span>
+              </div>
+            )}
+
+            {reelFormMsg.success && (
+              <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 flex items-center gap-2 font-bold">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span>{reelFormMsg.success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCreateReel} className="space-y-4 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Reel Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={reelFormTitle}
+                    onChange={(e) => setReelFormTitle(e.target.value)}
+                    placeholder="e.g. Hand-Carved Burma Teak Main Door"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Furniture Category
+                  </label>
+                  <select
+                    value={reelFormCategory}
+                    onChange={(e) => setReelFormCategory(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B]"
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Video Link / Video Upload */}
+              <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-[#F5E6C8] mb-1">
+                    Reel Video Link (YouTube Shorts, Instagram, or MP4 URL) *
+                  </label>
+                  <input
+                    type="text"
+                    value={reelFormVideoLink}
+                    onChange={(e) => {
+                      setReelFormVideoLink(e.target.value);
+                      if (e.target.value) setReelFormVideoFile(null);
+                    }}
+                    placeholder="e.g. https://www.youtube.com/shorts/... or https://www.instagram.com/reel/..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B] font-mono"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    💡 <strong>Automatic Thumbnail:</strong> If you paste a YouTube Shorts link, the high-res cover photo will be auto-generated automatically!
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">OR Upload Video File</span>
+                  <div className="flex-1 h-[1px] bg-slate-200 dark:bg-slate-800" />
+                </div>
+
+                <div>
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-[#D6A04B] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer">
+                    <Upload className="h-4 w-4 text-[#D6A04B]" />
+                    <span>{reelFormVideoFile ? reelFormVideoFile.name : "Choose Video File (Max 50MB)"}</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setReelFormVideoFile(file);
+                          setReelFormVideoLink('');
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                  {reelFormVideoFile && (
+                    <button
+                      type="button"
+                      onClick={() => setReelFormVideoFile(null)}
+                      className="ml-2 text-red-500 text-xs font-bold hover:underline"
+                    >
+                      Clear File
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Price & Cover Image Optional */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Price (Optional ₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={reelFormPrice}
+                    onChange={(e) => setReelFormPrice(e.target.value)}
+                    placeholder="e.g. 45000"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Cover Thumbnail URL (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={reelFormImageLink}
+                    onChange={(e) => setReelFormImageLink(e.target.value)}
+                    placeholder="Auto-extracted from YouTube if left empty"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                  Reel Description / Caption (Optional)
+                </label>
+                <textarea
+                  rows="2"
+                  value={reelFormDescription}
+                  onChange={(e) => setReelFormDescription(e.target.value)}
+                  placeholder="Short description of the woodworking process, carving, or polish..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#D6A04B]"
+                />
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={reelFormSubmitting}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#7B3215] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {reelFormSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Publishing Reel...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 fill-white" />
+                      <span>Publish Workshop Reel</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active Workshop Reels Grid */}
+          <div className="bg-white/90 dark:bg-[#0B1E3B] backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#F5E6C8]">
+                  All Active Workshop Reels ({adminReels.length})
+                </h3>
+                <p className="text-xs text-slate-500 font-light mt-0.5">
+                  These videos play live for visitors in the Instagram Reels scrolling feed.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-300">
+                ● Live in Feed
+              </span>
+            </div>
+
+            {adminReels.length === 0 ? (
+              <div className="py-12 text-center space-y-3">
+                <Film className="h-10 w-10 text-slate-300 mx-auto" />
+                <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                  No workshop reels uploaded yet
+                </h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  Paste your YouTube Shorts or video links using the form above to add your first live workshop reel!
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {adminReels.map((reel) => (
+                  <div
+                    key={reel._id}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Video Thumbnail */}
+                      <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden">
+                        <img
+                          src={reel.image || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
+                          alt={reel.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="h-9 w-9 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center">
+                            <Play className="h-4 w-4 fill-white ml-0.5" />
+                          </div>
+                        </div>
+                        <span className="absolute top-2 left-2 bg-[#A64B24] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full">
+                          {reel.category || 'Workshop'}
+                        </span>
+                      </div>
+
+                      {/* Info & Real-Time Stats */}
+                      <div className="p-3.5 space-y-2">
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">
+                          {reel.title}
+                        </h4>
+
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300">
+                            {reel.price && reel.price > 0 ? `₹${reel.price.toLocaleString('en-IN')}` : 'Estimate'}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span className="font-mono text-slate-400 truncate max-w-[150px]">
+                            {reel.video}
+                          </span>
+                        </div>
+
+                        {/* Real-Time Database Metrics Badges */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[10px] font-bold">
+                            👁️ {reel.views || 0} real views
+                          </span>
+
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 text-[10px] font-bold">
+                            ❤️ {reel.likes || 0} real likes
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <a
+                        href={reel.video}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-[#008DDA] hover:underline flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Open Video</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReel(reel._id)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Reel"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
         </div>

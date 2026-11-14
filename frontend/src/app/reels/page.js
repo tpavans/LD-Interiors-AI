@@ -6,100 +6,27 @@ import api from '@/utils/api';
 import { 
   Loader2, Volume2, VolumeX, Eye, Play, Pause, X, 
   Sparkles, MessageCircle, Heart, Share2, ChevronUp, 
-  ChevronDown, Check, ArrowLeft, Film, LayoutGrid, Music
+  ChevronDown, Check, ArrowLeft, Film, LayoutGrid, Music, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
-// 10 Curated Authentic LD Interiors Workshop Teakwood Video Reels
-const DEFAULT_WORKSHOP_REELS = [
-  {
-    _id: "reel_door_1",
-    title: "Hand-Carved Burma Teak Main Door Crafting",
-    category: "Doors",
-    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/36V1Uq5fCio",
-    price: 45000,
-    likes: 342,
-    description: "Grade-A 100% pure Burma teakwood main entrance door with traditional intricate temple carvings and PU matte polish."
-  },
-  {
-    _id: "reel_mandir_1",
-    title: "Teak Wood Royal Temple Puja Mandir Hand Carving",
-    category: "Puja Mandiralu",
-    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/F5jP9Gv_bXo",
-    price: 38000,
-    likes: 528,
-    description: "Artisanal hand-crafted teakwood puja mandir with brass bells, gopuram arch, and deep storage drawers."
-  },
-  {
-    _id: "reel_bed_1",
-    title: "Luxury King Size Teakwood Bed Polish Process",
-    category: "Wooden Beds",
-    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/7Pq-S557XQU",
-    price: 52000,
-    likes: 415,
-    description: "Premium king size bed with ergonomically carved headboard, hydraulic box storage, and scratch-resistant Italian PU finish."
-  },
-  {
-    _id: "reel_swing_1",
-    title: "Traditional Handcrafted Uyyala Teakwood Swing",
-    category: "Uyyala Swings",
-    image: "https://images.unsplash.com/photo-1540518614846-7ede433c4ef3?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/36V1Uq5fCio",
-    price: 42000,
-    likes: 671,
-    description: "Heavy solid teakwood heritage ceiling swing with hand-carved floral side rails and pure brass chains."
-  },
-  {
-    _id: "reel_sofa_1",
-    title: "Chesterfield Teakwood Tufted Sofa Workshop Finish",
-    category: "Sofas",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/F5jP9Gv_bXo",
-    price: 65000,
-    likes: 298,
-    description: "Luxury 3+2 teakwood frame sofa set with custom density cushioning and genuine velvet-finish upholstery."
-  },
-  {
-    _id: "reel_dining_1",
-    title: "6-Seater Royal Burma Teak Dining Table Carving",
-    category: "Dining Tables",
-    image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/7Pq-S557XQU",
-    price: 58000,
-    likes: 489,
-    description: "Solid one-piece teakwood tabletop dining set with 6 ergonomically cushioned carved dining chairs."
-  },
-  {
-    _id: "reel_window_1",
-    title: "Artisanal Teakwood Window Frame Finishing",
-    category: "Teak Windows",
-    image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/36V1Uq5fCio",
-    price: 24000,
-    likes: 219,
-    description: "Heavy solid Burma teak window frame with toughened glass shutter channels and brass hinges."
-  },
-  {
-    _id: "reel_wall_1",
-    title: "Custom Traditional Temple Wall Carving Panel",
-    category: "Wall Designs",
-    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
-    video: "https://www.youtube.com/shorts/F5jP9Gv_bXo",
-    price: 35000,
-    likes: 384,
-    description: "3D bas-relief teakwood wall panel featuring intricate temple motifs and antique gold leaf accents."
+// Get or create persistent client ID for genuine like tracking
+function getClientId() {
+  if (typeof window === 'undefined') return 'client_guest';
+  let cid = localStorage.getItem('ld_client_id');
+  if (!cid) {
+    cid = 'ld_user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('ld_client_id', cid);
   }
-];
+  return cid;
+}
 
 export default function ReelsPage() {
   const { language } = useLanguage();
   const t = translations[language] || translations['EN'];
   const isTelugu = language === 'TE';
 
-  // Reels Data
+  // Reels Data (Purely from Database - NO DEFAULT FAKE REELS)
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -117,6 +44,7 @@ export default function ReelsPage() {
   const feedContainerRef = useRef(null);
   const videoRefs = useRef({});
   const lastTapRef = useRef(0);
+  const recordedViewsRef = useRef(new Set());
 
   // Helper to test YouTube
   const isYouTubeUrl = (url) => {
@@ -130,13 +58,16 @@ export default function ReelsPage() {
     
     if (url.includes('/shorts/')) {
       const parts = url.split('/shorts/');
-      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
+      if (parts[1]) videoId = parts[1].split(/[?#&]/)[0];
     } else if (url.includes('youtu.be/')) {
       const parts = url.split('youtu.be/');
-      if (parts[1]) videoId = parts[1].split(/[?#]/)[0];
+      if (parts[1]) videoId = parts[1].split(/[?#&]/)[0];
     } else if (url.includes('v=')) {
       const parts = url.split('v=');
-      if (parts[1]) videoId = parts[1].split(/[&?#]/)[0];
+      if (parts[1]) videoId = parts[1].split(/[?#&]/)[0];
+    } else if (url.includes('embed/')) {
+      const parts = url.split('embed/');
+      if (parts[1]) videoId = parts[1].split(/[?#&]/)[0];
     } else {
       videoId = url;
     }
@@ -144,51 +75,57 @@ export default function ReelsPage() {
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`;
   };
 
-  // Fetch Products & Filter Reels
-  useEffect(() => {
-    const fetchReels = async () => {
-      try {
-        const response = await api.get('/products');
-        let remoteReels = [];
-        if (Array.isArray(response.data)) {
-          remoteReels = response.data
-            .filter(p => p.video && p.video.trim() !== '')
-            .map(p => ({
-              ...p,
-              likes: p.likes || Math.floor(Math.random() * 300) + 120,
-              description: p.description || `${p.title} handcrafted in solid Burma teakwood at LD Interiors workshop.`
-            }));
+  // Helper to test Instagram
+  const isInstagramUrl = (url) => {
+    if (!url) return false;
+    return url.includes('instagram.com/reel/') || url.includes('instagram.com/p/');
+  };
+
+  const getInstagramEmbedUrl = (url) => {
+    if (!url) return '';
+    const cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+    return `${cleanUrl}/embed/`;
+  };
+
+  // Fetch Reels strictly from API (No Mock/Default items)
+  const fetchReels = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/reels');
+      const reelsData = response.data?.reels || [];
+      setProducts(reelsData);
+
+      // Initialize liked map from DB data using client ID
+      const clientId = getClientId();
+      const initialLikes = {};
+      reelsData.forEach(r => {
+        if (Array.isArray(r.likedBy) && r.likedBy.includes(clientId)) {
+          initialLikes[r._id] = true;
         }
+      });
+      setLikedMap(initialLikes);
 
-        // Merge with curated reels so there is always a rich feed
-        const combined = [...remoteReels];
-        DEFAULT_WORKSHOP_REELS.forEach(def => {
-          if (!combined.some(c => c._id === def._id || c.title === def.title)) {
-            combined.push(def);
-          }
-        });
-
-        setProducts(combined);
-
-        // Check if URL has ?reel= or ?index= query param
-        if (typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search);
-          const reelId = params.get('reel');
-          if (reelId) {
-            const foundIdx = combined.findIndex(r => r._id === reelId);
-            if (foundIdx !== -1) {
-              setActiveIndex(foundIdx);
-              setIsPlayerOpen(true);
-            }
+      // Check if URL has ?reel= or ?index= query param
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const reelId = params.get('reel');
+        if (reelId) {
+          const foundIdx = reelsData.findIndex(r => r._id === reelId);
+          if (foundIdx !== -1) {
+            setActiveIndex(foundIdx);
+            setIsPlayerOpen(true);
           }
         }
-      } catch (err) {
-        console.error('Error fetching reels:', err);
-        setProducts(DEFAULT_WORKSHOP_REELS);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.warn('Error fetching reels:', err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchReels();
   }, []);
 
@@ -257,6 +194,30 @@ export default function ReelsPage() {
     }
   }, [isPlayerOpen]);
 
+  // Real-Time View Count Increment on Active Reel
+  useEffect(() => {
+    if (!isPlayerOpen || !filteredReels[activeIndex]) return;
+    const currentReel = filteredReels[activeIndex];
+    const reelId = currentReel._id;
+
+    // Avoid double counting within same session
+    if (recordedViewsRef.current.has(reelId)) return;
+    recordedViewsRef.current.add(reelId);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.post(`/reels/${reelId}/view`);
+        if (res.data?.success && res.data.views !== undefined) {
+          setProducts(prev => prev.map(p => p._id === reelId ? { ...p, views: res.data.views } : p));
+        }
+      } catch (e) {
+        console.warn('Real-time view increment error:', e.message);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [activeIndex, isPlayerOpen, filteredReels]);
+
   // Handle Native Scroll Detection (Snapping to Active Item)
   const handleFeedScroll = () => {
     if (!feedContainerRef.current) return;
@@ -315,16 +276,49 @@ export default function ReelsPage() {
     });
   }, [activeIndex, isPaused, isPlayerOpen]);
 
+  // Real-Time Like Toggle Function (Updates database and UI)
+  const handleToggleLike = async (reelId, e) => {
+    if (e) e.stopPropagation();
+    const currentReel = filteredReels.find(r => r._id === reelId);
+    if (!currentReel) return;
+
+    const clientId = getClientId();
+    const currentlyLiked = likedMap[reelId];
+
+    // Optimistic UI Update
+    setLikedMap(prev => ({ ...prev, [reelId]: !currentlyLiked }));
+    if (!currentlyLiked) {
+      setHeartPop(true);
+      setTimeout(() => setHeartPop(false), 800);
+    }
+    setProducts(prev => prev.map(p => {
+      if (p._id === reelId) {
+        const newLikes = Math.max(0, (p.likes || 0) + (currentlyLiked ? -1 : 1));
+        return { ...p, likes: newLikes };
+      }
+      return p;
+    }));
+
+    // Database Real-time Sync
+    try {
+      const res = await api.post(`/reels/${reelId}/like`, { clientId });
+      if (res.data?.success) {
+        setLikedMap(prev => ({ ...prev, [reelId]: res.data.liked }));
+        setProducts(prev => prev.map(p => p._id === reelId ? { ...p, likes: res.data.likes } : p));
+      }
+    } catch (err) {
+      console.warn('Real-time like toggle failed:', err.message);
+    }
+  };
+
   // Single Tap vs Double Tap Detection (Instagram-style Like & Pause)
   const handleVideoTap = (reelId) => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      // Double Tap -> Like Animation
-      setLikedMap(prev => ({ ...prev, [reelId]: true }));
-      setHeartPop(true);
-      setTimeout(() => setHeartPop(false), 900);
+      // Double Tap -> Like
+      handleToggleLike(reelId);
       lastTapRef.current = 0;
     } else {
       // Single Tap -> Toggle Play/Pause
@@ -368,34 +362,16 @@ export default function ReelsPage() {
     }
   };
 
-  // Toggle Like Handler
-  const handleToggleLike = (reelId, e) => {
-    if (e) e.stopPropagation();
-    setLikedMap(prev => {
-      const isAlreadyLiked = prev[reelId];
-      if (!isAlreadyLiked) {
-        setHeartPop(true);
-        setTimeout(() => setHeartPop(false), 800);
-      }
-      return {
-        ...prev,
-        [reelId]: !isAlreadyLiked
-      };
-    });
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-[75vh] w-full flex-col items-center justify-center bg-[#FBF9F1] dark:bg-[#071A33]">
         <Loader2 className="h-9 w-9 animate-spin text-[#008DDA] dark:text-[#D6A04B] mb-2" />
         <p className="text-xs text-slate-600 dark:text-slate-300 font-medium animate-pulse">
-          Loading Workshop Video Reels...
+          Loading Workshop Video Reels from Database...
         </p>
       </div>
     );
   }
-
-  const activeReel = filteredReels[activeIndex] || filteredReels[0];
 
   return (
     <div className="min-h-[85vh] bg-[#FBF9F1] dark:bg-[#071A33] py-8 px-4 sm:px-8 max-w-7xl mx-auto text-left select-none transition-colors duration-300">
@@ -412,20 +388,22 @@ export default function ReelsPage() {
 
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-normal mt-2 leading-relaxed">
           {isTelugu 
-            ? "మా వర్క్‌షాప్‌లో టేకు కలప చెక్కడాలు, పాలిష్ మరియు తయారీ లైవ్ వీడియోలను ఇన్‌స్టాగ్రామ్ రీల్స్ లాగా పైకి క్రిందికి స్క్రోల్ చేస్తూ చూడండి!"
-            : "Tap any video to open the Instagram-style vertical feed. Swipe or scroll UP & DOWN to watch next and previous teakwood reels!"}
+            ? "అడ్మిన్ అప్‌లోడ్ చేసిన తాజా వర్క్‌షాప్ రీల్స్ ఇక్కడ ప్లే అవుతాయి. ఏదైనా రీల్‌ను క్లిక్ చేసి ఇన్‌స్టాగ్రామ్ లాగా పైకి క్రిందికి స్క్రోల్ చేస్తూ చూడండి!"
+            : "Watch real workshop woodworking videos uploaded by our master craftsmen. Tap any video to scroll UP & DOWN like Instagram Reels!"}
         </p>
 
-        {/* Primary CTA: Watch Fullscreen Reels */}
-        <div className="mt-5 flex items-center justify-center gap-3">
-          <button
-            onClick={() => openReelPlayer(0)}
-            className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-md flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
-          >
-            <Play className="h-3.5 w-3.5 fill-white" />
-            <span>{isTelugu ? "రీల్స్ ఫీడ్ చూడండి (Scroll Mode)" : "▶ Watch All Reels (Instagram Mode)"}</span>
-          </button>
-        </div>
+        {/* Primary CTA: Watch Fullscreen Reels if available */}
+        {filteredReels.length > 0 && (
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <button
+              onClick={() => openReelPlayer(0)}
+              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-md flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
+            >
+              <Play className="h-3.5 w-3.5 fill-white" />
+              <span>{isTelugu ? "రీల్స్ ఫీడ్ చూడండి (Scroll Mode)" : "▶ Watch All Reels (Instagram Mode)"}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Category Filter Pills Bar */}
@@ -450,77 +428,105 @@ export default function ReelsPage() {
         </div>
       )}
 
-      {/* REELS GRID: Click any card to launch the Instagram Scroll Player */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
-        {filteredReels.map((product, index) => (
-          <div
-            key={product._id || index}
-            onClick={() => openReelPlayer(index)}
-            className="group relative bg-white dark:bg-[#0B1E3B] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col"
-          >
-            {/* Reel 9:16 Aspect Thumbnail Container */}
-            <div className="relative aspect-[9/14] w-full overflow-hidden bg-slate-900">
-              <img
-                src={product.image}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              
-              {/* Dark Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-black/20" />
+      {/* EMPTY STATE: Only shown when admin has not uploaded any video reels yet */}
+      {filteredReels.length === 0 ? (
+        <div className="bg-white dark:bg-[#0B1E3B] border border-slate-200 dark:border-slate-800 rounded-3xl p-12 sm:p-16 text-center space-y-4 max-w-xl mx-auto shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 text-[#D6A04B] flex items-center justify-center mx-auto">
+            <Film className="h-8 w-8" />
+          </div>
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            {isTelugu ? "వర్క్‌షాప్ రీల్స్ త్వరలో రానున్నాయి" : "No Workshop Reels Uploaded Yet"}
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            {isTelugu 
+              ? "అడ్మిన్ డాష్‌బోర్డ్ నుండి యూట్యూబ్ షార్ట్స్ లేదా వీడియో లింక్‌లు అప్‌లోడ్ చేసిన తర్వాత ఇక్కడ ప్రత్యక్షంగా కనిపిస్తాయి."
+              : "Videos uploaded by admin from the Admin Dashboard will play live here. Check back soon for new woodworking reels!"}
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#071A33] hover:bg-[#0B1E3B] text-[#F5E6C8] border border-[#D6A04B]/40 text-xs font-bold transition-all shadow-sm"
+            >
+              <Eye className="h-4 w-4 text-[#D6A04B]" />
+              <span>{isTelugu ? "ఫర్నిచర్ డిజైన్లు చూడండి" : "Explore Furniture Designs"}</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        /* REELS GRID: Real videos uploaded by admin */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
+          {filteredReels.map((product, index) => (
+            <div
+              key={product._id || index}
+              onClick={() => openReelPlayer(index)}
+              className="group relative bg-white dark:bg-[#0B1E3B] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col"
+            >
+              {/* Reel 9:16 Aspect Thumbnail Container */}
+              <div className="relative aspect-[9/14] w-full overflow-hidden bg-slate-900">
+                <img
+                  src={product.image || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                
+                {/* Dark Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-black/20" />
 
-              {/* Top Reel Badge */}
-              <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-[#A64B24] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-md">
-                <Play className="h-2.5 w-2.5 fill-white" />
-                <span>REEL</span>
-              </div>
+                {/* Top Reel Badge */}
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-[#A64B24] text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-md">
+                  <Play className="h-2.5 w-2.5 fill-white" />
+                  <span>REEL</span>
+                </div>
 
-              {/* Likes Counter on Top Right */}
-              <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[9px] font-bold">
-                <Heart className="h-3 w-3 text-red-500 fill-red-500" />
-                <span>{product.likes || 240}</span>
-              </div>
+                {/* Real-time Likes Counter on Top Right */}
+                <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[9px] font-bold">
+                  <Heart className={`h-3 w-3 ${likedMap[product._id] ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+                  <span>{product.likes || 0}</span>
+                </div>
 
-              {/* Center Play Button Pulse Icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-11 w-11 rounded-full bg-white/20 backdrop-blur-md border border-white/50 flex items-center justify-center group-hover:scale-120 group-hover:bg-[#008DDA] transition-all duration-300 shadow-xl">
-                  <Play className="h-5 w-5 fill-white text-white ml-0.5" />
+                {/* Center Play Button Pulse Icon */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-11 w-11 rounded-full bg-white/20 backdrop-blur-md border border-white/50 flex items-center justify-center group-hover:scale-120 group-hover:bg-[#008DDA] transition-all duration-300 shadow-xl">
+                    <Play className="h-5 w-5 fill-white text-white ml-0.5" />
+                  </div>
+                </div>
+
+                {/* Bottom Thumbnail Info */}
+                <div className="absolute bottom-2.5 inset-x-2.5 text-left">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-[#D6A04B] block truncate mb-0.5">
+                    {product.category || 'Workshop'}
+                  </span>
+                  <h3 className="font-serif text-xs font-black text-white line-clamp-1 group-hover:text-[#F5E6C8] transition-colors">
+                    {product.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5 text-[9px] text-slate-300 font-mono">
+                    <span>👁️ {product.views || 0}</span>
+                    <span>•</span>
+                    <span>{product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Estimate'}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom Thumbnail Info */}
-              <div className="absolute bottom-2.5 inset-x-2.5 text-left">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#D6A04B] block truncate mb-0.5">
-                  {product.category}
+              {/* Bottom Card Footer */}
+              <div className="p-2.5 bg-white dark:bg-[#0B1E3B] flex items-center justify-between gap-1 text-left border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-bold">
+                  {product.views || 0} views
                 </span>
-                <h3 className="font-serif text-xs font-black text-white line-clamp-1 group-hover:text-[#F5E6C8] transition-colors">
-                  {product.title}
-                </h3>
+
+                <span className="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-[#A64B24] dark:text-[#D6A04B] border border-[#D6A04B]/30 font-extrabold text-[10px] uppercase tracking-wider group-hover:bg-[#A64B24] group-hover:text-white transition-all">
+                  Play ▶
+                </span>
               </div>
             </div>
-
-            {/* Bottom Card Footer */}
-            <div className="p-2.5 bg-white dark:bg-[#0B1E3B] flex items-center justify-between gap-1 text-left border-t border-slate-100 dark:border-slate-800">
-              <div>
-                <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Price</p>
-                <p className="text-xs font-black text-slate-900 dark:text-white font-mono">
-                  {product.price && product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Estimate'}
-                </p>
-              </div>
-
-              <span className="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-[#A64B24] dark:text-[#D6A04B] border border-[#D6A04B]/30 font-extrabold text-[10px] uppercase tracking-wider group-hover:bg-[#A64B24] group-hover:text-white transition-all">
-                Play ▶
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* =========================================================================
           FULLSCREEN INSTAGRAM REELS VERTICAL SCROLLING PLAYER
-          When opened, user can scroll UP and DOWN seamlessly like Instagram!
+          Supports Up and Down scrolling, real-time views, and real-time likes
          ========================================================================= */}
-      {isPlayerOpen && (
+      {isPlayerOpen && filteredReels.length > 0 && (
         <div 
           className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-lg flex items-center justify-center animate-fadeIn select-none overflow-hidden"
           onClick={closeReelPlayer}
@@ -571,17 +577,18 @@ export default function ReelsPage() {
               </div>
             </div>
 
-            {/* VERTICAL SCROLL SNAP CONTAINER */}
+            {/* VERTICAL SCROLL SNAP CONTAINER (UP AND DOWN INSTAGRAM SCROLLING) */}
             <div
               ref={feedContainerRef}
               onScroll={handleFeedScroll}
               style={{ scrollSnapType: 'y mandatory', msOverflowStyle: 'none', scrollbarWidth: 'none' }}
-              className="relative flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth select-none bg-black"
+              className="relative flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth select-none bg-black no-scrollbar"
             >
               {filteredReels.map((reel, index) => {
                 const isActive = index === activeIndex;
                 const isLiked = likedMap[reel._id];
-                const likeCount = (reel.likes || 180) + (isLiked ? 1 : 0);
+                const realLikesCount = reel.likes || 0;
+                const realViewsCount = reel.views || 0;
 
                 return (
                   <div
@@ -593,7 +600,7 @@ export default function ReelsPage() {
                     {/* Video Player Canvas */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black">
                       {isYouTubeUrl(reel.video) ? (
-                        // YouTube Shorts Embed: load when active
+                        // YouTube Shorts / Video Embed
                         isActive ? (
                           <iframe
                             src={getYouTubeEmbedUrl(reel.video)}
@@ -605,13 +612,31 @@ export default function ReelsPage() {
                           />
                         ) : (
                           <img
-                            src={reel.image}
+                            src={reel.image || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
+                            alt={reel.title}
+                            className="w-full h-full object-cover opacity-60"
+                          />
+                        )
+                      ) : isInstagramUrl(reel.video) ? (
+                        // Instagram Reel Embed
+                        isActive ? (
+                          <iframe
+                            src={getInstagramEmbedUrl(reel.video)}
+                            title={reel.title}
+                            frameBorder="0"
+                            allowTransparency="true"
+                            allow="autoplay; encrypted-media"
+                            className="w-full h-full object-cover bg-black"
+                          />
+                        ) : (
+                          <img
+                            src={reel.image || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
                             alt={reel.title}
                             className="w-full h-full object-cover opacity-60"
                           />
                         )
                       ) : (
-                        // Native HTML5 Video
+                        // Native HTML5 / Cloudinary MP4 Video
                         <video
                           ref={el => { videoRefs.current[index] = el; }}
                           src={reel.video}
@@ -661,7 +686,7 @@ export default function ReelsPage() {
                         </div>
                       </div>
 
-                      {/* 1. Like Heart Button */}
+                      {/* 1. Real-Time Like Heart Button */}
                       <button
                         type="button"
                         onClick={(e) => handleToggleLike(reel._id, e)}
@@ -677,7 +702,7 @@ export default function ReelsPage() {
                           }`} />
                         </div>
                         <span className="text-[10px] font-extrabold font-mono tracking-tight drop-shadow-md">
-                          {likeCount}
+                          {realLikesCount}
                         </span>
                       </button>
 
@@ -696,18 +721,33 @@ export default function ReelsPage() {
                       </button>
 
                       {/* 3. View Product Page Button */}
-                      <Link
-                        href={`/products/${reel._id}`}
-                        onClick={closeReelPlayer}
-                        className="flex flex-col items-center gap-1 group cursor-pointer transition-transform hover:scale-110 active:scale-90"
-                      >
-                        <div className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20">
-                          <Eye className="h-6 w-6 text-[#D6A04B]" />
-                        </div>
-                        <span className="text-[10px] font-extrabold tracking-tight drop-shadow-md">
-                          Design
-                        </span>
-                      </Link>
+                      {reel.productId ? (
+                        <Link
+                          href={`/products/${reel.productId}`}
+                          onClick={closeReelPlayer}
+                          className="flex flex-col items-center gap-1 group cursor-pointer transition-transform hover:scale-110 active:scale-90"
+                        >
+                          <div className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20">
+                            <Eye className="h-6 w-6 text-[#D6A04B]" />
+                          </div>
+                          <span className="text-[10px] font-extrabold tracking-tight drop-shadow-md">
+                            Design
+                          </span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/products"
+                          onClick={closeReelPlayer}
+                          className="flex flex-col items-center gap-1 group cursor-pointer transition-transform hover:scale-110 active:scale-90"
+                        >
+                          <div className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20">
+                            <Eye className="h-6 w-6 text-[#D6A04B]" />
+                          </div>
+                          <span className="text-[10px] font-extrabold tracking-tight drop-shadow-md">
+                            Catalog
+                          </span>
+                        </Link>
+                      )}
 
                       {/* 4. Share Button */}
                       <button
@@ -748,14 +788,18 @@ export default function ReelsPage() {
                         {reel.title}
                       </h2>
 
-                      {/* Price & Category Tags */}
+                      {/* Price, Category & Real-Time Views */}
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-md bg-[#A64B24] text-white text-xs font-black font-mono shadow-sm">
                           {reel.price && reel.price > 0 ? `₹${reel.price.toLocaleString('en-IN')}` : 'Custom Estimate'}
                         </span>
 
                         <span className="px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-md text-[10px] font-extrabold text-[#F5E6C8] uppercase tracking-wider">
-                          #{reel.category}
+                          #{reel.category || 'Workshop'}
+                        </span>
+
+                        <span className="text-[10px] text-sky-300 font-mono font-bold bg-black/40 px-2 py-0.5 rounded-md">
+                          👁️ {realViewsCount} views
                         </span>
                       </div>
 

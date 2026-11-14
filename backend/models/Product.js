@@ -55,6 +55,18 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  likes: {
+    type: Number,
+    default: 0,
+  },
+  likedBy: {
+    type: [String],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
