@@ -71,13 +71,20 @@ exports.getReels = async (req, res) => {
       const vid = (prod.video || '').trim();
       if (vid && !existingVideoUrls.has(vid)) {
         existingVideoUrls.add(vid);
+        let prodImage = prod.image || '';
+        if (!prodImage) {
+          const ytId = extractYouTubeId(vid);
+          if (ytId) {
+            prodImage = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+          }
+        }
         combined.push({
           _id: prod._id,
           title: prod.title,
           category: prod.category || 'Workshop',
           video: prod.video,
           videoPublicId: prod.videoPublicId || '',
-          image: prod.image || '',
+          image: prodImage,
           imagePublicId: prod.imagePublicId || '',
           price: prod.price || 0,
           description: prod.description || '',

@@ -5,6 +5,7 @@ import { Loader2, Plus, Edit, Trash2, X, Upload, CheckCircle2, AlertTriangle, Ey
 import ShippingSlipModal from '@/components/ShippingSlipModal';
 import GSTInvoiceModal from '@/components/GSTInvoiceModal';
 import Link from 'next/link';
+import { getReelThumbnail, getOptimizedVideoUrl } from '@/utils/mediaUtils';
 
 const CATEGORIES = ["Doors", "Living Room", "Kitchen", "Bedroom", "Kids Room", "Sofas", "Wooden Beds", "Dining Tables", "TV Units", "Uyyala Swings", "Wooden Windows", "Mesh Doors", "Polish Items", "Money Boxes", "Glass Windows", "Office", "Bathroom", "Puja Mandiralu", "Gummalu", "Dressing Tables"];
 
@@ -2336,7 +2337,7 @@ LD Interiors & Furnitures
                       {videoPreview ? (
                         <div className="flex flex-col items-center">
                           <div className="relative w-full max-w-xs aspect-video max-h-40 rounded-xl overflow-hidden border border-wood-border bg-black flex items-center justify-center">
-                            <video src={videoPreview} controls className="max-w-full max-h-full object-contain" />
+                            <video src={getOptimizedVideoUrl(videoPreview)} controls className="max-w-full max-h-full object-contain" />
                           </div>
                           <div className="mt-3">
                             <button
@@ -3894,7 +3895,7 @@ LD Interiors & Furnitures
                       {/* Video Thumbnail */}
                       <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden">
                         <img
-                          src={reel.image || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
+                          src={getReelThumbnail(reel.video, reel.image)}
                           alt={reel.title}
                           className="w-full h-full object-cover"
                         />

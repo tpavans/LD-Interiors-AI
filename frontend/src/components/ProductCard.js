@@ -8,6 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { translations } from '@/utils/translations';
 
 import CelebrationModal from './CelebrationModal';
+import { getOptimizedVideoUrl } from '@/utils/mediaUtils';
 
 export default function ProductCard({ product }) {
   const router = useRouter();
@@ -642,7 +643,7 @@ ${customSize.trim() ? `- Custom Size: ${customSize.trim()}\n` : ''}${desiredPric
             <div className="w-full flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/45 shadow-2xl relative min-h-[300px]">
               {product.video ? (
                 <video
-                  src={product.video}
+                  src={getOptimizedVideoUrl(product.video)}
                   controls
                   autoPlay
                   playsInline
