@@ -1808,6 +1808,19 @@ LD Interiors & Furnitures
                 {adminReels.length}
               </span>
             </button>
+
+            <Link
+              href="/management"
+              className="w-full px-3.5 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-between cursor-pointer bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-white hover:brightness-110 shadow-md mt-2 border border-white/20"
+            >
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#F5E6C8]" />
+                <span>LD ERP & Staff Portal</span>
+              </span>
+              <span className="bg-black/40 text-[#F5E6C8] rounded-full px-2 py-0.5 text-[8.5px] font-bold">
+                OPEN ↗
+              </span>
+            </Link>
           </div>
         </div>
 
