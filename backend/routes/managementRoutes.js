@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const managementController = require('../controllers/managementController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // Apply protection to all management routes
 router.use(protect);
@@ -11,8 +12,8 @@ router.get('/stats', managementController.getManagementStats);
 
 // 2. Workers
 router.get('/workers', managementController.getWorkers);
-router.post('/workers', managementController.createWorker);
-router.put('/workers/:id', managementController.updateWorker);
+router.post('/workers', upload.single('photo'), managementController.createWorker);
+router.put('/workers/:id', upload.single('photo'), managementController.updateWorker);
 router.delete('/workers/:id', managementController.deleteWorker);
 
 // 3. QR Attendance & Daily Sheets

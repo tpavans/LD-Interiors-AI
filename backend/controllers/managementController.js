@@ -2,6 +2,7 @@ const Worker = require('../models/Worker');
 const Attendance = require('../models/Attendance');
 const WorkerAdvance = require('../models/WorkerAdvance');
 const Project = require('../models/Project');
+const { uploadToCloudinary } = require('../config/cloudinary');
 
 // Helper to get current date formatted as YYYY-MM-DD in Indian Standard Time (IST)
 function getTodayIST() {
@@ -119,6 +120,19 @@ exports.createWorker = async (req, res) => {
       }
     }
 
+    let photoUrl = (photo || '').trim();
+    // Handle uploaded file from gallery/camera
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToCloudinary(req.file.path, 'ld_interiors/workers', 'image');
+        if (uploadResult?.url) {
+          photoUrl = uploadResult.url;
+        }
+      } catch (uploadErr) {
+        console.error('Worker photo upload to Cloudinary error:', uploadErr);
+      }
+    }
+
     const worker = await Worker.create({
       workerId,
       name: name.trim(),
@@ -127,7 +141,7 @@ exports.createWorker = async (req, res) => {
       wageType: wageType || 'daily',
       dailyRate: Number(dailyRate) || 900,
       monthlySalary: Number(monthlySalary) || 0,
-      photo: photo || '',
+      photo: photoUrl,
       aadharNumber: aadharNumber || '',
       bloodGroup: bloodGroup || 'O+',
       emergencyContact: emergencyContact || '',
@@ -145,7 +159,18 @@ exports.createWorker = async (req, res) => {
 // PUT /api/management/workers/:id
 exports.updateWorker = async (req, res) => {
   try {
-    const worker = await Worker.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updateData = { ...req.body };
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToCloudinary(req.file.path, 'ld_interiors/workers', 'image');
+        if (uploadResult?.url) {
+          updateData.photo = uploadResult.url;
+        }
+      } catch (uploadErr) {
+        console.error('Worker photo update upload error:', uploadErr);
+      }
+    }
+    const worker = await Worker.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!worker) {
       return res.status(404).json({ success: false, message: 'Worker not found' });
     }
