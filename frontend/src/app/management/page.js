@@ -14,7 +14,7 @@ import {
   LayoutDashboard, FolderKanban, CreditCard, Menu,
   MoreVertical, Zap, ChevronDown, LogOut, Building2,
   CalendarCheck, ArrowUpRight, UserPlus, FolderPlus, Bell,
-  Pencil, Trash2, Edit2
+  Pencil, Trash2, Edit2, MapPin, ScanLine, UserCheck, Share2
 } from 'lucide-react';
 
 const ROLES = [
@@ -36,6 +36,34 @@ const EXPENSE_CATEGORIES = [
   "Carpentry Labor", 
   "Miscellaneous"
 ];
+
+// Helper to determine department from role
+const getDepartment = (role) => {
+  if (!role) return 'Production';
+  const r = role.toLowerCase();
+  if (r.includes('carpenter')) return 'Production';
+  if (r.includes('carver')) return 'Carving & Art';
+  if (r.includes('polish')) return 'Finishing & Polish';
+  if (r.includes('fitter') || r.includes('assembl')) return 'Assembly';
+  if (r.includes('cutter') || r.includes('machine')) return 'Machine Dept';
+  if (r.includes('supervisor')) return 'Management';
+  return 'Production';
+};
+
+// Helper to format joining date
+const formatJoiningDate = (date) => {
+  if (!date) return '01-11-2025';
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '01-11-2025';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch {
+    return '01-11-2025';
+  }
+};
 
 // Curated reference data matching the luxury screenshot
 const DEFAULT_RECENT_PROJECTS = [
@@ -94,8 +122,11 @@ export default function ManagementPortal() {
   const [loading, setLoading] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [chartPeriod, setChartPeriod] = useState('6M'); // '1M' | '3M' | '6M' | '1Y'
+  const [chartPeriod, setChartPeriod] = useState('6M');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ID Cards Gallery View Flip State: { [workerId]: 'front' | 'back' }
+  const [cardFlipStates, setCardFlipStates] = useState({});
 
   // Data Collections
   const [stats, setStats] = useState(null);
@@ -155,11 +186,12 @@ export default function ManagementPortal() {
     totalBudget: '', status: 'in_progress', targetDate: '', notes: ''
   });
 
-  // Delete Confirmation Modal State (Handles both Project and Worker)
+  // Delete Confirmation Modal State
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'worker' | 'project', item: object }
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // PVC ID Card Modal State
   const [showIdCardModal, setShowIdCardModal] = useState(false);
   const [selectedWorkerForCard, setSelectedWorkerForCard] = useState(null);
 
@@ -550,7 +582,6 @@ export default function ManagementPortal() {
     }
   };
 
-  // Open Edit Project Modal
   const openEditProjectModal = (proj) => {
     setEditingProject(proj);
     setEditProjectFormData({
@@ -566,7 +597,6 @@ export default function ManagementPortal() {
     setShowEditProjectModal(true);
   };
 
-  // Submit Project Update
   const handleUpdateProject = async (e) => {
     e.preventDefault();
     if (!editingProject?._id) return;
@@ -584,7 +614,7 @@ export default function ManagementPortal() {
   };
 
   // =========================================================================
-  // GENERAL DELETE MODAL CONFIRMATION HANDLER
+  // DELETE CONFIRMATION HANDLER
   // =========================================================================
   const confirmDelete = (type, item) => {
     setDeleteTarget({ type, item });
@@ -749,7 +779,7 @@ export default function ManagementPortal() {
     );
   }
 
-  // Sidebar navigation items matching the luxury design
+  // Sidebar navigation items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
@@ -771,11 +801,292 @@ export default function ManagementPortal() {
   const displayActiveProjects = stats?.activeProjectsCount || (projects.filter(p => p.status === 'in_progress').length || 10);
 
   // =========================================================================
+  // SUB-COMPONENT: PORTRAIT PVC ID CARD (EXACT MOCKUP MATCH)
+  // =========================================================================
+  const renderPvcCardFront = (worker, showLanyard = false) => {
+    if (!worker) return null;
+    const department = getDepartment(worker.role);
+    const joiningDateStr = formatJoiningDate(worker.joiningDate || worker.createdAt);
+
+    return (
+      <div className="flex flex-col items-center">
+        {/* Realistic Lanyard Visualization */}
+        {showLanyard && (
+          <div className="flex flex-col items-center -mb-2.5 z-10 no-print">
+            <div className="w-12 h-14 bg-gradient-to-r from-[#201007] via-[#381F13] to-[#201007] rounded-t-lg shadow-md flex items-center justify-center border-x border-[#D6A04B]/30 relative overflow-hidden">
+              <span className="text-[7.5px] font-black tracking-widest text-[#F5E6C8] -rotate-90 whitespace-nowrap uppercase">
+                LD INTERIORS
+              </span>
+            </div>
+            <div className="w-5 h-5 rounded-full border-2 border-stone-300 bg-gradient-to-tr from-stone-400 to-stone-200 -mt-1 shadow-xs" />
+            <div className="w-3.5 h-6 bg-gradient-to-b from-stone-200 via-stone-400 to-stone-300 rounded-sm shadow-sm -mt-1" />
+          </div>
+        )}
+
+        {/* FRONT CARD BODY (PORTRAIT 300px x 475px) */}
+        <div className="w-[300px] h-[475px] rounded-[24px] bg-[#FAF5EE] text-[#1C130D] relative flex flex-col justify-between overflow-hidden shadow-2xl border border-stone-300/80 select-none">
+          {/* Top Arch Wave Banner */}
+          <div className="relative pt-2.5 pb-5 px-4 bg-gradient-to-b from-[#2B170E] via-[#3A1F13] to-[#482819] text-white text-center">
+            {/* Slot Punch Hole */}
+            <div className="w-9 h-2 rounded-full bg-stone-300/70 border border-stone-400/40 mx-auto mb-2 no-print shadow-inner" />
+
+            <div className="flex flex-col items-center">
+              {/* LD House Monogram */}
+              <div className="flex items-center gap-1.5 justify-center">
+                <span className="font-serif font-black text-2xl text-[#F5E6C8] tracking-tight">L</span>
+                <svg className="w-6 h-6 text-[#D6A04B]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 11h3v10h14V11h3L12 2zm0 3.2l5 4.5v7.3H7V9.7l5-4.5z" />
+                  <path d="M10 13h4v4h-4z" />
+                </svg>
+                <span className="font-serif font-black text-2xl text-[#F5E6C8] tracking-tight">D</span>
+              </div>
+              <h3 className="font-sans font-black text-[11px] tracking-[0.25em] text-[#F5E6C8] uppercase -mt-0.5">
+                INTERIORS
+              </h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="w-4 h-[1px] bg-[#D6A04B]/60" />
+                <span className="text-[7.5px] text-[#E6B86C] tracking-wider italic font-medium">
+                  Crafting Better Living
+                </span>
+                <div className="w-4 h-[1px] bg-[#D6A04B]/60" />
+              </div>
+            </div>
+
+            {/* Bottom Swoosh Curve Cutout */}
+            <svg className="absolute -bottom-3 left-0 w-full h-4 text-[#FAF5EE]" viewBox="0 0 300 16" preserveAspectRatio="none" fill="currentColor">
+              <path d="M0,0 C75,16 225,16 300,0 L300,16 L0,16 Z" />
+            </svg>
+          </div>
+
+          {/* Photo + Name + Role Section */}
+          <div className="flex flex-col items-center px-4 -mt-2">
+            {/* Artisan Photo Frame */}
+            <div className="w-26 h-30 rounded-2xl border-2 border-stone-800/30 overflow-hidden bg-stone-200 shadow-md relative shrink-0">
+              {worker.photo ? (
+                <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-stone-100 text-stone-500">
+                  <Users className="h-10 w-10 text-stone-400" />
+                  <span className="text-[9px] font-bold mt-1">Photo</span>
+                </div>
+              )}
+            </div>
+
+            {/* Artisan Name & Designation Badge */}
+            <h4 className="font-serif text-lg font-black text-[#1C130D] mt-2 text-center line-clamp-1">
+              {worker.name}
+            </h4>
+            <div className="bg-[#2C180E] text-[#F5E6C8] px-4 py-0.5 rounded-full text-[10px] font-bold tracking-wide mt-0.5 uppercase shadow-xs">
+              {worker.role}
+            </div>
+          </div>
+
+          {/* Details & QR Split Grid */}
+          <div className="px-4 py-2 flex items-center justify-between gap-2 border-t border-stone-200/80 mx-2">
+            {/* Left Column: Metadata */}
+            <div className="space-y-1.5 flex-1 text-[9.5px]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-full bg-[#2C180E] text-[#D6A04B] flex items-center justify-center text-[8px] shrink-0">
+                  <CreditCard className="h-2.5 w-2.5" />
+                </div>
+                <span className="text-stone-600 font-medium w-18">Employee ID</span>
+                <span className="text-stone-400">:</span>
+                <span className="font-bold text-[#1C130D] font-mono">{worker.workerId}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-full bg-[#2C180E] text-[#D6A04B] flex items-center justify-center text-[8px] shrink-0">
+                  <Briefcase className="h-2.5 w-2.5" />
+                </div>
+                <span className="text-stone-600 font-medium w-18">Department</span>
+                <span className="text-stone-400">:</span>
+                <span className="font-bold text-[#1C130D]">{department}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-full bg-[#2C180E] text-[#D6A04B] flex items-center justify-center text-[8px] shrink-0">
+                  <Calendar className="h-2.5 w-2.5" />
+                </div>
+                <span className="text-stone-600 font-medium w-18">Joining Date</span>
+                <span className="text-stone-400">:</span>
+                <span className="font-bold text-[#1C130D] font-mono">{joiningDateStr}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-full bg-[#2C180E] text-[#D6A04B] flex items-center justify-center text-[8px] shrink-0">
+                  <MapPin className="h-2.5 w-2.5" />
+                </div>
+                <span className="text-stone-600 font-medium w-18">Location</span>
+                <span className="text-stone-400">:</span>
+                <span className="font-bold text-[#1C130D]">Workshop</span>
+              </div>
+            </div>
+
+            {/* Right Column: Attendance QR Code & Pill */}
+            <div className="flex flex-col items-center justify-center shrink-0">
+              <div className="w-18 h-18 p-1 bg-white rounded-xl border border-stone-300 shadow-xs flex items-center justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=LDI-WORKER:${worker.workerId}&color=1C130D&bgcolor=FFFFFF`}
+                  alt="Worker Attendance QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="bg-[#2C180E] text-[#F5E6C8] px-2 py-0.5 rounded text-[7.5px] font-bold flex items-center gap-1 shadow-xs mt-1 w-fit whitespace-nowrap">
+                <ScanLine className="h-2 w-2 text-[#D6A04B]" />
+                <span>Scan for Attendance</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Card Footer Strip */}
+          <div className="bg-gradient-to-t from-[#2B170E] via-[#381F13] to-[#452718] py-2 text-center text-white relative">
+            <div className="w-16 h-[1px] bg-[#D6A04B]/60 mx-auto mb-0.5" />
+            <span className="text-[9px] font-serif font-black tracking-[0.25em] text-[#F5E6C8] uppercase">
+              — LD INTERIORS —
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderPvcCardBack = (worker, showLanyard = false) => {
+    if (!worker) return null;
+
+    return (
+      <div className="flex flex-col items-center">
+        {/* Realistic Lanyard Visualization */}
+        {showLanyard && (
+          <div className="flex flex-col items-center -mb-2.5 z-10 no-print">
+            <div className="w-12 h-14 bg-gradient-to-r from-[#201007] via-[#381F13] to-[#201007] rounded-t-lg shadow-md flex items-center justify-center border-x border-[#D6A04B]/30 relative overflow-hidden">
+              <span className="text-[7.5px] font-black tracking-widest text-[#F5E6C8] -rotate-90 whitespace-nowrap uppercase">
+                LD INTERIORS
+              </span>
+            </div>
+            <div className="w-5 h-5 rounded-full border-2 border-stone-300 bg-gradient-to-tr from-stone-400 to-stone-200 -mt-1 shadow-xs" />
+            <div className="w-3.5 h-6 bg-gradient-to-b from-stone-200 via-stone-400 to-stone-300 rounded-sm shadow-sm -mt-1" />
+          </div>
+        )}
+
+        {/* BACK CARD BODY (PORTRAIT 300px x 475px) */}
+        <div className="w-[300px] h-[475px] rounded-[24px] bg-[#FAF5EE] text-[#1C130D] relative flex flex-col justify-between overflow-hidden shadow-2xl border border-stone-300/80 select-none">
+          {/* Subtle architectural building outline watermark */}
+          <div className="absolute right-4 top-16 opacity-5 pointer-events-none">
+            <Building2 className="w-48 h-48 text-[#1C130D]" />
+          </div>
+
+          {/* Top Arch Wave Banner */}
+          <div className="relative pt-2.5 pb-4 px-4 bg-gradient-to-b from-[#2B170E] via-[#3A1F13] to-[#482819] text-white text-center">
+            {/* Slot Punch Hole */}
+            <div className="w-9 h-2 rounded-full bg-stone-300/70 border border-stone-400/40 mx-auto mb-2 no-print shadow-inner" />
+
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1.5 justify-center">
+                <span className="font-serif font-black text-2xl text-[#F5E6C8] tracking-tight">L</span>
+                <svg className="w-6 h-6 text-[#D6A04B]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 11h3v10h14V11h3L12 2zm0 3.2l5 4.5v7.3H7V9.7l5-4.5z" />
+                  <path d="M10 13h4v4h-4z" />
+                </svg>
+                <span className="font-serif font-black text-2xl text-[#F5E6C8] tracking-tight">D</span>
+              </div>
+              <h3 className="font-sans font-black text-[11px] tracking-[0.25em] text-[#F5E6C8] uppercase -mt-0.5">
+                INTERIORS
+              </h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="w-4 h-[1px] bg-[#D6A04B]/60" />
+                <span className="text-[7.5px] text-[#E6B86C] tracking-wider italic font-medium">
+                  Crafting Better Living
+                </span>
+                <div className="w-4 h-[1px] bg-[#D6A04B]/60" />
+              </div>
+            </div>
+
+            <svg className="absolute -bottom-3 left-0 w-full h-4 text-[#FAF5EE]" viewBox="0 0 300 16" preserveAspectRatio="none" fill="currentColor">
+              <path d="M0,0 C75,16 225,16 300,0 L300,16 L0,16 Z" />
+            </svg>
+          </div>
+
+          {/* Guidelines Header Pill */}
+          <div className="text-center px-4 -mt-1">
+            <div className="inline-block bg-[#2C180E] text-[#F5E6C8] px-5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs">
+              ID Usage Guidelines
+            </div>
+          </div>
+
+          {/* 4 Usage Guidelines with Circular Icon Badges */}
+          <div className="px-5 space-y-2.5 my-auto text-[10px] text-stone-700">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-[#381F13] text-[#F5E6C8] flex items-center justify-center shrink-0 shadow-xs">
+                <ScanLine className="h-3.5 w-3.5 text-[#D6A04B]" />
+              </div>
+              <span className="font-medium leading-tight">
+                Scan this QR code for attendance.
+              </span>
+            </div>
+            <div className="h-[1px] bg-stone-200/80" />
+
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-[#381F13] text-[#F5E6C8] flex items-center justify-center shrink-0 shadow-xs">
+                <UserCheck className="h-3.5 w-3.5 text-[#D6A04B]" />
+              </div>
+              <span className="font-medium leading-tight">
+                Carry this ID at all times within the premises.
+              </span>
+            </div>
+            <div className="h-[1px] bg-stone-200/80" />
+
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-[#381F13] text-[#F5E6C8] flex items-center justify-center shrink-0 shadow-xs">
+                <Share2 className="h-3.5 w-3.5 text-[#D6A04B]" />
+              </div>
+              <span className="font-medium leading-tight">
+                Do not share this ID with anyone.
+              </span>
+            </div>
+            <div className="h-[1px] bg-stone-200/80" />
+
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-[#381F13] text-[#F5E6C8] flex items-center justify-center shrink-0 shadow-xs">
+                <AlertCircle className="h-3.5 w-3.5 text-[#D6A04B]" />
+              </div>
+              <span className="font-medium leading-tight">
+                Report loss or damage immediately.
+              </span>
+            </div>
+          </div>
+
+          {/* Location & Workshop Address Strip */}
+          <div className="px-4 py-2 bg-[#F3EADB] border-t border-b border-stone-200/80 flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-[#2C180E] text-[#D6A04B] flex items-center justify-center shrink-0">
+              <MapPin className="h-3.5 w-3.5" />
+            </div>
+            <div className="leading-tight">
+              <span className="font-serif font-black text-[10px] text-[#1C130D] block">
+                LD INTERIORS
+              </span>
+              <span className="text-[8.5px] text-stone-600 font-sans">
+                Workshop Premises, Rajahmundry, Andhra Pradesh, India
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Card Footer Strip */}
+          <div className="bg-gradient-to-t from-[#2B170E] via-[#381F13] to-[#452718] py-2.5 text-center text-white relative">
+            <span className="text-[9.5px] font-sans font-medium text-[#F5E6C8]">
+              Together We Build a Better Tomorrow
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =========================================================================
   // MAIN LUXURY DASHBOARD LAYOUT
   // =========================================================================
   return (
     <div className="min-h-screen bg-[#F7F2E7] text-[#1C130D] flex font-sans antialiased selection:bg-[#D6A04B]/30">
-      {/* Print Style Optimization for PVC ID Cards */}
+      {/* Print Style Optimization for PVC ID Cards (Standard CR80 Portrait) */}
       <style jsx global>{`
         @media print {
           body * {
@@ -788,12 +1099,19 @@ export default function ManagementPortal() {
             position: fixed;
             left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             display: flex;
+            flex-direction: row;
+            gap: 15mm;
             align-items: center;
             justify-content: center;
             background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print {
+            display: none !important;
           }
         }
       `}</style>
@@ -805,7 +1123,6 @@ export default function ManagementPortal() {
         fixed inset-y-0 left-0 z-50 w-64 bg-[#160F0A] text-[#C4B7A6] flex flex-col justify-between p-5 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto
         ${mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
       `}>
-        {/* Top: Logo & Monogram */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
@@ -824,7 +1141,6 @@ export default function ManagementPortal() {
               </div>
             </Link>
 
-            {/* Mobile Close Button */}
             <button 
               onClick={() => setMobileSidebarOpen(false)}
               className="lg:hidden p-1.5 text-stone-400 hover:text-white"
@@ -833,7 +1149,6 @@ export default function ManagementPortal() {
             </button>
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-1.5 pt-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -860,7 +1175,6 @@ export default function ManagementPortal() {
           </nav>
         </div>
 
-        {/* Bottom Section: Promo Card & Logout */}
         <div className="space-y-4 pt-6 border-t border-white/5">
           <div className="relative rounded-2xl overflow-hidden p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent border border-white/10 shadow-inner group">
             <div 
@@ -888,7 +1202,7 @@ export default function ManagementPortal() {
       </aside>
 
       {/* ------------------------------------------------------------------- */}
-      {/* MAIN CONTENT AREA: Luxurious Warm Sand/Cream Palette */}
+      {/* MAIN CONTENT AREA */}
       {/* ------------------------------------------------------------------- */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Top Header */}
@@ -955,11 +1269,11 @@ export default function ManagementPortal() {
         {/* Main Body Canvas */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
           {/* ================================================================= */}
-          {/* TAB: DASHBOARD (Matches Screenshot Exact Layout) */}
+          {/* TAB: DASHBOARD */}
           {/* ================================================================= */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 animate-fadeIn">
-              {/* 1. Hero Welcome Banner */}
+              {/* Hero Welcome Banner */}
               <div className="relative rounded-3xl bg-gradient-to-r from-[#160F0A] via-[#24170E] to-[#332014] text-white p-6 sm:p-8 overflow-hidden shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div 
                   className="absolute right-0 inset-y-0 w-full md:w-3/5 bg-cover bg-right opacity-35 mix-blend-screen pointer-events-none"
@@ -983,7 +1297,7 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* 2. 5 Stat Cards Row */}
+              {/* 5 Stat Cards Row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                   <div className="flex items-start justify-between">
@@ -1096,7 +1410,7 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* 3. Middle Section: Chart + Quick Actions + Workforce Promo Card */}
+              {/* Middle Section: Chart + Quick Actions + Workforce Promo Card */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
@@ -1231,7 +1545,7 @@ export default function ManagementPortal() {
                     <button
                       onClick={() => {
                         if (workers.length > 0) openIdCardModal(workers[0]);
-                        else setActiveTab('workers');
+                        else setActiveTab('id_cards');
                       }}
                       className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
                     >
@@ -1286,9 +1600,8 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* 4. Bottom Section: Recent Projects + Worker Management + Today's Summary */}
+              {/* Bottom Section: Recent Projects + Worker Management + Today's Summary */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                {/* Recent Projects with Edit & Delete actions */}
                 <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1372,7 +1685,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Worker Management Horizontal Artisan Avatars */}
                 <div className="lg:col-span-4 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1403,6 +1715,7 @@ export default function ManagementPortal() {
                           <div 
                             onClick={() => openIdCardModal(w)}
                             className="w-12 h-12 rounded-full overflow-hidden bg-stone-200 border-2 border-[#D6A04B]/40 shadow-xs mb-1.5 group-hover:scale-105 transition-transform"
+                            title="Generate Official PVC ID Card"
                           >
                             <img src={avatar} alt={w.name} className="w-full h-full object-cover" />
                           </div>
@@ -1413,7 +1726,6 @@ export default function ManagementPortal() {
                             {w.role}
                           </span>
 
-                          {/* Action Links on Hover or default status */}
                           {hasRealId ? (
                             <div className="flex items-center gap-1 mt-1 opacity-80 group-hover:opacity-100">
                               <button
@@ -1460,7 +1772,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Today's Summary */}
                 <div className="lg:col-span-3 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-[#A64B24]" />
@@ -1521,7 +1832,7 @@ export default function ManagementPortal() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB: PROJECTS (Full Costing, Edit & Delete) */}
+          {/* TAB: PROJECTS */}
           {/* ================================================================= */}
           {activeTab === 'projects' && (
             <div className="space-y-6 animate-fadeIn">
@@ -1544,7 +1855,6 @@ export default function ManagementPortal() {
                 </button>
               </div>
 
-              {/* Projects List */}
               <div className="space-y-4">
                 {projects.length === 0 ? (
                   <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-12 text-center space-y-3">
@@ -1584,7 +1894,6 @@ export default function ManagementPortal() {
                               {proj.status?.replace('_', ' ')}
                             </span>
 
-                            {/* Edit Project Button */}
                             <button
                               onClick={() => openEditProjectModal(proj)}
                               className="px-2.5 py-1.5 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] text-[#160F0A] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#E8DFC9]"
@@ -1594,7 +1903,6 @@ export default function ManagementPortal() {
                               <span>Edit</span>
                             </button>
 
-                            {/* Delete Project Button */}
                             <button
                               onClick={() => confirmDelete('project', proj)}
                               className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1606,7 +1914,6 @@ export default function ManagementPortal() {
                           </div>
                         </div>
 
-                        {/* Financial Summary */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-[#FBF8F2] p-4 rounded-2xl border border-[#ECE2D0]">
                           <div>
                             <span className="text-[10px] text-stone-500 uppercase font-mono block">Total Budget</span>
@@ -1634,7 +1941,6 @@ export default function ManagementPortal() {
                           </div>
                         </div>
 
-                        {/* Milestones & Expenses Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
                             <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
@@ -1709,7 +2015,7 @@ export default function ManagementPortal() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB: WORKERS (Directory, Registration, Edit & Delete) */}
+          {/* TAB: WORKERS */}
           {/* ================================================================= */}
           {activeTab === 'workers' && (
             <div className="space-y-6 animate-fadeIn">
@@ -1789,7 +2095,7 @@ export default function ManagementPortal() {
                       <button
                         onClick={() => openIdCardModal(worker)}
                         className="flex-1 py-2 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] border border-[#D6A04B]/40 text-[#8B5A2B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        title="View & Print PVC ID Badge"
+                        title="View & Print Official PVC ID Badge"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
                         <span>ID Card</span>
@@ -1818,7 +2124,7 @@ export default function ManagementPortal() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB: ID CARDS GALLERY */}
+          {/* TAB: ID CARDS GALLERY (VERTICAL PORTRAIT PVC MOCKUP) */}
           {/* ================================================================= */}
           {activeTab === 'id_cards' && (
             <div className="space-y-6 animate-fadeIn">
@@ -1828,7 +2134,7 @@ export default function ManagementPortal() {
                     Official PVC ID Badges Gallery
                   </h2>
                   <p className="text-xs text-stone-500 font-light">
-                    Preview, edit, or batch print official workshop PVC badges with high-resolution attendance QR codes.
+                    Preview Front &amp; Back of official workshop PVC badges with high-resolution attendance QR codes.
                   </p>
                 </div>
                 <button
@@ -1840,76 +2146,60 @@ export default function ManagementPortal() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {workers.map((worker) => (
-                  <div
-                    key={worker._id}
-                    className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="rounded-2xl bg-gradient-to-b from-[#160F0A] to-[#26190F] p-4 text-white space-y-3 relative overflow-hidden shadow-md">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full bg-[#D6A04B] text-[#160F0A] flex items-center justify-center font-serif font-black text-[9px]">
-                            LD
-                          </div>
-                          <span className="font-serif text-[10px] font-black text-[#F5E6C8] tracking-widest">
-                            LD INTERIORS
-                          </span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-[#A64B24] text-white text-[8px] font-bold uppercase">
-                          STAFF
-                        </span>
-                      </div>
+              {/* ID Cards Gallery Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                {workers.map((worker) => {
+                  const currentSide = cardFlipStates[worker._id] || 'front';
+                  return (
+                    <div
+                      key={worker._id}
+                      className="flex flex-col items-center space-y-4 p-4 rounded-3xl bg-white/60 border border-[#E8DFC9] shadow-xs hover:shadow-md transition-shadow"
+                    >
+                      {/* Card Display with Lanyard */}
+                      {currentSide === 'front' ? (
+                        renderPvcCardFront(worker, true)
+                      ) : (
+                        renderPvcCardBack(worker, true)
+                      )}
 
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-xl border border-[#D6A04B] overflow-hidden bg-stone-800 shrink-0">
-                          {worker.photo ? (
-                            <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-bold text-lg text-[#D6A04B]">
-                              {worker.name.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="leading-tight space-y-0.5">
-                          <span className="text-[9px] uppercase tracking-wider text-[#D6A04B] font-bold block">
-                            {worker.role}
-                          </span>
-                          <h4 className="font-serif text-sm font-bold text-white">
-                            {worker.name}
-                          </h4>
-                          <p className="text-[10px] font-mono text-[#F5E6C8]">
-                            ID: {worker.workerId}
-                          </p>
-                        </div>
+                      {/* Side Toggle & Actions */}
+                      <div className="flex items-center gap-2 w-full pt-1">
+                        <button
+                          onClick={() => setCardFlipStates(prev => ({
+                            ...prev,
+                            [worker._id]: currentSide === 'front' ? 'back' : 'front'
+                          }))}
+                          className="flex-1 py-2 px-3 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] text-[#160F0A] text-xs font-bold border border-[#E8DFC9] transition-all cursor-pointer text-center"
+                        >
+                          {currentSide === 'front' ? 'Flip to Back ↷' : 'Flip to Front ↶'}
+                        </button>
+
+                        <button
+                          onClick={() => openIdCardModal(worker)}
+                          className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-xs cursor-pointer hover:brightness-110 transition-all"
+                          title="Print Front & Back PVC Cards"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          <span>Print</span>
+                        </button>
+
+                        <button
+                          onClick={() => openEditWorkerModal(worker)}
+                          className="p-2 rounded-xl bg-[#F0E6D2] hover:bg-[#E2D5BE] text-[#160F0A] border border-[#E8DFC9] transition-all cursor-pointer"
+                          title="Edit Worker Profile"
+                        >
+                          <Pencil className="h-3.5 w-3.5 text-[#A64B24]" />
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openIdCardModal(worker)}
-                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                      >
-                        <Printer className="h-4 w-4" />
-                        <span>Print PVC Card</span>
-                      </button>
-
-                      <button
-                        onClick={() => openEditWorkerModal(worker)}
-                        className="p-2.5 rounded-xl bg-[#F0E6D2] hover:bg-[#E2D5BE] text-[#160F0A] border border-[#E8DFC9] transition-all cursor-pointer"
-                        title="Edit Worker"
-                      >
-                        <Pencil className="h-4 w-4 text-[#A64B24]" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* ================================================================= */}
-          {/* TAB: ATTENDANCE (Live Sheet & Scanner) */}
+          {/* TAB: ATTENDANCE */}
           {/* ================================================================= */}
           {activeTab === 'attendance' && (
             <div className="space-y-6 animate-fadeIn">
@@ -2043,7 +2333,7 @@ export default function ManagementPortal() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB: PAYROLL & PAYMENTS (Salary Khata) */}
+          {/* TAB: PAYROLL & PAYMENTS */}
           {/* ================================================================= */}
           {activeTab === 'salaries' && (
             <div className="space-y-6 animate-fadeIn">
@@ -2314,121 +2604,68 @@ export default function ManagementPortal() {
       )}
 
       {/* ===================================================================== */}
-      {/* MODAL 2: OFFICIAL PVC ID CARD GENERATOR & PRINT */}
+      {/* MODAL 2: OFFICIAL PVC ID CARD GENERATOR & PRINT (VERTICAL PORTRAIT MATCH) */}
       {/* ===================================================================== */}
       {showIdCardModal && selectedWorkerForCard && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 text-center relative text-white">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 sm:p-8 max-w-4xl w-full shadow-2xl space-y-6 text-center relative text-white my-auto">
             <button
               onClick={() => setShowIdCardModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer no-print"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
 
-            <div>
+            <div className="no-print">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B] block mb-1">
-                OFFICIAL WORKSHOP BADGE
+                OFFICIAL WORKSHOP BADGE • CR80 PVC FORMAT
               </span>
-              <h3 className="font-serif text-lg font-black text-white">
-                Worker PVC ID Card Preview
+              <h3 className="font-serif text-xl font-black text-white">
+                Worker PVC ID Card Preview ({selectedWorkerForCard.name})
               </h3>
+              <p className="text-xs text-stone-400 mt-1">
+                High-resolution Front &amp; Back portrait badges ready for standard PVC thermal badge printing.
+              </p>
             </div>
 
-            {/* Printable ID Card Container */}
-            <div id="printable-id-card-area" className="flex flex-col sm:flex-row gap-4 items-center justify-center py-2">
+            {/* Printable ID Card Container (BOTH FRONT & BACK SHOWN SIDE-BY-SIDE) */}
+            <div id="printable-id-card-area" className="flex flex-col md:flex-row gap-6 md:gap-8 items-center justify-center py-2">
               {/* FRONT OF ID CARD */}
-              <div className="w-[320px] h-[200px] rounded-2xl bg-gradient-to-b from-[#160F0A] via-[#24170E] to-[#160F0A] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-white">
-                <div className="flex items-center justify-between border-b border-[#D6A04B]/40 pb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-[#D6A04B] text-[#160F0A] flex items-center justify-center font-serif font-black text-[9px]">
-                      LD
-                    </div>
-                    <div>
-                      <h5 className="font-serif text-[10px] font-black text-[#F5E6C8] tracking-widest">
-                        LD INTERIORS
-                      </h5>
-                      <span className="text-[7px] text-[#D6A04B] uppercase tracking-wider block font-bold">
-                        HANDCRAFTED TEAKWOOD
-                      </span>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-[#A64B24] text-white text-[7.5px] font-black uppercase tracking-wider">
-                    STAFF
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 my-auto">
-                  <div className="w-16 h-16 rounded-xl border-2 border-[#D6A04B] overflow-hidden bg-stone-800 text-[#D6A04B] flex items-center justify-center font-serif font-black text-xl shrink-0 shadow-sm">
-                    {selectedWorkerForCard.photo ? (
-                      <img src={selectedWorkerForCard.photo} alt={selectedWorkerForCard.name} className="w-full h-full object-cover" />
-                    ) : (
-                      selectedWorkerForCard.name.charAt(0)
-                    )}
-                  </div>
-
-                  <div className="space-y-0.5 leading-tight">
-                    <span className="text-[8px] uppercase tracking-wider text-[#D6A04B] font-bold block">
-                      {selectedWorkerForCard.role}
-                    </span>
-                    <h4 className="font-serif text-sm font-black text-white line-clamp-1">
-                      {selectedWorkerForCard.name}
-                    </h4>
-                    <p className="text-[9px] font-mono text-[#F5E6C8] font-bold">
-                      ID: {selectedWorkerForCard.workerId}
-                    </p>
-                    <p className="text-[8px] font-mono text-stone-300">
-                      Blood Group: <strong className="text-red-400">{selectedWorkerForCard.bloodGroup || 'O+'}</strong>
-                    </p>
-                    <p className="text-[8px] font-mono text-stone-400">
-                      Phone: {selectedWorkerForCard.phone}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[7.5px] text-[#F5E6C8]/80 font-mono pt-1 border-t border-[#D6A04B]/30">
-                  <span>Rajahmundry, AP</span>
-                  <span className="text-[#D6A04B] font-bold">Authorized Artisan</span>
-                </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[11px] font-mono font-bold text-[#D6A04B] mb-2 uppercase tracking-wider no-print">
+                  ● Front Side
+                </span>
+                {renderPvcCardFront(selectedWorkerForCard, true)}
               </div>
 
               {/* BACK OF ID CARD */}
-              <div className="w-[320px] h-[200px] rounded-2xl bg-[#F5E6C8] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-[#160F0A]">
-                <div className="text-center border-b border-[#160F0A]/20 pb-1">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-[#A64B24]">
-                    ATTENDANCE &amp; VERIFICATION QR
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-center gap-3 my-auto">
-                  <div className="w-24 h-24 p-1 bg-white rounded-xl border border-[#160F0A]/30 shadow-xs flex items-center justify-center">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LDI-WORKER:${selectedWorkerForCard.workerId}&color=160F0A&bgcolor=FFFFFF`}
-                      alt="Worker QR Code"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="text-[8px] text-[#160F0A] space-y-1 font-sans">
-                    <p className="font-bold">Instructions:</p>
-                    <p>• Scan daily at workshop for instant attendance punch.</p>
-                    <p>• Emergency: +91 6281653998</p>
-                    <p>• Valid at all LD Interiors job sites.</p>
-                  </div>
-                </div>
-
-                <div className="text-center text-[7.5px] text-[#160F0A]/70 font-mono pt-1 border-t border-[#160F0A]/20">
-                  LD Interiors Handcrafted Teakwood • Rajahmundry
-                </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[11px] font-mono font-bold text-[#D6A04B] mb-2 uppercase tracking-wider no-print">
+                  ● Back Side (Guidelines &amp; Address)
+                </span>
+                {renderPvcCardBack(selectedWorkerForCard, true)}
               </div>
             </div>
 
-            <div className="pt-2 flex items-center justify-center gap-3">
+            {/* Print & Action Controls */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 no-print">
               <button
                 onClick={() => window.print()}
-                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Printer className="h-4 w-4" />
                 <span>Print Official PVC ID Card</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowIdCardModal(false);
+                  openEditWorkerModal(selectedWorkerForCard);
+                }}
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-[#F5E6C8] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Pencil className="h-4 w-4" />
+                <span>Edit Worker Info</span>
               </button>
             </div>
           </div>
@@ -2699,7 +2936,6 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* Status & Active toggle */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-stone-300 font-bold block mb-1">Status</label>
@@ -2725,7 +2961,6 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* Photo Update Section */}
               <div>
                 <label className="text-stone-300 font-bold block mb-1">
                   Artisan Photo (Update from Gallery or URL)
