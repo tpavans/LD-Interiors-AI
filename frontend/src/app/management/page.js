@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import api from '@/utils/api';
 import { playWoodenChime } from '@/utils/audioChime';
@@ -10,7 +10,10 @@ import {
   Eye, EyeOff, ShieldCheck, Camera, Sparkles, 
   DollarSign, TrendingUp, X, Check, Download,
   SlidersHorizontal, ChevronRight, FileText,
-  BadgeAlert, HardHat, Hammer, AlertTriangle
+  BadgeAlert, HardHat, Hammer, AlertTriangle,
+  LayoutDashboard, FolderKanban, CreditCard, Menu,
+  MoreVertical, Zap, ChevronDown, LogOut, Building2,
+  CalendarCheck, ArrowUpRight, UserPlus, FolderPlus, Bell
 } from 'lucide-react';
 
 const ROLES = [
@@ -33,6 +36,44 @@ const EXPENSE_CATEGORIES = [
   "Miscellaneous"
 ];
 
+// Curated reference data matching the luxury screenshot
+const DEFAULT_RECENT_PROJECTS = [
+  {
+    id: "P-101",
+    title: "Modern Villa Interiors",
+    location: "Hyderabad",
+    date: "Nov 12, 2025",
+    status: "On Progress",
+    statusColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    id: "P-102",
+    title: "Office Workspace Setup",
+    location: "Bengaluru",
+    date: "Nov 10, 2025",
+    status: "Planning",
+    statusColor: "bg-sky-100 text-sky-800 border-sky-200",
+    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80"
+  },
+  {
+    id: "P-103",
+    title: "Home Furniture Setup",
+    location: "Chennai",
+    date: "Nov 8, 2025",
+    status: "Completed",
+    statusColor: "bg-purple-100 text-purple-800 border-purple-200",
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80"
+  }
+];
+
+const DEFAULT_WORKERS_ROSTER = [
+  { id: "W1", name: "Ravi Kumar", role: "Carpenter", status: "Active", avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&w=200&q=80" },
+  { id: "W2", name: "Suresh M", role: "Installer", status: "Active", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
+  { id: "W3", name: "Manoj K", role: "Painter", status: "Active", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" },
+  { id: "W4", name: "Karthik B", role: "Fabricator", status: "Active", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80" }
+];
+
 export default function ManagementPortal() {
   // Authentication & Security Pin Gate
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -46,10 +87,14 @@ export default function ManagementPortal() {
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState('');
 
-  // Main Portal State
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'attendance' | 'workers' | 'salaries' | 'projects'
+  // Main Navigation State matching screenshot
+  // 'dashboard' | 'projects' | 'workers' | 'id_cards' | 'attendance' | 'salaries' | 'reports' | 'settings'
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState('6M'); // '1M' | '3M' | '6M' | '1Y'
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Data Collections
   const [stats, setStats] = useState(null);
@@ -69,7 +114,7 @@ export default function ManagementPortal() {
   const [showQrScanner, setShowQrScanner] = useState(false);
   const [scannerResult, setScannerResult] = useState(null);
   const [manualQrInput, setManualQrInput] = useState('');
-  const [scannerCameraError, setScannerCameraError] = useState('');
+  const [, setScannerCameraError] = useState('');
 
   const [showAddWorkerModal, setShowAddWorkerModal] = useState(false);
   const [workerPhotoFile, setWorkerPhotoFile] = useState(null);
@@ -142,8 +187,15 @@ export default function ManagementPortal() {
     }
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('ld_management_authed');
+    sessionStorage.removeItem('ld_admin_authenticated');
+    setIsAuthenticated(false);
+    setPinInput('');
+  };
+
   // 3. Data Fetching
-  const fetchAllData = React.useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
       setLoading(true);
@@ -247,7 +299,6 @@ export default function ManagementPortal() {
 
   const initiateBarcodeDetection = () => {
     if (!('BarcodeDetector' in window)) {
-      // Browser does not support native BarcodeDetector; fallback is available
       return;
     }
 
@@ -261,11 +312,11 @@ export default function ManagementPortal() {
             if (barcodes && barcodes.length > 0) {
               const rawValue = barcodes[0].rawValue;
               handleScannedPayload(rawValue);
-              return; // Stop loop once detected
+              return;
             }
           }
-        } catch (e) {
-          // Frame detect skip
+        } catch {
+          // ignore
         }
         if (isScanningRef.current) {
           requestAnimationFrame(detectLoop);
@@ -284,7 +335,7 @@ export default function ManagementPortal() {
       if (res.data?.success) {
         playWoodenChime();
         setScannerResult(res.data);
-        fetchAllData(); // Refresh list
+        fetchAllData();
       } else {
         alert(res.data?.message || 'Scan failed');
       }
@@ -301,7 +352,6 @@ export default function ManagementPortal() {
     }
   };
 
-  // Toggle Manual Attendance Status
   const handleToggleAttendanceStatus = async (workerId, newStatus) => {
     try {
       await api.post('/management/attendance/manual', {
@@ -311,7 +361,7 @@ export default function ManagementPortal() {
       });
       playWoodenChime();
       fetchAllData();
-    } catch (err) {
+    } catch {
       alert('Failed to update attendance');
     }
   };
@@ -379,9 +429,6 @@ export default function ManagementPortal() {
     setShowIdCardModal(true);
   };
 
-  // =========================================================================
-  // ADVANCE / SALARY ACTIONS
-  // =========================================================================
   const handleCreateAdvance = async (e) => {
     e.preventDefault();
     try {
@@ -397,9 +444,6 @@ export default function ManagementPortal() {
     }
   };
 
-  // =========================================================================
-  // PROJECT ACTIONS
-  // =========================================================================
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
@@ -460,10 +504,10 @@ export default function ManagementPortal() {
   // =========================================================================
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#071A33] text-white flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-[#0B1E3B] border border-[#D6A04B]/30 rounded-3xl p-8 shadow-2xl space-y-6 text-center animate-scaleUp">
+      <div className="min-h-screen bg-[#140D08] text-white flex items-center justify-center p-4 antialiased">
+        <div className="w-full max-w-md bg-[#1C130D] border border-[#D6A04B]/30 rounded-3xl p-8 shadow-2xl space-y-6 text-center animate-scaleUp">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#A64B24] via-[#D6A04B] to-[#F5E6C8] p-[2px] mx-auto shadow-lg">
-            <div className="w-full h-full rounded-full bg-[#071A33] flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-[#140D08] flex items-center justify-center">
               <Lock className="h-7 w-7 text-[#D6A04B]" />
             </div>
           </div>
@@ -475,8 +519,8 @@ export default function ManagementPortal() {
             <h1 className="font-serif text-2xl font-black text-[#F5E6C8]">
               Management &amp; ERP Access
             </h1>
-            <p className="text-xs text-slate-400 mt-1 font-light">
-              Enter authorized Security PIN to manage staff, ID cards, attendance, and client project budgets.
+            <p className="text-xs text-stone-400 mt-1 font-light">
+              Enter authorized Master PIN to manage staff, ID cards, attendance, and client project budgets.
             </p>
           </div>
 
@@ -488,12 +532,12 @@ export default function ManagementPortal() {
                 onChange={(e) => setPinInput(e.target.value)}
                 placeholder="Enter Security PIN"
                 autoFocus
-                className="w-full px-5 py-3.5 rounded-2xl bg-black/40 border border-[#D6A04B]/40 text-center text-lg font-mono tracking-widest text-[#F5E6C8] placeholder:text-slate-500 focus:outline-none focus:border-[#D6A04B] transition-all"
+                className="w-full px-5 py-3.5 rounded-2xl bg-black/40 border border-[#D6A04B]/40 text-center text-lg font-mono tracking-widest text-[#F5E6C8] placeholder:text-stone-500 focus:outline-none focus:border-[#D6A04B] transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPin(!showPin)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#D6A04B] cursor-pointer"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#D6A04B] cursor-pointer"
                 title={showPin ? "Hide PIN" : "Show PIN"}
               >
                 {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -506,16 +550,16 @@ export default function ManagementPortal() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#140D08] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
               Unlock Management Portal →
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-800">
+          <div className="pt-2 border-t border-stone-800">
             <Link
               href="/"
-              className="text-xs text-slate-400 hover:text-[#D6A04B] transition-colors inline-flex items-center gap-1.5"
+              className="text-xs text-stone-400 hover:text-[#D6A04B] transition-colors inline-flex items-center gap-1.5"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Main Website
             </Link>
@@ -525,11 +569,32 @@ export default function ManagementPortal() {
     );
   }
 
+  // Sidebar navigation items matching the luxury design
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'projects', label: 'Projects', icon: FolderKanban },
+    { id: 'workers', label: 'Workers', icon: Users },
+    { id: 'id_cards', label: 'ID Cards', icon: CreditCard },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'salaries', label: 'Payroll & Payments', icon: Wallet },
+    { id: 'reports', label: 'Reports', icon: TrendingUp },
+    { id: 'settings', label: 'Settings', icon: SlidersHorizontal }
+  ];
+
+  // Calculated/Fallback display metrics
+  const displayTotalProjects = stats?.totalProjectsCount || (projects.length > 0 ? projects.length : 12);
+  const displayTotalWorkers = stats?.totalWorkers || (workers.length > 0 ? workers.length : 48);
+  const displayIdCards = workers.length > 0 ? workers.length : 48;
+  const displayPendingDues = stats?.pendingClientReceivables 
+    ? `₹${stats.pendingClientReceivables.toLocaleString('en-IN')}` 
+    : "₹3,00,000";
+  const displayActiveProjects = stats?.activeProjectsCount || (projects.filter(p => p.status === 'in_progress').length || 10);
+
   // =========================================================================
-  // MAIN PORTAL DASHBOARD
+  // MAIN LUXURY DASHBOARD LAYOUT
   // =========================================================================
   return (
-    <div className="min-h-screen bg-[#071A33] text-slate-100 flex flex-col antialiased">
+    <div className="min-h-screen bg-[#F7F2E7] text-[#1C130D] flex font-sans antialiased selection:bg-[#D6A04B]/30">
       {/* Print Style Optimization for PVC ID Cards */}
       <style jsx global>{`
         @media print {
@@ -553,794 +618,1367 @@ export default function ManagementPortal() {
         }
       `}</style>
 
-      {/* TOP LUXURY APP BAR */}
-      <header className="sticky top-0 z-40 bg-[#071A33]/90 backdrop-blur-md border-b border-[#D6A04B]/30 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#A64B24] via-[#D6A04B] to-[#F5E6C8] p-[2px] shadow-md">
-            <div className="w-full h-full rounded-full bg-[#071A33] flex items-center justify-center font-serif font-black text-xs text-[#F5E6C8]">
-              LD
+      {/* ------------------------------------------------------------------- */}
+      {/* LEFT SIDEBAR: Deep Rich Espresso Brown Teakwood Theme */}
+      {/* ------------------------------------------------------------------- */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#160F0A] text-[#C4B7A6] flex flex-col justify-between p-5 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto
+        ${mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+      `}>
+        {/* Top: Logo & Monogram */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#A64B24] via-[#D6A04B] to-[#F5E6C8] p-[2px] shadow-md group-hover:scale-105 transition-transform">
+                <div className="w-full h-full rounded-[10px] bg-[#160F0A] flex items-center justify-center font-serif font-black text-sm text-[#F5E6C8]">
+                  LD
+                </div>
+              </div>
+              <div>
+                <h1 className="font-serif text-base font-black text-[#F5E6C8] tracking-wider leading-none">
+                  LD INTERIORS
+                </h1>
+                <span className="text-[9px] uppercase tracking-widest text-[#D6A04B] font-semibold block mt-1">
+                  Design • Build • Inspire
+                </span>
+              </div>
+            </Link>
+
+            {/* Mobile Close Button */}
+            <button 
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden p-1.5 text-stone-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="space-y-1.5 pt-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer text-left
+                    ${isActive 
+                      ? 'bg-gradient-to-r from-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-bold shadow-md' 
+                      : 'text-[#C4B7A6] hover:text-[#F5E6C8] hover:bg-white/5'}
+                  `}
+                >
+                  <Icon className={`h-4 w-4 ${isActive ? 'text-[#160F0A]' : 'text-[#D6A04B]'}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Section: Promo Card & Logout */}
+        <div className="space-y-4 pt-6 border-t border-white/5">
+          {/* Build Better Together Card with luxury interior background */}
+          <div className="relative rounded-2xl overflow-hidden p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent border border-white/10 shadow-inner group">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-500"
+              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=400&q=80')` }}
+            />
+            <div className="relative z-10">
+              <h4 className="font-serif text-sm font-bold text-white leading-tight">
+                Build Better Together
+              </h4>
+              <p className="text-[10px] uppercase tracking-wider text-[#D6A04B] font-bold mt-1">
+                LD INTERIORS
+              </p>
             </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-serif text-sm sm:text-base font-black text-[#F5E6C8] tracking-wide">
-                LD INTERIORS
-              </h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#D6A04B]/20 border border-[#D6A04B]/40 text-[#D6A04B] text-[9px] font-black uppercase tracking-wider">
-                ERP & Workshop Portal
+
+          {/* Logout Action */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-stone-400 hover:text-red-400 transition-colors cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ------------------------------------------------------------------- */}
+      {/* MAIN CONTENT AREA: Luxurious Warm Sand/Cream Palette */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 bg-[#F7F2E7]/90 backdrop-blur-md border-b border-[#E8DEC8] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+          {/* Left: Mobile Toggle & Search Bar */}
+          <div className="flex items-center gap-3 flex-1 max-w-xl">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-xl bg-white/80 border border-[#E8DEC8] text-stone-700 hover:text-[#160F0A]"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {/* Pill Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search projects, workers, or reports..."
+                className="w-full pl-10 pr-20 py-2.5 rounded-full bg-white/90 border border-[#E8DEC8] text-xs text-[#160F0A] placeholder:text-stone-400 focus:outline-none focus:border-[#D6A04B] shadow-xs transition-all"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-md bg-[#F0E6D2] text-[10px] font-mono font-bold text-stone-600 select-none hidden sm:inline-block">
+                Ctrl + K
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-mono">
-              Live IST: {currentTimeStr || 'Connecting...'}
-            </p>
           </div>
-        </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick QR Attendance Scan Button */}
-          <button
-            onClick={startCameraScanner}
-            className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <Camera className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Scan QR Attendance</span>
-            <span className="sm:hidden">Scan QR</span>
-          </button>
-
-          <Link
-            href="/admin"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-black/40 hover:bg-black/60 border border-slate-700 text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5"
-            title="Website Admin"
-          >
-            <Briefcase className="h-3.5 w-3.5 text-[#D6A04B]" />
-            <span className="hidden md:inline">Website Admin</span>
-          </Link>
-
-          <Link
-            href="/"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-black/40 hover:bg-black/60 border border-slate-700 text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5"
-            title="View Live Website"
-          >
-            <ArrowLeft className="h-3.5 w-3.5 text-[#D6A04B]" />
-            <span className="hidden md:inline">Storefront</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* HORIZONTAL TAB NAVIGATION */}
-      <nav className="bg-[#0B1E3B] border-b border-slate-800 px-4 sm:px-8 py-2 overflow-x-auto scrollbar-none flex items-center gap-2">
-        {[
-          { id: 'overview', label: '📊 Dashboard Overview', icon: Sparkles },
-          { id: 'attendance', label: '📅 Daily Attendance & QR', icon: QrCode },
-          { id: 'workers', label: '👷 Workers & ID Cards', icon: Users },
-          { id: 'salaries', label: '💵 Salaries & Advances Khata', icon: Wallet },
-          { id: 'projects', label: '🏛️ Client Projects & Budgets', icon: Briefcase },
-        ].map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
+          {/* Right: Notifications & Profile Pill */}
+          <div className="flex items-center gap-3">
+            {/* Quick QR Attendance Scan Button */}
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 border ${
-                isActive
-                  ? 'bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white border-transparent font-black shadow-md'
-                  : 'bg-black/20 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
-              }`}
+              onClick={startCameraScanner}
+              className="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#160F0A] hover:bg-[#2A1B10] text-[#F5E6C8] text-xs font-semibold shadow-xs transition-all cursor-pointer"
+              title="Launch QR Camera"
             >
-              <span>{tab.label}</span>
+              <Camera className="h-3.5 w-3.5 text-[#D6A04B]" />
+              <span>QR Scanner</span>
             </button>
-          );
-        })}
 
-        <button
-          onClick={fetchAllData}
-          disabled={loading}
-          className="ml-auto p-2 rounded-xl bg-black/30 hover:bg-black/50 text-slate-400 hover:text-[#D6A04B] border border-slate-800 transition-all cursor-pointer"
-          title="Refresh Data"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin text-[#D6A04B]' : ''}`} />
-        </button>
-      </nav>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 space-y-8 text-left">
-        {/* =========================================================================
-            TAB 1: OVERVIEW
-           ========================================================================= */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-              {/* Metric 1: Today Attendance */}
-              <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Today&apos;s Attendance</span>
-                  <Users className="h-4 w-4 text-emerald-400" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black font-mono text-emerald-400">
-                    {stats?.presentCount || 0}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">
-                    / {stats?.totalWorkers || workers.length} Present
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500">
-                  {stats?.halfDayCount || 0} Half-Day • {stats?.absentCount || 0} Absent
-                </p>
-              </div>
-
-              {/* Metric 2: Today Wages Earned */}
-              <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Today Labor Wages</span>
-                  <Wallet className="h-4 w-4 text-sky-400" />
-                </div>
-                <span className="text-3xl font-black font-mono text-sky-400 block">
-                  ₹{(stats?.todayWages || 0).toLocaleString('en-IN')}
+            {/* Notification Bell */}
+            <div className="relative">
+              <button 
+                onClick={fetchAllData}
+                className="p-2.5 rounded-full bg-white/90 border border-[#E8DEC8] text-stone-600 hover:text-[#160F0A] shadow-xs relative cursor-pointer"
+                title={`Live IST: ${currentTimeStr} • Click to refresh`}
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  3
                 </span>
-                <p className="text-[10px] text-slate-500">
-                  Accrued for active shift today
-                </p>
-              </div>
-
-              {/* Metric 3: Active Client Projects */}
-              <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Active Client Projects</span>
-                  <Briefcase className="h-4 w-4 text-[#D6A04B]" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black font-mono text-[#F5E6C8]">
-                    {stats?.activeProjectsCount || projects.length}
-                  </span>
-                  <span className="text-xs text-slate-400">In Progress</span>
-                </div>
-                <p className="text-[10px] text-slate-500 truncate">
-                  Budget: ₹{(stats?.totalProjectsBudget || 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-
-              {/* Metric 4: Pending Client Dues */}
-              <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 shadow-sm space-y-2">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Pending Client Dues</span>
-                  <AlertCircle className="h-4 w-4 text-amber-400" />
-                </div>
-                <span className="text-3xl font-black font-mono text-amber-400 block">
-                  ₹{(stats?.pendingClientReceivables || 0).toLocaleString('en-IN')}
-                </span>
-                <p className="text-[10px] text-slate-500">
-                  To be collected on milestones
-                </p>
-              </div>
+              </button>
             </div>
 
-            {/* Quick Actions & Live Attendance Snapshot */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Quick QR Punch & Actions */}
-              <div className="bg-gradient-to-br from-[#0B1E3B] to-[#071A33] border border-[#D6A04B]/30 rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#D6A04B]/20 text-[#D6A04B] text-[9px] font-black uppercase tracking-wider inline-block">
-                    Instant Check-In
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-white">
-                    Worker QR Attendance Scanner
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed font-light">
-                    Scan any worker&apos;s PVC ID Card QR code to automatically mark attendance, timestamp arrival, and credit their daily wage.
+            {/* Admin Profile Pill */}
+            <div className="flex items-center gap-2.5 bg-white/90 border border-[#E8DEC8] px-3 py-1.5 rounded-full shadow-xs cursor-pointer hover:border-[#D6A04B] transition-colors">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#A64B24] to-[#D6A04B] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                AD
+              </div>
+              <div className="text-left hidden sm:block">
+                <span className="text-xs font-bold text-[#160F0A] block leading-tight">Admin</span>
+                <span className="text-[10px] text-stone-500 font-medium">Super Admin</span>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 text-stone-400 hidden sm:block" />
+            </div>
+          </div>
+        </header>
+
+        {/* Main Body Canvas */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+          {/* ================================================================= */}
+          {/* TAB: DASHBOARD (Matches Screenshot Exact Layout) */}
+          {/* ================================================================= */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* 1. Hero Welcome Banner with Luxury Interior Graphic */}
+              <div className="relative rounded-3xl bg-gradient-to-r from-[#160F0A] via-[#24170E] to-[#332014] text-white p-6 sm:p-8 overflow-hidden shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+                {/* Background blended interior image */}
+                <div 
+                  className="absolute right-0 inset-y-0 w-full md:w-3/5 bg-cover bg-right opacity-35 mix-blend-screen pointer-events-none"
+                  style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80')` }}
+                />
+
+                <div className="relative z-10 space-y-2 max-w-xl">
+                  <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#F5E6C8] tracking-wide">
+                    Welcome back, <span className="text-white">Admin!</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#C4B7A6] font-light leading-relaxed">
+                    Manage your projects, workforce and operations with ease.
                   </p>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <button
-                    onClick={startCameraScanner}
-                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Camera className="h-4 w-4" />
-                    <span>Launch QR Camera Scanner</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('workers')}
-                    className="w-full py-2.5 rounded-xl bg-black/40 hover:bg-black/60 border border-slate-700 text-xs text-[#F5E6C8] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Users className="h-3.5 w-3.5 text-[#D6A04B]" />
-                    <span>Manage Staff & Print ID Badges</span>
-                  </button>
+                <div className="relative z-10 text-right hidden md:block">
+                  <p className="font-serif text-lg font-bold text-[#E6B86C] italic tracking-wide">
+                    Crafting Dream Spaces Together
+                  </p>
+                  <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-[#D6A04B] to-transparent ml-auto mt-1" />
                 </div>
               </div>
 
-              {/* Right 2 Columns: Today's Punched Workers Feed */}
-              <div className="lg:col-span-2 bg-[#0B1E3B] border border-slate-800 rounded-3xl p-6 shadow-md space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div>
-                    <h3 className="font-serif text-base font-bold text-white">
-                      Today&apos;s Live Attendance Sheet
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-mono">
-                      Date: {selectedDate} • {attendances.length} Punched
-                    </p>
+              {/* 2. 5 Stat Cards Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* Stat 1: Total Projects */}
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-500 block">Total Projects</span>
+                      <span className="text-2xl font-black font-sans text-[#160F0A] mt-1 block">
+                        {displayTotalProjects}
+                      </span>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-[#F6EFE3] text-[#A64B24] flex items-center justify-center">
+                      <FolderKanban className="h-4 w-4" />
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('attendance')}
-                    className="text-xs text-[#D6A04B] hover:underline font-bold flex items-center gap-1"
-                  >
-                    Full Sheet <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0E6D2]">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                      ↑ +20%
+                    </span>
+                    <svg className="w-12 h-4 text-[#D6A04B]" viewBox="0 0 50 16" fill="none">
+                      <path d="M1 12C10 12 15 4 25 8C35 12 40 2 49 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
                 </div>
 
-                {attendances.length === 0 ? (
-                  <div className="py-12 text-center text-slate-500 space-y-2">
-                    <Clock className="h-8 w-8 mx-auto text-slate-600" />
-                    <p className="text-xs">No workers punched in yet today.</p>
-                    <button
-                      onClick={startCameraScanner}
-                      className="text-xs text-[#D6A04B] hover:underline font-bold"
+                {/* Stat 2: Total Workers */}
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-500 block">Total Workers</span>
+                      <span className="text-2xl font-black font-sans text-[#160F0A] mt-1 block">
+                        {displayTotalWorkers}
+                      </span>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-[#F6EFE3] text-[#A64B24] flex items-center justify-center">
+                      <Users className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0E6D2]">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                      ↑ +12%
+                    </span>
+                    <svg className="w-12 h-4 text-[#D6A04B]" viewBox="0 0 50 16" fill="none">
+                      <path d="M1 14C10 14 18 6 28 9C38 12 42 3 49 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Stat 3: ID Cards Generated */}
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-500 block">ID Cards Generated</span>
+                      <span className="text-2xl font-black font-sans text-[#160F0A] mt-1 block">
+                        {displayIdCards}
+                      </span>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-[#F6EFE3] text-[#A64B24] flex items-center justify-center">
+                      <CreditCard className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0E6D2]">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                      ↑ +100%
+                    </span>
+                    <svg className="w-12 h-4 text-[#D6A04B]" viewBox="0 0 50 16" fill="none">
+                      <path d="M1 13C12 13 18 5 28 8C38 11 44 2 49 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Stat 4: Pending Dues */}
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-500 block">Pending Dues</span>
+                      <span className="text-2xl font-black font-sans text-[#160F0A] mt-1 block truncate">
+                        {displayPendingDues}
+                      </span>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-[#F6EFE3] text-[#A64B24] flex items-center justify-center">
+                      <Wallet className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0E6D2]">
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                      ↑ +5%
+                    </span>
+                    <svg className="w-12 h-4 text-[#D6A04B]" viewBox="0 0 50 16" fill="none">
+                      <path d="M1 10C10 10 18 8 28 11C38 14 42 6 49 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Stat 5: Active Projects */}
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between col-span-2 sm:col-span-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-500 block">Active Projects</span>
+                      <span className="text-2xl font-black font-sans text-[#160F0A] mt-1 block">
+                        {displayActiveProjects}
+                      </span>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-[#F6EFE3] text-[#A64B24] flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0E6D2]">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                      ↑ +11%
+                    </span>
+                    <svg className="w-12 h-4 text-[#D6A04B]" viewBox="0 0 50 16" fill="none">
+                      <path d="M1 12C10 12 18 4 28 7C38 10 44 2 49 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Middle Section: Project Overview Chart + Quick Actions + Workforce Promo Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Left (col-span-5): Project Overview Spline Chart */}
+                <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-[#A64B24]" />
+                      <h3 className="font-serif text-sm font-bold text-[#160F0A]">
+                        Project Overview
+                      </h3>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center gap-1 bg-[#F5EEDB] p-1 rounded-xl text-[10px] font-bold">
+                      {['1M', '3M', '6M', '1Y'].map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setChartPeriod(p)}
+                          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                            chartPeriod === p
+                              ? 'bg-[#D6A04B] text-white shadow-xs font-black'
+                              : 'text-stone-600 hover:text-stone-900'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SVG Spline Area Chart */}
+                  <div className="relative pt-4">
+                    {/* Tooltip badge on latest point */}
+                    <div className="absolute top-2 right-6 bg-[#160F0A] text-[#F5E6C8] text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-md z-10 flex items-center gap-1">
+                      <span>18 Projects</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* Y-axis labels */}
+                      <div className="flex flex-col justify-between h-36 text-[9px] font-mono text-stone-400 py-1">
+                        <span>20</span>
+                        <span>15</span>
+                        <span>10</span>
+                        <span>5</span>
+                        <span>0</span>
+                      </div>
+
+                      {/* Chart Canvas */}
+                      <div className="flex-1 h-36 relative">
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 300 120" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#D6A04B" stopOpacity="0.4" />
+                              <stop offset="100%" stopColor="#D6A04B" stopOpacity="0.02" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Horizontal Grid lines */}
+                          <line x1="0" y1="0" x2="300" y2="0" stroke="#F0E6D2" strokeDasharray="3 3" />
+                          <line x1="0" y1="30" x2="300" y2="30" stroke="#F0E6D2" strokeDasharray="3 3" />
+                          <line x1="0" y1="60" x2="300" y2="60" stroke="#F0E6D2" strokeDasharray="3 3" />
+                          <line x1="0" y1="90" x2="300" y2="90" stroke="#F0E6D2" strokeDasharray="3 3" />
+                          <line x1="0" y1="120" x2="300" y2="120" stroke="#F0E6D2" />
+
+                          {/* Gradient Area */}
+                          <path
+                            d="M0,85 C50,75 80,60 120,62 C160,64 190,80 230,70 C260,65 280,30 300,32 L300,120 L0,120 Z"
+                            fill="url(#goldGradient)"
+                          />
+
+                          {/* Golden Smooth Spline Curve */}
+                          <path
+                            d="M0,85 C50,75 80,60 120,62 C160,64 190,80 230,70 C260,65 280,30 300,32"
+                            fill="none"
+                            stroke="#D6A04B"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                          />
+
+                          {/* Data points */}
+                          <circle cx="0" cy="85" r="3.5" fill="#D6A04B" />
+                          <circle cx="60" cy="72" r="3.5" fill="#D6A04B" />
+                          <circle cx="120" cy="62" r="3.5" fill="#D6A04B" />
+                          <circle cx="180" cy="74" r="3.5" fill="#D6A04B" />
+                          <circle cx="240" cy="68" r="3.5" fill="#D6A04B" />
+                          <circle cx="300" cy="32" r="4.5" fill="#160F0A" stroke="#D6A04B" strokeWidth="2" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* X-axis labels */}
+                    <div className="flex justify-between pl-6 pt-2 text-[10px] font-sans text-stone-500">
+                      <span>Jun</span>
+                      <span>Jul</span>
+                      <span>Aug</span>
+                      <span>Sep</span>
+                      <span>Oct</span>
+                      <span>Nov</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center (col-span-3): Quick Actions */}
+                <div className="lg:col-span-3 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-[#A64B24]" />
+                      <h3 className="font-serif text-sm font-bold text-[#160F0A]">
+                        Quick Actions
+                      </h3>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('projects')}
+                      className="w-6 h-6 rounded-full bg-[#F5EEDB] text-stone-700 hover:text-[#160F0A] flex items-center justify-center cursor-pointer"
                     >
-                      Scan QR Code to mark first attendance →
+                      <ArrowUpRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                ) : (
-                  <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto">
-                    {attendances.map((att) => (
-                      <div key={att._id} className="py-2.5 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-800 text-[#D6A04B] flex items-center justify-center font-bold text-xs">
-                            {att.workerName.charAt(0)}
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold text-white block">
-                              {att.workerName}
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-400">
-                              {att.workerId} • Checked in at {att.checkInTime || 'Morning'}
-                            </span>
-                          </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-800">
-                            {att.status}
+                  {/* 4 Quick Action Tiles (2x2 Grid) */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Action 1: Add New Project */}
+                    <button
+                      onClick={() => setShowAddProjectModal(true)}
+                      className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#EFE4D0] text-[#A64B24] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Plus className="h-4 w-4" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#160F0A] leading-tight">
+                        Add New Project
+                      </span>
+                    </button>
+
+                    {/* Action 2: Hire Worker */}
+                    <button
+                      onClick={() => setShowAddWorkerModal(true)}
+                      className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#EFE4D0] text-[#A64B24] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <UserPlus className="h-4 w-4" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#160F0A] leading-tight">
+                        Hire Worker
+                      </span>
+                    </button>
+
+                    {/* Action 3: Generate ID Cards */}
+                    <button
+                      onClick={() => {
+                        if (workers.length > 0) openIdCardModal(workers[0]);
+                        else setActiveTab('workers');
+                      }}
+                      className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#EFE4D0] text-[#A64B24] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <CreditCard className="h-4 w-4" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#160F0A] leading-tight">
+                        Generate ID Cards
+                      </span>
+                    </button>
+
+                    {/* Action 4: View Reports / QR Attendance */}
+                    <button
+                      onClick={startCameraScanner}
+                      className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#EFE4D0] text-[#A64B24] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Camera className="h-4 w-4" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#160F0A] leading-tight">
+                        Scan QR Punch
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right (col-span-4): Manage Your Workforce Better Dark Banner */}
+                <div className="lg:col-span-4 relative rounded-3xl bg-gradient-to-br from-[#160F0A] via-[#24170E] to-[#140D08] text-white p-6 overflow-hidden shadow-md flex flex-col justify-between space-y-4">
+                  {/* Subtle background decorative lamp & plant image */}
+                  <div 
+                    className="absolute right-0 inset-y-0 w-1/2 bg-cover bg-center opacity-30 mix-blend-screen pointer-events-none"
+                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=400&q=80')` }}
+                  />
+
+                  <div className="relative z-10 space-y-2">
+                    <span className="inline-block px-3 py-1 rounded-full bg-[#D6A04B]/20 border border-[#D6A04B]/40 text-[#E6B86C] text-[10px] font-bold uppercase tracking-wider">
+                      Grow Your Business
+                    </span>
+                    <h3 className="font-serif text-xl font-black text-white leading-tight">
+                      Manage Your Workforce Better.
+                    </h3>
+                    <p className="text-xs text-[#C4B7A6] font-light">
+                      Streamline operations, boost productivity.
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 pt-2">
+                    <button
+                      onClick={startCameraScanner}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D6A04B] to-[#E6B86C] text-[#160F0A] text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Scan QR Attendance →</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Bottom Section: Recent Projects + Worker Management + Today's Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Left (col-span-5): Recent Projects */}
+                <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="h-4 w-4 text-[#A64B24]" />
+                      <h3 className="font-serif text-sm font-bold text-[#160F0A]">
+                        Recent Projects
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('projects')}
+                      className="text-xs font-bold text-[#A64B24] hover:text-[#D6A04B] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>View All</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Projects List */}
+                  <div className="space-y-3">
+                    {(projects.length > 0 ? projects.slice(0, 3) : DEFAULT_RECENT_PROJECTS).map((proj, idx) => {
+                      const title = proj.title || `Project #${idx + 1}`;
+                      const location = proj.clientCity || proj.location || 'Rajahmundry';
+                      const dateStr = proj.createdAt 
+                        ? new Date(proj.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                        : proj.date || 'Nov 12, 2025';
+                      const status = proj.status ? proj.status.replace('_', ' ') : 'On Progress';
+                      const image = proj.image || DEFAULT_RECENT_PROJECTS[idx % 3].image;
+
+                      return (
+                        <div
+                          key={proj._id || proj.id || idx}
+                          className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-[#F9F5EC] transition-colors border border-transparent hover:border-[#E8DFC9]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-200 shrink-0 shadow-xs">
+                              <img src={image} alt={title} className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xs text-[#160F0A] line-clamp-1">
+                                {title}
+                              </h4>
+                              <p className="text-[10px] text-stone-500 font-medium">
+                                📍 {location} • {dateStr}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 capitalize">
+                              {status}
+                            </span>
+                            <button className="text-stone-400 hover:text-stone-700 p-1">
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Center (col-span-4): Worker Management Horizontal Artisan Avatars */}
+                <div className="lg:col-span-4 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-[#A64B24]" />
+                      <h3 className="font-serif text-sm font-bold text-[#160F0A]">
+                        Worker Management
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('workers')}
+                      className="text-xs font-bold text-[#A64B24] hover:text-[#D6A04B] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>View All</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Horizontal Scroll / Grid of Workers matching screenshot */}
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 items-center">
+                    {(workers.length > 0 ? workers.slice(0, 4) : DEFAULT_WORKERS_ROSTER).map((w, idx) => {
+                      const avatar = w.photo || w.avatar || DEFAULT_WORKERS_ROSTER[idx % 4].avatar;
+                      return (
+                        <div
+                          key={w._id || w.id || idx}
+                          onClick={() => openIdCardModal(w)}
+                          className="flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#F9F5EC] transition-all cursor-pointer group"
+                        >
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-stone-200 border-2 border-[#D6A04B]/40 shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                            <img src={avatar} alt={w.name} className="w-full h-full object-cover" />
+                          </div>
+                          <span className="font-bold text-[11px] text-[#160F0A] truncate w-full">
+                            {w.name}
                           </span>
-                          <span className="text-xs font-mono font-bold text-[#F5E6C8]">
-                            ₹{att.dailyWageEarned}
+                          <span className="text-[9px] text-stone-500 truncate w-full">
+                            {w.role}
+                          </span>
+                          <span className="text-[8px] font-bold text-emerald-600 flex items-center gap-0.5 mt-0.5">
+                            ● Active
                           </span>
                         </div>
+                      );
+                    })}
+
+                    {/* + Add Worker Dashed Card */}
+                    <div
+                      onClick={() => setShowAddWorkerModal(true)}
+                      className="border-2 border-dashed border-[#D6A04B]/60 hover:border-[#D6A04B] rounded-2xl flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:bg-[#F9F5EC] transition-all h-28"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-[#EFE4D0] text-[#A64B24] flex items-center justify-center mb-1">
+                        <Plus className="h-4 w-4" />
                       </div>
-                    ))}
+                      <span className="text-[10px] font-bold text-[#160F0A] leading-tight">
+                        + Add Worker
+                      </span>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Right (col-span-3): Today's Summary + Blueprint Watermark */}
+                <div className="lg:col-span-3 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-[#A64B24]" />
+                    <h3 className="font-serif text-sm font-bold text-[#160F0A]">
+                      Today&apos;s Summary
+                    </h3>
+                  </div>
+
+                  {/* Summary Rows */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-stone-600">
+                        <Users className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>New Attendance</span>
+                      </div>
+                      <span className="font-bold font-mono text-[#160F0A]">
+                        {stats?.presentCount || attendances.length || 48}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-stone-600">
+                        <FolderKanban className="h-3.5 w-3.5 text-[#D6A04B]" />
+                        <span>New Projects</span>
+                      </div>
+                      <span className="font-bold font-mono text-[#160F0A]">
+                        {projects.length > 0 ? projects.length : 2}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-stone-600">
+                        <Wallet className="h-3.5 w-3.5 text-amber-600" />
+                        <span>Payments Received</span>
+                      </div>
+                      <span className="font-bold font-mono text-[#160F0A]">
+                        ₹75,000
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Architectural Blueprint Watermark Card */}
+                  <div className="bg-[#FAF3E5] border border-[#EADDC5] rounded-2xl p-3 text-center space-y-1">
+                    <svg className="w-16 h-8 mx-auto text-[#A64B24]/40" viewBox="0 0 60 30" fill="none">
+                      <path d="M5 25L30 5L55 25H5Z" stroke="currentColor" strokeWidth="2" />
+                      <path d="M15 25V17H45V25" stroke="currentColor" strokeWidth="1.5" />
+                      <line x1="25" y1="25" x2="25" y2="17" stroke="currentColor" strokeWidth="1.5" />
+                      <line x1="35" y1="25" x2="35" y2="17" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                    <span className="text-[10px] uppercase tracking-wider font-serif font-black text-[#8B5A2B] block">
+                      Building Dreams
+                    </span>
+                    <span className="text-[8px] text-stone-500 font-sans block">
+                      Since Day One
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* =========================================================================
-            TAB 2: DAILY ATTENDANCE & QR
-           ========================================================================= */}
-        {activeTab === 'attendance' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Header Controls */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-white">
-                  Daily Attendance Tracker
-                </h2>
-                <p className="text-xs text-slate-400 font-light">
-                  Scan QR codes or use quick toggle buttons to record attendance and daily wages.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-black/40 border border-slate-700 text-xs font-mono text-white focus:outline-none focus:border-[#D6A04B]"
-                />
+          {/* ================================================================= */}
+          {/* TAB: PROJECTS (Full Costing & Budget Management) */}
+          {/* ================================================================= */}
+          {activeTab === 'projects' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                    Client Interior Projects &amp; Costing
+                  </h2>
+                  <p className="text-xs text-stone-500 font-light">
+                    Track client quotations, stage-wise payments, wood/material expenses, and calculate net profit.
+                  </p>
+                </div>
 
                 <button
-                  onClick={startCameraScanner}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  onClick={() => setShowAddProjectModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
-                  <Camera className="h-3.5 w-3.5" />
-                  <span>Scan QR Code</span>
+                  <Plus className="h-4 w-4" />
+                  <span>New Client Project</span>
                 </button>
               </div>
-            </div>
 
-            {/* Attendance Roster Table */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl overflow-hidden shadow-md">
-              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 font-mono">
-                  All Active Workers ({workers.length})
-                </span>
-                <span className="text-xs font-bold text-[#D6A04B] font-mono">
-                  Total Day Wages: ₹{attendances.reduce((acc, a) => acc + (a.dailyWageEarned || 0), 0).toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              <div className="divide-y divide-slate-800/80 overflow-x-auto">
-                {workers.map((worker) => {
-                  const att = attendances.find(a => a.workerId === worker.workerId);
-                  const currentStatus = att ? att.status : 'absent';
+              {/* Projects List */}
+              <div className="space-y-4">
+                {projects.map((proj) => {
+                  const totalExpenses = (proj.materialsCost || 0) + (proj.laborCost || 0) + (proj.transportCost || 0);
+                  const pendingBalance = Math.max(0, (proj.totalBudget || 0) - (proj.receivedAmount || 0));
+                  const netProfit = (proj.receivedAmount || 0) - totalExpenses;
+                  const profitMargin = proj.receivedAmount > 0 ? Math.round((netProfit / proj.receivedAmount) * 100) : 0;
 
                   return (
                     <div
-                      key={worker._id}
-                      className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-slate-900/40 transition-colors"
+                      key={proj._id}
+                      className="bg-white/95 border border-[#E8DFC9] hover:border-[#D6A04B]/60 rounded-3xl p-6 shadow-xs space-y-4 transition-all"
                     >
-                      {/* Worker Info */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#071A33] border border-[#D6A04B]/40 text-[#F5E6C8] flex items-center justify-center font-bold text-sm shadow-xs overflow-hidden">
-                          {worker.photo ? (
-                            <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
-                          ) : (
-                            worker.name.charAt(0)
-                          )}
-                        </div>
-
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F0E6D2] pb-3">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-xs sm:text-sm text-white">
-                              {worker.name}
-                            </h4>
-                            <span className="px-2 py-0.5 rounded-md bg-black/40 text-[#D6A04B] text-[9px] font-mono font-bold">
-                              {worker.workerId}
+                            <span className="px-2 py-0.5 rounded-md bg-[#D6A04B]/20 text-[#A64B24] text-[10px] font-mono font-bold">
+                              {proj.projectId}
                             </span>
+                            <h3 className="font-serif text-base sm:text-lg font-bold text-[#160F0A]">
+                              {proj.title}
+                            </h3>
                           </div>
-                          <span className="text-[10px] text-slate-400 font-light block">
-                            {worker.role} • ₹{worker.dailyRate}/day
+                          <p className="text-xs text-stone-500 mt-0.5">
+                            Client: <strong className="text-stone-800">{proj.clientName}</strong> • {proj.clientCity} {proj.clientPhone ? `• 📞 ${proj.clientPhone}` : ''}
+                          </p>
+                        </div>
+
+                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 w-fit">
+                          {proj.status.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      {/* Financial Summary */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-[#FBF8F2] p-4 rounded-2xl border border-[#ECE2D0]">
+                        <div>
+                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Total Budget</span>
+                          <span className="text-lg font-black font-mono text-[#160F0A]">
+                            ₹{proj.totalBudget.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Received Amount</span>
+                          <span className="text-lg font-black font-mono text-emerald-700">
+                            ₹{(proj.receivedAmount || 0).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Pending Balance</span>
+                          <span className="text-lg font-black font-mono text-amber-700">
+                            ₹{pendingBalance.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Estimated Net Profit</span>
+                          <span className={`text-lg font-black font-mono ${netProfit >= 0 ? 'text-[#8B5A2B]' : 'text-red-600'}`}>
+                            ₹{netProfit.toLocaleString('en-IN')} ({profitMargin}%)
                           </span>
                         </div>
                       </div>
 
-                      {/* Status Selector & Punch Times */}
-                      <div className="flex items-center gap-2 self-end sm:self-auto">
-                        {att?.checkInTime && (
-                          <span className="text-[10px] text-slate-400 font-mono mr-2 hidden md:inline">
-                            Punched {att.checkInTime}
-                          </span>
-                        )}
-
-                        {/* Status Buttons */}
-                        <div className="flex items-center bg-black/40 p-1 rounded-xl border border-slate-800 gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAttendanceStatus(worker.workerId, 'present')}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
-                              currentStatus === 'present'
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            Present
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAttendanceStatus(worker.workerId, 'half_day')}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
-                              currentStatus === 'half_day'
-                                ? 'bg-amber-600 text-white shadow-xs'
-                                : 'text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            Half Day
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAttendanceStatus(worker.workerId, 'absent')}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
-                              currentStatus === 'absent'
-                                ? 'bg-red-600/80 text-white shadow-xs'
-                                : 'text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            Absent
-                          </button>
+                      {/* Milestones & Expenses Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Milestones */}
+                        <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
+                          <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
+                            <span className="text-xs font-bold text-stone-700 font-mono">Payment Stages</span>
+                            <button
+                              onClick={() => {
+                                setSelectedProjectForPayment(proj);
+                                setShowRecordPaymentModal(true);
+                              }}
+                              className="text-[11px] font-bold text-[#A64B24] hover:underline"
+                            >
+                              + Record Payment
+                            </button>
+                          </div>
+                          <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60">
+                            {proj.milestones?.map((m, idx) => (
+                              <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
+                                <span className="text-stone-700">{m.title}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-stone-900 font-bold">₹{m.amount.toLocaleString('en-IN')}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                    m.status === 'received' 
+                                      ? 'bg-emerald-100 text-emerald-800' 
+                                      : 'bg-amber-100 text-amber-800'
+                                  }`}>
+                                    {m.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
-                        <span className="text-xs font-mono font-bold text-[#F5E6C8] w-14 text-right">
-                          ₹{att ? att.dailyWageEarned : 0}
-                        </span>
+                        {/* Expenses */}
+                        <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
+                          <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
+                            <span className="text-xs font-bold text-stone-700 font-mono">
+                              Expenses (₹{totalExpenses.toLocaleString('en-IN')})
+                            </span>
+                            <button
+                              onClick={() => {
+                                setSelectedProjectForExpense(proj);
+                                setShowAddExpenseModal(true);
+                              }}
+                              className="text-[11px] font-bold text-[#A64B24] hover:underline"
+                            >
+                              + Add Expense
+                            </button>
+                          </div>
+                          <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60 max-h-36 overflow-y-auto">
+                            {proj.expenses?.length === 0 ? (
+                              <p className="text-[11px] text-stone-400 py-2">No expenses logged yet.</p>
+                            ) : (
+                              proj.expenses?.map((e, idx) => (
+                                <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="text-stone-800 block">{e.description}</span>
+                                    <span className="text-[9px] text-[#A64B24] uppercase font-bold">{e.category}</span>
+                                  </div>
+                                  <span className="font-mono text-red-600 font-bold">₹{e.amount.toLocaleString('en-IN')}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* =========================================================================
-            TAB 3: WORKERS & ID CARDS
-           ========================================================================= */}
-        {activeTab === 'workers' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Header Bar */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-white">
-                  Staff & Workshop Artisans
-                </h2>
-                <p className="text-xs text-slate-400 font-light">
-                  Manage worker profiles and generate official LD Interiors PVC ID Badges with scannable QR codes.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setShowAddWorkerModal(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-stretch sm:self-auto justify-center"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Register New Worker</span>
-              </button>
-            </div>
-
-            {/* Workers Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {workers.map((worker) => (
-                <div
-                  key={worker._id}
-                  className="bg-[#0B1E3B] border border-slate-800 hover:border-[#D6A04B]/40 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-[#071A33] border border-[#D6A04B]/40 text-[#F5E6C8] flex items-center justify-center font-bold text-base shadow-xs overflow-hidden">
-                        {worker.photo ? (
-                          <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
-                        ) : (
-                          worker.name.charAt(0)
-                        )}
-                      </div>
-
-                      <div>
-                        <h4 className="font-serif text-sm font-bold text-white">
-                          {worker.name}
-                        </h4>
-                        <span className="px-2 py-0.5 rounded-full bg-[#D6A04B]/20 text-[#D6A04B] text-[9px] font-bold uppercase inline-block">
-                          {worker.role}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span className="text-[10px] font-mono font-bold text-slate-400 bg-black/40 px-2 py-0.5 rounded-md">
-                      {worker.workerId}
-                    </span>
-                  </div>
-
-                  {/* Details List */}
-                  <div className="space-y-1.5 text-xs text-slate-400 border-t border-slate-800/80 pt-3">
-                    <div className="flex justify-between">
-                      <span>Daily Wage:</span>
-                      <span className="font-mono font-bold text-[#F5E6C8]">₹{worker.dailyRate} / day</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Phone:</span>
-                      <span className="font-mono text-slate-300">{worker.phone}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Blood Group:</span>
-                      <span className="font-mono text-red-400 font-bold">{worker.bloodGroup || 'O+'}</span>
-                    </div>
-                  </div>
-
-                  {/* ID Card Action */}
-                  <div className="pt-2">
-                    <button
-                      onClick={() => openIdCardModal(worker)}
-                      className="w-full py-2 rounded-xl bg-black/40 hover:bg-[#D6A04B]/20 border border-[#D6A04B]/40 text-[#D6A04B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <QrCode className="h-3.5 w-3.5" />
-                      <span>Generate & Print ID Card</span>
-                    </button>
-                  </div>
+          {/* ================================================================= */}
+          {/* TAB: WORKERS (Directory & Registration) */}
+          {/* ================================================================= */}
+          {activeTab === 'workers' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                    Staff &amp; Workshop Artisans
+                  </h2>
+                  <p className="text-xs text-stone-500 font-light">
+                    Manage worker profiles and generate official LD Interiors PVC ID Badges with scannable QR codes.
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================================
-            TAB 4: SALARIES, ADVANCES & KHATA
-           ========================================================================= */}
-        {activeTab === 'salaries' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Header Bar */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-white">
-                  Salary & Advance Khata Book
-                </h2>
-                <p className="text-xs text-slate-400 font-light">
-                  Track weekly/monthly wages, advance deductions, and payout settlements.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-black/40 border border-slate-700 text-xs font-mono text-white focus:outline-none focus:border-[#D6A04B]"
-                />
 
                 <button
-                  onClick={() => setShowAddAdvanceModal(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  onClick={() => setShowAddWorkerModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Give Advance / Payout</span>
+                  <Plus className="h-4 w-4" />
+                  <span>Register New Worker</span>
                 </button>
               </div>
-            </div>
 
-            {/* Salary Summary Table */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl overflow-hidden shadow-md">
-              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 font-mono">
-                  Monthly Wage Calculations for {selectedMonth}
-                </span>
-                <span className="text-xs font-bold text-[#D6A04B] font-mono">
-                  Total Payable: ₹{salarySummary.reduce((acc, s) => acc + s.netPayable, 0).toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-black/40 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
-                    <tr>
-                      <th className="p-3.5">Worker</th>
-                      <th className="p-3.5">Daily Rate</th>
-                      <th className="p-3.5">Days Worked</th>
-                      <th className="p-3.5">Gross Wages</th>
-                      <th className="p-3.5 text-red-400">Advances Deducted</th>
-                      <th className="p-3.5 text-[#D6A04B]">Net Balance Payable</th>
-                      <th className="p-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {salarySummary.map((s) => (
-                      <tr key={s.workerId} className="hover:bg-slate-900/40 transition-colors">
-                        <td className="p-3.5">
-                          <span className="font-bold text-white block">{s.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">{s.workerId} • {s.role}</span>
-                        </td>
-                        <td className="p-3.5 font-mono">₹{s.dailyRate}</td>
-                        <td className="p-3.5 font-mono text-emerald-400 font-bold">{s.effectiveDays} Days</td>
-                        <td className="p-3.5 font-mono font-bold text-white">₹{s.grossEarnings.toLocaleString('en-IN')}</td>
-                        <td className="p-3.5 font-mono text-red-400 font-bold">-₹{s.advancesTaken.toLocaleString('en-IN')}</td>
-                        <td className="p-3.5 font-mono font-black text-[#F5E6C8] text-sm">
-                          ₹{s.netPayable.toLocaleString('en-IN')}
-                        </td>
-                        <td className="p-3.5 text-right">
-                          <button
-                            onClick={() => {
-                              setAdvanceFormData({
-                                workerId: s.workerId,
-                                amount: s.netPayable > 0 ? s.netPayable : '',
-                                type: 'salary_payout',
-                                paymentMode: 'cash',
-                                notes: `Settlement for ${selectedMonth}`
-                              });
-                              setShowAddAdvanceModal(true);
-                            }}
-                            className="px-3 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-600/50 text-[10px] font-bold uppercase transition-all"
-                          >
-                            Pay & Settle
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Advance History Ledger */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 space-y-3">
-              <h3 className="font-serif text-sm font-bold text-white">
-                Recent Advance & Payout Transactions
-              </h3>
-              <div className="divide-y divide-slate-800/80 max-h-60 overflow-y-auto">
-                {advances.slice(0, 15).map((adv) => (
-                  <div key={adv._id} className="py-2.5 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-white block">{adv.workerName} ({adv.workerId})</span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {new Date(adv.date).toLocaleDateString('en-IN')} • {adv.paymentMode.toUpperCase()} {adv.notes ? `• ${adv.notes}` : ''}
+              {/* Workers Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workers.map((worker) => (
+                  <div
+                    key={worker._id}
+                    className="bg-white/95 border border-[#E8DFC9] hover:border-[#D6A04B] rounded-3xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-[#F6EFE3] border border-[#D6A04B]/40 text-[#8B5A2B] flex items-center justify-center font-bold text-base shadow-xs overflow-hidden">
+                          {worker.photo ? (
+                            <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
+                          ) : (
+                            worker.name.charAt(0)
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-serif text-sm font-bold text-[#160F0A]">
+                            {worker.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-full bg-[#D6A04B]/20 text-[#A64B24] text-[9px] font-bold uppercase inline-block">
+                            {worker.role}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-stone-500 bg-[#F0E6D2] px-2 py-0.5 rounded-md">
+                        {worker.workerId}
                       </span>
                     </div>
-                    <span className={`font-mono font-bold ${adv.type === 'advance' ? 'text-red-400' : 'text-emerald-400'}`}>
-                      {adv.type === 'advance' ? '-₹' : '₹'}{adv.amount.toLocaleString('en-IN')} ({adv.type})
-                    </span>
+
+                    <div className="space-y-1.5 text-xs text-stone-600 border-t border-[#F0E6D2] pt-3">
+                      <div className="flex justify-between">
+                        <span>Daily Wage:</span>
+                        <span className="font-mono font-bold text-[#8B5A2B]">₹{worker.dailyRate} / day</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Phone:</span>
+                        <span className="font-mono text-stone-800">{worker.phone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Blood Group:</span>
+                        <span className="font-mono text-red-600 font-bold">{worker.bloodGroup || 'O+'}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        onClick={() => openIdCardModal(worker)}
+                        className="w-full py-2.5 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] border border-[#D6A04B]/40 text-[#8B5A2B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        <span>Generate &amp; Print ID Card</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* =========================================================================
-            TAB 5: CLIENT PROJECTS & BUDGETS
-           ========================================================================= */}
-        {activeTab === 'projects' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Header Bar */}
-            <div className="bg-[#0B1E3B] border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-white">
-                  Client Interior Projects & Costing
+          {/* ================================================================= */}
+          {/* TAB: ID CARDS GALLERY */}
+          {/* ================================================================= */}
+          {activeTab === 'id_cards' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                    Official PVC ID Badges Gallery
+                  </h2>
+                  <p className="text-xs text-stone-500 font-light">
+                    Preview and batch print official workshop PVC badges with high-resolution attendance QR codes.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddWorkerModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>New Staff Member</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {workers.map((worker) => (
+                  <div
+                    key={worker._id}
+                    className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4 hover:shadow-md transition-shadow"
+                  >
+                    {/* Front Badge Card Mock */}
+                    <div className="rounded-2xl bg-gradient-to-b from-[#160F0A] to-[#26190F] p-4 text-white space-y-3 relative overflow-hidden shadow-md">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-[#D6A04B] text-[#160F0A] flex items-center justify-center font-serif font-black text-[9px]">
+                            LD
+                          </div>
+                          <span className="font-serif text-[10px] font-black text-[#F5E6C8] tracking-widest">
+                            LD INTERIORS
+                          </span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-[#A64B24] text-white text-[8px] font-bold uppercase">
+                          STAFF
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-xl border border-[#D6A04B] overflow-hidden bg-stone-800 shrink-0">
+                          {worker.photo ? (
+                            <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center font-bold text-lg text-[#D6A04B]">
+                              {worker.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="leading-tight space-y-0.5">
+                          <span className="text-[9px] uppercase tracking-wider text-[#D6A04B] font-bold block">
+                            {worker.role}
+                          </span>
+                          <h4 className="font-serif text-sm font-bold text-white">
+                            {worker.name}
+                          </h4>
+                          <p className="text-[10px] font-mono text-[#F5E6C8]">
+                            ID: {worker.workerId}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => openIdCardModal(worker)}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>Print PVC Card</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB: ATTENDANCE (Live Sheet & Scanner) */}
+          {/* ================================================================= */}
+          {activeTab === 'attendance' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                    Daily Attendance Tracker
+                  </h2>
+                  <p className="text-xs text-stone-500 font-light">
+                    Scan QR codes or use quick toggle buttons to record attendance and daily wages.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-[#F5EEDB] border border-[#E8DFC9] text-xs font-mono text-[#160F0A] focus:outline-none focus:border-[#D6A04B]"
+                  />
+
+                  <button
+                    onClick={startCameraScanner}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <span>Scan QR Code</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Attendance Table */}
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl overflow-hidden shadow-xs">
+                <div className="p-4 sm:p-5 border-b border-[#F0E6D2] flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-700 font-mono">
+                    All Active Workers ({workers.length})
+                  </span>
+                  <span className="text-xs font-bold text-[#8B5A2B] font-mono">
+                    Total Day Wages: ₹{attendances.reduce((acc, a) => acc + (a.dailyWageEarned || 0), 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[#F0E6D2] overflow-x-auto">
+                  {workers.map((worker) => {
+                    const att = attendances.find(a => a.workerId === worker.workerId);
+                    const currentStatus = att ? att.status : 'absent';
+
+                    return (
+                      <div
+                        key={worker._id}
+                        className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-[#F9F5EC] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-[#F6EFE3] border border-[#D6A04B]/40 text-[#8B5A2B] flex items-center justify-center font-bold text-sm overflow-hidden">
+                            {worker.photo ? (
+                              <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
+                            ) : (
+                              worker.name.charAt(0)
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-xs sm:text-sm text-[#160F0A]">
+                                {worker.name}
+                              </h4>
+                              <span className="px-2 py-0.5 rounded-md bg-[#F0E6D2] text-[#A64B24] text-[9px] font-mono font-bold">
+                                {worker.workerId}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-stone-500 font-light block">
+                              {worker.role} • ₹{worker.dailyRate}/day
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          {att?.checkInTime && (
+                            <span className="text-[10px] text-stone-500 font-mono mr-2 hidden md:inline">
+                              Punched {att.checkInTime}
+                            </span>
+                          )}
+
+                          <div className="flex items-center bg-[#F5EEDB] p-1 rounded-xl border border-[#E8DFC9] gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAttendanceStatus(worker.workerId, 'present')}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                                currentStatus === 'present'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'text-stone-600 hover:text-stone-900'
+                              }`}
+                            >
+                              Present
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAttendanceStatus(worker.workerId, 'half_day')}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                                currentStatus === 'half_day'
+                                  ? 'bg-amber-600 text-white shadow-xs'
+                                  : 'text-stone-600 hover:text-stone-900'
+                              }`}
+                            >
+                              Half Day
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAttendanceStatus(worker.workerId, 'absent')}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                                currentStatus === 'absent'
+                                  ? 'bg-red-600 text-white shadow-xs'
+                                  : 'text-stone-600 hover:text-stone-900'
+                              }`}
+                            >
+                              Absent
+                            </button>
+                          </div>
+
+                          <span className="text-xs font-mono font-bold text-[#8B5A2B] w-14 text-right">
+                            ₹{att ? att.dailyWageEarned : 0}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB: PAYROLL & PAYMENTS (Salary Khata) */}
+          {/* ================================================================= */}
+          {activeTab === 'salaries' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                    Salary &amp; Advance Khata Book
+                  </h2>
+                  <p className="text-xs text-stone-500 font-light">
+                    Track weekly/monthly wages, advance deductions, and payout settlements.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-[#F5EEDB] border border-[#E8DFC9] text-xs font-mono text-[#160F0A] focus:outline-none focus:border-[#D6A04B]"
+                  />
+
+                  <button
+                    onClick={() => setShowAddAdvanceModal(true)}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Give Advance / Payout</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Salary Summary Table */}
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl overflow-hidden shadow-xs">
+                <div className="p-4 sm:p-5 border-b border-[#F0E6D2] flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-700 font-mono">
+                    Monthly Wage Calculations for {selectedMonth}
+                  </span>
+                  <span className="text-xs font-bold text-[#8B5A2B] font-mono">
+                    Total Payable: ₹{salarySummary.reduce((acc, s) => acc + s.netPayable, 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-stone-800">
+                    <thead className="bg-[#FAF3E5] text-stone-600 uppercase font-mono text-[10px] border-b border-[#E8DFC9]">
+                      <tr>
+                        <th className="p-3.5">Worker</th>
+                        <th className="p-3.5">Daily Rate</th>
+                        <th className="p-3.5">Days Worked</th>
+                        <th className="p-3.5">Gross Wages</th>
+                        <th className="p-3.5 text-red-600">Advances Deducted</th>
+                        <th className="p-3.5 text-[#8B5A2B]">Net Balance</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F0E6D2]">
+                      {salarySummary.map((s) => (
+                        <tr key={s.workerId} className="hover:bg-[#F9F5EC] transition-colors">
+                          <td className="p-3.5">
+                            <span className="font-bold text-[#160F0A] block">{s.name}</span>
+                            <span className="text-[10px] text-stone-500 font-mono">{s.workerId} • {s.role}</span>
+                          </td>
+                          <td className="p-3.5 font-mono">₹{s.dailyRate}</td>
+                          <td className="p-3.5 font-mono text-emerald-700 font-bold">{s.effectiveDays} Days</td>
+                          <td className="p-3.5 font-mono font-bold text-[#160F0A]">₹{s.grossEarnings.toLocaleString('en-IN')}</td>
+                          <td className="p-3.5 font-mono text-red-600 font-bold">-₹{s.advancesTaken.toLocaleString('en-IN')}</td>
+                          <td className="p-3.5 font-mono font-black text-[#8B5A2B] text-sm">
+                            ₹{s.netPayable.toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3.5 text-right">
+                            <button
+                              onClick={() => {
+                                setAdvanceFormData({
+                                  workerId: s.workerId,
+                                  amount: s.netPayable > 0 ? s.netPayable : '',
+                                  type: 'salary_payout',
+                                  paymentMode: 'cash',
+                                  notes: `Settlement for ${selectedMonth}`
+                                });
+                                setShowAddAdvanceModal(true);
+                              }}
+                              className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold uppercase transition-all shadow-xs cursor-pointer"
+                            >
+                              Pay &amp; Settle
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB: REPORTS */}
+          {/* ================================================================= */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5">
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                  Workshop Analytics &amp; Reports
                 </h2>
-                <p className="text-xs text-slate-400 font-light">
-                  Track client quotations, stage-wise payments, wood/material expenses, and calculate net profit.
+                <p className="text-xs text-stone-500 font-light">
+                  High-level reporting on workforce productivity, monthly labor expenses, and client contract profitability.
                 </p>
               </div>
 
-              <button
-                onClick={() => setShowAddProjectModal(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-black uppercase tracking-wider shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-stretch sm:self-auto justify-center"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Client Project</span>
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 space-y-3">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Attendance Rate</span>
+                  <span className="text-3xl font-black text-emerald-700 font-sans block">94.8%</span>
+                  <p className="text-xs text-stone-500">Average on-time attendance this month</p>
+                </div>
+
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 space-y-3">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Gross Labor Expense</span>
+                  <span className="text-3xl font-black text-[#8B5A2B] font-sans block">
+                    ₹{salarySummary.reduce((acc, s) => acc + s.grossEarnings, 0).toLocaleString('en-IN')}
+                  </span>
+                  <p className="text-xs text-stone-500">Earned wages for active artisans</p>
+                </div>
+
+                <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 space-y-3">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Active Contracts</span>
+                  <span className="text-3xl font-black text-sky-700 font-sans block">{displayActiveProjects}</span>
+                  <p className="text-xs text-stone-500">Currently in progress at workshop</p>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Projects List */}
-            <div className="space-y-6">
-              {projects.map((proj) => {
-                const totalExpenses = (proj.materialsCost || 0) + (proj.laborCost || 0) + (proj.transportCost || 0);
-                const pendingBalance = Math.max(0, (proj.totalBudget || 0) - (proj.receivedAmount || 0));
-                const netProfit = (proj.receivedAmount || 0) - totalExpenses;
-                const profitMargin = proj.receivedAmount > 0 ? Math.round((netProfit / proj.receivedAmount) * 100) : 0;
+          {/* ================================================================= */}
+          {/* TAB: SETTINGS */}
+          {/* ================================================================= */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5">
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#160F0A]">
+                  Workshop Settings &amp; Security
+                </h2>
+                <p className="text-xs text-stone-500 font-light">
+                  Configure default wage rates, working shift timings, and ERP access credentials.
+                </p>
+              </div>
 
-                return (
-                  <div
-                    key={proj._id}
-                    className="bg-[#0B1E3B] border border-slate-800 hover:border-[#D6A04B]/30 rounded-3xl p-6 shadow-md space-y-5 transition-all"
-                  >
-                    {/* Project Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-md bg-[#D6A04B]/20 text-[#D6A04B] text-[10px] font-mono font-bold">
-                            {proj.projectId}
-                          </span>
-                          <h3 className="font-serif text-base sm:text-lg font-black text-white">
-                            {proj.title}
-                          </h3>
-                        </div>
-                        <p className="text-xs text-slate-400 font-light mt-0.5">
-                          Client: <strong className="text-slate-200">{proj.clientName}</strong> • {proj.clientCity} {proj.clientPhone ? `• 📞 ${proj.clientPhone}` : ''}
-                        </p>
-                      </div>
+              <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-6 space-y-5 max-w-xl">
+                <div>
+                  <label className="text-xs font-bold text-stone-700 block mb-1">Workshop Shift Timings</label>
+                  <input
+                    type="text"
+                    defaultValue="09:00 AM - 06:30 PM (IST)"
+                    disabled
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#F5EEDB] border border-[#E8DFC9] text-xs text-stone-800"
+                  />
+                </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-sky-950 text-sky-300 border border-sky-800">
-                          {proj.status.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </div>
+                <div>
+                  <label className="text-xs font-bold text-stone-700 block mb-1">Standard Daily Carpenter Rate</label>
+                  <input
+                    type="text"
+                    defaultValue="₹900 - ₹1200 / day"
+                    disabled
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#F5EEDB] border border-[#E8DFC9] text-xs text-stone-800"
+                  />
+                </div>
 
-                    {/* Financial Summary Cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-black/40 p-4 rounded-2xl border border-slate-800/80">
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-mono block">Total Budget</span>
-                        <span className="text-lg font-black font-mono text-white">
-                          ₹{proj.totalBudget.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-mono block">Received Amount</span>
-                        <span className="text-lg font-black font-mono text-emerald-400">
-                          ₹{(proj.receivedAmount || 0).toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-mono block">Pending Balance</span>
-                        <span className="text-lg font-black font-mono text-amber-400">
-                          ₹{pendingBalance.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-mono block">Estimated Net Profit</span>
-                        <span className={`text-lg font-black font-mono ${netProfit >= 0 ? 'text-[#D6A04B]' : 'text-red-400'}`}>
-                          ₹{netProfit.toLocaleString('en-IN')} ({profitMargin}%)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Milestones & Expenses Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Left: Payment Milestones */}
-                      <div className="bg-black/20 p-4 rounded-2xl border border-slate-800/60 space-y-2">
-                        <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
-                          <span className="text-xs font-bold text-slate-300 font-mono">Payment Stages</span>
-                          <button
-                            onClick={() => {
-                              setSelectedProjectForPayment(proj);
-                              setShowRecordPaymentModal(true);
-                            }}
-                            className="text-[10px] font-bold text-[#D6A04B] hover:underline"
-                          >
-                            + Record Payment
-                          </button>
-                        </div>
-
-                        <div className="space-y-1.5 divide-y divide-slate-800/40">
-                          {proj.milestones?.map((m, idx) => (
-                            <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
-                              <span className="text-slate-300">{m.title}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-white font-bold">₹{m.amount.toLocaleString('en-IN')}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                  m.status === 'received' 
-                                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' 
-                                    : 'bg-amber-950 text-amber-300 border border-amber-800'
-                                }`}>
-                                  {m.status}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right: Project Expenses (Wood, Polish, Labor) */}
-                      <div className="bg-black/20 p-4 rounded-2xl border border-slate-800/60 space-y-2">
-                        <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
-                          <span className="text-xs font-bold text-slate-300 font-mono">
-                            Expenses (₹{totalExpenses.toLocaleString('en-IN')})
-                          </span>
-                          <button
-                            onClick={() => {
-                              setSelectedProjectForExpense(proj);
-                              setShowAddExpenseModal(true);
-                            }}
-                            className="text-[10px] font-bold text-[#D6A04B] hover:underline"
-                          >
-                            + Add Expense
-                          </button>
-                        </div>
-
-                        <div className="space-y-1.5 divide-y divide-slate-800/40 max-h-36 overflow-y-auto">
-                          {proj.expenses?.length === 0 ? (
-                            <p className="text-[11px] text-slate-500 py-2">No expenses logged yet.</p>
-                          ) : (
-                            proj.expenses?.map((e, idx) => (
-                              <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
-                                <div>
-                                  <span className="text-slate-300 block">{e.description}</span>
-                                  <span className="text-[9px] text-[#D6A04B] uppercase font-bold">{e.category}</span>
-                                </div>
-                                <span className="font-mono text-red-400 font-bold">₹{e.amount.toLocaleString('en-IN')}</span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                <div>
+                  <label className="text-xs font-bold text-stone-700 block mb-1">ERP Master PIN Protection</label>
+                  <input
+                    type="password"
+                    defaultValue="•••••••"
+                    disabled
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#F5EEDB] border border-[#E8DFC9] text-xs text-stone-800 font-mono"
+                  />
+                  <span className="text-[10px] text-stone-500 mt-1 block">PIN configured and active.</span>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
 
-      {/* =========================================================================
-          MODAL 1: QR CODE LIVE CAMERA SCANNER
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 1: QR CODE LIVE CAMERA SCANNER */}
+      {/* ===================================================================== */}
       {showQrScanner && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center relative text-white">
             <button
               onClick={stopCameraScanner}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1354,7 +1992,6 @@ export default function ManagementPortal() {
               </h3>
             </div>
 
-            {/* Video Viewport with Scanning Target Frame */}
             <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center border-2 border-dashed border-[#D6A04B]/60 shadow-inner">
               <video
                 ref={videoRef}
@@ -1363,7 +2000,6 @@ export default function ManagementPortal() {
                 className="w-full h-full object-cover"
               />
 
-              {/* Scanning Crosshair Overlay */}
               <div className="absolute inset-8 border-2 border-[#D6A04B] rounded-2xl pointer-events-none animate-pulse flex flex-col justify-between p-2">
                 <div className="flex justify-between">
                   <div className="w-3 h-3 border-t-2 border-l-2 border-[#D6A04B]" />
@@ -1379,7 +2015,6 @@ export default function ManagementPortal() {
               </div>
             </div>
 
-            {/* Success Popup Card when Scanned */}
             {scannerResult && (
               <div className="bg-emerald-950 border border-emerald-600 rounded-2xl p-4 text-left animate-scaleUp">
                 <div className="flex items-center gap-3">
@@ -1396,24 +2031,23 @@ export default function ManagementPortal() {
               </div>
             )}
 
-            {/* Fallback Manual Input for Handheld Barcode Scanners or Manual Entry */}
-            <form onSubmit={handleManualScanSubmit} className="pt-2 border-t border-slate-800 space-y-2">
+            <form onSubmit={handleManualScanSubmit} className="pt-2 border-t border-stone-800 space-y-2">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={manualQrInput}
                   onChange={(e) => setManualQrInput(e.target.value)}
                   placeholder="Or enter Worker ID (e.g. LDI-W101)"
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-xs font-mono text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-xs font-mono text-white focus:outline-none focus:border-[#D6A04B]"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-[#D6A04B] text-[#071A33] text-xs font-black uppercase tracking-wider"
+                  className="px-4 py-2.5 rounded-xl bg-[#D6A04B] text-[#160F0A] text-xs font-black uppercase tracking-wider cursor-pointer"
                 >
                   Punch
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400 font-light">
+              <p className="text-[10px] text-stone-400 font-light">
                 Works with USB/Bluetooth laser scanners or manual typing.
               </p>
             </form>
@@ -1421,15 +2055,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 2: OFFICIAL PVC ID CARD GENERATOR & PRINT
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 2: OFFICIAL PVC ID CARD GENERATOR & PRINT */}
+      {/* ===================================================================== */}
       {showIdCardModal && selectedWorkerForCard && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 text-center relative">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 text-center relative text-white">
             <button
               onClick={() => setShowIdCardModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1443,14 +2077,13 @@ export default function ManagementPortal() {
               </h3>
             </div>
 
-            {/* Printable ID Card Container (Standard PVC 85.6mm x 54mm Ratio) */}
+            {/* Printable ID Card Container */}
             <div id="printable-id-card-area" className="flex flex-col sm:flex-row gap-4 items-center justify-center py-2">
               {/* FRONT OF ID CARD */}
-              <div className="w-[320px] h-[200px] rounded-2xl bg-gradient-to-b from-[#071A33] via-[#0B1E3B] to-[#071A33] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden">
-                {/* Gold Top Banner */}
+              <div className="w-[320px] h-[200px] rounded-2xl bg-gradient-to-b from-[#160F0A] via-[#24170E] to-[#160F0A] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-white">
                 <div className="flex items-center justify-between border-b border-[#D6A04B]/40 pb-1.5">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-[#D6A04B] text-[#071A33] flex items-center justify-center font-serif font-black text-[9px]">
+                    <div className="w-5 h-5 rounded-full bg-[#D6A04B] text-[#160F0A] flex items-center justify-center font-serif font-black text-[9px]">
                       LD
                     </div>
                     <div>
@@ -1467,9 +2100,8 @@ export default function ManagementPortal() {
                   </span>
                 </div>
 
-                {/* Body: Photo & Info */}
                 <div className="flex items-center gap-3 my-auto">
-                  <div className="w-16 h-16 rounded-xl border-2 border-[#D6A04B] overflow-hidden bg-slate-800 text-[#D6A04B] flex items-center justify-center font-serif font-black text-xl shrink-0 shadow-sm">
+                  <div className="w-16 h-16 rounded-xl border-2 border-[#D6A04B] overflow-hidden bg-stone-800 text-[#D6A04B] flex items-center justify-center font-serif font-black text-xl shrink-0 shadow-sm">
                     {selectedWorkerForCard.photo ? (
                       <img src={selectedWorkerForCard.photo} alt={selectedWorkerForCard.name} className="w-full h-full object-cover" />
                     ) : (
@@ -1487,41 +2119,38 @@ export default function ManagementPortal() {
                     <p className="text-[9px] font-mono text-[#F5E6C8] font-bold">
                       ID: {selectedWorkerForCard.workerId}
                     </p>
-                    <p className="text-[8px] font-mono text-slate-300">
+                    <p className="text-[8px] font-mono text-stone-300">
                       Blood Group: <strong className="text-red-400">{selectedWorkerForCard.bloodGroup || 'O+'}</strong>
                     </p>
-                    <p className="text-[8px] font-mono text-slate-400">
+                    <p className="text-[8px] font-mono text-stone-400">
                       Phone: {selectedWorkerForCard.phone}
                     </p>
                   </div>
                 </div>
 
-                {/* Footer Strip */}
                 <div className="flex items-center justify-between text-[7.5px] text-[#F5E6C8]/80 font-mono pt-1 border-t border-[#D6A04B]/30">
                   <span>Rajahmundry, AP</span>
                   <span className="text-[#D6A04B] font-bold">Authorized Artisan</span>
                 </div>
               </div>
 
-              {/* BACK OF ID CARD (SCANNABLE QR CODE) */}
-              <div className="w-[320px] h-[200px] rounded-2xl bg-[#F5E6C8] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-[#071A33]">
-                {/* Back Header */}
-                <div className="text-center border-b border-[#071A33]/20 pb-1">
+              {/* BACK OF ID CARD (SCANNABLE QR) */}
+              <div className="w-[320px] h-[200px] rounded-2xl bg-[#F5E6C8] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-[#160F0A]">
+                <div className="text-center border-b border-[#160F0A]/20 pb-1">
                   <span className="text-[8px] font-black uppercase tracking-wider text-[#A64B24]">
-                    ATTENDANCE & VERIFICATION QR
+                    ATTENDANCE &amp; VERIFICATION QR
                   </span>
                 </div>
 
-                {/* QR Code Center */}
                 <div className="flex items-center justify-center gap-3 my-auto">
-                  <div className="w-24 h-24 p-1 bg-white rounded-xl border border-[#071A33]/30 shadow-xs flex items-center justify-center">
+                  <div className="w-24 h-24 p-1 bg-white rounded-xl border border-[#160F0A]/30 shadow-xs flex items-center justify-center">
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LDI-WORKER:${selectedWorkerForCard.workerId}&color=071A33&bgcolor=FFFFFF`}
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LDI-WORKER:${selectedWorkerForCard.workerId}&color=160F0A&bgcolor=FFFFFF`}
                       alt="Worker QR Code"
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div className="text-[8px] text-[#071A33] space-y-1 font-sans">
+                  <div className="text-[8px] text-[#160F0A] space-y-1 font-sans">
                     <p className="font-bold">Instructions:</p>
                     <p>• Scan daily at workshop for instant attendance punch.</p>
                     <p>• Emergency: +91 6281653998</p>
@@ -1529,18 +2158,16 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Back Footer */}
-                <div className="text-center text-[7.5px] text-[#071A33]/70 font-mono pt-1 border-t border-[#071A33]/20">
+                <div className="text-center text-[7.5px] text-[#160F0A]/70 font-mono pt-1 border-t border-[#160F0A]/20">
                   LD Interiors Handcrafted Teakwood • Rajahmundry
                 </div>
               </div>
             </div>
 
-            {/* Print CTA */}
             <div className="pt-2 flex items-center justify-center gap-3">
               <button
                 onClick={() => window.print()}
-                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Printer className="h-4 w-4" />
                 <span>Print Official PVC ID Card</span>
@@ -1550,15 +2177,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 3: REGISTER NEW WORKER
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 3: REGISTER NEW WORKER (With Direct Photo Gallery Upload) */}
+      {/* ===================================================================== */}
       {showAddWorkerModal && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto text-white">
             <button
               onClick={() => setShowAddWorkerModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1574,36 +2201,36 @@ export default function ManagementPortal() {
 
             <form onSubmit={handleCreateWorker} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Full Name *</label>
+                <label className="text-stone-300 font-bold block mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   value={workerFormData.name}
                   onChange={(e) => setWorkerFormData({ ...workerFormData, name: e.target.value })}
                   placeholder="e.g. Ramesh Kumar"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Phone Number *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Phone Number *</label>
                   <input
                     type="tel"
                     required
                     value={workerFormData.phone}
                     onChange={(e) => setWorkerFormData({ ...workerFormData, phone: e.target.value })}
                     placeholder="e.g. 9876543210"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Role / Craft *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Role / Craft *</label>
                   <select
                     value={workerFormData.role}
                     onChange={(e) => setWorkerFormData({ ...workerFormData, role: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   >
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
@@ -1612,23 +2239,23 @@ export default function ManagementPortal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Daily Wage (₹/day) *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Daily Wage (₹/day) *</label>
                   <input
                     type="number"
                     required
                     value={workerFormData.dailyRate}
                     onChange={(e) => setWorkerFormData({ ...workerFormData, dailyRate: e.target.value })}
                     placeholder="900"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Blood Group</label>
+                  <label className="text-stone-300 font-bold block mb-1">Blood Group</label>
                   <select
                     value={workerFormData.bloodGroup}
                     onChange={(e) => setWorkerFormData({ ...workerFormData, bloodGroup: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   >
                     {["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map(bg => (
                       <option key={bg} value={bg}>{bg}</option>
@@ -1637,8 +2264,9 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
+              {/* Direct Gallery Photo File Picker */}
               <div>
-                <label className="text-slate-300 font-bold block mb-1">
+                <label className="text-stone-300 font-bold block mb-1">
                   Artisan Photo (Select from Gallery / Camera)
                 </label>
                 
@@ -1650,8 +2278,7 @@ export default function ManagementPortal() {
                   className="hidden"
                 />
 
-                <div className="flex items-center gap-3 bg-black/30 p-2.5 rounded-2xl border border-slate-700/80">
-                  {/* Photo Preview Thumbnail */}
+                <div className="flex items-center gap-3 bg-black/30 p-2.5 rounded-2xl border border-stone-700/80">
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="w-16 h-16 rounded-xl border-2 border-dashed border-[#D6A04B]/60 bg-black/50 hover:bg-[#D6A04B]/10 transition-colors flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group relative"
@@ -1666,12 +2293,11 @@ export default function ManagementPortal() {
                     ) : (
                       <div className="text-center p-1">
                         <Camera className="h-5 w-5 text-[#D6A04B] mx-auto group-hover:scale-110 transition-transform" />
-                        <span className="text-[8px] text-slate-400 font-bold block mt-0.5">Gallery</span>
+                        <span className="text-[8px] text-stone-400 font-bold block mt-0.5">Gallery</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Actions & URL Input */}
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
                       <button
@@ -1702,29 +2328,29 @@ export default function ManagementPortal() {
                         if (e.target.value) setWorkerPhotoPreview(e.target.value);
                       }}
                       placeholder="Or paste image link (optional)"
-                      className="w-full px-3 py-1.5 rounded-xl bg-black/40 border border-slate-700 text-[10px] text-white focus:outline-none focus:border-[#D6A04B]"
+                      className="w-full px-3 py-1.5 rounded-xl bg-black/40 border border-stone-700 text-[10px] text-white focus:outline-none focus:border-[#D6A04B]"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Emergency Contact</label>
+                <label className="text-stone-300 font-bold block mb-1">Emergency Contact</label>
                 <input
                   type="text"
                   value={workerFormData.emergencyContact}
                   onChange={(e) => setWorkerFormData({ ...workerFormData, emergencyContact: e.target.value })}
                   placeholder="Family member phone"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
-                  Save & Generate ID Card →
+                  Save &amp; Generate ID Card →
                 </button>
               </div>
             </form>
@@ -1732,15 +2358,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 4: RECORD ADVANCE / PAYOUT
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 4: RECORD ADVANCE / PAYOUT */}
+      {/* ===================================================================== */}
       {showAddAdvanceModal && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative text-white">
             <button
               onClick={() => setShowAddAdvanceModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1756,12 +2382,12 @@ export default function ManagementPortal() {
 
             <form onSubmit={handleCreateAdvance} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Select Worker *</label>
+                <label className="text-stone-300 font-bold block mb-1">Select Worker *</label>
                 <select
                   required
                   value={advanceFormData.workerId}
                   onChange={(e) => setAdvanceFormData({ ...advanceFormData, workerId: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 >
                   <option value="">-- Choose Worker --</option>
                   {workers.map(w => (
@@ -1772,23 +2398,23 @@ export default function ManagementPortal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Amount (₹) *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Amount (₹) *</label>
                   <input
                     type="number"
                     required
                     value={advanceFormData.amount}
                     onChange={(e) => setAdvanceFormData({ ...advanceFormData, amount: e.target.value })}
                     placeholder="e.g. 2000"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Type *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Type *</label>
                   <select
                     value={advanceFormData.type}
                     onChange={(e) => setAdvanceFormData({ ...advanceFormData, type: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   >
                     <option value="advance">Advance (Deduction)</option>
                     <option value="salary_payout">Salary Settlement</option>
@@ -1798,11 +2424,11 @@ export default function ManagementPortal() {
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Payment Mode</label>
+                <label className="text-stone-300 font-bold block mb-1">Payment Mode</label>
                 <select
                   value={advanceFormData.paymentMode}
                   onChange={(e) => setAdvanceFormData({ ...advanceFormData, paymentMode: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 >
                   <option value="cash">Cash</option>
                   <option value="upi">UPI / GPay / PhonePe</option>
@@ -1811,20 +2437,20 @@ export default function ManagementPortal() {
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Notes / Reason</label>
+                <label className="text-stone-300 font-bold block mb-1">Notes / Reason</label>
                 <input
                   type="text"
                   value={advanceFormData.notes}
                   onChange={(e) => setAdvanceFormData({ ...advanceFormData, notes: e.target.value })}
                   placeholder="e.g. Festival advance / Medical"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   Save Transaction →
                 </button>
@@ -1834,15 +2460,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 5: NEW CLIENT PROJECT
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 5: NEW CLIENT PROJECT */}
+      {/* ===================================================================== */}
       {showAddProjectModal && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto text-white">
             <button
               onClick={() => setShowAddProjectModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1858,63 +2484,63 @@ export default function ManagementPortal() {
 
             <form onSubmit={handleCreateProject} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Project Title *</label>
+                <label className="text-stone-300 font-bold block mb-1">Project Title *</label>
                 <input
                   type="text"
                   required
                   value={projectFormData.title}
                   onChange={(e) => setProjectFormData({ ...projectFormData, title: e.target.value })}
                   placeholder="e.g. Suresh Garu Villa Teakwood Mandir & Doors"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Client Name *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Client Name *</label>
                   <input
                     type="text"
                     required
                     value={projectFormData.clientName}
                     onChange={(e) => setProjectFormData({ ...projectFormData, clientName: e.target.value })}
                     placeholder="Client Name"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Client Phone</label>
+                  <label className="text-stone-300 font-bold block mb-1">Client Phone</label>
                   <input
                     type="tel"
                     value={projectFormData.clientPhone}
                     onChange={(e) => setProjectFormData({ ...projectFormData, clientPhone: e.target.value })}
                     placeholder="Phone Number"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Total Agreed Budget (₹) *</label>
+                  <label className="text-stone-300 font-bold block mb-1">Total Agreed Budget (₹) *</label>
                   <input
                     type="number"
                     required
                     value={projectFormData.totalBudget}
                     onChange={(e) => setProjectFormData({ ...projectFormData, totalBudget: e.target.value })}
                     placeholder="e.g. 350000"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Client City</label>
+                  <label className="text-stone-300 font-bold block mb-1">Client City</label>
                   <input
                     type="text"
                     value={projectFormData.clientCity}
                     onChange={(e) => setProjectFormData({ ...projectFormData, clientCity: e.target.value })}
                     placeholder="Rajahmundry"
-                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                   />
                 </div>
               </div>
@@ -1922,9 +2548,9 @@ export default function ManagementPortal() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
-                  Create Project & Milestones →
+                  Create Project &amp; Milestones →
                 </button>
               </div>
             </form>
@@ -1932,15 +2558,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 6: RECORD PROJECT EXPENSE
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 6: RECORD PROJECT EXPENSE */}
+      {/* ===================================================================== */}
       {showAddExpenseModal && selectedProjectForExpense && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative text-white">
             <button
               onClick={() => setShowAddExpenseModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1956,44 +2582,44 @@ export default function ManagementPortal() {
 
             <form onSubmit={handleAddProjectExpense} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Expense Category *</label>
+                <label className="text-stone-300 font-bold block mb-1">Expense Category *</label>
                 <select
                   value={expenseFormData.category}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, category: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 >
                   {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Description *</label>
+                <label className="text-stone-300 font-bold block mb-1">Description *</label>
                 <input
                   type="text"
                   required
                   value={expenseFormData.description}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, description: e.target.value })}
                   placeholder="e.g. 50 cft Burma Teak logs purchased"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Amount (₹) *</label>
+                <label className="text-stone-300 font-bold block mb-1">Amount (₹) *</label>
                 <input
                   type="number"
                   required
                   value={expenseFormData.amount}
                   onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: e.target.value })}
                   placeholder="e.g. 45000"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   Save Project Expense →
                 </button>
@@ -2003,15 +2629,15 @@ export default function ManagementPortal() {
         </div>
       )}
 
-      {/* =========================================================================
-          MODAL 7: RECORD CLIENT PAYMENT
-         ========================================================================= */}
+      {/* ===================================================================== */}
+      {/* MODAL 7: RECORD CLIENT PAYMENT */}
+      {/* ===================================================================== */}
       {showRecordPaymentModal && selectedProjectForPayment && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0B1E3B] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 text-left relative text-white">
             <button
               onClick={() => setShowRecordPaymentModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -2023,18 +2649,18 @@ export default function ManagementPortal() {
               <h3 className="font-serif text-lg font-black text-white">
                 Record Payment Received
               </h3>
-              <p className="text-xs text-slate-400 font-light mt-0.5">
+              <p className="text-xs text-stone-400 font-light mt-0.5">
                 For {selectedProjectForPayment.title}
               </p>
             </div>
 
             <form onSubmit={handleRecordProjectPayment} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Payment Stage (Milestone)</label>
+                <label className="text-stone-300 font-bold block mb-1">Payment Stage (Milestone)</label>
                 <select
                   value={paymentFormData.milestoneIndex}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, milestoneIndex: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 >
                   <option value="">General Payment</option>
                   {selectedProjectForPayment.milestones?.map((m, idx) => (
@@ -2046,23 +2672,23 @@ export default function ManagementPortal() {
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Amount Received (₹) *</label>
+                <label className="text-stone-300 font-bold block mb-1">Amount Received (₹) *</label>
                 <input
                   type="number"
                   required
                   value={paymentFormData.amount}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, amount: e.target.value })}
                   placeholder="e.g. 50000"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Payment Mode</label>
+                <label className="text-stone-300 font-bold block mb-1">Payment Mode</label>
                 <select
                   value={paymentFormData.paymentMode}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, paymentMode: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 >
                   <option value="upi">UPI (GPay / PhonePe / Paytm)</option>
                   <option value="bank_transfer">Bank NEFT / RTGS</option>
@@ -2072,20 +2698,20 @@ export default function ManagementPortal() {
               </div>
 
               <div>
-                <label className="text-slate-300 font-bold block mb-1">Notes</label>
+                <label className="text-stone-300 font-bold block mb-1">Notes</label>
                 <input
                   type="text"
                   value={paymentFormData.note}
                   onChange={(e) => setPaymentFormData({ ...paymentFormData, note: e.target.value })}
                   placeholder="e.g. Received via GPay from Client"
-                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-slate-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
                 />
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#c0582d] to-[#D6A04B] text-[#071A33] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   Confirm Payment Received →
                 </button>
