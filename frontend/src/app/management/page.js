@@ -13,7 +13,8 @@ import {
   BadgeAlert, HardHat, Hammer, AlertTriangle,
   LayoutDashboard, FolderKanban, CreditCard, Menu,
   MoreVertical, Zap, ChevronDown, LogOut, Building2,
-  CalendarCheck, ArrowUpRight, UserPlus, FolderPlus, Bell
+  CalendarCheck, ArrowUpRight, UserPlus, FolderPlus, Bell,
+  Pencil, Trash2, Edit2
 } from 'lucide-react';
 
 const ROLES = [
@@ -116,6 +117,7 @@ export default function ManagementPortal() {
   const [manualQrInput, setManualQrInput] = useState('');
   const [, setScannerCameraError] = useState('');
 
+  // Worker Modals State (Add & Edit)
   const [showAddWorkerModal, setShowAddWorkerModal] = useState(false);
   const [workerPhotoFile, setWorkerPhotoFile] = useState(null);
   const [workerPhotoPreview, setWorkerPhotoPreview] = useState('');
@@ -126,18 +128,44 @@ export default function ManagementPortal() {
     emergencyContact: '', photo: '', notes: ''
   });
 
+  // Edit Worker State
+  const [showEditWorkerModal, setShowEditWorkerModal] = useState(false);
+  const [editingWorker, setEditingWorker] = useState(null);
+  const [editWorkerPhotoFile, setEditWorkerPhotoFile] = useState(null);
+  const [editWorkerPhotoPreview, setEditWorkerPhotoPreview] = useState('');
+  const editFileInputRef = useRef(null);
+  const [editWorkerFormData, setEditWorkerFormData] = useState({
+    name: '', phone: '', role: 'Master Carpenter', wageType: 'daily',
+    dailyRate: 900, monthlySalary: 0, aadharNumber: '', bloodGroup: 'O+',
+    emergencyContact: '', photo: '', isActive: true, notes: ''
+  });
+
+  // Project Modals State (Add & Edit)
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [projectFormData, setProjectFormData] = useState({
+    title: '', clientName: '', clientPhone: '', clientCity: 'Rajahmundry',
+    totalBudget: '', targetDate: '', notes: ''
+  });
+
+  // Edit Project State
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+  const [editProjectFormData, setEditProjectFormData] = useState({
+    title: '', clientName: '', clientPhone: '', clientCity: 'Rajahmundry',
+    totalBudget: '', status: 'in_progress', targetDate: '', notes: ''
+  });
+
+  // Delete Confirmation Modal State (Handles both Project and Worker)
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'worker' | 'project', item: object }
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [showIdCardModal, setShowIdCardModal] = useState(false);
   const [selectedWorkerForCard, setSelectedWorkerForCard] = useState(null);
 
   const [showAddAdvanceModal, setShowAddAdvanceModal] = useState(false);
   const [advanceFormData, setAdvanceFormData] = useState({
     workerId: '', amount: '', type: 'advance', paymentMode: 'cash', notes: ''
-  });
-
-  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
-  const [projectFormData, setProjectFormData] = useState({
-    title: '', clientName: '', clientPhone: '', clientCity: 'Rajahmundry',
-    totalBudget: '', targetDate: '', notes: ''
   });
 
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
@@ -367,7 +395,7 @@ export default function ManagementPortal() {
   };
 
   // =========================================================================
-  // WORKER ACTIONS
+  // WORKER ACTIONS (ADD, EDIT, DELETE)
   // =========================================================================
   const handlePhotoSelect = (e) => {
     const file = e.target.files?.[0];
@@ -424,26 +452,89 @@ export default function ManagementPortal() {
     }
   };
 
+  // Open Edit Worker Modal
+  const openEditWorkerModal = (worker) => {
+    setEditingWorker(worker);
+    setEditWorkerFormData({
+      name: worker.name || '',
+      phone: worker.phone || '',
+      role: worker.role || 'Master Carpenter',
+      wageType: worker.wageType || 'daily',
+      dailyRate: worker.dailyRate || 900,
+      monthlySalary: worker.monthlySalary || 0,
+      bloodGroup: worker.bloodGroup || 'O+',
+      aadharNumber: worker.aadharNumber || '',
+      emergencyContact: worker.emergencyContact || '',
+      photo: worker.photo || '',
+      isActive: worker.isActive !== false,
+      notes: worker.notes || ''
+    });
+    setEditWorkerPhotoFile(null);
+    setEditWorkerPhotoPreview(worker.photo || '');
+    setShowEditWorkerModal(true);
+  };
+
+  const handleEditPhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditWorkerPhotoFile(file);
+      setEditWorkerPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveEditPhoto = () => {
+    setEditWorkerPhotoFile(null);
+    setEditWorkerPhotoPreview('');
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
+    setEditWorkerFormData(prev => ({ ...prev, photo: '' }));
+  };
+
+  // Submit Worker Update
+  const handleUpdateWorker = async (e) => {
+    e.preventDefault();
+    if (!editingWorker?._id) return;
+    try {
+      const formData = new FormData();
+      formData.append('name', editWorkerFormData.name);
+      formData.append('phone', editWorkerFormData.phone);
+      formData.append('role', editWorkerFormData.role);
+      formData.append('wageType', editWorkerFormData.wageType);
+      formData.append('dailyRate', editWorkerFormData.dailyRate);
+      formData.append('monthlySalary', editWorkerFormData.monthlySalary || 0);
+      formData.append('bloodGroup', editWorkerFormData.bloodGroup || 'O+');
+      formData.append('aadharNumber', editWorkerFormData.aadharNumber || '');
+      formData.append('emergencyContact', editWorkerFormData.emergencyContact || '');
+      formData.append('isActive', editWorkerFormData.isActive);
+      formData.append('notes', editWorkerFormData.notes || '');
+
+      if (editWorkerPhotoFile) {
+        formData.append('photo', editWorkerPhotoFile);
+      } else if (editWorkerFormData.photo) {
+        formData.append('photo', editWorkerFormData.photo);
+      }
+
+      const res = await api.put(`/management/workers/${editingWorker._id}`, formData);
+      if (res.data?.success) {
+        playWoodenChime();
+        setShowEditWorkerModal(false);
+        setEditingWorker(null);
+        setEditWorkerPhotoFile(null);
+        setEditWorkerPhotoPreview('');
+        fetchAllData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update worker');
+    }
+  };
+
   const openIdCardModal = (worker) => {
     setSelectedWorkerForCard(worker);
     setShowIdCardModal(true);
   };
 
-  const handleCreateAdvance = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/management/advances', advanceFormData);
-      if (res.data?.success) {
-        playWoodenChime();
-        setShowAddAdvanceModal(false);
-        setAdvanceFormData({ workerId: '', amount: '', type: 'advance', paymentMode: 'cash', notes: '' });
-        fetchAllData();
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to record advance');
-    }
-  };
-
+  // =========================================================================
+  // PROJECT ACTIONS (ADD, EDIT, DELETE)
+  // =========================================================================
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
@@ -456,6 +547,95 @@ export default function ManagementPortal() {
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create project');
+    }
+  };
+
+  // Open Edit Project Modal
+  const openEditProjectModal = (proj) => {
+    setEditingProject(proj);
+    setEditProjectFormData({
+      title: proj.title || '',
+      clientName: proj.clientName || '',
+      clientPhone: proj.clientPhone || '',
+      clientCity: proj.clientCity || 'Rajahmundry',
+      totalBudget: proj.totalBudget || '',
+      status: proj.status || 'in_progress',
+      targetDate: proj.targetDate ? proj.targetDate.substring(0, 10) : '',
+      notes: proj.notes || ''
+    });
+    setShowEditProjectModal(true);
+  };
+
+  // Submit Project Update
+  const handleUpdateProject = async (e) => {
+    e.preventDefault();
+    if (!editingProject?._id) return;
+    try {
+      const res = await api.put(`/management/projects/${editingProject._id}`, editProjectFormData);
+      if (res.data?.success) {
+        playWoodenChime();
+        setShowEditProjectModal(false);
+        setEditingProject(null);
+        fetchAllData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update project');
+    }
+  };
+
+  // =========================================================================
+  // GENERAL DELETE MODAL CONFIRMATION HANDLER
+  // =========================================================================
+  const confirmDelete = (type, item) => {
+    setDeleteTarget({ type, item });
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!deleteTarget?.item?._id) return;
+    try {
+      setDeleteLoading(true);
+      if (deleteTarget.type === 'worker') {
+        const res = await api.delete(`/management/workers/${deleteTarget.item._id}`);
+        if (res.data?.success) {
+          playWoodenChime();
+          setShowDeleteConfirmModal(false);
+          setDeleteTarget(null);
+          fetchAllData();
+        } else {
+          alert(res.data?.message || 'Failed to delete worker');
+        }
+      } else if (deleteTarget.type === 'project') {
+        const res = await api.delete(`/management/projects/${deleteTarget.item._id}`);
+        if (res.data?.success) {
+          playWoodenChime();
+          setShowDeleteConfirmModal(false);
+          setDeleteTarget(null);
+          fetchAllData();
+        } else {
+          alert(res.data?.message || 'Failed to delete project');
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Delete operation failed');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Advances & Project Finances
+  const handleCreateAdvance = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/management/advances', advanceFormData);
+      if (res.data?.success) {
+        playWoodenChime();
+        setShowAddAdvanceModal(false);
+        setAdvanceFormData({ workerId: '', amount: '', type: 'advance', paymentMode: 'cash', notes: '' });
+        fetchAllData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to record advance');
     }
   };
 
@@ -682,7 +862,6 @@ export default function ManagementPortal() {
 
         {/* Bottom Section: Promo Card & Logout */}
         <div className="space-y-4 pt-6 border-t border-white/5">
-          {/* Build Better Together Card with luxury interior background */}
           <div className="relative rounded-2xl overflow-hidden p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent border border-white/10 shadow-inner group">
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-500"
@@ -698,7 +877,6 @@ export default function ManagementPortal() {
             </div>
           </div>
 
-          {/* Logout Action */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-stone-400 hover:text-red-400 transition-colors cursor-pointer"
@@ -715,7 +893,6 @@ export default function ManagementPortal() {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Top Header */}
         <header className="sticky top-0 z-30 bg-[#F7F2E7]/90 backdrop-blur-md border-b border-[#E8DEC8] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
-          {/* Left: Mobile Toggle & Search Bar */}
           <div className="flex items-center gap-3 flex-1 max-w-xl">
             <button
               onClick={() => setMobileSidebarOpen(true)}
@@ -724,7 +901,6 @@ export default function ManagementPortal() {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Pill Search Input */}
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
               <input
@@ -740,9 +916,7 @@ export default function ManagementPortal() {
             </div>
           </div>
 
-          {/* Right: Notifications & Profile Pill */}
           <div className="flex items-center gap-3">
-            {/* Quick QR Attendance Scan Button */}
             <button
               onClick={startCameraScanner}
               className="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#160F0A] hover:bg-[#2A1B10] text-[#F5E6C8] text-xs font-semibold shadow-xs transition-all cursor-pointer"
@@ -752,7 +926,6 @@ export default function ManagementPortal() {
               <span>QR Scanner</span>
             </button>
 
-            {/* Notification Bell */}
             <div className="relative">
               <button 
                 onClick={fetchAllData}
@@ -766,7 +939,6 @@ export default function ManagementPortal() {
               </button>
             </div>
 
-            {/* Admin Profile Pill */}
             <div className="flex items-center gap-2.5 bg-white/90 border border-[#E8DEC8] px-3 py-1.5 rounded-full shadow-xs cursor-pointer hover:border-[#D6A04B] transition-colors">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#A64B24] to-[#D6A04B] text-white flex items-center justify-center font-bold text-xs shadow-xs">
                 AD
@@ -787,9 +959,8 @@ export default function ManagementPortal() {
           {/* ================================================================= */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 animate-fadeIn">
-              {/* 1. Hero Welcome Banner with Luxury Interior Graphic */}
+              {/* 1. Hero Welcome Banner */}
               <div className="relative rounded-3xl bg-gradient-to-r from-[#160F0A] via-[#24170E] to-[#332014] text-white p-6 sm:p-8 overflow-hidden shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
-                {/* Background blended interior image */}
                 <div 
                   className="absolute right-0 inset-y-0 w-full md:w-3/5 bg-cover bg-right opacity-35 mix-blend-screen pointer-events-none"
                   style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80')` }}
@@ -814,7 +985,6 @@ export default function ManagementPortal() {
 
               {/* 2. 5 Stat Cards Row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {/* Stat 1: Total Projects */}
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                   <div className="flex items-start justify-between">
                     <div>
@@ -837,7 +1007,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Stat 2: Total Workers */}
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                   <div className="flex items-start justify-between">
                     <div>
@@ -860,7 +1029,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Stat 3: ID Cards Generated */}
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                   <div className="flex items-start justify-between">
                     <div>
@@ -883,7 +1051,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Stat 4: Pending Dues */}
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                   <div className="flex items-start justify-between">
                     <div>
@@ -906,7 +1073,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Stat 5: Active Projects */}
                 <div className="bg-white/95 border border-[#E8DFC9] rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between col-span-2 sm:col-span-1">
                   <div className="flex items-start justify-between">
                     <div>
@@ -930,9 +1096,8 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* 3. Middle Section: Project Overview Chart + Quick Actions + Workforce Promo Card */}
+              {/* 3. Middle Section: Chart + Quick Actions + Workforce Promo Card */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                {/* Left (col-span-5): Project Overview Spline Chart */}
                 <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -942,7 +1107,6 @@ export default function ManagementPortal() {
                       </h3>
                     </div>
 
-                    {/* Filter Pills */}
                     <div className="flex items-center gap-1 bg-[#F5EEDB] p-1 rounded-xl text-[10px] font-bold">
                       {['1M', '3M', '6M', '1Y'].map((p) => (
                         <button
@@ -960,15 +1124,12 @@ export default function ManagementPortal() {
                     </div>
                   </div>
 
-                  {/* SVG Spline Area Chart */}
                   <div className="relative pt-4">
-                    {/* Tooltip badge on latest point */}
                     <div className="absolute top-2 right-6 bg-[#160F0A] text-[#F5E6C8] text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-md z-10 flex items-center gap-1">
                       <span>18 Projects</span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Y-axis labels */}
                       <div className="flex flex-col justify-between h-36 text-[9px] font-mono text-stone-400 py-1">
                         <span>20</span>
                         <span>15</span>
@@ -977,7 +1138,6 @@ export default function ManagementPortal() {
                         <span>0</span>
                       </div>
 
-                      {/* Chart Canvas */}
                       <div className="flex-1 h-36 relative">
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 300 120" preserveAspectRatio="none">
                           <defs>
@@ -987,20 +1147,17 @@ export default function ManagementPortal() {
                             </linearGradient>
                           </defs>
 
-                          {/* Horizontal Grid lines */}
                           <line x1="0" y1="0" x2="300" y2="0" stroke="#F0E6D2" strokeDasharray="3 3" />
                           <line x1="0" y1="30" x2="300" y2="30" stroke="#F0E6D2" strokeDasharray="3 3" />
                           <line x1="0" y1="60" x2="300" y2="60" stroke="#F0E6D2" strokeDasharray="3 3" />
                           <line x1="0" y1="90" x2="300" y2="90" stroke="#F0E6D2" strokeDasharray="3 3" />
                           <line x1="0" y1="120" x2="300" y2="120" stroke="#F0E6D2" />
 
-                          {/* Gradient Area */}
                           <path
                             d="M0,85 C50,75 80,60 120,62 C160,64 190,80 230,70 C260,65 280,30 300,32 L300,120 L0,120 Z"
                             fill="url(#goldGradient)"
                           />
 
-                          {/* Golden Smooth Spline Curve */}
                           <path
                             d="M0,85 C50,75 80,60 120,62 C160,64 190,80 230,70 C260,65 280,30 300,32"
                             fill="none"
@@ -1009,7 +1166,6 @@ export default function ManagementPortal() {
                             strokeLinecap="round"
                           />
 
-                          {/* Data points */}
                           <circle cx="0" cy="85" r="3.5" fill="#D6A04B" />
                           <circle cx="60" cy="72" r="3.5" fill="#D6A04B" />
                           <circle cx="120" cy="62" r="3.5" fill="#D6A04B" />
@@ -1020,7 +1176,6 @@ export default function ManagementPortal() {
                       </div>
                     </div>
 
-                    {/* X-axis labels */}
                     <div className="flex justify-between pl-6 pt-2 text-[10px] font-sans text-stone-500">
                       <span>Jun</span>
                       <span>Jul</span>
@@ -1032,7 +1187,6 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Center (col-span-3): Quick Actions */}
                 <div className="lg:col-span-3 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1049,9 +1203,7 @@ export default function ManagementPortal() {
                     </button>
                   </div>
 
-                  {/* 4 Quick Action Tiles (2x2 Grid) */}
                   <div className="grid grid-cols-2 gap-2.5">
-                    {/* Action 1: Add New Project */}
                     <button
                       onClick={() => setShowAddProjectModal(true)}
                       className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
@@ -1064,7 +1216,6 @@ export default function ManagementPortal() {
                       </span>
                     </button>
 
-                    {/* Action 2: Hire Worker */}
                     <button
                       onClick={() => setShowAddWorkerModal(true)}
                       className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
@@ -1077,7 +1228,6 @@ export default function ManagementPortal() {
                       </span>
                     </button>
 
-                    {/* Action 3: Generate ID Cards */}
                     <button
                       onClick={() => {
                         if (workers.length > 0) openIdCardModal(workers[0]);
@@ -1093,7 +1243,6 @@ export default function ManagementPortal() {
                       </span>
                     </button>
 
-                    {/* Action 4: View Reports / QR Attendance */}
                     <button
                       onClick={startCameraScanner}
                       className="p-3 rounded-2xl bg-[#FBF8F2] hover:bg-[#F3EADB] border border-[#ECE2D0] flex flex-col items-center justify-center text-center gap-2 transition-all cursor-pointer group shadow-xs"
@@ -1108,9 +1257,7 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Right (col-span-4): Manage Your Workforce Better Dark Banner */}
                 <div className="lg:col-span-4 relative rounded-3xl bg-gradient-to-br from-[#160F0A] via-[#24170E] to-[#140D08] text-white p-6 overflow-hidden shadow-md flex flex-col justify-between space-y-4">
-                  {/* Subtle background decorative lamp & plant image */}
                   <div 
                     className="absolute right-0 inset-y-0 w-1/2 bg-cover bg-center opacity-30 mix-blend-screen pointer-events-none"
                     style={{ backgroundImage: `url('https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=400&q=80')` }}
@@ -1141,7 +1288,7 @@ export default function ManagementPortal() {
 
               {/* 4. Bottom Section: Recent Projects + Worker Management + Today's Summary */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                {/* Left (col-span-5): Recent Projects */}
+                {/* Recent Projects with Edit & Delete actions */}
                 <div className="lg:col-span-5 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1159,7 +1306,6 @@ export default function ManagementPortal() {
                     </button>
                   </div>
 
-                  {/* Projects List */}
                   <div className="space-y-3">
                     {(projects.length > 0 ? projects.slice(0, 3) : DEFAULT_RECENT_PROJECTS).map((proj, idx) => {
                       const title = proj.title || `Project #${idx + 1}`;
@@ -1169,6 +1315,7 @@ export default function ManagementPortal() {
                         : proj.date || 'Nov 12, 2025';
                       const status = proj.status ? proj.status.replace('_', ' ') : 'On Progress';
                       const image = proj.image || DEFAULT_RECENT_PROJECTS[idx % 3].image;
+                      const hasRealId = !!proj._id;
 
                       return (
                         <div
@@ -1189,13 +1336,35 @@ export default function ManagementPortal() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 capitalize">
                               {status}
                             </span>
-                            <button className="text-stone-400 hover:text-stone-700 p-1">
-                              <MoreVertical className="h-3.5 w-3.5" />
-                            </button>
+                            {hasRealId ? (
+                              <>
+                                <button 
+                                  onClick={() => openEditProjectModal(proj)}
+                                  className="p-1 rounded-lg text-stone-400 hover:text-[#A64B24] hover:bg-stone-100 cursor-pointer"
+                                  title="Edit Project"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button 
+                                  onClick={() => confirmDelete('project', proj)}
+                                  className="p-1 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                                  title="Delete Project"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <button 
+                                onClick={() => setActiveTab('projects')}
+                                className="text-stone-400 hover:text-stone-700 p-1"
+                              >
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1203,7 +1372,7 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Center (col-span-4): Worker Management Horizontal Artisan Avatars */}
+                {/* Worker Management Horizontal Artisan Avatars */}
                 <div className="lg:col-span-4 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1221,17 +1390,20 @@ export default function ManagementPortal() {
                     </button>
                   </div>
 
-                  {/* Horizontal Scroll / Grid of Workers matching screenshot */}
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 items-center">
                     {(workers.length > 0 ? workers.slice(0, 4) : DEFAULT_WORKERS_ROSTER).map((w, idx) => {
                       const avatar = w.photo || w.avatar || DEFAULT_WORKERS_ROSTER[idx % 4].avatar;
+                      const hasRealId = !!w._id;
+
                       return (
                         <div
                           key={w._id || w.id || idx}
-                          onClick={() => openIdCardModal(w)}
-                          className="flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#F9F5EC] transition-all cursor-pointer group"
+                          className="flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#F9F5EC] transition-all cursor-pointer group relative"
                         >
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-stone-200 border-2 border-[#D6A04B]/40 shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <div 
+                            onClick={() => openIdCardModal(w)}
+                            className="w-12 h-12 rounded-full overflow-hidden bg-stone-200 border-2 border-[#D6A04B]/40 shadow-xs mb-1.5 group-hover:scale-105 transition-transform"
+                          >
                             <img src={avatar} alt={w.name} className="w-full h-full object-cover" />
                           </div>
                           <span className="font-bold text-[11px] text-[#160F0A] truncate w-full">
@@ -1240,14 +1412,40 @@ export default function ManagementPortal() {
                           <span className="text-[9px] text-stone-500 truncate w-full">
                             {w.role}
                           </span>
-                          <span className="text-[8px] font-bold text-emerald-600 flex items-center gap-0.5 mt-0.5">
-                            ● Active
-                          </span>
+
+                          {/* Action Links on Hover or default status */}
+                          {hasRealId ? (
+                            <div className="flex items-center gap-1 mt-1 opacity-80 group-hover:opacity-100">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditWorkerModal(w);
+                                }}
+                                className="p-0.5 text-stone-400 hover:text-[#A64B24] cursor-pointer"
+                                title="Edit Worker"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete('worker', w);
+                                }}
+                                className="p-0.5 text-stone-400 hover:text-red-600 cursor-pointer"
+                                title="Delete Worker"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[8px] font-bold text-emerald-600 flex items-center gap-0.5 mt-0.5">
+                              ● Active
+                            </span>
+                          )}
                         </div>
                       );
                     })}
 
-                    {/* + Add Worker Dashed Card */}
                     <div
                       onClick={() => setShowAddWorkerModal(true)}
                       className="border-2 border-dashed border-[#D6A04B]/60 hover:border-[#D6A04B] rounded-2xl flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:bg-[#F9F5EC] transition-all h-28"
@@ -1262,7 +1460,7 @@ export default function ManagementPortal() {
                   </div>
                 </div>
 
-                {/* Right (col-span-3): Today's Summary + Blueprint Watermark */}
+                {/* Today's Summary */}
                 <div className="lg:col-span-3 bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-[#A64B24]" />
@@ -1271,7 +1469,6 @@ export default function ManagementPortal() {
                     </h3>
                   </div>
 
-                  {/* Summary Rows */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 text-stone-600">
@@ -1304,7 +1501,6 @@ export default function ManagementPortal() {
                     </div>
                   </div>
 
-                  {/* Architectural Blueprint Watermark Card */}
                   <div className="bg-[#FAF3E5] border border-[#EADDC5] rounded-2xl p-3 text-center space-y-1">
                     <svg className="w-16 h-8 mx-auto text-[#A64B24]/40" viewBox="0 0 60 30" fill="none">
                       <path d="M5 25L30 5L55 25H5Z" stroke="currentColor" strokeWidth="2" />
@@ -1325,7 +1521,7 @@ export default function ManagementPortal() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB: PROJECTS (Full Costing & Budget Management) */}
+          {/* TAB: PROJECTS (Full Costing, Edit & Delete) */}
           {/* ================================================================= */}
           {activeTab === 'projects' && (
             <div className="space-y-6 animate-fadeIn">
@@ -1350,142 +1546,170 @@ export default function ManagementPortal() {
 
               {/* Projects List */}
               <div className="space-y-4">
-                {projects.map((proj) => {
-                  const totalExpenses = (proj.materialsCost || 0) + (proj.laborCost || 0) + (proj.transportCost || 0);
-                  const pendingBalance = Math.max(0, (proj.totalBudget || 0) - (proj.receivedAmount || 0));
-                  const netProfit = (proj.receivedAmount || 0) - totalExpenses;
-                  const profitMargin = proj.receivedAmount > 0 ? Math.round((netProfit / proj.receivedAmount) * 100) : 0;
+                {projects.length === 0 ? (
+                  <div className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-12 text-center space-y-3">
+                    <FolderKanban className="h-10 w-10 text-stone-400 mx-auto" />
+                    <h3 className="font-serif text-base font-bold text-stone-700">No client projects registered yet</h3>
+                    <p className="text-xs text-stone-500">Click &quot;New Client Project&quot; above to log your first interior design project.</p>
+                  </div>
+                ) : (
+                  projects.map((proj) => {
+                    const totalExpenses = (proj.materialsCost || 0) + (proj.laborCost || 0) + (proj.transportCost || 0);
+                    const pendingBalance = Math.max(0, (proj.totalBudget || 0) - (proj.receivedAmount || 0));
+                    const netProfit = (proj.receivedAmount || 0) - totalExpenses;
+                    const profitMargin = proj.receivedAmount > 0 ? Math.round((netProfit / proj.receivedAmount) * 100) : 0;
 
-                  return (
-                    <div
-                      key={proj._id}
-                      className="bg-white/95 border border-[#E8DFC9] hover:border-[#D6A04B]/60 rounded-3xl p-6 shadow-xs space-y-4 transition-all"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F0E6D2] pb-3">
-                        <div>
+                    return (
+                      <div
+                        key={proj._id}
+                        className="bg-white/95 border border-[#E8DFC9] hover:border-[#D6A04B]/60 rounded-3xl p-6 shadow-xs space-y-4 transition-all"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F0E6D2] pb-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-md bg-[#D6A04B]/20 text-[#A64B24] text-[10px] font-mono font-bold">
+                                {proj.projectId}
+                              </span>
+                              <h3 className="font-serif text-base sm:text-lg font-bold text-[#160F0A]">
+                                {proj.title}
+                              </h3>
+                            </div>
+                            <p className="text-xs text-stone-500 mt-0.5">
+                              Client: <strong className="text-stone-800">{proj.clientName}</strong> • {proj.clientCity} {proj.clientPhone ? `• 📞 ${proj.clientPhone}` : ''}
+                            </p>
+                          </div>
+
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-[#D6A04B]/20 text-[#A64B24] text-[10px] font-mono font-bold">
-                              {proj.projectId}
+                            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 w-fit">
+                              {proj.status?.replace('_', ' ')}
                             </span>
-                            <h3 className="font-serif text-base sm:text-lg font-bold text-[#160F0A]">
-                              {proj.title}
-                            </h3>
-                          </div>
-                          <p className="text-xs text-stone-500 mt-0.5">
-                            Client: <strong className="text-stone-800">{proj.clientName}</strong> • {proj.clientCity} {proj.clientPhone ? `• 📞 ${proj.clientPhone}` : ''}
-                          </p>
-                        </div>
 
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 w-fit">
-                          {proj.status.replace('_', ' ')}
-                        </span>
-                      </div>
-
-                      {/* Financial Summary */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-[#FBF8F2] p-4 rounded-2xl border border-[#ECE2D0]">
-                        <div>
-                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Total Budget</span>
-                          <span className="text-lg font-black font-mono text-[#160F0A]">
-                            ₹{proj.totalBudget.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Received Amount</span>
-                          <span className="text-lg font-black font-mono text-emerald-700">
-                            ₹{(proj.receivedAmount || 0).toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Pending Balance</span>
-                          <span className="text-lg font-black font-mono text-amber-700">
-                            ₹{pendingBalance.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-stone-500 uppercase font-mono block">Estimated Net Profit</span>
-                          <span className={`text-lg font-black font-mono ${netProfit >= 0 ? 'text-[#8B5A2B]' : 'text-red-600'}`}>
-                            ₹{netProfit.toLocaleString('en-IN')} ({profitMargin}%)
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Milestones & Expenses Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Milestones */}
-                        <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
-                          <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
-                            <span className="text-xs font-bold text-stone-700 font-mono">Payment Stages</span>
+                            {/* Edit Project Button */}
                             <button
-                              onClick={() => {
-                                setSelectedProjectForPayment(proj);
-                                setShowRecordPaymentModal(true);
-                              }}
-                              className="text-[11px] font-bold text-[#A64B24] hover:underline"
+                              onClick={() => openEditProjectModal(proj)}
+                              className="px-2.5 py-1.5 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] text-[#160F0A] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#E8DFC9]"
+                              title="Edit Project Details"
                             >
-                              + Record Payment
+                              <Pencil className="h-3.5 w-3.5 text-[#A64B24]" />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* Delete Project Button */}
+                            <button
+                              onClick={() => confirmDelete('project', proj)}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                              title="Delete Project"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>Delete</span>
                             </button>
                           </div>
-                          <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60">
-                            {proj.milestones?.map((m, idx) => (
-                              <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
-                                <span className="text-stone-700">{m.title}</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-stone-900 font-bold">₹{m.amount.toLocaleString('en-IN')}</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                    m.status === 'received' 
-                                      ? 'bg-emerald-100 text-emerald-800' 
-                                      : 'bg-amber-100 text-amber-800'
-                                  }`}>
-                                    {m.status}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
+                        </div>
+
+                        {/* Financial Summary */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-[#FBF8F2] p-4 rounded-2xl border border-[#ECE2D0]">
+                          <div>
+                            <span className="text-[10px] text-stone-500 uppercase font-mono block">Total Budget</span>
+                            <span className="text-lg font-black font-mono text-[#160F0A]">
+                              ₹{proj.totalBudget?.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-500 uppercase font-mono block">Received Amount</span>
+                            <span className="text-lg font-black font-mono text-emerald-700">
+                              ₹{(proj.receivedAmount || 0).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-500 uppercase font-mono block">Pending Balance</span>
+                            <span className="text-lg font-black font-mono text-amber-700">
+                              ₹{pendingBalance.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-stone-500 uppercase font-mono block">Estimated Net Profit</span>
+                            <span className={`text-lg font-black font-mono ${netProfit >= 0 ? 'text-[#8B5A2B]' : 'text-red-600'}`}>
+                              ₹{netProfit.toLocaleString('en-IN')} ({profitMargin}%)
+                            </span>
                           </div>
                         </div>
 
-                        {/* Expenses */}
-                        <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
-                          <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
-                            <span className="text-xs font-bold text-stone-700 font-mono">
-                              Expenses (₹{totalExpenses.toLocaleString('en-IN')})
-                            </span>
-                            <button
-                              onClick={() => {
-                                setSelectedProjectForExpense(proj);
-                                setShowAddExpenseModal(true);
-                              }}
-                              className="text-[11px] font-bold text-[#A64B24] hover:underline"
-                            >
-                              + Add Expense
-                            </button>
-                          </div>
-                          <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60 max-h-36 overflow-y-auto">
-                            {proj.expenses?.length === 0 ? (
-                              <p className="text-[11px] text-stone-400 py-2">No expenses logged yet.</p>
-                            ) : (
-                              proj.expenses?.map((e, idx) => (
+                        {/* Milestones & Expenses Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
+                            <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
+                              <span className="text-xs font-bold text-stone-700 font-mono">Payment Stages</span>
+                              <button
+                                onClick={() => {
+                                  setSelectedProjectForPayment(proj);
+                                  setShowRecordPaymentModal(true);
+                                }}
+                                className="text-[11px] font-bold text-[#A64B24] hover:underline"
+                              >
+                                + Record Payment
+                              </button>
+                            </div>
+                            <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60">
+                              {proj.milestones?.map((m, idx) => (
                                 <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
-                                  <div>
-                                    <span className="text-stone-800 block">{e.description}</span>
-                                    <span className="text-[9px] text-[#A64B24] uppercase font-bold">{e.category}</span>
+                                  <span className="text-stone-700">{m.title}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-stone-900 font-bold">₹{m.amount.toLocaleString('en-IN')}</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                      m.status === 'received' 
+                                        ? 'bg-emerald-100 text-emerald-800' 
+                                        : 'bg-amber-100 text-amber-800'
+                                    }`}>
+                                      {m.status}
+                                    </span>
                                   </div>
-                                  <span className="font-mono text-red-600 font-bold">₹{e.amount.toLocaleString('en-IN')}</span>
                                 </div>
-                              ))
-                            )}
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#ECE2D0] space-y-2">
+                            <div className="flex items-center justify-between pb-2 border-b border-[#E8DEC8]">
+                              <span className="text-xs font-bold text-stone-700 font-mono">
+                                Expenses (₹{totalExpenses.toLocaleString('en-IN')})
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setSelectedProjectForExpense(proj);
+                                  setShowAddExpenseModal(true);
+                                }}
+                                className="text-[11px] font-bold text-[#A64B24] hover:underline"
+                              >
+                                + Add Expense
+                              </button>
+                            </div>
+                            <div className="space-y-1.5 divide-y divide-[#E8DEC8]/60 max-h-36 overflow-y-auto">
+                              {proj.expenses?.length === 0 ? (
+                                <p className="text-[11px] text-stone-400 py-2">No expenses logged yet.</p>
+                              ) : (
+                                proj.expenses?.map((e, idx) => (
+                                  <div key={idx} className="pt-1.5 flex items-center justify-between text-xs">
+                                    <div>
+                                      <span className="text-stone-800 block">{e.description}</span>
+                                      <span className="text-[9px] text-[#A64B24] uppercase font-bold">{e.category}</span>
+                                    </div>
+                                    <span className="font-mono text-red-600 font-bold">₹{e.amount.toLocaleString('en-IN')}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           )}
 
           {/* ================================================================= */}
-          {/* TAB: WORKERS (Directory & Registration) */}
+          {/* TAB: WORKERS (Directory, Registration, Edit & Delete) */}
           {/* ================================================================= */}
           {activeTab === 'workers' && (
             <div className="space-y-6 animate-fadeIn">
@@ -1495,7 +1719,7 @@ export default function ManagementPortal() {
                     Staff &amp; Workshop Artisans
                   </h2>
                   <p className="text-xs text-stone-500 font-light">
-                    Manage worker profiles and generate official LD Interiors PVC ID Badges with scannable QR codes.
+                    Manage worker profiles, daily wages, edit details, and generate official PVC ID Badges.
                   </p>
                 </div>
 
@@ -1517,7 +1741,7 @@ export default function ManagementPortal() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-[#F6EFE3] border border-[#D6A04B]/40 text-[#8B5A2B] flex items-center justify-center font-bold text-base shadow-xs overflow-hidden">
+                        <div className="w-12 h-12 rounded-2xl bg-[#F6EFE3] border border-[#D6A04B]/40 text-[#8B5A2B] flex items-center justify-center font-bold text-base shadow-xs overflow-hidden shrink-0">
                           {worker.photo ? (
                             <img src={worker.photo} alt={worker.name} className="w-full h-full object-cover" />
                           ) : (
@@ -1525,9 +1749,16 @@ export default function ManagementPortal() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-serif text-sm font-bold text-[#160F0A]">
-                            {worker.name}
-                          </h4>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-serif text-sm font-bold text-[#160F0A]">
+                              {worker.name}
+                            </h4>
+                            {worker.isActive === false && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] bg-red-100 text-red-700 font-bold">
+                                Inactive
+                              </span>
+                            )}
+                          </div>
                           <span className="px-2 py-0.5 rounded-full bg-[#D6A04B]/20 text-[#A64B24] text-[9px] font-bold uppercase inline-block">
                             {worker.role}
                           </span>
@@ -1553,13 +1784,31 @@ export default function ManagementPortal() {
                       </div>
                     </div>
 
-                    <div className="pt-2">
+                    {/* Action Buttons: ID Card + Edit + Delete */}
+                    <div className="pt-2 flex items-center gap-2">
                       <button
                         onClick={() => openIdCardModal(worker)}
-                        className="w-full py-2.5 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] border border-[#D6A04B]/40 text-[#8B5A2B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-2 rounded-xl bg-[#F5EEDB] hover:bg-[#EBDDC3] border border-[#D6A04B]/40 text-[#8B5A2B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="View & Print PVC ID Badge"
                       >
                         <CreditCard className="h-3.5 w-3.5" />
-                        <span>Generate &amp; Print ID Card</span>
+                        <span>ID Card</span>
+                      </button>
+
+                      <button
+                        onClick={() => openEditWorkerModal(worker)}
+                        className="p-2 rounded-xl bg-[#F0E6D2] hover:bg-[#E2D5BE] text-[#160F0A] border border-[#E8DFC9] transition-all cursor-pointer"
+                        title="Edit Worker Profile"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-[#A64B24]" />
+                      </button>
+
+                      <button
+                        onClick={() => confirmDelete('worker', worker)}
+                        className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all cursor-pointer"
+                        title="Delete Worker"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1579,7 +1828,7 @@ export default function ManagementPortal() {
                     Official PVC ID Badges Gallery
                   </h2>
                   <p className="text-xs text-stone-500 font-light">
-                    Preview and batch print official workshop PVC badges with high-resolution attendance QR codes.
+                    Preview, edit, or batch print official workshop PVC badges with high-resolution attendance QR codes.
                   </p>
                 </div>
                 <button
@@ -1597,7 +1846,6 @@ export default function ManagementPortal() {
                     key={worker._id}
                     className="bg-white/95 border border-[#E8DFC9] rounded-3xl p-5 shadow-xs space-y-4 hover:shadow-md transition-shadow"
                   >
-                    {/* Front Badge Card Mock */}
                     <div className="rounded-2xl bg-gradient-to-b from-[#160F0A] to-[#26190F] p-4 text-white space-y-3 relative overflow-hidden shadow-md">
                       <div className="flex items-center justify-between border-b border-white/10 pb-2">
                         <div className="flex items-center gap-2">
@@ -1637,13 +1885,23 @@ export default function ManagementPortal() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => openIdCardModal(worker)}
-                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                    >
-                      <Printer className="h-4 w-4" />
-                      <span>Print PVC Card</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openIdCardModal(worker)}
+                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>Print PVC Card</span>
+                      </button>
+
+                      <button
+                        onClick={() => openEditWorkerModal(worker)}
+                        className="p-2.5 rounded-xl bg-[#F0E6D2] hover:bg-[#E2D5BE] text-[#160F0A] border border-[#E8DFC9] transition-all cursor-pointer"
+                        title="Edit Worker"
+                      >
+                        <Pencil className="h-4 w-4 text-[#A64B24]" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -2134,7 +2392,7 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* BACK OF ID CARD (SCANNABLE QR) */}
+              {/* BACK OF ID CARD */}
               <div className="w-[320px] h-[200px] rounded-2xl bg-[#F5E6C8] border-2 border-[#D6A04B] p-3 text-left relative flex flex-col justify-between shadow-2xl select-none overflow-hidden text-[#160F0A]">
                 <div className="text-center border-b border-[#160F0A]/20 pb-1">
                   <span className="text-[8px] font-black uppercase tracking-wider text-[#A64B24]">
@@ -2178,7 +2436,7 @@ export default function ManagementPortal() {
       )}
 
       {/* ===================================================================== */}
-      {/* MODAL 3: REGISTER NEW WORKER (With Direct Photo Gallery Upload) */}
+      {/* MODAL 3: REGISTER NEW WORKER */}
       {/* ===================================================================== */}
       {showAddWorkerModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
@@ -2264,7 +2522,6 @@ export default function ManagementPortal() {
                 </div>
               </div>
 
-              {/* Direct Gallery Photo File Picker */}
               <div>
                 <label className="text-stone-300 font-bold block mb-1">
                   Artisan Photo (Select from Gallery / Camera)
@@ -2351,6 +2608,210 @@ export default function ManagementPortal() {
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
                   Save &amp; Generate ID Card →
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL 3B: EDIT WORKER DETAILS */}
+      {/* ===================================================================== */}
+      {showEditWorkerModal && editingWorker && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto text-white">
+            <button
+              onClick={() => setShowEditWorkerModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B] block mb-1">
+                UPDATE WORKER • {editingWorker.workerId}
+              </span>
+              <h3 className="font-serif text-lg font-black text-white">
+                Edit Artisan Profile ({editingWorker.name})
+              </h3>
+            </div>
+
+            <form onSubmit={handleUpdateWorker} className="space-y-3 text-xs">
+              <div>
+                <label className="text-stone-300 font-bold block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editWorkerFormData.name}
+                  onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, name: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={editWorkerFormData.phone}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, phone: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Role / Craft *</label>
+                  <select
+                    value={editWorkerFormData.role}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, role: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  >
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Daily Wage (₹/day) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={editWorkerFormData.dailyRate}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, dailyRate: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Blood Group</label>
+                  <select
+                    value={editWorkerFormData.bloodGroup}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, bloodGroup: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  >
+                    {["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map(bg => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Status & Active toggle */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Status</label>
+                  <select
+                    value={editWorkerFormData.isActive ? 'active' : 'inactive'}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, isActive: e.target.value === 'active' })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  >
+                    <option value="active">Active (Working)</option>
+                    <option value="inactive">Inactive / On Leave</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Aadhar Number</label>
+                  <input
+                    type="text"
+                    value={editWorkerFormData.aadharNumber}
+                    onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, aadharNumber: e.target.value })}
+                    placeholder="12-digit Aadhar"
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+              </div>
+
+              {/* Photo Update Section */}
+              <div>
+                <label className="text-stone-300 font-bold block mb-1">
+                  Artisan Photo (Update from Gallery or URL)
+                </label>
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={editFileInputRef}
+                  onChange={handleEditPhotoSelect}
+                  className="hidden"
+                />
+
+                <div className="flex items-center gap-3 bg-black/30 p-2.5 rounded-2xl border border-stone-700/80">
+                  <div 
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="w-16 h-16 rounded-xl border-2 border-dashed border-[#D6A04B]/60 bg-black/50 hover:bg-[#D6A04B]/10 transition-colors flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group relative"
+                    title="Tap to select new photo"
+                  >
+                    {editWorkerPhotoPreview || editWorkerFormData.photo ? (
+                      <img 
+                        src={editWorkerPhotoPreview || editWorkerFormData.photo} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center p-1">
+                        <Camera className="h-5 w-5 text-[#D6A04B] mx-auto group-hover:scale-110 transition-transform" />
+                        <span className="text-[8px] text-stone-400 font-bold block mt-0.5">Gallery</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#A64B24] to-[#D6A04B] text-white text-[10px] font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Camera className="h-3 w-3" />
+                        <span>Change Photo</span>
+                      </button>
+
+                      {(editWorkerPhotoPreview || editWorkerFormData.photo) && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveEditPhoto}
+                          className="px-2 py-1 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800 text-[10px] font-bold transition-all cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <input
+                      type="url"
+                      value={editWorkerFormData.photo}
+                      onChange={(e) => {
+                        setEditWorkerFormData({ ...editWorkerFormData, photo: e.target.value });
+                        if (e.target.value) setEditWorkerPhotoPreview(e.target.value);
+                      }}
+                      placeholder="Or photo link"
+                      className="w-full px-3 py-1.5 rounded-xl bg-black/40 border border-stone-700 text-[10px] text-white focus:outline-none focus:border-[#D6A04B]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-stone-300 font-bold block mb-1">Emergency Contact</label>
+                <input
+                  type="text"
+                  value={editWorkerFormData.emergencyContact}
+                  onChange={(e) => setEditWorkerFormData({ ...editWorkerFormData, emergencyContact: e.target.value })}
+                  placeholder="Family phone"
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  Save Worker Changes →
                 </button>
               </div>
             </form>
@@ -2559,6 +3020,136 @@ export default function ManagementPortal() {
       )}
 
       {/* ===================================================================== */}
+      {/* MODAL 5B: EDIT CLIENT PROJECT */}
+      {/* ===================================================================== */}
+      {showEditProjectModal && editingProject && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-[#D6A04B]/40 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto text-white">
+            <button
+              onClick={() => setShowEditProjectModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#D6A04B] block mb-1">
+                EDIT CONTRACT • {editingProject.projectId}
+              </span>
+              <h3 className="font-serif text-lg font-black text-white">
+                Update Project Details
+              </h3>
+            </div>
+
+            <form onSubmit={handleUpdateProject} className="space-y-3 text-xs">
+              <div>
+                <label className="text-stone-300 font-bold block mb-1">Project Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editProjectFormData.title}
+                  onChange={(e) => setEditProjectFormData({ ...editProjectFormData, title: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Client Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editProjectFormData.clientName}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, clientName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Client Phone</label>
+                  <input
+                    type="tel"
+                    value={editProjectFormData.clientPhone}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, clientPhone: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Total Agreed Budget (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={editProjectFormData.totalBudget}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, totalBudget: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Client City</label>
+                  <input
+                    type="text"
+                    value={editProjectFormData.clientCity}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, clientCity: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Project Status</label>
+                  <select
+                    value={editProjectFormData.status}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, status: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  >
+                    <option value="quotation">Quotation / Planning</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="on_hold">On Hold</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-stone-300 font-bold block mb-1">Target Completion Date</label>
+                  <input
+                    type="date"
+                    value={editProjectFormData.targetDate}
+                    onChange={(e) => setEditProjectFormData({ ...editProjectFormData, targetDate: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-stone-300 font-bold block mb-1">Notes</label>
+                <textarea
+                  rows={2}
+                  value={editProjectFormData.notes}
+                  onChange={(e) => setEditProjectFormData({ ...editProjectFormData, notes: e.target.value })}
+                  placeholder="Material specs, milestones, or client instructions"
+                  className="w-full px-4 py-2 rounded-xl bg-black/40 border border-stone-700 text-white focus:outline-none focus:border-[#D6A04B]"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A64B24] via-[#D6A04B] to-[#E6B86C] text-[#160F0A] font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  Save Project Changes →
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
       {/* MODAL 6: RECORD PROJECT EXPENSE */}
       {/* ===================================================================== */}
       {showAddExpenseModal && selectedProjectForExpense && (
@@ -2717,6 +3308,77 @@ export default function ManagementPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL 8: DELETE CONFIRMATION MODAL */}
+      {/* ===================================================================== */}
+      {showDeleteConfirmModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#160F0A] border border-red-500/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 text-center relative text-white">
+            <button
+              onClick={() => {
+                setShowDeleteConfirmModal(false);
+                setDeleteTarget(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-stone-300 hover:text-white cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="w-14 h-14 rounded-full bg-red-950/80 border border-red-500/40 text-red-400 flex items-center justify-center mx-auto shadow-md">
+              <Trash2 className="h-6 w-6" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-red-400 block mb-1">
+                PERMANENT REMOVAL
+              </span>
+              <h3 className="font-serif text-lg font-black text-white">
+                Delete {deleteTarget.type === 'worker' ? 'Artisan / Worker' : 'Client Project'}?
+              </h3>
+              <p className="text-xs text-stone-300 mt-2 font-light leading-relaxed">
+                {deleteTarget.type === 'worker' ? (
+                  <>
+                    Are you sure you want to permanently remove artisan <strong className="text-[#F5E6C8]">{deleteTarget.item?.name}</strong> ({deleteTarget.item?.workerId})?
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to permanently remove project <strong className="text-[#F5E6C8]">{deleteTarget.item?.title}</strong> ({deleteTarget.item?.projectId})? All recorded payment milestones and material expenses will be deleted.
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setDeleteTarget(null);
+                }}
+                disabled={deleteLoading}
+                className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-stone-300 font-bold text-xs transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExecuteDelete}
+                disabled={deleteLoading}
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-black uppercase tracking-wider text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {deleteLoading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                <span>{deleteLoading ? 'Deleting...' : 'Yes, Delete'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
